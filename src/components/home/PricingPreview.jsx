@@ -8,15 +8,15 @@ const plans = [
     name: 'Starter',
     setup: '$1,500',
     monthly: '$497',
-    desc: 'Perfect for small businesses ready to stop missing calls.',
-    features: ['AI receptionist', 'Basic lead capture', 'Simple automation', 'Business hours coverage', 'Email support'],
+    desc: 'Best for small businesses and basic AI receptionist use.',
+    features: ['AI receptionist', 'Basic lead capture', 'Call answering', 'Business hours coverage', 'Email support'],
     featured: false,
   },
   {
     name: 'Growth',
     setup: '$3,000',
     monthly: '$1,500',
-    desc: 'For growing businesses that need full AI-powered communication.',
+    desc: 'Best for growing businesses needing voice AI plus CRM automation.',
     features: ['AI voice agent', 'CRM automation', 'Appointment booking', 'Lead qualification', 'SMS & email follow-up', '24/7 coverage', 'Priority support'],
     featured: true,
   },
@@ -24,8 +24,8 @@ const plans = [
     name: 'Enterprise',
     setup: '$7,500+',
     monthly: '$3,000+',
-    desc: 'For businesses that need custom, multi-channel AI systems.',
-    features: ['Multiple AI agents', 'Custom workflows', 'Advanced integrations', 'Advanced automation', 'Dedicated account manager', 'Priority support', 'Custom reporting'],
+    desc: 'Best for larger businesses with multiple locations and complex workflows.',
+    features: ['Multiple AI agents', 'Advanced automation', 'Multi-location support', 'Custom workflows', 'Advanced integrations', 'Dedicated account manager', 'Priority support'],
     featured: false,
   },
 ];
@@ -44,7 +44,7 @@ export default function PricingPreview() {
           <p className="text-cyan-400 text-sm font-medium mb-3">PRICING</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
           <p className="mt-4 text-gray-400 max-w-xl mx-auto">
-            Invest in an AI employee that pays for itself in captured leads and saved time.
+            Less than the cost of a staff member, with 24/7 coverage.
           </p>
         </motion.div>
 
