@@ -67,15 +67,19 @@ export default function HeroSection({ heroImage }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="hidden md:block"
+            className="hidden md:flex items-center justify-center"
           >
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent z-10 rounded-2xl" />
-              <img
-                src={heroImage}
-                alt="Futuristic AI neural network visualization"
-                className="w-full rounded-2xl"
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl" />
+              <div className="relative w-[400px] h-[400px] rounded-full border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.1),transparent_50%)]" />
+                <img
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/7f46de16f_AIAssistantbrandidentitypresentation.png"
+                  alt="AI Assistant"
+                  className="w-[280px] h-[280px] object-contain relative z-10"
+                />
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-pulse" />
+              </div>
             </div>
           </motion.div>
         </div>

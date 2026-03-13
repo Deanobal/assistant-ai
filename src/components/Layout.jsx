@@ -19,10 +19,12 @@ function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/Home" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
+        <Link to="/Home" className="flex items-center gap-2.5">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png" 
+            alt="AI Assistant Logo" 
+            className="w-9 h-9"
+          />
           <span className="text-white font-semibold text-lg tracking-tight">AI Assistant</span>
         </Link>
 
@@ -101,10 +103,12 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
+            <div className="flex items-center gap-2.5 mb-4">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png" 
+                alt="AI Assistant Logo" 
+                className="w-9 h-9"
+              />
               <span className="text-white font-semibold text-lg">AI Assistant</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
