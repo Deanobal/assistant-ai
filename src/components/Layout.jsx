@@ -131,7 +131,7 @@ function Footer() {
           <div>
             <h4 className="text-white font-medium text-sm mb-4">Contact</h4>
             <div className="space-y-2.5 text-gray-500 text-sm">
-              <p>hello@aiassistant.com.au</p>
+              <p>sales@assistantai.com.au</p>
               <p>+61 3 XXXX XXXX</p>
               <div className="flex gap-3 pt-2">
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">LinkedIn</span>
