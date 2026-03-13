@@ -22,10 +22,10 @@ function Navbar() {
         <Link to="/Home" className="flex items-center gap-2.5">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png" 
-            alt="AI Assistant Logo" 
+            alt="Assistant AI Logo" 
             className="w-9 h-9"
           />
-          <span className="text-white font-semibold text-lg tracking-tight">AI Assistant</span>
+          <span className="text-white font-semibold text-lg tracking-tight">Assistant AI</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
@@ -106,10 +106,10 @@ function Footer() {
             <div className="flex items-center gap-2.5 mb-4">
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png" 
-                alt="AI Assistant Logo" 
+                alt="Assistant AI Logo" 
                 className="w-9 h-9"
               />
-              <span className="text-white font-semibold text-lg">AI Assistant</span>
+              <span className="text-white font-semibold text-lg">Assistant AI</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
               AI automation for Australian businesses. We help companies capture more leads, answer every call, and grow with intelligent AI systems.
@@ -143,7 +143,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/5 mt-12 pt-8 text-center">
-          <p className="text-gray-600 text-xs">© 2026 AI Assistant. All rights reserved.</p>
+          <p className="text-gray-600 text-xs">© 2026 Assistant AI. All rights reserved.</p>
         </div>
       </div>
     </footer>

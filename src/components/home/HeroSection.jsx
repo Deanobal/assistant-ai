@@ -75,7 +75,7 @@ export default function HeroSection({ heroImage }) {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.1),transparent_50%)]" />
                 <img
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/7f46de16f_AIAssistantbrandidentitypresentation.png"
-                  alt="AI Assistant"
+                  alt="Assistant AI"
                   className="w-[280px] h-[280px] object-contain relative z-10"
                 />
                 <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-pulse" />

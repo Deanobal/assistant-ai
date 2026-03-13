@@ -79,7 +79,7 @@ export default function Industries() {
               <span className="text-gradient">Your Industry</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
-              We understand the unique challenges of every industry. Here's how AI Assistant helps businesses like yours win more customers.
+              We understand the unique challenges of every industry. Here's how Assistant AI helps businesses like yours win more customers.
             </p>
           </motion.div>
 
