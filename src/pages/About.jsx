@@ -36,7 +36,7 @@ export default function About() {
               className="space-y-6 text-gray-400 leading-relaxed text-lg"
             >
               <p>
-                AI Assistant was founded with a clear mission: help Australian businesses stop losing revenue to missed calls, slow responses, and manual processes.
+                Assistant AI was founded with a clear mission: help Australian businesses stop losing revenue to missed calls, slow responses, and manual processes.
               </p>
               <p>
                 We noticed a pattern across industries — from tradies on the tools to real estate agents at inspections to dental receptionists juggling a packed schedule. Every business was losing customers simply because they couldn't respond fast enough.

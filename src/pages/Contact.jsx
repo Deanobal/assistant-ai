@@ -67,7 +67,7 @@ export default function Contact() {
                 </div>
                 <div className="flex items-center gap-3 text-gray-400 text-sm">
                   <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
-                  hello@aiassistant.com.au
+                  hello@assistantai.com.au
                 </div>
                 <div className="flex items-center gap-3 text-gray-400 text-sm">
                   <Phone className="w-4 h-4 text-cyan-400 shrink-0" />

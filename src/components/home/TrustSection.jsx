@@ -33,7 +33,7 @@ export default function TrustSection({ aboutImage }) {
             </h2>
             <div className="space-y-4 text-gray-400 leading-relaxed">
               <p>
-                AI Assistant was created with a simple mission: help businesses stop losing customers to missed calls, slow response times, and manual processes.
+                Assistant AI was created with a simple mission: help businesses stop losing customers to missed calls, slow response times, and manual processes.
               </p>
               <p>
                 We saw businesses across Australia — from tradies to law firms — losing thousands in revenue simply because they couldn't answer every call or follow up with every lead.
