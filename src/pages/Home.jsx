@@ -9,8 +9,8 @@ import PricingPreview from '../components/home/PricingPreview';
 import TrustSection from '../components/home/TrustSection';
 import CTASection from '../components/home/CTASection';
 
-const HERO_IMAGE = '/__generating__/img_8c863036a6cf.png';
-const ABOUT_IMAGE = '/__generating__/img_359dab355ed6.png';
+const HERO_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/9541496d0_generated_bc3bb2a9.png';
+const ABOUT_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/e62f92cba_generated_bfd2150b.png';
 
 export default function Home() {
   return (
