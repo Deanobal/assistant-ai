@@ -5,10 +5,15 @@ import { ArrowRight, Play } from 'lucide-react';
 
 export default function HeroSection({ heroImage }) {
   return (
-    <section className="relative overflow-hidden bg-grid">
-      <div className="bg-radial-glow absolute inset-0" />
-      <div className="absolute top-20 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+    <section className="relative overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
+          alt="AI Background"
+          className="w-full h-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f] via-[#0a0a0f]/90 to-transparent" />
+      </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-32">
         <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -28,7 +33,7 @@ export default function HeroSection({ heroImage }) {
             </h1>
 
             <p className="mt-6 text-gray-400 text-lg md:text-xl leading-relaxed max-w-lg">
-              Automate calls, capture leads, and grow your business with intelligent AI agents built for modern businesses.
+              Assistant AI is a premium AI automation agency that helps Australian businesses capture more leads, reduce missed calls, and automate customer communication using AI receptionists and practical automation systems.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -63,25 +68,7 @@ export default function HeroSection({ heroImage }) {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="hidden md:flex items-center justify-center"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl" />
-              <div className="relative w-[400px] h-[400px] rounded-full border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.1),transparent_50%)]" />
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/7f46de16f_AIAssistantbrandidentitypresentation.png"
-                  alt="Assistant AI"
-                  className="w-[280px] h-[280px] object-contain relative z-10"
-                />
-                <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-pulse" />
-              </div>
-            </div>
-          </motion.div>
+
         </div>
       </div>
     </section>
