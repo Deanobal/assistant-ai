@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Calendar, Users, TrendingUp, ArrowUp, ArrowDown, Lock } from 'lucide-react';
+import { Phone, Calendar, Users, TrendingUp, ArrowUp, ArrowDown, Lock, Headphones, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OnboardingWizard from '../components/dashboard/OnboardingWizard';
+import CallRecordings from '../components/dashboard/CallRecordings';
+import BillingSection from '../components/dashboard/BillingSection';
 
 const stats = [
   { 
@@ -148,10 +151,26 @@ export default function Dashboard() {
           className="mb-10"
         >
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Client Dashboard</h1>
-          <p className="text-gray-400">Your AI performance analytics for this month</p>
+          <p className="text-gray-400">Manage your AI performance, calls, and billing</p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <Tabs defaultValue="overview" className="space-y-8">
+          <TabsList className="bg-[#12121a] border border-white/5">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="calls" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
+              <Headphones className="w-4 h-4 mr-2" />
+              Call Recordings
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Billing
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -257,6 +276,16 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         </div>
+          </TabsContent>
+
+          <TabsContent value="calls">
+            <CallRecordings />
+          </TabsContent>
+
+          <TabsContent value="billing">
+            <BillingSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
