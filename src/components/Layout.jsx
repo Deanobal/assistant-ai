@@ -10,6 +10,7 @@ const navLinks = [
   { label: 'Pricing', path: '/Pricing' },
   { label: 'About', path: '/About' },
   { label: 'Contact', path: '/Contact' },
+  { label: 'Dashboard', path: '/Dashboard' },
 ];
 
 function Navbar() {
