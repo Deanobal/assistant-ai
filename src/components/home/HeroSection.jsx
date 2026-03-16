@@ -16,8 +16,8 @@ export default function HeroSection({ heroImage }) {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0a0a0f]/95 to-[#0a0a0f]" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-20">
-        <div className="grid lg:grid-cols-[1fr_0.95fr] gap-14 items-center">
+      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16 md:px-8 md:pt-28 md:pb-20">
+        <div className="grid lg:grid-cols-[1fr_0.95fr] gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,9 +47,9 @@ export default function HeroSection({ heroImage }) {
               </Link>
               <Link
                 to="/Platform"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/15 text-white font-semibold rounded-full hover:bg-white/5 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white font-semibold rounded-full bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/30 transition-all"
               >
-                <Play className="w-5 h-5" />
+                <Play className="w-5 h-5 text-cyan-300" />
                 Watch AI Demo
               </Link>
             </div>
@@ -62,18 +62,18 @@ export default function HeroSection({ heroImage }) {
             className="hidden lg:block"
           >
             <div className="relative max-w-[540px] ml-auto">
-              <div className="absolute -inset-8 bg-cyan-500/8 blur-3xl rounded-full" />
-              <div className="relative rounded-[32px] border border-white/10 bg-[#11111a]/80 backdrop-blur-xl p-4 shadow-2xl shadow-cyan-500/10">
-                <div className="rounded-[24px] overflow-hidden border border-white/5 bg-[#0c0c14]">
+              <div className="absolute -inset-6 bg-cyan-500/6 blur-3xl rounded-full" />
+              <div className="relative rounded-[32px] border border-white/8 bg-[#11111a]/75 backdrop-blur-xl p-3.5 shadow-2xl shadow-cyan-500/5">
+                <div className="rounded-[24px] overflow-hidden border border-white/4 bg-[#0c0c14]">
                   <img
                     src={heroImage}
                     alt="AssistantAI.com.au platform preview"
                     className="w-full h-[560px] object-cover"
                   />
                 </div>
-                <div className="absolute bottom-8 left-8 px-4 py-3 rounded-2xl border border-white/10 bg-[#0a0a0f]/85 backdrop-blur-md">
-                  <p className="text-xs text-gray-400 mb-1">AI workflow</p>
-                  <p className="text-sm font-medium text-white">Call captured → CRM updated → Follow-up sent</p>
+                <div className="absolute bottom-6 left-6 px-3.5 py-2.5 rounded-[18px] border border-white/8 bg-[#0a0a0f]/82 backdrop-blur-md shadow-lg shadow-black/10">
+                  <p className="text-[11px] text-gray-400 mb-1">Workflow</p>
+                  <p className="text-[13px] font-medium text-white">Call captured → CRM updated → Follow-up sent</p>
                 </div>
               </div>
             </div>
