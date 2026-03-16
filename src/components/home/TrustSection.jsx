@@ -10,7 +10,7 @@ const trustPoints = [
 
 export default function TrustSection({ aboutImage }) {
   return (
-    <section className="relative py-24 md:py-28">
+    <section className="relative py-20 md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div

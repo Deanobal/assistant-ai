@@ -1,5 +1,6 @@
 import React from 'react';
 import HeroSection from '../components/home/HeroSection';
+import TrustStrip from '../components/home/TrustStrip';
 import WhatAgentsDo from '../components/home/WhatAgentsDo';
 import BenefitsSection from '../components/home/BenefitsSection';
 import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
@@ -18,6 +19,7 @@ export default function Home() {
   return (
     <div>
       <HeroSection heroImage={HERO_IMAGE} />
+      <TrustStrip />
       <WhatAgentsDo />
       <BenefitsSection />
       <EverythingWorksTogether />

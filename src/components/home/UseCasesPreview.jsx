@@ -6,30 +6,30 @@ import { ArrowRight, PhoneCall, CalendarCheck2, Database } from 'lucide-react';
 const useCases = [
   {
     icon: PhoneCall,
-    label: 'Sample Client Scenario',
-    title: 'Trades Business',
-    desc: 'Answer urgent calls while the team is on-site, capture job details, and send qualified enquiries into the workflow instantly.',
-    outcome: 'Typical outcome: fewer missed leads and faster response times.',
+    label: 'Use Case',
+    title: 'Trades: Fewer Missed Leads',
+    desc: 'Answer urgent calls while the team is on-site, capture job details, and move the enquiry into the workflow instantly.',
+    outcome: 'Sample outcome: faster response times and fewer missed opportunities.',
   },
   {
     icon: CalendarCheck2,
-    label: 'Example Use Case',
-    title: 'Clinic or Practice',
+    label: 'Example Client Scenario',
+    title: 'Clinics: Faster Booking Flow',
     desc: 'Handle bookings, reschedules, and common questions automatically so staff can stay focused on patients and front-desk flow.',
-    outcome: 'Typical outcome: less admin and smoother appointment handling.',
+    outcome: 'Sample outcome: smoother appointment handling and less admin pressure.',
   },
   {
     icon: Database,
-    label: 'Sample Outcome Example',
-    title: 'Service Business',
+    label: 'Sample Outcome',
+    title: 'Service Businesses: Better Follow-Up',
     desc: 'Capture customer details, sync data into the CRM, and trigger follow-up messages after every enquiry without manual data entry.',
-    outcome: 'Typical outcome: cleaner systems and better lead follow-up.',
+    outcome: 'Sample outcome: cleaner systems and more reliable lead follow-up.',
   },
 ];
 
 export default function UseCasesPreview() {
   return (
-    <section className="relative py-24 md:py-28 bg-[#0c0c14]">
+    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
         <motion.div
