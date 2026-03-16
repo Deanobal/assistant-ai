@@ -8,14 +8,13 @@ const plans = [
     name: 'Starter',
     setup: '$1,500',
     monthly: '$497',
-    desc: 'Best for small businesses and basic AI receptionist use.',
+    desc: 'Best for businesses starting with AI call handling and lead capture.',
     features: [
-      'AI receptionist',
-      'Basic lead capture',
-      'Call answering',
-      'Business hours coverage',
-      'Email support',
-      'Monthly performance report',
+      'Setup fee',
+      'Monthly management',
+      'Support included',
+      'Reporting included',
+      'AI call handling and lead capture',
     ],
     featured: false,
   },
@@ -23,16 +22,14 @@ const plans = [
     name: 'Growth',
     setup: '$3,000',
     monthly: '$1,500',
-    desc: 'Best for growing businesses needing voice AI plus CRM automation.',
+    desc: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
     features: [
-      'AI voice agent',
-      'CRM automation',
-      'Appointment booking',
-      'Lead qualification',
-      'SMS & email follow-up',
-      '24/7 coverage',
-      'Priority support',
-      'Weekly performance reports',
+      'Setup fee',
+      'Monthly management',
+      'Optimisation included',
+      'Support included',
+      'Reporting included',
+      'CRM, calendar, and follow-up automation',
     ],
     featured: true,
   },
@@ -40,16 +37,14 @@ const plans = [
     name: 'Enterprise',
     setup: '$7,500+',
     monthly: '$3,000+',
-    desc: 'Best for larger businesses with multiple locations and complex workflows.',
+    desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
     features: [
-      'Multiple AI agents',
-      'Advanced automation',
-      'Multi-location support',
-      'Custom workflows',
-      'Advanced integrations',
-      'Dedicated account manager',
-      'Priority support',
-      'Custom reporting & analytics',
+      'Advanced setup',
+      'Monthly management',
+      'Optimisation included',
+      'Support included',
+      'Reporting included',
+      'Custom integrations and workflow design',
     ],
     featured: false,
   },
@@ -58,27 +53,31 @@ const plans = [
 const faqs = [
   {
     q: 'How long does setup take?',
-    a: 'Most AI systems go live within 5–10 business days, depending on complexity.',
+    a: 'Most setups can be scoped and launched quickly, depending on how complex your call flow and integrations are.',
   },
   {
-    q: 'Do I need to change my phone system?',
-    a: 'No. We integrate with your existing phone number and systems. No disruption to your business.',
+    q: 'Do I need to change my phone number?',
+    a: 'Usually no. AssistantAI.com.au is designed to work with your existing call workflow wherever possible.',
   },
   {
-    q: 'Can I upgrade my plan later?',
-    a: 'Absolutely. You can upgrade at any time as your business grows.',
+    q: 'Can the AI transfer calls to staff?',
+    a: 'Yes. Call routing can be configured so urgent or specific enquiries go to the right person when needed.',
   },
   {
-    q: 'Is there a lock-in contract?',
-    a: 'No lock-in contracts. We believe in earning your business every month.',
+    q: 'Can it book appointments?',
+    a: 'Yes. We can connect appointment workflows to your calendar and booking process.',
   },
   {
-    q: 'What happens if the AI can\'t handle a call?',
-    a: 'Your AI seamlessly transfers the call to a human team member when needed.',
+    q: 'What tools does it integrate with?',
+    a: 'Common setups include CRM systems, Google or Outlook Calendar, and SMS follow-up tools.',
   },
   {
-    q: 'Do you offer a trial?',
-    a: 'We offer a free strategy call to design the right solution. Setup includes a pilot period to fine-tune performance.',
+    q: 'Can I upgrade later?',
+    a: 'Yes. Plans can scale as your workflow becomes more advanced.',
+  },
+  {
+    q: 'Do you offer support and optimisation?',
+    a: 'Yes. Support, reporting, and ongoing optimisation are built into the service model.',
   },
 ];
 
@@ -95,11 +94,11 @@ export default function Pricing() {
           >
             <p className="text-cyan-400 text-sm font-medium mb-3">PRICING</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Invest in an AI Employee{' '}
-              <span className="text-gradient">That Pays for Itself</span>
+              Done-for-You Pricing for{' '}
+              <span className="text-gradient">Premium AI Automation</span>
             </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
-              Less than the cost of a staff member, with 24/7 coverage.
+            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
+              AssistantAI.com.au is positioned as a managed service with setup, monthly management, support, reporting, and optimisation built into the offer.
             </p>
           </motion.div>
 
@@ -124,13 +123,13 @@ export default function Pricing() {
                 )}
 
                 <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
-                <p className="text-gray-500 text-sm mt-2 mb-6">{plan.desc}</p>
+                <p className="text-gray-400 text-sm mt-2 mb-6 leading-relaxed">{plan.desc}</p>
 
-                <div className="mb-1">
+                <div className="mb-2">
                   <span className="text-4xl font-bold text-white">{plan.monthly}</span>
                   <span className="text-gray-500 text-sm">/month</span>
                 </div>
-                <p className="text-gray-600 text-xs mb-8">{plan.setup} one-time setup</p>
+                <p className="text-gray-500 text-sm mb-8">{plan.setup} setup fee</p>
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map(f => (
@@ -149,7 +148,7 @@ export default function Pricing() {
                       : 'border border-white/10 text-white hover:bg-white/5'
                   }`}
                 >
-                  Get Started
+                  Book Strategy Call
                 </Link>
               </motion.div>
             ))}
@@ -161,7 +160,7 @@ export default function Pricing() {
             viewport={{ once: true }}
           >
             <h2 className="text-2xl font-bold text-white text-center mb-10">Frequently Asked Questions</h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
               {faqs.map((faq, i) => (
                 <div key={i} className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
                   <div className="flex items-start gap-3">
@@ -182,12 +181,12 @@ export default function Pricing() {
             viewport={{ once: true }}
             className="mt-20 text-center"
           >
-            <p className="text-gray-400 mb-4">Not sure which plan is right for you?</p>
+            <p className="text-gray-400 mb-4">Not sure which plan is right for your workflow?</p>
             <Link
               to="/Contact"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
             >
-              Book a Free Strategy Call
+              Talk to Us
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

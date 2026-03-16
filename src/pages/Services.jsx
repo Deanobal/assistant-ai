@@ -7,44 +7,44 @@ const services = [
   {
     icon: Mic,
     title: 'AI Voice Agents',
-    desc: 'Your AI voice agent answers calls like a real team member — understanding customer needs, answering questions, and taking action.',
-    outcomes: ['Handle unlimited inbound calls', 'Qualify leads in real-time', 'Transfer urgent calls to staff', 'Work across business hours and after-hours'],
+    desc: 'AI voice agents designed to answer calls naturally, capture intent, and move the conversation toward the right next step.',
+    outcomes: ['Answer inbound calls consistently', 'Qualify leads in real time', 'Transfer urgent calls to staff', 'Support after-hours workflows'],
   },
   {
     icon: Headphones,
     title: 'AI Receptionists',
-    desc: 'A professional virtual receptionist that greets every caller, routes enquiries, and ensures no customer goes unattended.',
-    outcomes: ['Professional first impression every time', 'Route calls to the right person', 'Capture caller details automatically', 'Reduce hold times to zero'],
+    desc: 'A premium front-end call experience that greets callers professionally, routes enquiries, and keeps your team focused.',
+    outcomes: ['Professional first impression', 'Route calls to the right person', 'Capture caller details automatically', 'Reduce admin pressure on staff'],
   },
   {
     icon: MessageSquare,
     title: 'AI Chatbots',
-    desc: 'Engage website visitors the moment they land on your site. Answer questions, capture leads, and guide prospects toward booking.',
-    outcomes: ['24/7 website engagement', 'Instant lead capture', 'Pre-qualify prospects', 'Reduce bounce rates'],
+    desc: 'Website chat experiences that answer questions, capture leads, and help prospects take action faster.',
+    outcomes: ['24/7 website engagement', 'Instant lead capture', 'Pre-qualify enquiries', 'Guide visitors to book or enquire'],
   },
   {
     icon: Database,
     title: 'CRM Automation',
-    desc: 'Every call, message, and interaction gets logged automatically. No more manual data entry or lost customer information.',
-    outcomes: ['Auto-sync contacts and notes', 'Track lead status in real-time', 'Trigger workflows from CRM events', 'Eliminate manual data entry'],
+    desc: 'Every interaction can be pushed into the right system so your team has cleaner records and less manual admin.',
+    outcomes: ['Sync contacts and notes', 'Update lead records automatically', 'Track call outcomes', 'Reduce manual data entry'],
   },
   {
     icon: CalendarCheck,
-    title: 'Appointment Booking',
-    desc: 'Let your AI handle scheduling — checking availability, booking appointments, and sending confirmations without human involvement.',
-    outcomes: ['Sync with your existing calendar', 'Send automated reminders', 'Handle rescheduling and cancellations', 'Reduce no-shows by up to 40%'],
+    title: 'Appointment Booking Automation',
+    desc: 'Let AI check availability, book appointments, and keep your calendar workflow moving without back-and-forth admin.',
+    outcomes: ['Sync with your calendar', 'Book and confirm appointments', 'Handle reschedules and cancellations', 'Support reminders and confirmations'],
   },
   {
     icon: Send,
     title: 'SMS & Email Follow-Up',
-    desc: 'Never let a lead go cold. Automated follow-up sequences ensure every prospect gets the right message at the right time.',
-    outcomes: ['Instant post-call follow-ups', 'Multi-step nurture sequences', 'Personalised messaging', 'Higher conversion rates'],
+    desc: 'Automated follow-up that keeps new enquiries warm and makes sure every customer gets a timely next step.',
+    outcomes: ['Instant post-call follow-up', 'Confirmation messages', 'Reminder messages', 'Lead nurture workflows'],
   },
   {
     icon: GitBranch,
     title: 'Workflow Automation',
-    desc: 'Connect your business tools and create automated workflows that eliminate repetitive tasks and keep everything running smoothly.',
-    outcomes: ['Connect 500+ business tools', 'Automate repetitive processes', 'Trigger actions across platforms', 'Save hours of manual work daily'],
+    desc: 'Connect your core business tools so calls, bookings, updates, and follow-up all happen in one smoother process.',
+    outcomes: ['Connect key systems', 'Automate repetitive steps', 'Trigger actions across workflows', 'Create cleaner internal handoffs'],
   },
 ];
 
@@ -59,13 +59,13 @@ export default function Services() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-20"
           >
-            <p className="text-cyan-400 text-sm font-medium mb-3">OUR SERVICES</p>
+            <p className="text-cyan-400 text-sm font-medium mb-3">SERVICES</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              AI Solutions That{' '}
-              <span className="text-gradient">Drive Results</span>
+              Productised AI Services for{' '}
+              <span className="text-gradient">Calls, Follow-Up, and Workflow Automation</span>
             </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
-              Every service is designed around one goal: helping your business capture more leads, respond faster, and operate more efficiently.
+            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
+              AssistantAI.com.au combines premium service delivery with practical automation so Australian businesses can answer more calls, capture more leads, and reduce admin.
             </p>
           </motion.div>
 
@@ -77,21 +77,21 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="grid md:grid-cols-2 gap-8 p-8 md:p-10 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
+                className="grid md:grid-cols-2 gap-10 p-8 md:p-12 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
               >
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-5">
                     <s.icon className="w-6 h-6 text-cyan-400" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-3">{s.title}</h2>
-                  <p className="text-gray-400 leading-relaxed">{s.desc}</p>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{s.title}</h2>
+                  <p className="text-gray-400 text-base md:text-lg leading-relaxed">{s.desc}</p>
                 </div>
                 <div>
-                  <h4 className="text-white text-sm font-medium mb-4">Key Outcomes</h4>
-                  <ul className="space-y-3">
+                  <h4 className="text-white text-sm font-medium mb-4 uppercase tracking-[0.2em]">Key Outcomes</h4>
+                  <ul className="space-y-4">
                     {s.outcomes.map(o => (
-                      <li key={o} className="flex items-start gap-3 text-gray-400 text-sm">
-                        <div className="w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <li key={o} className="flex items-start gap-3 text-gray-300 text-base leading-relaxed">
+                        <div className="w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0 mt-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                         </div>
                         {o}
@@ -109,15 +109,15 @@ export default function Services() {
             viewport={{ once: true }}
             className="mt-20 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
           >
-            <h3 className="text-2xl font-bold text-white mb-3">Not Sure Which Service You Need?</h3>
-            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-              Book a free strategy call and we'll recommend the right AI solution for your business.
+            <h3 className="text-2xl font-bold text-white mb-3">Not Sure Which Setup Fits Best?</h3>
+            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              Book a strategy call and we’ll recommend the right combination of voice AI, integrations, booking automation, and follow-up for your business.
             </p>
             <Link
               to="/Contact"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
             >
-              Book Your Free Strategy Call
+              Book Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

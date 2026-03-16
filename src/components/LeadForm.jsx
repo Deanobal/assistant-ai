@@ -138,7 +138,7 @@ export default function LeadForm() {
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <>
-            Book Free AI Strategy Call
+            Book Free Strategy Call
             <ArrowRight className="w-4 h-4" />
           </>
         )}
