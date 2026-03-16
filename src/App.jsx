@@ -13,9 +13,11 @@ import Industries from './pages/Industries';
 import Pricing from './pages/Pricing';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import Dashboard from './pages/Dashboard';
 import CaseStudies from './pages/CaseStudies';
 import Integrations from './pages/Integrations';
+import Platform from './pages/Platform';
+import ClientLogin from './pages/ClientLogin';
+import ClientPortal from './pages/ClientPortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,7 +55,10 @@ const AuthenticatedApp = () => {
         <Route path="/Contact" element={<Contact />} />
         <Route path="/CaseStudies" element={<CaseStudies />} />
         <Route path="/Integrations" element={<Integrations />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/Platform" element={<Platform />} />
+        <Route path="/ClientLogin" element={<ClientLogin />} />
+        <Route path="/ClientPortal" element={<ClientPortal />} />
+        <Route path="/Dashboard" element={<Navigate to="/ClientLogin" replace />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

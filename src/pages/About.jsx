@@ -87,6 +87,29 @@ export default function About() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="mb-12 p-8 md:p-10 rounded-2xl border border-white/5 bg-[#12121a]"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">What We Actually Build</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                'AI call handling',
+                'Lead capture automation',
+                'CRM sync',
+                'Calendar booking',
+                'Follow-up workflows',
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-4 text-gray-300">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             className="mb-20 p-8 md:p-10 rounded-2xl border border-white/5 bg-[#12121a]"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">Why Businesses Choose AssistantAI.com.au</h2>

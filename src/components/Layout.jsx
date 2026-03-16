@@ -11,6 +11,7 @@ const navLinks = [
   { label: 'Case Studies', path: '/CaseStudies' },
   { label: 'About', path: '/About' },
   { label: 'Contact', path: '/Contact' },
+  { label: 'Client Login', path: '/ClientLogin' },
 ];
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -112,7 +113,7 @@ function Footer() {
               <span className="text-white font-semibold text-lg">AssistantAI.com.au</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-              Premium AI automation for Australian businesses, built to answer more calls, capture more leads, and automate follow-up with a productised service approach.
+              Premium AI automation for Australian service businesses, designed to answer calls, capture leads, sync systems, and automate follow-up with a more productised service experience.
             </p>
             <p className="text-gray-600 text-xs mt-4">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
           </div>
@@ -132,7 +133,8 @@ function Footer() {
             <h4 className="text-white font-medium text-sm mb-4">Contact</h4>
             <div className="space-y-2.5 text-gray-500 text-sm">
               <p>sales@assistantai.com.au</p>
-              <Link to="/Dashboard" className="block hover:text-cyan-400 transition-colors">Client Portal Preview</Link>
+              <Link to="/Platform" className="block hover:text-cyan-400 transition-colors">Platform Preview</Link>
+              <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
               <div className="flex gap-3 pt-2">
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">LinkedIn</span>
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">Facebook</span>

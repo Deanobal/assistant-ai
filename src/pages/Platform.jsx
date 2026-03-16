@@ -44,6 +44,7 @@ export default function Platform() {
                 Client Login
               </Link>
             </div>
+            <p className="mt-4 text-gray-500 text-sm">This is a public preview of the platform experience, not the private login area.</p>
           </motion.div>
 
           <div className="space-y-12">
