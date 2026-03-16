@@ -12,8 +12,8 @@ export default function CTASection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+          viewport={{ once: true }}>
+
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
             Ready to Capture More Leads Without Hiring More Staff?
           </h2>
@@ -23,15 +23,15 @@ export default function CTASection() {
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/Contact"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+
               Book Your Free AI Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="mt-4 text-gray-600 text-xs">No commitment. No pressure. Just a conversation about what's possible.</p>
+          <p className="text-gray-600 mt-4 text-base">No commitment. No pressure. Just a conversation about what's possible.</p>
         </motion.div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
