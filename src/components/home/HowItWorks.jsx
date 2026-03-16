@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { PhoneCall, Lightbulb, Link as LinkIcon, Rocket } from 'lucide-react';
 
 const steps = [
-  { icon: PhoneCall, step: '01', title: 'Book a Strategy Call', desc: 'Tell us about your business and where you\'re losing leads.' },
-  { icon: Lightbulb, step: '02', title: 'We Design Your AI System', desc: 'Our team builds a custom AI solution tailored to your needs.' },
-  { icon: LinkIcon, step: '03', title: 'We Connect It to Your Business', desc: 'Seamless integration with your phone, CRM, and calendar.' },
-  { icon: Rocket, step: '04', title: 'Your AI Assistant Goes Live', desc: 'Start capturing leads and automating communication instantly.' },
+  { icon: PhoneCall, step: '01', title: 'Book a Strategy Call', desc: 'We learn how your business handles calls, leads, bookings, and follow-up today.' },
+  { icon: Lightbulb, step: '02', title: 'We Map Your Workflow', desc: 'We identify what the AI should say, capture, automate, and sync into your systems.' },
+  { icon: LinkIcon, step: '03', title: 'We Build & Integrate Your AI', desc: 'Your AI is configured and connected to the tools your team already uses.' },
+  { icon: Rocket, step: '04', title: 'Your Assistant Goes Live', desc: 'You launch with monitoring, optimisation, and support included from day one.' },
 ];
 
 export default function HowItWorks() {

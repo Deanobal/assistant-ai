@@ -15,11 +15,10 @@ export default function CTASection() {
           viewport={{ once: true }}
         >
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Ready to Stop Missing Calls{' '}
-            <span className="text-gradient">and Start Growing?</span>
+            Ready to Capture More Leads Without Hiring More Staff?
           </h2>
-          <p className="mt-6 text-gray-400 text-lg max-w-xl mx-auto">
-            Book a free strategy call and discover how AI can transform your business communication.
+          <p className="mt-6 text-gray-400 text-lg max-w-2xl mx-auto">
+            Book a free strategy call and see how AssistantAI.com.au can automate calls, follow-up, and lead capture for your business.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link

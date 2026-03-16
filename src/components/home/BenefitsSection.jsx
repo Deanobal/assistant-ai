@@ -13,7 +13,7 @@ const benefits = [
 
 export default function BenefitsSection() {
   return (
-    <section className="relative py-24 md:py-32 bg-[#0c0c14]">
+    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
         <motion.div
@@ -22,8 +22,8 @@ export default function BenefitsSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-cyan-400 text-sm font-medium mb-3">WHY AI ASSISTANT</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">The Competitive Edge Your Business Needs</h2>
+          <p className="text-cyan-400 text-sm font-medium mb-3">WHY ASSISTANTAI.COM.AU</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Why It Matters for Lead Capture, Speed, and Growth</h2>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">

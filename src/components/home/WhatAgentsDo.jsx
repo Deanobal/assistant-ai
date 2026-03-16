@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Phone, UserCheck, ClipboardList, CalendarCheck, PhoneForwarded, MailCheck } from 'lucide-react';
 
 const features = [
-  { icon: Phone, title: 'Answer Calls Automatically', desc: 'Never miss a call. Your AI agent picks up every time, day or night.' },
-  { icon: UserCheck, title: 'Qualify Leads', desc: 'Ask the right questions to filter high-value prospects instantly.' },
-  { icon: ClipboardList, title: 'Collect Customer Details', desc: 'Capture names, numbers, and enquiry details automatically.' },
-  { icon: CalendarCheck, title: 'Book Appointments', desc: 'Schedule meetings directly into your calendar without lifting a finger.' },
-  { icon: PhoneForwarded, title: 'Transfer to Staff', desc: 'Seamlessly hand off calls to your team when human touch is needed.' },
-  { icon: MailCheck, title: 'Automate Follow-Up', desc: 'Send SMS and email follow-ups to every lead, every time.' },
+  { icon: Phone, title: 'Answer Every Call', desc: 'Make sure every enquiry is answered professionally during business hours, after hours, and on weekends.' },
+  { icon: UserCheck, title: 'Qualify Better Leads', desc: 'Ask the right questions early so your team spends more time on the opportunities that matter most.' },
+  { icon: ClipboardList, title: 'Capture Customer Details Instantly', desc: 'Collect names, phone numbers, enquiry details, and context automatically while the conversation is happening.' },
+  { icon: CalendarCheck, title: 'Book Appointments Automatically', desc: 'Check availability and schedule appointments directly into your workflow without back-and-forth admin.' },
+  { icon: PhoneForwarded, title: 'Route Calls to the Right Person', desc: 'Send urgent or high-value calls to the right staff member when human input is needed.' },
+  { icon: MailCheck, title: 'Follow Up Automatically', desc: 'Trigger SMS and email follow-up so no lead is left waiting after the call ends.' },
 ];
 
 export default function WhatAgentsDo() {

@@ -8,31 +8,31 @@ const plans = [
     name: 'Starter',
     setup: '$1,500',
     monthly: '$497',
-    desc: 'Best for small businesses and basic AI receptionist use.',
-    features: ['AI receptionist', 'Basic lead capture', 'Call answering', 'Business hours coverage', 'Email support'],
+    desc: 'Done-for-you AI call handling for businesses that need a strong first step into automation.',
+    features: ['Setup fee included upfront', 'Monthly management included', 'Support included', 'Reporting included', 'Lead capture and call handling'],
     featured: false,
   },
   {
     name: 'Growth',
     setup: '$3,000',
     monthly: '$1,500',
-    desc: 'Best for growing businesses needing voice AI plus CRM automation.',
-    features: ['AI voice agent', 'CRM automation', 'Appointment booking', 'Lead qualification', 'SMS & email follow-up', '24/7 coverage', 'Priority support'],
+    desc: 'Best for businesses ready for AI voice, bookings, CRM sync, and automated follow-up.',
+    features: ['Setup fee included upfront', 'Monthly management included', 'Optimisation included', 'Support included', 'Reporting included', 'CRM, booking, and follow-up automation'],
     featured: true,
   },
   {
     name: 'Enterprise',
     setup: '$7,500+',
     monthly: '$3,000+',
-    desc: 'Best for larger businesses with multiple locations and complex workflows.',
-    features: ['Multiple AI agents', 'Advanced automation', 'Multi-location support', 'Custom workflows', 'Advanced integrations', 'Dedicated account manager', 'Priority support'],
+    desc: 'For multi-location or more complex workflows that need broader integrations and deeper automation.',
+    features: ['Advanced setup included', 'Monthly management included', 'Optimisation included', 'Support included', 'Reporting included', 'Custom integrations and workflow design'],
     featured: false,
   },
 ];
 
 export default function PricingPreview() {
   return (
-    <section className="relative py-24 md:py-32 bg-[#0c0c14]">
+    <section className="relative py-24 md:py-28 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
         <motion.div
@@ -42,9 +42,9 @@ export default function PricingPreview() {
           className="text-center mb-16"
         >
           <p className="text-cyan-400 text-sm font-medium mb-3">PRICING</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
-          <p className="mt-4 text-gray-400 max-w-xl mx-auto">
-            Less than the cost of a staff member, with 24/7 coverage.
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Done-for-You Pricing for AI Automation</h2>
+          <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
+            Setup, monthly management, support, optimisation, and reporting are built into the way AssistantAI.com.au is delivered.
           </p>
         </motion.div>
 
@@ -69,18 +69,18 @@ export default function PricingPreview() {
               )}
 
               <h3 className="text-white font-semibold text-lg">{plan.name}</h3>
-              <p className="text-gray-500 text-sm mt-1 mb-6">{plan.desc}</p>
+              <p className="text-gray-400 text-sm mt-2 mb-6 leading-relaxed">{plan.desc}</p>
 
-              <div className="mb-1">
+              <div className="mb-2">
                 <span className="text-3xl font-bold text-white">{plan.monthly}</span>
                 <span className="text-gray-500 text-sm">/month</span>
               </div>
-              <p className="text-gray-600 text-xs mb-6">{plan.setup} setup fee</p>
+              <p className="text-gray-500 text-sm mb-6">{plan.setup} setup fee</p>
 
               <ul className="space-y-3 mb-8">
                 {plan.features.map(f => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
-                    <Check className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-gray-400">
+                    <Check className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                     {f}
                   </li>
                 ))}
@@ -94,7 +94,7 @@ export default function PricingPreview() {
                     : 'border border-white/10 text-white hover:bg-white/5'
                 }`}
               >
-                Get Started
+                Book Strategy Call
               </Link>
             </motion.div>
           ))}

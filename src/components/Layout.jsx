@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
   { label: 'Home', path: '/Home' },
   { label: 'Services', path: '/Services' },
-  { label: 'Industries', path: '/Industries' },
-  { label: 'Case Studies', path: '/CaseStudies' },
+  { label: 'Integrations', path: '/Integrations' },
   { label: 'Pricing', path: '/Pricing' },
+  { label: 'Case Studies', path: '/CaseStudies' },
   { label: 'About', path: '/About' },
   { label: 'Contact', path: '/Contact' },
-  { label: 'Dashboard', path: '/Dashboard' },
 ];
-
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -27,7 +25,7 @@ function Navbar() {
             alt="Assistant AI Logo" 
             className="w-9 h-9"
           />
-          <span className="text-white font-semibold text-lg tracking-tight">Assistant AI</span>
+          <span className="text-white font-semibold text-lg tracking-tight">AssistantAI.com.au</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
@@ -51,7 +49,7 @@ function Navbar() {
             to="/Contact"
             className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/20 transition-all"
           >
-            Book Free Call
+            Book Demo
           </Link>
         </div>
 
@@ -89,7 +87,7 @@ function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="block w-full text-center px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full mt-3"
               >
-                Book Free Call
+                Book Demo
               </Link>
             </div>
           </motion.div>
@@ -111,12 +109,12 @@ function Footer() {
                 alt="Assistant AI Logo" 
                 className="w-9 h-9"
               />
-              <span className="text-white font-semibold text-lg">Assistant AI</span>
+              <span className="text-white font-semibold text-lg">AssistantAI.com.au</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-              AI automation for Australian businesses. We help companies capture more leads, answer every call, and grow with intelligent AI systems.
+              Premium AI automation for Australian businesses, built to answer more calls, capture more leads, and automate follow-up with a productised service approach.
             </p>
-            <p className="text-gray-600 text-xs mt-4">Chelsea Heights VIC, Australia</p>
+            <p className="text-gray-600 text-xs mt-4">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
           </div>
 
           <div>
@@ -134,7 +132,7 @@ function Footer() {
             <h4 className="text-white font-medium text-sm mb-4">Contact</h4>
             <div className="space-y-2.5 text-gray-500 text-sm">
               <p>sales@assistantai.com.au</p>
-              <p>+61 3 XXXX XXXX</p>
+              <Link to="/Dashboard" className="block hover:text-cyan-400 transition-colors">Client Portal Preview</Link>
               <div className="flex gap-3 pt-2">
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">LinkedIn</span>
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">Facebook</span>
@@ -145,7 +143,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/5 mt-12 pt-8 text-center">
-          <p className="text-gray-600 text-xs">© 2026 Assistant AI. All rights reserved.</p>
+          <p className="text-gray-600 text-xs">© 2026 AssistantAI.com.au. All rights reserved.</p>
         </div>
       </div>
     </footer>

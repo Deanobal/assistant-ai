@@ -2,7 +2,8 @@ import React from 'react';
 import HeroSection from '../components/home/HeroSection';
 import WhatAgentsDo from '../components/home/WhatAgentsDo';
 import BenefitsSection from '../components/home/BenefitsSection';
-import ServicesPreview from '../components/home/ServicesPreview';
+import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
+import UseCasesPreview from '../components/home/UseCasesPreview';
 import IndustriesPreview from '../components/home/IndustriesPreview';
 import HowItWorks from '../components/home/HowItWorks';
 import PricingPreview from '../components/home/PricingPreview';
@@ -19,11 +20,12 @@ export default function Home() {
       <HeroSection heroImage={HERO_IMAGE} />
       <WhatAgentsDo />
       <BenefitsSection />
-      <ServicesPreview />
-      <ROICalculator />
-      <IndustriesPreview />
+      <EverythingWorksTogether />
+      <UseCasesPreview />
       <HowItWorks />
+      <IndustriesPreview />
       <PricingPreview />
+      <ROICalculator />
       <TrustSection aboutImage={ABOUT_IMAGE} />
       <CTASection />
     </div>

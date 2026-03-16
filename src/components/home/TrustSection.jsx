@@ -1,9 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+const trustPoints = [
+  'Built for Australian businesses',
+  'Designed for lead capture and automation',
+  'Works across calls, bookings, and follow-up',
+  'Ongoing optimisation and support included',
+];
+
 export default function TrustSection({ aboutImage }) {
   return (
-    <section className="relative py-24 md:py-32">
+    <section className="relative py-24 md:py-28">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div
@@ -11,11 +18,11 @@ export default function TrustSection({ aboutImage }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <div className="relative rounded-2xl overflow-hidden">
+            <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-[#12121a]">
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/50 to-transparent z-10" />
               <img
                 src={aboutImage}
-                alt="AI automation technology"
+                alt="AssistantAI.com.au workflow preview"
                 className="w-full rounded-2xl"
               />
             </div>
@@ -26,31 +33,25 @@ export default function TrustSection({ aboutImage }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <p className="text-cyan-400 text-sm font-medium mb-3">ABOUT US</p>
+            <p className="text-cyan-400 text-sm font-medium mb-3">ABOUT ASSISTANTAI.COM.AU</p>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
-              Built to Help Businesses{' '}
-              <span className="text-gradient">Win More Customers</span>
+              Premium AI Systems Built for{' '}
+              <span className="text-gradient">Real Business Workflows</span>
             </h2>
             <div className="space-y-4 text-gray-400 leading-relaxed">
               <p>
-                Assistant AI was created with a simple mission: help businesses stop losing customers to missed calls, slow response times, and manual processes.
+                AssistantAI.com.au helps businesses answer more calls, capture better leads, and automate follow-up with practical AI systems that fit into daily operations.
               </p>
               <p>
-                We saw businesses across Australia — from tradies to law firms — losing thousands in revenue simply because they couldn't answer every call or follow up with every lead.
-              </p>
-              <p>
-                So we built practical AI systems that work around the clock — answering calls, qualifying leads, booking appointments, and automating follow-up. No hype, just results.
+                We focus on productised, business-ready automation that connects calls, bookings, CRM updates, and customer communication in one smoother workflow.
               </p>
             </div>
-            <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-[#12121a] border border-white/5">
-                <p className="text-2xl font-bold text-white">50+</p>
-                <p className="text-gray-500 text-xs mt-1">Businesses Automated</p>
-              </div>
-              <div className="p-4 rounded-xl bg-[#12121a] border border-white/5">
-                <p className="text-2xl font-bold text-white">$2M+</p>
-                <p className="text-gray-500 text-xs mt-1">Revenue Captured for Clients</p>
-              </div>
+            <div className="mt-8 grid sm:grid-cols-2 gap-4">
+              {trustPoints.map((point) => (
+                <div key={point} className="p-4 rounded-xl bg-[#12121a] border border-white/5 text-sm text-white/90">
+                  {point}
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>

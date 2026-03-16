@@ -55,7 +55,7 @@ export default function ROICalculator() {
             <span className="text-gradient">Revenue Opportunity</span>
           </h2>
           <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto">
-            See how much revenue you're losing to missed calls — and how much Assistant AI can help you recapture.
+            Estimate how much revenue missed calls could be costing your business each month.
           </p>
         </motion.div>
 

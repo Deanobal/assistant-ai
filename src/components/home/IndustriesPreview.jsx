@@ -1,34 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wrench, Home, Heart, Stethoscope, Scale, Car, UtensilsCrossed, Building2, ArrowRight } from 'lucide-react';
+import { Wrench, Home, Heart, Scale, ArrowRight } from 'lucide-react';
 
 const industries = [
   { icon: Wrench, name: 'Trades' },
   { icon: Home, name: 'Real Estate' },
-  { icon: Heart, name: 'Medical Clinics' },
-  { icon: Stethoscope, name: 'Dental Clinics' },
+  { icon: Heart, name: 'Clinics' },
   { icon: Scale, name: 'Law Firms' },
-  { icon: Car, name: 'Automotive' },
-  { icon: UtensilsCrossed, name: 'Hospitality' },
-  { icon: Building2, name: 'Service Businesses' },
 ];
 
 export default function IndustriesPreview() {
   return (
-    <section className="relative py-24 md:py-32 bg-[#0c0c14]">
+    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
           <p className="text-cyan-400 text-sm font-medium mb-3">INDUSTRIES</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built for Businesses Like Yours</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built for High-Intent Service Businesses</h2>
+          <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
+            AssistantAI.com.au can be tailored to the way your industry handles enquiries, bookings, and follow-up.
+          </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {industries.map((ind, i) => (
             <motion.div
               key={ind.name}
@@ -46,7 +45,7 @@ export default function IndustriesPreview() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-10 text-center">
           <Link
             to="/Industries"
             className="inline-flex items-center gap-2 text-cyan-400 text-sm font-medium hover:text-cyan-300 transition-colors"
