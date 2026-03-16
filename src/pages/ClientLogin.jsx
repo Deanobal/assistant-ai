@@ -27,16 +27,16 @@ export default function ClientLogin() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
+        className="w-full max-w-md">
+
         <Card className="bg-[#12121a] border-white/5 shadow-2xl shadow-cyan-500/5">
           <CardContent className="p-8">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mx-auto mb-6">
               <Lock className="w-7 h-7 text-cyan-400" />
             </div>
             <h1 className="text-2xl font-bold text-white text-center mb-2">Client Login</h1>
-            <p className="text-gray-400 text-center text-sm leading-relaxed mb-6">
-              Access your AssistantAI.com.au client portal to review call activity, billing, integrations, and performance.
+            <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI.com.au client portal to review call activity, billing, integrations, and performance.
+
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,15 +45,15 @@ export default function ClientLogin() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600"
-              />
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600" />
+
               <Input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600"
-              />
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600" />
+
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Private client-only access</span>
                 <Link to="/Contact" className="text-cyan-400 hover:text-cyan-300 transition-colors">
@@ -68,13 +68,13 @@ export default function ClientLogin() {
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <Link to="/Contact" className="text-gray-400 hover:text-white transition-colors">
-                Need help? Contact support
+              <Link to="/Contact" className="text-gray-400 text-lg hover:text-white transition-colors">Need help? Contact support
+
               </Link>
             </div>
           </CardContent>
         </Card>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 }
