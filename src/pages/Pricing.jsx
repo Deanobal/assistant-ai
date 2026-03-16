@@ -4,82 +4,82 @@ import { motion } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle } from 'lucide-react';
 
 const plans = [
-  {
-    name: 'Starter',
-    setup: '$1,500',
-    monthly: '$497',
-    desc: 'Best for businesses starting with AI call handling and lead capture.',
-    features: [
-      'Setup fee',
-      'Monthly management',
-      'Support included',
-      'Reporting included',
-      'AI call handling and lead capture',
-    ],
-    featured: false,
-  },
-  {
-    name: 'Growth',
-    setup: '$3,000',
-    monthly: '$1,500',
-    desc: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
-    features: [
-      'Setup fee',
-      'Monthly management',
-      'Optimisation included',
-      'Support included',
-      'Reporting included',
-      'CRM, calendar, and follow-up automation',
-    ],
-    featured: true,
-  },
-  {
-    name: 'Enterprise',
-    setup: '$7,500+',
-    monthly: '$3,000+',
-    desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
-    features: [
-      'Advanced setup',
-      'Monthly management',
-      'Optimisation included',
-      'Support included',
-      'Reporting included',
-      'Custom integrations and workflow design',
-    ],
-    featured: false,
-  },
-];
+{
+  name: 'Starter',
+  setup: '$1,500',
+  monthly: '$497',
+  desc: 'Best for businesses starting with AI call handling and lead capture.',
+  features: [
+  'Setup fee',
+  'Monthly management',
+  'Support included',
+  'Reporting included',
+  'AI call handling and lead capture'],
+
+  featured: false
+},
+{
+  name: 'Growth',
+  setup: '$3,000',
+  monthly: '$1,500',
+  desc: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
+  features: [
+  'Setup fee',
+  'Monthly management',
+  'Optimisation included',
+  'Support included',
+  'Reporting included',
+  'CRM, calendar, and follow-up automation'],
+
+  featured: true
+},
+{
+  name: 'Enterprise',
+  setup: '$7,500+',
+  monthly: '$3,000+',
+  desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
+  features: [
+  'Advanced setup',
+  'Monthly management',
+  'Optimisation included',
+  'Support included',
+  'Reporting included',
+  'Custom integrations and workflow design'],
+
+  featured: false
+}];
+
 
 const faqs = [
-  {
-    q: 'How long does setup take?',
-    a: 'Most setups can be scoped and launched quickly, depending on how complex your call flow and integrations are.',
-  },
-  {
-    q: 'Do I need to change my phone number?',
-    a: 'Usually no. AssistantAI.com.au is designed to work with your existing call workflow wherever possible.',
-  },
-  {
-    q: 'Can the AI transfer calls to staff?',
-    a: 'Yes. Call routing can be configured so urgent or specific enquiries go to the right person when needed.',
-  },
-  {
-    q: 'Can it book appointments?',
-    a: 'Yes. We can connect appointment workflows to your calendar and booking process.',
-  },
-  {
-    q: 'What tools does it integrate with?',
-    a: 'Common setups include CRM systems, Google or Outlook Calendar, and SMS follow-up tools.',
-  },
-  {
-    q: 'Can I upgrade later?',
-    a: 'Yes. Plans can scale as your workflow becomes more advanced.',
-  },
-  {
-    q: 'Do you offer support and optimisation?',
-    a: 'Yes. Support, reporting, and ongoing optimisation are built into the service model.',
-  },
-];
+{
+  q: 'How long does setup take?',
+  a: 'Most setups can be scoped and launched quickly, depending on how complex your call flow and integrations are.'
+},
+{
+  q: 'Do I need to change my phone number?',
+  a: 'Usually no. AssistantAI.com.au is designed to work with your existing call workflow wherever possible.'
+},
+{
+  q: 'Can the AI transfer calls to staff?',
+  a: 'Yes. Call routing can be configured so urgent or specific enquiries go to the right person when needed.'
+},
+{
+  q: 'Can it book appointments?',
+  a: 'Yes. We can connect appointment workflows to your calendar and booking process.'
+},
+{
+  q: 'What tools does it integrate with?',
+  a: 'Common setups include CRM systems, Google or Outlook Calendar, and SMS follow-up tools.'
+},
+{
+  q: 'Can I upgrade later?',
+  a: 'Yes. Plans can scale as your workflow becomes more advanced.'
+},
+{
+  q: 'Do you offer support and optimisation?',
+  a: 'Yes. Support, reporting, and ongoing optimisation are built into the service model.'
+}];
+
 
 export default function Pricing() {
   return (
@@ -90,9 +90,9 @@ export default function Pricing() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-20"
-          >
-            <p className="text-cyan-400 text-sm font-medium mb-3">PRICING</p>
+            className="text-center mb-20">
+
+            <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Done-for-You Pricing for{' '}
               <span className="text-gradient">Premium AI Automation</span>
@@ -103,75 +103,75 @@ export default function Pricing() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-24">
-            {plans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative p-8 rounded-2xl border card-hover ${
-                  plan.featured
-                    ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border'
-                    : 'border-white/5 bg-[#12121a]'
-                }`}
-              >
-                {plan.featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-medium text-white">
+            {plans.map((plan, i) =>
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className={`relative p-8 rounded-2xl border card-hover ${
+              plan.featured ?
+              'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border' :
+              'border-white/5 bg-[#12121a]'}`
+              }>
+
+                {plan.featured &&
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-medium text-white">
                     Most Popular
                   </div>
-                )}
+              }
 
                 <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
-                <p className="text-gray-400 text-sm mt-2 mb-6 leading-relaxed">{plan.desc}</p>
+                <p className="text-gray-400 mt-2 mb-6 text-base leading-relaxed">{plan.desc}</p>
 
                 <div className="mb-2">
                   <span className="text-4xl font-bold text-white">{plan.monthly}</span>
                   <span className="text-gray-500 text-sm">/month</span>
                 </div>
-                <p className="text-gray-500 text-sm mb-8">{plan.setup} setup fee</p>
+                <p className="text-gray-500 mb-8 text-base">{plan.setup} setup fee</p>
 
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
+                  {plan.features.map((f) =>
+                <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0" />
                       {f}
                     </li>
-                  ))}
+                )}
                 </ul>
 
                 <Link
-                  to="/Contact"
-                  className={`block w-full text-center py-3.5 rounded-full text-sm font-medium transition-all ${
-                    plan.featured
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'
-                      : 'border border-white/10 text-white hover:bg-white/5'
-                  }`}
-                >
+                to="/Contact"
+                className={`block w-full text-center py-3.5 rounded-full text-sm font-medium transition-all ${
+                plan.featured ?
+                'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
+                'border border-white/10 text-white hover:bg-white/5'}`
+                }>
+
                   Book Strategy Call
                 </Link>
               </motion.div>
-            ))}
+            )}
           </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+            viewport={{ once: true }}>
+
             <h2 className="text-2xl font-bold text-white text-center mb-10">Frequently Asked Questions</h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              {faqs.map((faq, i) => (
-                <div key={i} className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
+              {faqs.map((faq, i) =>
+              <div key={i} className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
                   <div className="flex items-start gap-3">
                     <HelpCircle className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-white font-medium text-sm mb-2">{faq.q}</h4>
-                      <p className="text-gray-500 text-sm leading-relaxed">{faq.a}</p>
+                      <h4 className="text-white mb-2 text-base font-medium">{faq.q}</h4>
+                      <p className="text-gray-500 text-base leading-relaxed">{faq.a}</p>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </motion.div>
 
@@ -179,19 +179,19 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-20 text-center"
-          >
+            className="mt-20 text-center">
+
             <p className="text-gray-400 mb-4">Not sure which plan is right for your workflow?</p>
             <Link
               to="/Contact"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-            >
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
+
               Talk to Us
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
         </div>
       </section>
-    </div>
-  );
+    </div>);
+
 }
