@@ -5,21 +5,21 @@ import { ArrowRight, CalendarDays, Database, MessageSquare, Workflow } from 'luc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const crmIntegrations = [
-  'GoHighLevel',
-  'HubSpot',
-  'Salesforce',
-  'Pipedrive',
-  'Zoho',
-];
+'GoHighLevel',
+'HubSpot',
+'Salesforce',
+'Pipedrive',
+'Zoho'];
+
 
 const calendarIntegrations = ['Google Calendar', 'Outlook Calendar'];
 const smsIntegrations = ['Twilio', 'GoHighLevel SMS', 'Other compatible SMS tools'];
 
 const syncSteps = [
-  'Connect your tools',
-  'AI captures the conversation',
-  'Data, bookings, and follow-up sync automatically',
-];
+'Connect your tools',
+'AI captures the conversation',
+'Data, bookings, and follow-up sync automatically'];
+
 
 export default function Integrations() {
   return (
@@ -30,9 +30,9 @@ export default function Integrations() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
-          >
-            <p className="text-cyan-400 text-sm font-medium mb-3">INTEGRATIONS</p>
+            className="text-center mb-16">
+
+            <p className="text-cyan-400 mb-3 text-lg font-medium">INTEGRATIONS</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
               Connect AssistantAI.com.au to the Tools Your Business Already Uses
             </h1>
@@ -41,8 +41,8 @@ export default function Integrations() {
             </p>
             <Link
               to="/Contact"
-              className="inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-            >
+              className="inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
+
               Book Integration Demo
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -63,11 +63,11 @@ export default function Integrations() {
               </CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                  {crmIntegrations.map((name) => (
-                    <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-center text-white text-sm font-medium">
+                  {crmIntegrations.map((name) =>
+                  <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-center text-white text-sm font-medium">
                       {name}
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -87,11 +87,11 @@ export default function Integrations() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {calendarIntegrations.map((name) => (
-                      <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-center text-white text-sm font-medium">
+                    {calendarIntegrations.map((name) =>
+                    <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-center text-white text-sm font-medium">
                         {name}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -110,11 +110,11 @@ export default function Integrations() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4">
-                    {smsIntegrations.map((name) => (
-                      <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-white text-sm font-medium">
+                    {smsIntegrations.map((name) =>
+                    <div key={name} className="rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-5 text-white text-sm font-medium">
                         {name}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -134,12 +134,12 @@ export default function Integrations() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-4">
-                  {syncSteps.map((step, index) => (
-                    <div key={step} className="rounded-2xl border border-white/10 bg-[#0a0a0f]/50 p-6">
+                  {syncSteps.map((step, index) =>
+                  <div key={step} className="rounded-2xl border border-white/10 bg-[#0a0a0f]/50 p-6">
                       <p className="text-cyan-300 text-xs font-medium mb-3">STEP {index + 1}</p>
                       <p className="text-white font-medium leading-relaxed">{step}</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -149,22 +149,22 @@ export default function Integrations() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mt-16 p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
-          >
+            className="text-center mt-16 p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
+
             <h3 className="text-2xl font-bold text-white mb-3">Want a custom integration setup?</h3>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
               Book a strategy call and we’ll map out the right CRM, calendar, and communication workflow for your business.
             </p>
             <Link
               to="/Contact"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-            >
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
+
               Book a Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
         </div>
       </section>
-    </div>
-  );
+    </div>);
+
 }
