@@ -9,7 +9,7 @@ export default function ROICalculator() {
   const [inputs, setInputs] = useState({
     monthlyCallVolume: '',
     avgLeadValue: '',
-    missedCallRate: '',
+    missedCallRate: ''
   });
 
   const calculate = () => {
@@ -29,7 +29,7 @@ export default function ROICalculator() {
       capturedCalls: Math.round(capturedCalls),
       newLeads: Math.round(newLeads),
       monthlyRevenue: monthlyRevenue.toFixed(0),
-      yearlyRevenue: yearlyRevenue.toFixed(0),
+      yearlyRevenue: yearlyRevenue.toFixed(0)
     };
   };
 
@@ -44,11 +44,11 @@ export default function ROICalculator() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+          className="text-center mb-12">
+
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-4">
             <Calculator className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-400 text-xs font-medium">ROI Calculator</span>
+            <span className="text-cyan-400 text-lg font-medium">ROI Calculator</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Calculate Your{' '}
@@ -63,8 +63,8 @@ export default function ROICalculator() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
+            viewport={{ once: true }}>
+
             <Card className="bg-[#12121a] border-white/5">
               <CardHeader>
                 <CardTitle className="text-white text-lg">Your Business Metrics</CardTitle>
@@ -77,8 +77,8 @@ export default function ROICalculator() {
                     placeholder="e.g. 500"
                     value={inputs.monthlyCallVolume}
                     onChange={(e) => setInputs({ ...inputs, monthlyCallVolume: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-                  />
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20" />
+
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-400 text-sm">Average Lead Value ($)</Label>
@@ -87,8 +87,8 @@ export default function ROICalculator() {
                     placeholder="e.g. 500"
                     value={inputs.avgLeadValue}
                     onChange={(e) => setInputs({ ...inputs, avgLeadValue: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-                  />
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20" />
+
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-400 text-sm">Current Missed Call Rate (%)</Label>
@@ -97,8 +97,8 @@ export default function ROICalculator() {
                     placeholder="e.g. 20"
                     value={inputs.missedCallRate}
                     onChange={(e) => setInputs({ ...inputs, missedCallRate: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-                  />
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20" />
+
                 </div>
               </CardContent>
             </Card>
@@ -107,8 +107,8 @@ export default function ROICalculator() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
+            viewport={{ once: true }}>
+
             <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
               <CardHeader>
                 <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -117,8 +117,8 @@ export default function ROICalculator() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {hasInputs ? (
-                  <>
+                {hasInputs ?
+                <>
                     <div className="p-4 rounded-xl bg-[#0a0a0f]/50 border border-white/5">
                       <p className="text-gray-400 text-sm mb-1">Currently Missing</p>
                       <p className="text-2xl font-bold text-white">{results.missedCalls} calls/month</p>
@@ -139,18 +139,18 @@ export default function ROICalculator() {
                     <p className="text-gray-500 text-xs text-center mt-4">
                       *Based on 95% call capture rate and 30% conversion rate
                     </p>
-                  </>
-                ) : (
-                  <div className="py-12 text-center">
+                  </> :
+
+                <div className="py-12 text-center">
                     <Calculator className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-500 text-sm">Enter your metrics to see your revenue opportunity</p>
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
