@@ -26,7 +26,7 @@ function Navbar() {
             alt="Assistant AI Logo" 
             className="w-9 h-9"
           />
-          <span className="text-white font-semibold text-lg tracking-tight">AssistantAI.com.au</span>
+          <span className="text-white font-semibold text-lg tracking-tight">AssistantAI</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
