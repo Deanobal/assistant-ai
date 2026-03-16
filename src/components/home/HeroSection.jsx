@@ -10,8 +10,8 @@ export default function HeroSection({ heroImage }) {
         <img
           src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
           alt="AI Background"
-          className="w-full h-full object-cover opacity-30"
-        />
+          className="w-full h-full object-cover opacity-30" />
+
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.12),transparent_35%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0a0a0f]/95 to-[#0a0a0f]" />
       </div>
@@ -22,35 +22,35 @@ export default function HeroSection({ heroImage }) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-2xl"
-          >
+            className="max-w-2xl">
+
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-6">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              <span className="text-cyan-400 text-xs font-medium">Premium AI automation for Australian businesses</span>
+              <span className="text-cyan-400 text-lg font-medium">Premium AI automation for Australian businesses</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.02] tracking-tight mb-6">
               Never Miss a Call. Never Lose a Lead.
             </h1>
 
-            <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl">
-              AssistantAI.com.au helps Australian businesses answer every call, capture more leads, and automate follow-up without hiring more staff.
+            <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl">Assistant AI helps Australian businesses answer every call, capture more leads, and automate follow-up without hiring more staff.
+
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/Contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-              >
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+
                 Book Free Strategy Call
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                to="/Platform"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white font-semibold rounded-full bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/30 transition-all"
-              >
-                <Play className="w-5 h-5 text-cyan-300" />
-                Watch AI Demo
+                to="/Platform" className="bg-white/[0.02] text-white mx-3 px-8 py-4 font-semibold rounded-full inline-flex items-center justify-center gap-2 border border-white/20 hover:bg-white/[0.05] hover:border-white/30 transition-all">Watch AI Demo
+
+
+
+
               </Link>
             </div>
           </motion.div>
@@ -59,8 +59,8 @@ export default function HeroSection({ heroImage }) {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="hidden lg:block"
-          >
+            className="hidden lg:block">
+
             <div className="relative max-w-[540px] ml-auto">
               <div className="absolute -inset-6 bg-cyan-500/6 blur-3xl rounded-full" />
               <div className="relative rounded-[32px] border border-white/8 bg-[#11111a]/75 backdrop-blur-xl p-3.5 shadow-2xl shadow-cyan-500/5">
@@ -68,18 +68,18 @@ export default function HeroSection({ heroImage }) {
                   <img
                     src={heroImage}
                     alt="AssistantAI.com.au platform preview"
-                    className="w-full h-[560px] object-cover"
-                  />
+                    className="w-full h-[560px] object-cover" />
+
                 </div>
-                <div className="absolute bottom-6 left-6 px-3.5 py-2.5 rounded-[18px] border border-white/8 bg-[#0a0a0f]/82 backdrop-blur-md shadow-lg shadow-black/10">
-                  <p className="text-[11px] text-gray-400 mb-1">Workflow</p>
-                  <p className="text-[13px] font-medium text-white">Call captured → CRM updated → Follow-up sent</p>
+                <div className="bg-[#0a0a0f]/82 py-1 rounded-[18px] absolute bottom-6 left-6 border border-white/8 backdrop-blur-md shadow-lg shadow-black/10">
+                  <p className="text-gray-400 mb-1 text-base">Workflow</p>
+                  <p className="text-white text-base font-medium">Call captured → CRM updated → Follow-up sent</p>
                 </div>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
