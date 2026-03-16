@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ChatWidget from './chat/ChatWidget';
 
 const navLinks = [
 { label: 'Home', path: '/Home' },
@@ -160,6 +161,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <ChatWidget />
     </div>);
 
 }
