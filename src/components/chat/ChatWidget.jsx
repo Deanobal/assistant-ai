@@ -8,6 +8,11 @@ import ChatBubble from './ChatBubble';
 
 const questions = [
   {
+    key: 'intent',
+    prompt: 'What can I help you with today?',
+    options: ['Support', 'AI Lead Qualification', 'Bookings & Appointments', 'General Enquiry'],
+  },
+  {
     key: 'businessType',
     prompt: 'What type of business are you running?',
     options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
@@ -39,7 +44,7 @@ export default function ChatWidget() {
     const items = [
       {
         role: 'assistant',
-        content: 'Hi — I’m the AssistantAI concierge. I can help qualify what kind of AI setup may suit your business in under a minute.',
+        content: 'Hi — welcome to AssistantAI live chat. I can help with support, lead qualification, bookings, or general questions in under a minute.',
       },
     ];
 
@@ -57,7 +62,9 @@ export default function ChatWidget() {
     } else if (isComplete) {
       items.push({
         role: 'assistant',
-        content: `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
+        content: answers.intent === 'Support'
+          ? `Thanks — it sounds like you need support. We can help with your ${answers.businessType?.toLowerCase() || 'business'} setup and point you to the right next step.`
+          : `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
       });
     }
 
@@ -113,10 +120,10 @@ export default function ChatWidget() {
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-1 text-[11px] text-cyan-300">
                     <Sparkles className="h-3 w-3" />
-                    AI Lead Qualification
+                    Live Chat
                   </div>
                   <h3 className="mt-3 text-sm font-semibold text-white">Chat with AssistantAI</h3>
-                  <p className="mt-1 text-xs text-gray-400">Friendly qualification for Australian service businesses.</p>
+                  <p className="mt-1 text-xs text-gray-400">Support and qualification for current and future clients.</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -196,7 +203,7 @@ export default function ChatWidget() {
         </div>
         <div className="hidden sm:block text-left">
           <p className="text-sm font-medium">Chat with AssistantAI</p>
-          <p className="text-xs text-gray-400">AI lead qualification</p>
+          <p className="text-xs text-gray-400">Support, bookings and enquiries</p>
         </div>
       </button>
     </div>
