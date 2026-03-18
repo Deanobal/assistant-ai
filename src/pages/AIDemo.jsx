@@ -7,11 +7,11 @@ import DemoConversation, { transcript } from '../components/demo/DemoConversatio
 import DemoAutomationPanel from '../components/demo/DemoAutomationPanel';
 
 const steps = [
-  'Incoming call answered instantly',
-  'Lead qualification questions handled by AI',
-  'Customer details and urgency captured',
-  'CRM update and follow-up triggered automatically',
-];
+'Incoming call answered instantly',
+'Lead qualification questions handled by AI',
+'Customer details and urgency captured',
+'CRM update and follow-up triggered automatically'];
+
 
 export default function AIDemo() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -65,14 +65,14 @@ export default function AIDemo() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-14"
-          >
+            className="text-center mb-14">
+            
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-cyan-300 text-xs font-medium mb-5">
               <Sparkles className="h-3.5 w-3.5" />
               AI Demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">
-              Watch How AssistantAI.com.au Handles a Lead from Call to Follow-Up
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Watch How Assistant AI Handles a Lead from Call to Follow-Up
+
             </h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">
               This demo shows how an AI receptionist can answer the call, qualify the lead, update the workflow, and trigger follow-up automatically.
@@ -95,24 +95,24 @@ export default function AIDemo() {
                 <Button
                   variant="outline"
                   onClick={() => setIsPlaying((prev) => !prev)}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5"
-                >
+                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
+                  
                   {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
                   {isPlaying ? 'Pause Demo' : 'Play Demo'}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsVoiceEnabled((prev) => !prev)}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5"
-                >
+                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
+                  
                   {isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
                   {isVoiceEnabled ? 'Voice On' : 'Voice Off'}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleRestart}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5"
-                >
+                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
+                  
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Restart
                 </Button>
@@ -127,6 +127,6 @@ export default function AIDemo() {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>);
+
 }
