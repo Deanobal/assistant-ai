@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DemoConversation, { transcript } from '../components/demo/DemoConversation';
 import DemoAutomationPanel from '../components/demo/DemoAutomationPanel';
@@ -17,37 +17,83 @@ export default function AIDemo() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
-    if (!isPlaying) return;
-    if (currentStep >= steps.length - 1) return;
+    if (typeof window === 'undefined') return;
+    if (!('speechSynthesis' in window)) return;
 
-    const timer = setTimeout(() => {
-      setCurrentStep((prev) => prev + 1);
-    }, 1800);
+    const loadVoices = () => setVoicesLoaded(true);
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    return () => clearTimeout(timer);
-  }, [currentStep, isPlaying]);
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  const selectedVoices = useMemo(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return { caller: null, assistant: null };
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    const findVoice = (keywords) =>
+      voices.find((voice) => keywords.some((keyword) => voice.name.toLowerCase().includes(keyword))) || null;
+
+    return {
+      assistant: findVoice(['samantha', 'aria', 'zira', 'google uk english female', 'female']) || voices[0] || null,
+      caller: findVoice(['daniel', 'alex', 'google uk english male', 'male']) || voices[1] || voices[0] || null,
+    };
+  }, [voicesLoaded]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
+    setIsSpeaking(false);
 
-    if (!isPlaying || !isVoiceEnabled) return;
+    if (!isPlaying) return;
 
     const message = transcript[currentStep];
     if (!message) return;
 
+    const moveToNextStep = () => {
+      if (currentStep < steps.length - 1) {
+        setTimeout(() => {
+          setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+        }, 700);
+      }
+    };
+
+    if (!isVoiceEnabled) {
+      moveToNextStep();
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(message.text);
-    utterance.rate = message.role === 'assistant' ? 1 : 0.96;
-    utterance.pitch = message.role === 'assistant' ? 1.05 : 0.92;
+    utterance.voice = message.role === 'assistant' ? selectedVoices.assistant : selectedVoices.caller;
+    utterance.rate = message.role === 'assistant' ? 0.98 : 0.94;
+    utterance.pitch = message.role === 'assistant' ? 1.02 : 0.92;
     utterance.volume = 1;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      moveToNextStep();
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      moveToNextStep();
+    };
     window.speechSynthesis.speak(utterance);
 
-    return () => window.speechSynthesis.cancel();
-  }, [currentStep, isPlaying, isVoiceEnabled]);
+    return () => {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    };
+  }, [currentStep, isPlaying, isVoiceEnabled, selectedVoices]);
 
   const handleRestart = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -55,6 +101,7 @@ export default function AIDemo() {
     }
     setCurrentStep(0);
     setIsPlaying(true);
+    setIsSpeaking(false);
   };
 
   return (
@@ -87,9 +134,15 @@ export default function AIDemo() {
           <div className="mt-8 rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Current Step</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Current Step</p>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-gray-300">
+                    <PhoneCall className="h-3.5 w-3.5 text-cyan-400" />
+                    {isSpeaking ? 'Speaking live' : 'Waiting for next turn'}
+                  </div>
+                </div>
                 <p className="mt-2 text-white font-medium text-lg">{steps[currentStep]}</p>
-                <p className="mt-2 text-sm text-gray-500">The demo now uses your browser voice to read the conversation aloud.</p>
+                <p className="mt-2 text-sm text-gray-500">The demo now uses more natural browser-selected voices and advances after each spoken turn.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button
