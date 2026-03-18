@@ -37,7 +37,7 @@ export default function ClientPortal() {
               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
               <Badge className="bg-white/5 text-gray-300 border-white/10">Private access</Badge>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI.com.au Client Portal</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI Client Portal</h1>
             <p className="text-gray-400">Review call activity, billing, integrations, and support from one private client workspace.</p>
           </div>
           <Button variant="outline" onClick={handleLogout} className="border-white/10 text-white hover:bg-white/5 w-fit">

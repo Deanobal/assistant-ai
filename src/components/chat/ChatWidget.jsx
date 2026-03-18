@@ -14,7 +14,7 @@ const questions = [
   },
   {
     key: 'goal',
-    prompt: 'What would you most like AssistantAI.com.au to help with?',
+    prompt: 'What would you most like AssistantAI to help with?',
     options: ['Answer missed calls', 'Book appointments', 'Automate follow-up'],
   },
   {
@@ -57,7 +57,7 @@ export default function ChatWidget() {
     } else if (isComplete) {
       items.push({
         role: 'assistant',
-        content: `Based on what you've shared, AssistantAI.com.au could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
+        content: `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
       });
     }
 

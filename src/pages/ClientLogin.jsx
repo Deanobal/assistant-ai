@@ -35,7 +35,7 @@ export default function ClientLogin() {
               <Lock className="w-7 h-7 text-cyan-400" />
             </div>
             <h1 className="text-2xl font-bold text-white text-center mb-2">Client Login</h1>
-            <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI.com.au client portal to review call activity, billing, integrations, and performance.
+            <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI client portal to review call activity, billing, integrations, and performance.
 
             </p>
 
