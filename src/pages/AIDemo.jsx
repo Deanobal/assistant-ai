@@ -12,6 +12,8 @@ const steps = [
 'Customer details and urgency captured',
 'CRM update and follow-up triggered automatically'];
 
+const MESSAGE_DELAY = 1600;
+
 
 export default function AIDemo() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,12 +41,27 @@ export default function AIDemo() {
     }
 
     const voices = window.speechSynthesis.getVoices();
-    const findVoice = (keywords) =>
-      voices.find((voice) => keywords.some((keyword) => voice.name.toLowerCase().includes(keyword))) || null;
+    const findVoice = (keywords, excludeName = '') =>
+      voices.find((voice) =>
+        voice.name !== excludeName && keywords.some((keyword) => voice.name.toLowerCase().includes(keyword))
+      ) || null;
+
+    const assistantVoice =
+      findVoice(['samantha', 'aria', 'zira', 'serena', 'google uk english female', 'female']) ||
+      voices.find((voice) => voice.name.toLowerCase().includes('female')) ||
+      voices[0] ||
+      null;
+
+    const callerVoice =
+      findVoice(['daniel', 'alex', 'fred', 'google uk english male', 'male'], assistantVoice?.name) ||
+      voices.find((voice) => voice.name !== assistantVoice?.name && voice.name.toLowerCase().includes('male')) ||
+      voices.find((voice) => voice.name !== assistantVoice?.name) ||
+      assistantVoice ||
+      null;
 
     return {
-      assistant: findVoice(['samantha', 'aria', 'zira', 'google uk english female', 'female']) || voices[0] || null,
-      caller: findVoice(['daniel', 'alex', 'google uk english male', 'male']) || voices[1] || voices[0] || null,
+      assistant: assistantVoice,
+      caller: callerVoice,
     };
   }, [voicesLoaded]);
 
@@ -55,7 +72,7 @@ export default function AIDemo() {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
 
-    if (!isPlaying) return;
+    if (!isPlaying || !voicesLoaded) return;
 
     const message = transcript[currentStep];
     if (!message) return;
@@ -64,7 +81,7 @@ export default function AIDemo() {
       if (currentStep < steps.length - 1) {
         setTimeout(() => {
           setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-        }, 700);
+        }, MESSAGE_DELAY);
       }
     };
 
@@ -75,8 +92,8 @@ export default function AIDemo() {
 
     const utterance = new SpeechSynthesisUtterance(message.text);
     utterance.voice = message.role === 'assistant' ? selectedVoices.assistant : selectedVoices.caller;
-    utterance.rate = message.role === 'assistant' ? 0.98 : 0.94;
-    utterance.pitch = message.role === 'assistant' ? 1.02 : 0.92;
+    utterance.rate = message.role === 'assistant' ? 0.94 : 0.88;
+    utterance.pitch = message.role === 'assistant' ? 1.04 : 0.82;
     utterance.volume = 1;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
@@ -142,7 +159,7 @@ export default function AIDemo() {
                   </div>
                 </div>
                 <p className="mt-2 text-white font-medium text-lg">{steps[currentStep]}</p>
-                <p className="mt-2 text-sm text-gray-500">The demo now uses more natural browser-selected voices and advances after each spoken turn.</p>
+                <p className="mt-2 text-sm text-gray-500">The demo now uses separate caller and assistant voices and waits longer between each spoken message.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button
