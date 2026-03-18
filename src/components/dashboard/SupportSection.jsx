@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, CalendarDays, MessageSquareMore } from 'lucide-react';
+import { Mail, CalendarDays, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
