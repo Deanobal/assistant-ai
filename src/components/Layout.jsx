@@ -12,7 +12,8 @@ const navLinks = [
 { label: 'Case Studies', path: '/CaseStudies' },
 { label: 'About', path: '/About' },
 { label: 'Contact', path: '/Contact' },
-{ label: 'Client Login', path: '/ClientLogin' }];
+{ label: 'Client Login', path: '/ClientLogin' },
+{ label: 'Admin Login', path: '/Dashboard' }];
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);

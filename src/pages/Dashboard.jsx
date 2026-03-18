@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Calendar, Users, TrendingUp, ArrowUp, Lock, Headphones, CreditCard, Link2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -29,35 +29,46 @@ const recentActivity = [
 const supportItems = ['Contact Support', 'Account help', 'Onboarding assistance', 'Optimisation help'];
 
 export default function Dashboard() {
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const authenticated = localStorage.getItem('dashboard_authenticated');
     const onboarded = localStorage.getItem('dashboard_onboarded');
-    if (authenticated === 'true') {
-      setIsAuthenticated(true);
-      setShowOnboarding(onboarded !== 'true');
-    }
-  }, []);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (password === 'client2026') {
+    const loadAccess = async () => {
+      const authenticated = await base44.auth.isAuthenticated();
+
+      if (!authenticated) {
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      const user = await base44.auth.me();
       setIsAuthenticated(true);
-      localStorage.setItem('dashboard_authenticated', 'true');
-      setError('');
-    } else {
-      setError('Incorrect password');
-    }
-  };
+      setIsAdmin(user?.role === 'admin');
+      setShowOnboarding(onboarded !== 'true');
+      setIsCheckingAuth(false);
+    };
+
+    loadAccess();
+  }, []);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
     localStorage.setItem('dashboard_onboarded', 'true');
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
+        <div className="w-8 h-8 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -68,31 +79,49 @@ export default function Dashboard() {
           className="w-full max-w-md"
         >
           <Card className="bg-[#12121a] border-white/5">
-            <CardContent className="p-8">
+            <CardContent className="p-8 text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mx-auto mb-6">
                 <Lock className="w-8 h-8 text-cyan-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white text-center mb-2">Client Portal</h2>
-              <p className="text-gray-400 text-center mb-6">Enter your password to view the AssistantAI.com.au portal preview.</p>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-600"
-                />
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25"
-                >
-                  Access Client Portal
-                </Button>
-              </form>
-              <p className="text-gray-600 text-xs text-center mt-4">
-                Demo password: client2026
-              </p>
+              <h2 className="text-2xl font-bold text-white text-center mb-2">Admin Team Login</h2>
+              <p className="text-gray-400 text-center mb-6">Sign in with your admin account to access the AssistantAI team dashboard.</p>
+              <Button
+                onClick={() => base44.auth.redirectToLogin('/Dashboard')}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                Continue to Login
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <Card className="bg-[#12121a] border-white/5">
+            <CardContent className="p-8 text-center space-y-5">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mx-auto">
+                <Lock className="w-8 h-8 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Admin Access Only</h2>
+                <p className="text-gray-400">This area is reserved for AssistantAI admin team members.</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => base44.auth.logout('/Home')}
+                className="w-full border-white/10 text-white hover:bg-white/5"
+              >
+                Return to Website
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -109,8 +138,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-10 text-center"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to AssistantAI.com.au</h1>
-            <p className="text-gray-400">Let’s get your AI system configured in 3 quick steps</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to AssistantAI</h1>
+            <p className="text-gray-400">Let’s get your team dashboard configured in 3 quick steps</p>
           </motion.div>
           <OnboardingWizard onComplete={handleOnboardingComplete} />
         </div>
@@ -127,11 +156,11 @@ export default function Dashboard() {
           className="mb-10"
         >
           <div className="flex flex-wrap items-center gap-3 mb-3">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Sample Portal Preview</Badge>
+            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Admin Dashboard</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">Internal Team Access</Badge>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Platform Overview</h1>
-          <p className="text-gray-400">Monitor calls, leads, bookings, integrations, and billing from one premium portal experience.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Team Overview</h1>
+          <p className="text-gray-400">Monitor calls, leads, bookings, integrations, and billing from one internal workspace.</p>
         </motion.div>
 
         <Tabs defaultValue="overview" className="space-y-8">
