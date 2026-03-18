@@ -118,11 +118,11 @@ export default function AIDemo() {
               <Sparkles className="h-3.5 w-3.5" />
               AI Demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Watch How Assistant AI Handles a Lead from Call to Follow-Up
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Watch How AssistantAI.com.au Handles a Lead from Call to Follow-Up
 
             </h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">
-              This demo shows how an AI receptionist can answer the call, qualify the lead, update the workflow, and trigger follow-up automatically.
+              This demo now uses more natural browser-selected voices and turn-by-turn playback so it feels closer to a real AI phone interaction.
             </p>
           </motion.div>
 
@@ -147,7 +147,12 @@ export default function AIDemo() {
               <div className="flex flex-wrap gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setIsPlaying((prev) => !prev)}
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPlaying) {
+                      window.speechSynthesis.cancel();
+                    }
+                    setIsPlaying((prev) => !prev);
+                  }}
                   className="border-white/10 bg-transparent text-white hover:bg-white/5">
                   
                   {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
