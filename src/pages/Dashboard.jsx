@@ -52,7 +52,7 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold text-white mb-2">Admin Access Only</h1>
               <p className="text-gray-400">This login is reserved for the AssistantAI internal team.</p>
             </div>
-            <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="w-full border-white/10 text-white hover:bg-white/5">
+            <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
               Return to Website
             </Button>
           </CardContent>

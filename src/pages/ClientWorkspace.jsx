@@ -59,7 +59,7 @@ export default function ClientWorkspace() {
           <h2 className="text-3xl font-bold text-white mb-2">{derivedClient.business_name}</h2>
           <p className="text-gray-400 max-w-3xl">Internal workspace for services, billing, activity, analytics, and account controls.</p>
         </div>
-        <Button variant="outline" className="border-white/10 text-white hover:bg-white/5">View Client Portal Access</Button>
+        <Button variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/5">View Client Portal Access</Button>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">

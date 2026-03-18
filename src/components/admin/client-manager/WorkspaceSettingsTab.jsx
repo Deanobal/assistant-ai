@@ -55,7 +55,7 @@ export default function WorkspaceSettingsTab({ client, onUpdate }) {
             <h3 className="text-white font-semibold">Archive Client</h3>
             <p className="text-sm text-gray-500 mt-1">Use this when the account should be removed from the active management list.</p>
           </div>
-          <Button variant="outline" onClick={() => onUpdate({ is_archived: true, status: 'Cancelled' })} className="border-white/10 text-white hover:bg-white/5">
+          <Button variant="outline" onClick={() => onUpdate({ is_archived: true, status: 'Cancelled' })} className="border-white/10 bg-transparent text-white hover:bg-white/5">
             Archive Client
           </Button>
         </CardContent>

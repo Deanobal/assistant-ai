@@ -30,7 +30,7 @@ export default function WorkspaceIntegrationsTab({ client, onIntegrationAction }
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => onIntegrationAction(integration.name, action)} className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white">{action}</Button>
-                <Button variant="outline" onClick={() => onIntegrationAction(integration.name, 'Disconnect')} className="border-white/10 text-white hover:bg-white/5">Disconnect</Button>
+                <Button variant="outline" onClick={() => onIntegrationAction(integration.name, 'Disconnect')} className="border-white/10 bg-transparent text-white hover:bg-white/5">Disconnect</Button>
               </div>
             </CardContent>
           </Card>

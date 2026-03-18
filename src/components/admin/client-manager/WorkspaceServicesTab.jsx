@@ -26,11 +26,11 @@ export default function WorkspaceServicesTab({ client, onUpdate }) {
             <h3 className="text-white font-semibold text-lg">Service Management</h3>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => onUpdate({ plan_name: 'Scale', monthly_fee: client.monthly_fee + 600 })} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Upgrade Plan</Button>
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ plan_name: 'Starter', monthly_fee: Math.max(990, client.monthly_fee - 600) })} className="border-white/10 text-white hover:bg-white/5">Downgrade Plan</Button>
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ extra_call_packs: client.extra_call_packs + 1 })} className="border-white/10 text-white hover:bg-white/5">Add Call Pack</Button>
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ included_calls: client.included_calls + 250 })} className="border-white/10 text-white hover:bg-white/5">Increase Monthly Usage</Button>
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ status: 'Paused' })} className="border-white/10 text-white hover:bg-white/5">Pause Service</Button>
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ status: 'Cancelled' })} className="border-white/10 text-white hover:bg-white/5">Cancel Service</Button>
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ plan_name: 'Starter', monthly_fee: Math.max(990, client.monthly_fee - 600) })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Downgrade Plan</Button>
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ extra_call_packs: client.extra_call_packs + 1 })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Add Call Pack</Button>
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ included_calls: client.included_calls + 250 })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Increase Monthly Usage</Button>
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ status: 'Paused' })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Pause Service</Button>
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ status: 'Cancelled' })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Cancel Service</Button>
             </div>
           </div>
 
@@ -46,9 +46,9 @@ export default function WorkspaceServicesTab({ client, onUpdate }) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {['Active', 'Inactive', 'Trial', 'Add-on'].map((status) => (
-                    <Button key={status} size="sm" variant="outline" onClick={() => onUpdate({ services: client.services.map((item) => item.name === service.name ? { ...item, status } : item) })} className="border-white/10 text-white hover:bg-white/5">Set {status}</Button>
+                    <Button key={status} size="sm" variant="outline" onClick={() => onUpdate({ services: client.services.map((item) => item.name === service.name ? { ...item, status } : item) })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Set {status}</Button>
                   ))}
-                  <Button size="sm" variant="outline" onClick={() => onUpdate({ services: client.services.filter((item) => item.name !== service.name) })} className="border-white/10 text-white hover:bg-white/5">Remove Service</Button>
+                  <Button size="sm" variant="outline" onClick={() => onUpdate({ services: client.services.filter((item) => item.name !== service.name) })} className="border-white/10 bg-transparent text-white hover:bg-white/5">Remove Service</Button>
                 </div>
               </div>
             ))}
