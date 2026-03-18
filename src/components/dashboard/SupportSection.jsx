@@ -17,7 +17,7 @@ const supportItems = [
     action: 'Book quarterly review',
   },
   {
-    icon: MessageSquareMore,
+    icon: MessageSquare,
     title: 'Client Success Notes',
     detail: 'Share business changes, seasonal campaigns, or service updates so your AI receptionist stays aligned.',
     action: 'Send update',
