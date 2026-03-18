@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageCircle, X, Sparkles, ArrowRight } from 'lucide-react';
@@ -10,7 +10,7 @@ const questions = [
   {
     key: 'businessType',
     prompt: 'What type of business are you running?',
-    options: ['Trades', 'Clinic', 'Real Estate'],
+    options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
   },
   {
     key: 'goal',
@@ -29,6 +29,8 @@ export default function ChatWidget() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [name, setName] = useState('');
+  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const currentQuestion = questions[step];
   const isComplete = step >= questions.length;
@@ -50,7 +52,9 @@ export default function ChatWidget() {
       }
     });
 
-    if (isComplete) {
+    if (isAssistantTyping) {
+      items.push({ role: 'assistant', content: '', isTyping: true });
+    } else if (isComplete) {
       items.push({
         role: 'assistant',
         content: `Based on what you've shared, AssistantAI.com.au could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
@@ -58,18 +62,39 @@ export default function ChatWidget() {
     }
 
     return items;
-  }, [answers, isComplete, step]);
+  }, [answers, isAssistantTyping, isComplete, step]);
+
+  const lastAssistantIndex = [...messages].map((message) => message.role).lastIndexOf('assistant');
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOptionClick = (value) => {
+    if (isAssistantTyping) return;
+
     const key = currentQuestion.key;
     setAnswers((prev) => ({ ...prev, [key]: value }));
-    setStep((prev) => prev + 1);
+    setIsAssistantTyping(true);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setStep((prev) => prev + 1);
+      setIsAssistantTyping(false);
+    }, 850);
   };
 
   const handleRestart = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
     setStep(0);
     setAnswers({});
     setName('');
+    setIsAssistantTyping(false);
   };
 
   return (
@@ -104,7 +129,12 @@ export default function ChatWidget() {
 
             <div className="space-y-3 px-4 py-4 max-h-[420px] overflow-y-auto">
               {messages.map((message, index) => (
-                <ChatBubble key={`${message.role}-${index}`} role={message.role}>
+                <ChatBubble
+                  key={`${message.role}-${index}`}
+                  role={message.role}
+                  isTyping={message.isTyping}
+                  shouldAnimate={message.role === 'assistant' && !message.isTyping && index === lastAssistantIndex}
+                >
                   {message.content}
                 </ChatBubble>
               ))}
@@ -112,12 +142,13 @@ export default function ChatWidget() {
 
             <div className="border-t border-white/8 px-4 py-4">
               {!isComplete ? (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {currentQuestion.options.map((option) => (
                     <button
                       key={option}
                       onClick={() => handleOptionClick(option)}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-gray-200 transition hover:border-cyan-500/30 hover:bg-cyan-500/5"
+                      disabled={isAssistantTyping}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-gray-200 transition hover:border-cyan-500/30 hover:bg-cyan-500/5 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {option}
                     </button>
