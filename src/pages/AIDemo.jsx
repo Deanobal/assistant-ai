@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import DemoConversation, { transcript } from '../components/demo/DemoConversation';
-import DemoAutomationPanel from '../components/demo/DemoAutomationPanel';
+import DemoAutomationPanel, { defaultWorkflowItems } from '../components/demo/DemoAutomationPanel';
+import DemoScenarioSelector from '../components/demo/DemoScenarioSelector';
 
 const steps = [
 'Incoming call answered instantly',
@@ -12,8 +14,31 @@ const steps = [
 'Customer details and urgency captured',
 'CRM update and follow-up triggered automatically'];
 
-const MESSAGE_DELAY = 1600;
+const MESSAGE_DELAY = 2600;
 
+const scenarios = [
+  {
+    id: 'trades',
+    label: 'Trades',
+    title: 'Emergency plumbing lead',
+    description: 'A homeowner calls with an urgent plumbing issue and needs fast help.',
+    context: 'Australian plumbing business, urgent residential lead, goal is qualification and booking.',
+  },
+  {
+    id: 'clinic',
+    label: 'Clinic',
+    title: 'New patient booking enquiry',
+    description: 'A patient calls a clinic to ask about appointment availability and next steps.',
+    context: 'Australian clinic, new patient enquiry, goal is capture details and book appointment.',
+  },
+  {
+    id: 'realestate',
+    label: 'Real Estate',
+    title: 'Property appraisal enquiry',
+    description: 'A homeowner calls to request an appraisal and speak with an agent.',
+    context: 'Australian real estate business, appraisal enquiry, goal is lead capture and follow-up.',
+  },
+];
 
 export default function AIDemo() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -21,6 +46,10 @@ export default function AIDemo() {
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState(scenarios[0]);
+  const [demoTranscript, setDemoTranscript] = useState(transcript);
+  const [workflowItems, setWorkflowItems] = useState(defaultWorkflowItems);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -74,7 +103,7 @@ export default function AIDemo() {
 
     if (!isPlaying || !voicesLoaded) return;
 
-    const message = transcript[currentStep];
+    const message = demoTranscript[currentStep];
     if (!message) return;
 
     const moveToNextStep = () => {
@@ -110,7 +139,7 @@ export default function AIDemo() {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     };
-  }, [currentStep, isPlaying, isVoiceEnabled, selectedVoices]);
+  }, [currentStep, isPlaying, isVoiceEnabled, selectedVoices, voicesLoaded, demoTranscript]);
 
   const handleRestart = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -119,6 +148,64 @@ export default function AIDemo() {
     setCurrentStep(0);
     setIsPlaying(true);
     setIsSpeaking(false);
+  };
+
+  const handleGenerateSimulation = () => {
+    setIsGenerating(true);
+    setIsPlaying(false);
+
+    base44.integrations.Core.InvokeLLM({
+      prompt: `Create a realistic Australian business phone call simulation for this scenario: ${selectedScenario.context}.
+
+Return exactly 4 messages in transcript order:
+1. caller
+2. assistant
+3. caller
+4. assistant
+
+Also return exactly 4 workflow items showing what the AI system is doing after each stage.
+Keep the tone natural, concise, professional, and business-focused.
+The final assistant message should show that the enquiry has been captured and a next step has been triggered.`,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          transcript: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                role: { type: 'string', enum: ['caller', 'assistant'] },
+                text: { type: 'string' },
+              },
+              required: ['role', 'text'],
+            },
+          },
+          workflow: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                desc: { type: 'string' },
+              },
+              required: ['title', 'desc'],
+            },
+          },
+        },
+        required: ['transcript', 'workflow'],
+      },
+    }).then((result) => {
+      setDemoTranscript(result.transcript);
+      setWorkflowItems(result.workflow.map((item, index) => ({
+        ...defaultWorkflowItems[index],
+        title: item.title,
+        desc: item.desc,
+      })));
+      setCurrentStep(0);
+      setIsPlaying(true);
+    }).finally(() => {
+      setIsGenerating(false);
+    });
   };
 
   return (
@@ -143,9 +230,17 @@ export default function AIDemo() {
             </p>
           </motion.div>
 
+          <DemoScenarioSelector
+            scenarios={scenarios}
+            selectedScenario={selectedScenario}
+            onSelect={setSelectedScenario}
+            onGenerate={handleGenerateSimulation}
+            isGenerating={isGenerating}
+          />
+
           <div className="grid xl:grid-cols-[1.2fr_0.8fr] gap-6 items-start">
-            <DemoConversation currentStep={currentStep} />
-            <DemoAutomationPanel currentStep={currentStep} />
+            <DemoConversation currentStep={currentStep} messages={demoTranscript} />
+            <DemoAutomationPanel currentStep={currentStep} items={workflowItems} />
           </div>
 
           <div className="mt-8 rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
@@ -158,7 +253,7 @@ export default function AIDemo() {
                     {isSpeaking ? 'Speaking live' : 'Waiting for next turn'}
                   </div>
                 </div>
-                <p className="mt-2 text-white font-medium text-lg">{steps[currentStep]}</p>
+                <p className="mt-2 text-white font-medium text-lg">{workflowItems[currentStep]?.title || steps[currentStep]}</p>
                 <p className="mt-2 text-sm text-gray-500">The demo now uses separate caller and assistant voices and waits longer between each spoken message.</p>
               </div>
               <div className="flex flex-wrap gap-3">

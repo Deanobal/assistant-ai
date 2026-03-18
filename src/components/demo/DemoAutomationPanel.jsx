@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Clock3, Database, MessageSquare, PhoneCall, UserCheck } from 'lucide-react';
 
-const items = [
+export const defaultWorkflowItems = [
   {
     icon: PhoneCall,
     title: 'Call Answered',
@@ -24,7 +24,7 @@ const items = [
   },
 ];
 
-export default function DemoAutomationPanel({ currentStep }) {
+export default function DemoAutomationPanel({ currentStep, items = defaultWorkflowItems }) {
   return (
     <div className="rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
       <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Workflow</p>

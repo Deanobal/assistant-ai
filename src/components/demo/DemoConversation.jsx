@@ -8,7 +8,7 @@ export const transcript = [
   { role: 'assistant', text: 'Thanks. I’ve marked this as urgent, captured your details, and requested the next available technician. A confirmation text has now been sent.' },
 ];
 
-export default function DemoConversation({ currentStep }) {
+export default function DemoConversation({ currentStep, messages = transcript }) {
   return (
     <div className="rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
       <div className="mb-5 flex items-center justify-between">
@@ -22,7 +22,7 @@ export default function DemoConversation({ currentStep }) {
       </div>
 
       <div className="space-y-3">
-        {transcript.slice(0, currentStep + 1).map((message, index) => (
+        {messages.slice(0, currentStep + 1).map((message, index) => (
           <motion.div
             key={`${message.role}-${index}`}
             initial={{ opacity: 0, y: 12 }}
