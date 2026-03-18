@@ -20,6 +20,9 @@ import AIDemo from './pages/AIDemo';
 import ClientLogin from './pages/ClientLogin';
 import ClientPortal from './pages/ClientPortal';
 import Dashboard from './pages/Dashboard';
+import ClientManager from './pages/ClientManager';
+import ClientWorkspace from './pages/ClientWorkspace';
+import AdminLayout from './components/admin/AdminLayout';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,7 +64,11 @@ const AuthenticatedApp = () => {
         <Route path="/AIDemo" element={<AIDemo />} />
         <Route path="/ClientLogin" element={<ClientLogin />} />
         <Route path="/ClientPortal" element={<ClientPortal />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
+      </Route>
+      <Route path="/Dashboard" element={<Dashboard />} />
+      <Route element={<AdminLayout />}>
+        <Route path="/ClientManager" element={<ClientManager />} />
+        <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
