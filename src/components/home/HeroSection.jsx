@@ -71,10 +71,10 @@ export default function HeroSection({ heroImage }) {
                     className="w-full h-[560px] object-cover" />
 
                 </div>
-                <div className="bg-[#0a0a0f]/82 px-3.5 py-2.5 rounded-[18px] absolute top-6 left-6 max-w-[320px] border border-white/8 backdrop-blur-md shadow-lg shadow-black/10">
-                  <p className="text-gray-400 mb-1 text-base">Workflow</p>
-                  <p className="text-white text-base font-medium">Call captured → CRM updated → Follow-up sent</p>
-                </div>
+                
+
+
+                
               </div>
             </div>
           </motion.div>
