@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import DemoConversation from '../components/demo/DemoConversation';
+import DemoConversation, { transcript } from '../components/demo/DemoConversation';
 import DemoAutomationPanel from '../components/demo/DemoAutomationPanel';
 
 const steps = [
@@ -16,6 +16,7 @@ const steps = [
 export default function AIDemo() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -28,7 +29,30 @@ export default function AIDemo() {
     return () => clearTimeout(timer);
   }, [currentStep, isPlaying]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    if (!isPlaying || !isVoiceEnabled) return;
+
+    const message = transcript[currentStep];
+    if (!message) return;
+
+    const utterance = new SpeechSynthesisUtterance(message.text);
+    utterance.rate = message.role === 'assistant' ? 1 : 0.96;
+    utterance.pitch = message.role === 'assistant' ? 1.05 : 0.92;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+
+    return () => window.speechSynthesis.cancel();
+  }, [currentStep, isPlaying, isVoiceEnabled]);
+
   const handleRestart = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     setCurrentStep(0);
     setIsPlaying(true);
   };
@@ -65,6 +89,7 @@ export default function AIDemo() {
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Current Step</p>
                 <p className="mt-2 text-white font-medium text-lg">{steps[currentStep]}</p>
+                <p className="mt-2 text-sm text-gray-500">The demo now uses your browser voice to read the conversation aloud.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -74,6 +99,14 @@ export default function AIDemo() {
                 >
                   {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
                   {isPlaying ? 'Pause Demo' : 'Play Demo'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsVoiceEnabled((prev) => !prev)}
+                  className="border-white/10 bg-transparent text-white hover:bg-white/5"
+                >
+                  {isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
+                  {isVoiceEnabled ? 'Voice On' : 'Voice Off'}
                 </Button>
                 <Button
                   variant="outline"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const transcript = [
+export const transcript = [
   { role: 'caller', text: 'Hi, I need help with a leaking hot water system at my property in Melbourne.' },
   { role: 'assistant', text: 'Absolutely — I can help with that. Is this urgent, and what’s the best number and address for the job?' },
   { role: 'caller', text: 'Yes, it’s urgent. My number is 0400 000 000 and the property is in Brighton.' },
