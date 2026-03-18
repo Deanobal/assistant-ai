@@ -12,8 +12,7 @@ const navLinks = [
 { label: 'Case Studies', path: '/CaseStudies' },
 { label: 'About', path: '/About' },
 { label: 'Contact', path: '/Contact' },
-{ label: 'Client Login', path: '/ClientLogin' },
-{ label: 'Admin Login', path: '/Dashboard' }];
+{ label: 'Client Login', path: '/ClientLogin' }];
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -137,6 +136,7 @@ function Footer() {
               <p className="text-base">sales@assistantai.com.au</p>
               <Link to="/Platform" className="text-base block hover:text-cyan-400 transition-colors">Platform Preview</Link>
               <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
+              <Link to="/Dashboard" className="block hover:text-cyan-400 transition-colors">Admin Login</Link>
               <div className="flex gap-3 pt-2">
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">LinkedIn</span>
                 <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">Facebook</span>
