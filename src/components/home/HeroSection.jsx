@@ -46,11 +46,10 @@ export default function HeroSection({ heroImage }) {
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                to="/Platform" className="bg-white/[0.02] text-white mx-3 px-8 py-4 font-semibold rounded-full inline-flex items-center justify-center gap-2 border border-white/20 hover:bg-white/[0.05] hover:border-white/30 transition-all">Watch AI Demo
-
-
-
-
+                to="/AIDemo"
+                className="bg-white/[0.02] text-white mx-3 px-8 py-4 font-semibold rounded-full inline-flex items-center justify-center gap-2 border border-white/20 hover:bg-white/[0.05] hover:border-white/30 transition-all">
+                <Play className="w-5 h-5 text-cyan-300" />
+                Watch AI Demo
               </Link>
             </div>
           </motion.div>

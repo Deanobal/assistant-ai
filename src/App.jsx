@@ -16,6 +16,7 @@ import Contact from './pages/Contact';
 import CaseStudies from './pages/CaseStudies';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
+import AIDemo from './pages/AIDemo';
 import ClientLogin from './pages/ClientLogin';
 import ClientPortal from './pages/ClientPortal';
 
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
         <Route path="/CaseStudies" element={<CaseStudies />} />
         <Route path="/Integrations" element={<Integrations />} />
         <Route path="/Platform" element={<Platform />} />
+        <Route path="/AIDemo" element={<AIDemo />} />
         <Route path="/ClientLogin" element={<ClientLogin />} />
         <Route path="/ClientPortal" element={<ClientPortal />} />
         <Route path="/Dashboard" element={<Navigate to="/ClientLogin" replace />} />
