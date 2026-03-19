@@ -35,7 +35,8 @@ export default function BookStrategyCall() {
                 submitLabel="Book Free Strategy Call"
                 successTitle="Strategy Call Request Received"
                 successText="Thanks — your enquiry has been received. We’ll review your details and send you the next step for your strategy call shortly."
-                statusOnSubmit="Strategy Call Booked"
+                matchedLeadStatus="Strategy Call Booked"
+                nextActionText="Follow up on strategy call request and send booking next step."
               />
             </motion.div>
 

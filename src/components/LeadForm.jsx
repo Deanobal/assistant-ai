@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { submitLeadCapture } from '@/lib/leadCapture';
 
 const industries = [
   { value: 'trades', label: 'Trades' },
@@ -39,7 +39,8 @@ export default function LeadForm({
   submitLabel = 'Request a Call Back',
   successTitle = 'Enquiry Received',
   successText = 'Thanks — your enquiry has been received. We’ll review your details and get back to you with the next step within one business day.',
-  statusOnSubmit = 'New Lead',
+  matchedLeadStatus,
+  nextActionText,
 }) {
   const [form, setForm] = useState({
     full_name: '',
@@ -53,37 +54,25 @@ export default function LeadForm({
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError('');
 
-    const source_page = window.location.pathname;
-    const created_at = new Date().toISOString();
-    const lead_score = form.monthly_enquiry_volume === '301_plus' ? 90 : form.monthly_enquiry_volume === '101_300' ? 70 : form.monthly_enquiry_volume === '21_100' ? 50 : 25;
-    const payload = {
-      ...form,
-      source_page,
-      created_at,
-      status: statusOnSubmit,
-      lead_score,
-      assigned_owner: '',
-      notes: '',
-    };
-
-    const existingLeads = await base44.entities.Lead.filter({ email: form.email }, '-created_date', 1);
-
-    if (existingLeads.length > 0) {
-      await base44.entities.Lead.update(existingLeads[0].id, {
-        ...existingLeads[0],
-        ...payload,
+    try {
+      await submitLeadCapture(form, {
+        matchedLeadStatus,
+        nextActionText,
       });
-    } else {
-      await base44.entities.Lead.create(payload);
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Lead submission failed', error);
+      setSubmitError('Something went wrong while sending your enquiry. Please try again or email sales@assistantai.com.au.');
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
-    setSubmitted(true);
   };
 
   if (submitted) {
@@ -203,6 +192,12 @@ export default function LeadForm({
           placeholder="Tell us about your workflow, what needs fixing, or what you want AssistantAI to help with."
         />
       </div>
+
+      {submitError && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {submitError}
+        </div>
+      )}
 
       <button
         type="submit"

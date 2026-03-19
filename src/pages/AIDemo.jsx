@@ -286,7 +286,7 @@ The final assistant message should show that the enquiry has been captured and a
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Restart
                 </Button>
-                <Link to="/Contact">
+                <Link to="/BookStrategyCall">
                   <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
                     Book Free Strategy Call
                     <ArrowRight className="ml-2 h-4 w-4" />
