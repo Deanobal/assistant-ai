@@ -4,9 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BriefcaseBusiness, LogOut, UsersRound, ShieldCheck, Rocket } from 'lucide-react';
+import { BriefcaseBusiness, LogOut, UsersRound, ShieldCheck, Rocket, BarChart3 } from 'lucide-react';
 
 const navItems = [
+  { label: 'Lead Dashboard', path: '/LeadDashboard', icon: Funnel },
   { label: 'Client Manager', path: '/ClientManager', icon: UsersRound },
   { label: 'Onboarding', path: '/Onboarding', icon: Rocket },
   { label: 'Team Access', path: '/TeamAccess', icon: ShieldCheck },
