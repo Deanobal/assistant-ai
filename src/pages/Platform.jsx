@@ -2,10 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Eye } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import OverviewPreview from '../components/portal/OverviewPreview';
 import CallRecordings from '../components/dashboard/CallRecordings';
+import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import BillingSection from '../components/dashboard/BillingSection';
 import PortalIntegrations from '../components/dashboard/PortalIntegrations';
+import SupportSection from '../components/dashboard/SupportSection';
 
 export default function Platform() {
   return (
@@ -23,11 +26,10 @@ export default function Platform() {
               <span className="text-cyan-400 text-xs font-medium">Platform Preview</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
-              See What Paying Clients Get with{' '}
-              <span className="text-gradient">AssistantAI.com.au</span>
+              Public Preview of the <span className="text-gradient">AssistantAI Platform</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              Explore a premium preview of the client experience, including call insights, billing, integrations, and performance visibility.
+              See what the client experience looks like across calls handled, leads captured, appointments booked, analytics, billing, integrations, and support access.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -44,15 +46,50 @@ export default function Platform() {
                 Client Login
               </Link>
             </div>
-            <p className="mt-4 text-gray-500 text-sm">This is a public preview of the platform experience, not the private login area.</p>
+            <p className="mt-4 text-gray-500 text-sm">This page uses realistic sample data to show the software experience without exposing private client information.</p>
           </motion.div>
+
+          <div className="mb-12">
+            <Card className="bg-[#12121a] border-white/5">
+              <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <p className="text-white font-semibold">Portal Preview</p>
+                  <p className="text-sm text-gray-400 mt-1">All sections below are sample previews only, designed to show the software and client experience clearly.</p>
+                </div>
+                <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 w-fit">
+                  Sample Data Preview
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="space-y-12">
             <OverviewPreview />
             <CallRecordings />
+            <AnalyticsSection />
             <BillingSection />
             <PortalIntegrations />
+            <SupportSection />
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
+          >
+            <h3 className="text-2xl font-bold text-white mb-3">Want This Experience for Your Business?</h3>
+            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              Book a free strategy call and we’ll show you how AssistantAI can help your business answer more calls, capture more leads, and reduce admin.
+            </p>
+            <Link
+              to="/BookStrategyCall"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
+            >
+              Book Free Strategy Call
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
