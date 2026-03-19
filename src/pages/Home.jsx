@@ -1,10 +1,12 @@
 import React from 'react';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
+import ProblemSection from '../components/home/ProblemSection';
 import ServicesPreview from '../components/home/ServicesPreview';
 import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
 import HowItWorks from '../components/home/HowItWorks';
 import UseCasesPreview from '../components/home/UseCasesPreview';
+import PlatformPreviewSection from '../components/home/PlatformPreviewSection';
 import PricingPreview from '../components/home/PricingPreview';
 import CTASection from '../components/home/CTASection';
 
@@ -15,10 +17,12 @@ export default function Home() {
     <div>
       <HeroSection heroImage={HERO_IMAGE} />
       <TrustStrip />
+      <ProblemSection />
       <ServicesPreview />
       <EverythingWorksTogether />
       <HowItWorks />
       <UseCasesPreview />
+      <PlatformPreviewSection />
       <PricingPreview />
       <CTASection />
     </div>

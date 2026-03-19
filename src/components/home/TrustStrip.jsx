@@ -4,8 +4,8 @@ import { Database, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
 
 const items = [
 { icon: Database, label: 'CRM Sync' },
-{ icon: CalendarDays, label: 'Google & Outlook Calendar Integration' },
-{ icon: MessageSquare, label: 'SMS Follow-Up Automation' },
+{ icon: CalendarDays, label: 'Google / Outlook Calendar' },
+{ icon: MessageSquare, label: 'SMS Follow-Up' },
 { icon: PhoneCall, label: '24/7 AI Call Handling' }];
 
 export default function TrustStrip() {
