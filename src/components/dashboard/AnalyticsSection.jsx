@@ -10,19 +10,23 @@ import InsightsPanel from './analytics/InsightsPanel';
 import { getAnalyticsSnapshot as getSampleAnalyticsSnapshot } from './analytics/mockData';
 import { getLiveAnalyticsSnapshot } from './analytics/liveData';
 
-export default function AnalyticsSection({ mode = 'live' }) {
+export default function AnalyticsSection({ mode = 'live', clientAccountId = null }) {
   const isSample = mode === 'sample';
 
   const { data: leads = [], isLoading: isLoadingLeads } = useQuery({
-    queryKey: ['analytics-leads'],
-    queryFn: () => base44.entities.Lead.list('-updated_date', 500),
+    queryKey: ['analytics-leads', clientAccountId || 'all'],
+    queryFn: () => clientAccountId
+      ? base44.entities.Lead.filter({ client_account_id: clientAccountId }, '-updated_date', 500)
+      : base44.entities.Lead.list('-updated_date', 500),
     initialData: [],
     enabled: !isSample,
   });
 
   const { data: callRecords = [], isLoading: isLoadingCalls } = useQuery({
-    queryKey: ['analytics-call-records'],
-    queryFn: () => base44.entities.CallRecord.list('-timestamp', 500),
+    queryKey: ['analytics-call-records', clientAccountId || 'all'],
+    queryFn: () => clientAccountId
+      ? base44.entities.CallRecord.filter({ client_account_id: clientAccountId }, '-timestamp', 500)
+      : base44.entities.CallRecord.list('-timestamp', 500),
     initialData: [],
     enabled: !isSample,
   });
