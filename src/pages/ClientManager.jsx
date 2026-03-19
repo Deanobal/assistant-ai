@@ -1,16 +1,170 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import ManagerStats from '@/components/admin/client-manager/ManagerStats';
 import ClientCard from '@/components/admin/client-manager/ClientCard';
+import CreateClientCard from '@/components/admin/client-manager/CreateClientCard';
+import WonLeadConversionCard from '@/components/admin/client-manager/WonLeadConversionCard';
 import { calculateManagerStats } from '@/components/admin/client-manager/mockClients';
-import { loadClientAccounts } from '@/components/admin/client-manager/storage';
 
 export default function ClientManager() {
-  const [clients, setClients] = useState([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setClients(loadClientAccounts().filter((client) => !client.is_archived));
-  }, []);
+  const { data: clients = [] } = useQuery({
+    queryKey: ['client-manager-clients'],
+    queryFn: () => base44.entities.ClientAccount.list('-updated_date', 200),
+    initialData: [],
+  });
+
+  const { data: wonLeads = [] } = useQuery({
+    queryKey: ['client-manager-won-leads'],
+    queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100),
+    initialData: [],
+  });
+
+  const createClientMutation = useMutation({
+    mutationFn: (data) => base44.entities.ClientAccount.create({
+      ...data,
+      phone: '',
+      website: '',
+      address: '',
+      timezone: 'Australia/Sydney',
+      monthly_fee: 0,
+      setup_fee_status: 'pending',
+      billing_status: data.status === 'Trial' ? 'trial' : 'active',
+      renewal_date: '',
+      included_calls: 0,
+      used_calls: 0,
+      extra_call_packs: 0,
+      overage_usage: 0,
+      premium_support_add_on: false,
+      monthly_revenue: 0,
+      total_calls_month: 0,
+      leads_captured: 0,
+      appointments_booked: 0,
+      last_activity: 'Client record created manually',
+      portal_access: true,
+      notification_setting: 'standard',
+      client_permissions: ['Overview', 'Calls', 'Analytics', 'Billing', 'Integrations', 'Support'],
+      payment_method_label: '',
+      requires_follow_up: false,
+      active_services: [],
+      lead_id: null,
+      services: [],
+      notes_entries: [],
+      integrations: [],
+      recent_calls: [],
+      invoices: [],
+      analytics: {
+        lead_conversion: 0,
+        average_call_duration: '',
+        peak_call_times: '',
+        follow_up_metrics: '',
+        trend: [],
+        categories: [],
+      },
+      is_archived: false,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });
+    },
+  });
+
+  const convertLeadMutation = useMutation({
+    mutationFn: async (lead) => {
+      const existingClient = (await base44.entities.ClientAccount.filter({ email: lead.email }, '-updated_date', 1))[0];
+      const client = existingClient || await base44.entities.ClientAccount.create({
+        business_name: lead.business_name || lead.full_name,
+        contact_name: lead.full_name,
+        email: lead.email,
+        phone: lead.mobile_number || '',
+        website: '',
+        address: '',
+        industry: lead.industry || 'other',
+        timezone: 'Australia/Sydney',
+        plan_name: '',
+        status: 'Onboarding',
+        monthly_fee: 0,
+        setup_fee_status: 'pending',
+        billing_status: 'active',
+        renewal_date: '',
+        included_calls: 0,
+        used_calls: 0,
+        extra_call_packs: 0,
+        overage_usage: 0,
+        premium_support_add_on: false,
+        monthly_revenue: 0,
+        total_calls_month: 0,
+        leads_captured: 0,
+        appointments_booked: 0,
+        last_activity: 'Client created from won lead',
+        portal_access: true,
+        notification_setting: 'standard',
+        client_permissions: ['Overview', 'Calls', 'Analytics', 'Billing', 'Integrations', 'Support'],
+        payment_method_label: '',
+        requires_follow_up: false,
+        active_services: [],
+        lead_id: lead.id,
+        services: [],
+        notes_entries: [],
+        integrations: [],
+        recent_calls: [],
+        invoices: [],
+        analytics: {
+          lead_conversion: 0,
+          average_call_duration: '',
+          peak_call_times: '',
+          follow_up_metrics: '',
+          trend: [],
+          categories: [],
+        },
+        is_archived: false,
+      });
+
+      const existingOnboarding = (await base44.entities.Onboarding.filter({ email: lead.email }, '-updated_date', 1))[0];
+      if (!existingOnboarding) {
+        await base44.entities.Onboarding.create({
+          client_name: lead.business_name || lead.full_name,
+          contact_name: lead.full_name,
+          email: lead.email,
+          mobile: lead.mobile_number || '',
+          industry: lead.industry || 'other',
+          plan: '',
+          payment_status: 'pending',
+          intake_form_status: 'not_sent',
+          assets_received: false,
+          workflow_mapped: false,
+          ai_agent_built: false,
+          integrations_connected: false,
+          testing_status: 'not_started',
+          go_live_status: 'not_ready',
+          onboarding_stage: 'Payment Received',
+          lead_id: lead.id,
+          client_account_id: client.id,
+          onboarding_notes: lead.notes || '',
+        });
+      }
+
+      await base44.entities.Lead.update(lead.id, {
+        ...lead,
+        client_account_id: client.id,
+        status: 'Onboarding',
+      });
+
+      return client;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client-manager-won-leads'] });
+      queryClient.invalidateQueries({ queryKey: ['onboardings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
+    },
+  });
+
+  const visibleClients = clients.filter((client) => !client.is_archived);
+  const convertibleWonLeads = wonLeads.filter((lead) => !lead.client_account_id);
 
   return (
     <div className="space-y-8">
@@ -21,14 +175,27 @@ export default function ClientManager() {
             <Badge className="bg-white/5 text-gray-300 border-white/10">Internal agency workspace</Badge>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Manage Every Client Account</h2>
-          <p className="text-gray-400 max-w-3xl">Review client health, open full workspaces, manage services, control billing, and keep your agency operations in one polished internal system.</p>
+          <p className="text-gray-400 max-w-3xl">Review client health, open full workspaces, manage services, billing, notes, onboarding, and linked records from one internal system.</p>
         </div>
       </div>
 
-      <ManagerStats stats={calculateManagerStats(clients)} />
+      <ManagerStats stats={calculateManagerStats(visibleClients)} />
+
+      <CreateClientCard onCreate={(form) => createClientMutation.mutate(form)} isSaving={createClientMutation.isPending} />
+
+      <div className="space-y-4">
+        <h3 className="text-white text-xl font-semibold">Won Leads Ready for Conversion</h3>
+        {convertibleWonLeads.length === 0 ? (
+          <Card className="bg-[#12121a] border-white/5">
+            <CardContent className="p-6 text-gray-400">No won leads are waiting to be converted right now.</CardContent>
+          </Card>
+        ) : convertibleWonLeads.map((lead) => (
+          <WonLeadConversionCard key={lead.id} lead={lead} onConvert={(item) => convertLeadMutation.mutate(item)} isSaving={convertLeadMutation.isPending} />
+        ))}
+      </div>
 
       <div className="grid xl:grid-cols-2 gap-6">
-        {clients.map((client) => (
+        {visibleClients.map((client) => (
           <ClientCard key={client.id} client={client} />
         ))}
       </div>
