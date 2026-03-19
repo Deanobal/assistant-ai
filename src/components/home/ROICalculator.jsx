@@ -37,14 +37,11 @@ export default function ROICalculator() {
   const hasInputs = inputs.monthlyCallVolume && inputs.avgLeadValue && inputs.missedCallRate;
 
   return (
-    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
+    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12">
+...
+          className="text-center mb-10">
 
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-4">
             <Calculator className="w-4 h-4 text-cyan-400" />

@@ -16,7 +16,7 @@ export default function HeroSection({ heroImage }) {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0a0a0f]/95 to-[#0a0a0f]" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-10 md:px-8 md:py-12 lg:min-h-[calc(100vh-4rem)] lg:flex lg:items-center">
+      <div className="relative max-w-7xl mx-auto px-6 py-8 md:px-8 md:py-10 lg:min-h-[calc(100vh-4rem)] lg:flex lg:items-center">
         <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.8fr)] gap-10 lg:gap-14 items-center w-full">
 ...
           <motion.div

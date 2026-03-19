@@ -32,14 +32,11 @@ const plans = [
 
 export default function PricingPreview() {
   return (
-    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
+    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16">
+...
+          className="text-center mb-12">
 
           <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Done-for-You Pricing for AI Automation</h2>

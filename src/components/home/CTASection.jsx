@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 export default function CTASection() {
   return (
-    <section className="relative py-20 md:py-24 bg-[#0c0c14]">
+    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="absolute inset-0 bg-radial-glow" />
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px]" />
       <div className="relative max-w-3xl mx-auto px-6 text-center">

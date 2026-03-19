@@ -13,13 +13,10 @@ const features = [
 
 export default function WhatAgentsDo() {
   return (
-    <section className="relative py-20 md:py-24">
+    <section className="relative py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16">
+...
+          className="text-center mb-12">
 
           <p className="text-cyan-400 mb-3 text-lg font-medium">CAPABILITIES</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What Our AI Agents Do</h2>
