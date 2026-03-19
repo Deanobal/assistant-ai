@@ -35,23 +35,23 @@ export default function HeroSection({ heroImage }) {
             </h1>
 
             <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl text-pretty">
-              AssistantAI helps Australian businesses answer calls instantly, capture qualified leads, book jobs, and automate follow-up — without hiring more admin staff.
+              AssistantAI helps Australian businesses answer calls instantly, capture leads, book jobs, and automate follow-up.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/BookStrategyCall"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
               >
                 Book Free Strategy Call
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 to="/AIDemo"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/15 bg-white/[0.03] text-white font-semibold rounded-full hover:bg-white/[0.05] hover:border-white/30 transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-8 py-4 border border-white/15 bg-white/[0.03] text-white font-semibold rounded-full hover:bg-white/[0.05] hover:border-white/30 transition-all"
               >
                 <Play className="w-5 h-5 text-cyan-300" />
-                Watch AI Demo
+                Watch Demo
               </Link>
             </div>
           </motion.div>
