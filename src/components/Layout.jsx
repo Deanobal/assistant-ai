@@ -30,12 +30,12 @@ function Navbar() {
           <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden xl:flex items-center gap-6 min-w-0">
           {navLinks.map((link) =>
           <Link
             key={link.path}
             to={link.path}
-            className={`text-sm font-medium transition-colors ${
+            className={`text-sm font-medium whitespace-nowrap transition-colors ${
             location.pathname === link.path ?
             'text-cyan-400' :
             'text-gray-400 hover:text-white'}`
@@ -46,17 +46,17 @@ function Navbar() {
           )}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden xl:block shrink-0">
           <Link
             to="/Contact"
-            className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
+            className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/20 transition-all whitespace-nowrap">
 
             Book Demo
           </Link>
         </div>
 
         <button
-          className="md:hidden text-white"
+          className="xl:hidden text-white"
           onClick={() => setMobileOpen(!mobileOpen)}>
 
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -69,7 +69,7 @@ function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
+          className="xl:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
 
             <div className="px-6 py-4 space-y-3">
               {navLinks.map((link) =>
