@@ -51,7 +51,7 @@ export default function About() {
                 We focus on practical automation that answers calls, captures customer details, books appointments, updates systems, and follows up automatically.
               </p>
               <p>
-                The goal is simple: reduce admin, improve response time, and give businesses a more reliable front-end customer workflow without adding more staff.
+                The goal is simple: answer more calls, capture more leads, reduce admin, and give businesses a more reliable front-end customer workflow without adding more staff.
               </p>
             </motion.div>
           </div>

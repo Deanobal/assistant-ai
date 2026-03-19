@@ -37,7 +37,7 @@ export default function Integrations() {
               Connect AssistantAI.com.au to the Tools Your Business Already Uses
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
-              Sync customer data, appointments, and communication across your CRM, calendar, and SMS platforms.
+              Connect the tools your business already uses so calls, bookings, follow-up, and customer data stay aligned.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -65,7 +65,7 @@ export default function Integrations() {
                   </div>
                   <div>
                     <CardTitle className="text-white text-2xl">CRM Integrations</CardTitle>
-                    <p className="text-gray-400 text-sm mt-1">Sync contacts, create new leads, update records automatically, and track call outcomes.</p>
+                    <p className="text-gray-400 text-sm mt-1">Common supported CRM options for lead capture, record updates, and cleaner follow-up workflows.</p>
                   </div>
                 </div>
               </CardHeader>

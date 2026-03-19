@@ -61,11 +61,10 @@ export default function Services() {
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">SERVICES</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Productised AI Services for{' '}
-              <span className="text-gradient">Calls, Follow-Up, and Workflow Automation</span>
+              Productised Services Built to <span className="text-gradient">Answer More Calls and Capture More Leads</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              AssistantAI.com.au combines premium service delivery with practical automation so Australian businesses can answer more calls, capture more leads, and reduce admin.
+              AssistantAI.com.au helps Australian service businesses reduce admin, automate follow-up, improve response time, and scale without hiring more staff.
             </p>
           </motion.div>
 

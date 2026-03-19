@@ -98,7 +98,7 @@ export default function Pricing() {
               <span className="text-gradient">Premium AI Automation</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              AssistantAI.com.au is positioned as a managed service with setup, monthly management, support, reporting, and optimisation built into the offer.
+              All plans include setup, support, optimisation, and ongoing management, so pricing stays clear and commercially usable from day one.
             </p>
           </motion.div>
 

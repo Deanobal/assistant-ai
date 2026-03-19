@@ -76,7 +76,7 @@ export default function CaseStudies() {
               <span className="text-gradient">Sample Outcomes</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              These examples show the types of business problems AssistantAI.com.au is designed to solve across calls, lead capture, booking, and follow-up.
+              These are example use cases and sample outcomes only. They show the types of business problems AssistantAI.com.au is designed to solve across calls, lead capture, booking, and follow-up.
             </p>
           </motion.div>
 
@@ -152,10 +152,10 @@ export default function CaseStudies() {
               Book a free strategy call and we’ll map out the right workflow for your industry, team, and enquiry process.
             </p>
             <Link
-              to="/Contact"
+              to="/BookStrategyCall"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
-              Book Your Free Strategy Call
+              Book Free Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
