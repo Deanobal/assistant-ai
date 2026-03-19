@@ -22,6 +22,7 @@ import ClientPortal from './pages/ClientPortal';
 import Dashboard from './pages/Dashboard';
 import ClientManager from './pages/ClientManager';
 import ClientWorkspace from './pages/ClientWorkspace';
+import TeamAccess from './pages/TeamAccess';
 import AdminLayout from './components/admin/AdminLayout';
 
 const AuthenticatedApp = () => {
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
       <Route element={<AdminLayout />}>
         <Route path="/ClientManager" element={<ClientManager />} />
         <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
+        <Route path="/TeamAccess" element={<TeamAccess />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

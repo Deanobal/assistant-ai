@@ -4,10 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BriefcaseBusiness, LogOut, UsersRound } from 'lucide-react';
+import { BriefcaseBusiness, LogOut, UsersRound, ShieldCheck } from 'lucide-react';
 
 const navItems = [
   { label: 'Client Manager', path: '/ClientManager', icon: UsersRound },
+  { label: 'Team Access', path: '/TeamAccess', icon: ShieldCheck },
 ];
 
 export default function AdminLayout() {
