@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy } from 'lucide-react';
+import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import OverviewPreview from '../components/portal/OverviewPreview';
@@ -16,11 +17,18 @@ import SupportSection from '../components/dashboard/SupportSection';
 export default function ClientPortal() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const checkAccess = async () => {
       const authenticated = await base44.auth.isAuthenticated();
       setIsAuthenticated(authenticated);
+
+      if (authenticated) {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      }
+
       setIsLoading(false);
     };
 
@@ -37,6 +45,27 @@ export default function ClientPortal() {
 
   if (!isAuthenticated) {
     return <Navigate to="/ClientLogin" replace />;
+  }
+
+  if (!currentUser?.client_account_id) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6 py-24">
+        <Card className="bg-[#12121a] border-white/5 max-w-md w-full">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
+              <Lock className="w-7 h-7 text-cyan-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white mb-2">Portal Access Not Linked Yet</h1>
+              <p className="text-gray-400">Your login is protected, but it has not been linked to a client business record yet.</p>
+            </div>
+            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
+              Return to Website
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const handleLogout = () => {
@@ -99,7 +128,7 @@ export default function ClientPortal() {
             <CallRecordings />
           </TabsContent>
           <TabsContent value="analytics">
-            <AnalyticsSection />
+            <AnalyticsSection clientAccountId={currentUser.client_account_id} />
           </TabsContent>
           <TabsContent value="billing">
             <BillingSection />

@@ -26,6 +26,61 @@ export default function OnboardingDashboard() {
       const existing = onboardings.find((item) => item.email === lead.email);
       if (existing) return existing;
 
+      const existingClients = await base44.entities.ClientAccount.filter({ email: lead.email }, '-updated_date', 1);
+      const clientAccount = existingClients[0] || await base44.entities.ClientAccount.create({
+        business_name: lead.business_name || lead.full_name,
+        contact_name: lead.full_name,
+        email: lead.email,
+        phone: lead.mobile_number || '',
+        website: '',
+        address: '',
+        industry: lead.industry || 'other',
+        timezone: 'Australia/Sydney',
+        plan_name: '',
+        status: 'Onboarding',
+        monthly_fee: 0,
+        setup_fee_status: 'pending',
+        billing_status: 'active',
+        renewal_date: '',
+        included_calls: 0,
+        used_calls: 0,
+        extra_call_packs: 0,
+        overage_usage: 0,
+        premium_support_add_on: false,
+        monthly_revenue: 0,
+        total_calls_month: 0,
+        leads_captured: 0,
+        appointments_booked: 0,
+        last_activity: 'Client created from won lead',
+        portal_access: true,
+        notification_setting: 'standard',
+        client_permissions: ['Overview', 'Calls', 'Analytics', 'Billing', 'Integrations', 'Support'],
+        payment_method_label: '',
+        requires_follow_up: false,
+        active_services: [],
+        lead_id: lead.id,
+        services: [],
+        notes_entries: [],
+        integrations: [],
+        recent_calls: [],
+        invoices: [],
+        analytics: {
+          lead_conversion: 0,
+          average_call_duration: '',
+          peak_call_times: '',
+          follow_up_metrics: '',
+          trend: [],
+          categories: [],
+        },
+        is_archived: false,
+      });
+
+      await base44.entities.Lead.update(lead.id, {
+        ...lead,
+        status: 'Onboarding',
+        client_account_id: clientAccount.id,
+      });
+
       return base44.entities.Onboarding.create({
         client_name: lead.business_name || lead.full_name,
         contact_name: lead.full_name,
@@ -43,7 +98,7 @@ export default function OnboardingDashboard() {
         go_live_status: 'not_ready',
         onboarding_stage: 'Payment Received',
         lead_id: lead.id,
-        client_account_id: null,
+        client_account_id: clientAccount.id,
         onboarding_notes: lead.notes || '',
       });
     },
