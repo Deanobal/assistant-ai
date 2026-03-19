@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
 import BookingSupportPanel from '@/components/contact/BookingSupportPanel';
 import { STRATEGY_CALL_BOOKING_URL } from '@/lib/booking';
 
 export default function BookStrategyCall() {
+  const [showAdminWarning, setShowAdminWarning] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const authenticated = await base44.auth.isAuthenticated();
+      if (!authenticated) return;
+      const user = await base44.auth.me();
+      setShowAdminWarning(user?.role === 'admin' && !STRATEGY_CALL_BOOKING_URL);
+    };
+
+    checkAdmin();
+  }, []);
+
   return (
     <div>
       <section className="relative py-24 md:py-28 bg-grid">
@@ -33,10 +47,18 @@ export default function BookStrategyCall() {
             >
               <LeadForm
                 submitLabel="Book Free Strategy Call"
-                successTitle="Strategy Call Request Received"
-                successText="Thanks — your enquiry has been received. We’ll review your details and send you the next step for your strategy call shortly."
+                successTitle={STRATEGY_CALL_BOOKING_URL ? 'Continue to Live Booking' : 'Strategy Call Request Received'}
+                successText={STRATEGY_CALL_BOOKING_URL
+                  ? 'Your details have been saved. Continue to the live calendar to confirm your strategy call.'
+                  : 'Thanks — your enquiry has been received. We’ll review your details and send you the next step for your strategy call shortly.'}
                 matchedLeadStatus="Strategy Call Booked"
+                createStatus="Strategy Call Booked"
                 nextActionText="Follow up on strategy call request and send booking next step."
+                bookingIntent={true}
+                bookingSource="strategy_call_page"
+                showPreferredMeetingFields={!STRATEGY_CALL_BOOKING_URL}
+                successActionHref={STRATEGY_CALL_BOOKING_URL || undefined}
+                successActionLabel={STRATEGY_CALL_BOOKING_URL ? 'Continue to Live Booking' : undefined}
               />
             </motion.div>
 
@@ -48,8 +70,9 @@ export default function BookStrategyCall() {
             >
               <BookingSupportPanel
                 bookingUrl={STRATEGY_CALL_BOOKING_URL}
-                intro="Use the form to request a strategy call now, or use the live booking button when a calendar link is connected."
-                responseText="We usually respond within one business day with the next step."
+                adminWarning={showAdminWarning ? 'Admin warning: add your live booking URL in src/lib/booking.js to enable direct calendar booking.' : ''}
+                intro="Complete the short form first so AssistantAI can save the lead properly before the booking step continues."
+                responseText="We usually respond within one business day if a live calendar link is not connected."
               />
             </motion.div>
           </div>

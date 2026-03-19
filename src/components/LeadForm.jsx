@@ -40,7 +40,13 @@ export default function LeadForm({
   successTitle = 'Enquiry Received',
   successText = 'Thanks — your enquiry has been received. We’ll review your details and get back to you with the next step within one business day.',
   matchedLeadStatus,
+  createStatus,
   nextActionText,
+  bookingIntent = false,
+  bookingSource = '',
+  showPreferredMeetingFields = false,
+  successActionHref,
+  successActionLabel,
 }) {
   const [form, setForm] = useState({
     full_name: '',
@@ -51,6 +57,8 @@ export default function LeadForm({
     enquiry_type: '',
     monthly_enquiry_volume: '',
     message: '',
+    preferred_meeting_date: '',
+    preferred_meeting_time: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -64,7 +72,10 @@ export default function LeadForm({
     try {
       await submitLeadCapture(form, {
         matchedLeadStatus,
+        createStatus,
         nextActionText,
+        bookingIntent,
+        bookingSource,
       });
       setSubmitted(true);
     } catch (error) {
@@ -87,6 +98,12 @@ export default function LeadForm({
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">{successTitle}</h3>
         <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{successText}</p>
+        {successActionHref && successActionLabel && (
+          <a href={successActionHref} target="_blank" rel="noreferrer" className="inline-flex mt-6 items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+            {successActionLabel}
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        )}
       </motion.div>
     );
   }
@@ -182,6 +199,29 @@ export default function LeadForm({
           </SelectContent>
         </Select>
       </div>
+
+      {showPreferredMeetingFields && (
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <Label className="text-gray-400 text-sm">Preferred Meeting Date</Label>
+            <Input
+              type="date"
+              value={form.preferred_meeting_date}
+              onChange={(e) => setForm({ ...form, preferred_meeting_date: e.target.value })}
+              className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-400 text-sm">Preferred Meeting Time</Label>
+            <Input
+              type="time"
+              value={form.preferred_meeting_time}
+              onChange={(e) => setForm({ ...form, preferred_meeting_time: e.target.value })}
+              className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label className="text-gray-400 text-sm">Message</Label>

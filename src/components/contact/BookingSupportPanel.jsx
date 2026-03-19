@@ -3,7 +3,7 @@ import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function BookingSupportPanel({ bookingUrl, heading = 'What Happens Next?', intro, responseText }) {
+export default function BookingSupportPanel({ bookingUrl, heading = 'What Happens Next?', intro, responseText, adminWarning }) {
   return (
     <div className="space-y-6">
       <Card className="bg-[#12121a] border-white/5">
@@ -27,7 +27,7 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
         </CardContent>
       </Card>
 
-      {bookingUrl && (
+      {bookingUrl ? (
         <Card className="bg-gradient-to-b from-cyan-500/10 to-transparent border-cyan-500/20">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-3">
@@ -35,16 +35,35 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
                 <CalendarDays className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Book Instantly</h3>
-                <p className="text-sm text-gray-400">Choose a live calendar slot for your strategy call.</p>
+                <h3 className="text-white font-semibold">Live Booking Enabled</h3>
+                <p className="text-sm text-gray-400">After submitting the short form, continue into the live booking calendar.</p>
               </div>
             </div>
-            <a href={bookingUrl} target="_blank" rel="noreferrer" className="block">
-              <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
-                Book Free Strategy Call
-                <ArrowUpRight className="w-4 h-4 ml-2" />
-              </Button>
-            </a>
+            <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
+              Real booking link is connected and ready to use.
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gradient-to-b from-white/[0.04] to-transparent border-white/10">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-cyan-300" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Booking Fallback Active</h3>
+                <p className="text-sm text-gray-400">Submit the form and our team will arrange your strategy call directly.</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
+              No live calendar link is connected yet, so public users will see a safe request flow instead of a dead button.
+            </div>
+            {adminWarning && (
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                {adminWarning}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
