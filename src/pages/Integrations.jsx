@@ -39,13 +39,21 @@ export default function Integrations() {
             <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
               Sync customer data, appointments, and communication across your CRM, calendar, and SMS platforms.
             </p>
-            <Link
-              to="/Contact"
-              className="inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
-
-              Book Integration Demo
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/Contact"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
+              >
+                Book Free Strategy Call
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/Platform"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all text-sm"
+              >
+                View Platform Preview
+              </Link>
+            </div>
           </motion.div>
 
           <div className="space-y-10">
@@ -159,7 +167,7 @@ export default function Integrations() {
               to="/Contact"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
-              Book a Strategy Call
+              Book Free Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

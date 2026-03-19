@@ -148,7 +148,7 @@ export default function Pricing() {
                 'border border-white/10 text-white hover:bg-white/5'}`
                 }>
 
-                  Book Strategy Call
+                  Book Free Strategy Call
                 </Link>
               </motion.div>
             )}
@@ -186,7 +186,7 @@ export default function Pricing() {
               to="/Contact"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
-              Talk to Us
+              Speak to Our Team
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

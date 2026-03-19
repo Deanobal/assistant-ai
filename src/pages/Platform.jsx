@@ -34,7 +34,7 @@ export default function Platform() {
                 to="/Contact"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
               >
-                Book Demo
+                Book Free Strategy Call
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
