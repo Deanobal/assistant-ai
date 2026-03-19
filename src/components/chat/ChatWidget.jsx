@@ -6,28 +6,103 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ChatBubble from './ChatBubble';
 
-const questions = [
+const baseQuestions = [
   {
     key: 'intent',
     prompt: 'What can I help you with today?',
     options: ['Support', 'AI Lead Qualification', 'Bookings & Appointments', 'General Enquiry'],
   },
-  {
-    key: 'businessType',
-    prompt: 'What type of business are you running?',
-    options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
-  },
-  {
-    key: 'goal',
-    prompt: 'What would you most like AssistantAI to help with?',
-    options: ['Answer missed calls', 'Book appointments', 'Automate follow-up'],
-  },
-  {
-    key: 'volume',
-    prompt: 'How many inbound calls or enquiries do you roughly get each week?',
-    options: ['Less than 20', '20–100', '100+'],
-  },
 ];
+
+const intentFlows = {
+  Support: [
+    {
+      key: 'supportType',
+      prompt: 'What kind of support do you need?',
+      options: ['Portal access', 'Billing question', 'Technical issue', 'Something urgent'],
+    },
+    {
+      key: 'supportUrgency',
+      prompt: 'How urgent is this?',
+      options: ['Not urgent', 'Soon today', 'Urgent now'],
+    },
+  ],
+  'AI Lead Qualification': [
+    {
+      key: 'businessType',
+      prompt: 'What type of business are you running?',
+      options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
+    },
+    {
+      key: 'goal',
+      prompt: 'What would you most like AssistantAI to help with?',
+      options: ['Answer missed calls', 'Book appointments', 'Automate follow-up'],
+    },
+    {
+      key: 'volume',
+      prompt: 'How many inbound calls or enquiries do you roughly get each week?',
+      options: ['Less than 20', '20–100', '100+'],
+    },
+  ],
+  'Bookings & Appointments': [
+    {
+      key: 'businessType',
+      prompt: 'What type of business are you running?',
+      options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
+    },
+    {
+      key: 'bookingNeed',
+      prompt: 'What do you need help with?',
+      options: ['Book a strategy call', 'See booking features', 'Calendar integrations'],
+    },
+  ],
+  'General Enquiry': [
+    {
+      key: 'generalTopic',
+      prompt: 'What would you like to know more about?',
+      options: ['Pricing', 'Integrations', 'How it works', 'Something else'],
+    },
+  ],
+};
+
+const getFlow = (answers) => {
+  if (!answers.intent) return baseQuestions;
+  return [...baseQuestions, ...(intentFlows[answers.intent] || [])];
+};
+
+const getFinalMessage = (answers) => {
+  if (answers.intent === 'Support') {
+    const shouldEscalate = answers.supportType === 'Technical issue' || answers.supportType === 'Something urgent' || answers.supportUrgency === 'Urgent now';
+    return shouldEscalate
+      ? 'Thanks — this looks like something more serious, so AssistantAI should route this straight to you for direct follow-up.'
+      : `Thanks — I can help with ${answers.supportType?.toLowerCase() || 'support'} and guide the client to the right next step.`;
+  }
+
+  if (answers.intent === 'Bookings & Appointments') {
+    return `Great — I can help with ${answers.bookingNeed?.toLowerCase() || 'bookings'} for your ${answers.businessType?.toLowerCase() || 'business'} setup.`;
+  }
+
+  if (answers.intent === 'General Enquiry') {
+    return `Happy to help — I can point you in the right direction for ${answers.generalTopic?.toLowerCase() || 'your enquiry'}.`;
+  }
+
+  return `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`;
+};
+
+const getPrimaryCta = (answers) => {
+  if (answers.intent === 'Support') {
+    const shouldEscalate = answers.supportType === 'Technical issue' || answers.supportType === 'Something urgent' || answers.supportUrgency === 'Urgent now';
+    return shouldEscalate
+      ? { label: 'Contact Support', to: '/Contact' }
+      : { label: 'Get Support', to: '/Contact' };
+  }
+
+  if (answers.intent === 'Bookings & Appointments') {
+    return { label: 'Book Free Strategy Call', to: '/Contact' };
+  }
+
+  return { label: 'Book Free Strategy Call', to: '/Contact' };
+};
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,8 +112,10 @@ export default function ChatWidget() {
   const [isAssistantTyping, setIsAssistantTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
 
+  const questions = useMemo(() => getFlow(answers), [answers]);
   const currentQuestion = questions[step];
   const isComplete = step >= questions.length;
+  const primaryCta = getPrimaryCta(answers);
 
   const messages = useMemo(() => {
     const items = [
@@ -62,14 +139,12 @@ export default function ChatWidget() {
     } else if (isComplete) {
       items.push({
         role: 'assistant',
-        content: answers.intent === 'Support'
-          ? `Thanks — it sounds like you need support. We can help with your ${answers.businessType?.toLowerCase() || 'business'} setup and point you to the right next step.`
-          : `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`,
+        content: getFinalMessage(answers),
       });
     }
 
     return items;
-  }, [answers, isAssistantTyping, isComplete, step]);
+  }, [answers, isAssistantTyping, isComplete, questions, step]);
 
   const lastAssistantIndex = [...messages].map((message) => message.role).lastIndexOf('assistant');
 
@@ -85,11 +160,13 @@ export default function ChatWidget() {
     if (isAssistantTyping) return;
 
     const key = currentQuestion.key;
-    setAnswers((prev) => ({ ...prev, [key]: value }));
+    const nextAnswers = { ...answers, [key]: value };
+    setAnswers(nextAnswers);
     setIsAssistantTyping(true);
 
     typingTimeoutRef.current = setTimeout(() => {
-      setStep((prev) => prev + 1);
+      const nextQuestions = getFlow(nextAnswers);
+      setStep((prev) => Math.min(prev + 1, nextQuestions.length));
       setIsAssistantTyping(false);
     }, 850);
   };
@@ -170,9 +247,9 @@ export default function ChatWidget() {
                     className="bg-white/[0.03] border-white/10 text-white placeholder:text-gray-500"
                   />
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Link to="/Contact" className="flex-1">
+                    <Link to={primaryCta.to} className="flex-1">
                       <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-                        Book Free Strategy Call
+                        {primaryCta.label}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
@@ -185,7 +262,9 @@ export default function ChatWidget() {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {name ? `Thanks ${name}. ` : ''}When you’re ready, book a strategy call and we’ll map the right workflow for your business.
+                    {name ? `Thanks ${name}. ` : ''}{answers.intent === 'Support'
+                      ? 'If this needs hands-on help, we’ll route it through to you directly.'
+                      : 'When you’re ready, book a strategy call and we’ll map the right workflow for your business.'}
                   </p>
                 </div>
               )}
