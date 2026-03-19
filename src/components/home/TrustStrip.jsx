@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { Database, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
 
 const items = [
-{ icon: Database, label: 'CRM Sync' },
-{ icon: CalendarDays, label: 'Google / Outlook Calendar' },
-{ icon: MessageSquare, label: 'SMS Follow-Up' },
-{ icon: PhoneCall, label: '24/7 AI Call Handling' }];
+{ icon: PhoneCall, label: '24/7 AI Call Handling' },
+{ icon: MessageSquare, label: 'Capture & Qualify Leads' },
+{ icon: CalendarDays, label: 'Book Appointments Automatically' },
+{ icon: Database, label: 'CRM & Calendar Sync' }];
 
 export default function TrustStrip() {
   return (
