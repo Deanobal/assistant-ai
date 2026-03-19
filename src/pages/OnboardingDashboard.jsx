@@ -112,8 +112,7 @@ export default function OnboardingDashboard() {
             key={item.id}
             onboarding={item}
             isSaving={updateMutation.isPending}
-            onSave={(data, silent = false) => {
-              if (silent) return;
+            onSave={(data) => {
               updateMutation.mutate({ id: item.id, data });
             }}
           />

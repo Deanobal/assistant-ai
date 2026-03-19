@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,28 +21,34 @@ const stageStyles = {
 };
 
 export default function OnboardingCard({ onboarding, onSave, isSaving }) {
+  const [draft, setDraft] = useState(onboarding);
+
+  useEffect(() => {
+    setDraft(onboarding);
+  }, [onboarding]);
+
   return (
     <Card className="bg-[#12121a] border-white/5">
       <CardContent className="p-6 space-y-5">
         <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <h3 className="text-white font-semibold text-lg">{onboarding.client_name}</h3>
-              <Badge className={stageStyles[onboarding.onboarding_stage]}>{onboarding.onboarding_stage}</Badge>
+              <h3 className="text-white font-semibold text-lg">{draft.client_name}</h3>
+              <Badge className={stageStyles[draft.onboarding_stage]}>{draft.onboarding_stage}</Badge>
             </div>
-            <p className="text-sm text-gray-400">{onboarding.contact_name} • {onboarding.email}</p>
-            <p className="text-sm text-gray-500 mt-1">Plan: {onboarding.plan || 'Not set'} • Industry: {onboarding.industry || 'Not set'}</p>
+            <p className="text-sm text-gray-400">{draft.contact_name} • {draft.email}</p>
+            <p className="text-sm text-gray-500 mt-1">Plan: {draft.plan || 'Not set'} • Industry: {draft.industry || 'Not set'}</p>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[
-            ['Payment Status', onboarding.payment_status],
-            ['Intake Form', onboarding.intake_form_status],
-            ['Testing', onboarding.testing_status],
-            ['Go Live', onboarding.go_live_status],
-            ['Assets Received', onboarding.assets_received ? 'Yes' : 'No'],
-            ['Integrations Connected', onboarding.integrations_connected ? 'Yes' : 'No'],
+            ['Payment Status', draft.payment_status],
+            ['Intake Form', draft.intake_form_status],
+            ['Testing', draft.testing_status],
+            ['Go Live', draft.go_live_status],
+            ['Assets Received', draft.assets_received ? 'Yes' : 'No'],
+            ['Integrations Connected', draft.integrations_connected ? 'Yes' : 'No'],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
               <p className="text-xs uppercase tracking-[0.16em] text-gray-500">{label}</p>
@@ -52,7 +58,7 @@ export default function OnboardingCard({ onboarding, onSave, isSaving }) {
         </div>
 
         <div className="grid lg:grid-cols-[220px_1fr_auto] gap-4 items-start">
-          <Select value={onboarding.onboarding_stage} onValueChange={(value) => onSave({ ...onboarding, onboarding_stage: value })}>
+          <Select value={draft.onboarding_stage} onValueChange={(value) => setDraft({ ...draft, onboarding_stage: value })}>
             <SelectTrigger className="bg-white/[0.03] border-white/10 text-white">
               <SelectValue />
             </SelectTrigger>
@@ -61,13 +67,13 @@ export default function OnboardingCard({ onboarding, onSave, isSaving }) {
             </SelectContent>
           </Select>
           <Textarea
-            value={onboarding.onboarding_notes || ''}
-            onChange={(e) => onSave({ ...onboarding, onboarding_notes: e.target.value }, true)}
+            value={draft.onboarding_notes || ''}
+            onChange={(e) => setDraft({ ...draft, onboarding_notes: e.target.value })}
             className="bg-white/[0.03] border-white/10 text-white min-h-[92px]"
             placeholder="Onboarding notes, blockers, next actions, and progress details."
           />
           <Button
-            onClick={() => onSave(onboarding)}
+            onClick={() => onSave(draft)}
             disabled={isSaving}
             className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50"
           >
