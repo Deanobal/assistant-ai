@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BriefcaseBusiness, LogOut, UsersRound, ShieldCheck, Rocket, BarChart3 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Lead Dashboard', path: '/LeadDashboard', icon: Funnel },
+  { label: 'Lead Dashboard', path: '/LeadDashboard', icon: BarChart3 },
   { label: 'Client Manager', path: '/ClientManager', icon: UsersRound },
   { label: 'Onboarding', path: '/Onboarding', icon: Rocket },
   { label: 'Team Access', path: '/TeamAccess', icon: ShieldCheck },
