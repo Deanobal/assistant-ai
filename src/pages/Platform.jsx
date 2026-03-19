@@ -68,7 +68,7 @@ export default function Platform() {
             <CallRecordings />
             <AnalyticsSection mode="sample" />
             <BillingSection />
-            <PortalIntegrations />
+            <PortalIntegrations mode="sample" />
             <SupportSection />
           </div>
 

@@ -1,90 +1,26 @@
-export const integrationSummary = [
-  {
-    label: 'Connected Apps',
-    value: '6',
-    helper: 'Core tools currently linked',
-  },
-  {
-    label: 'Last Successful Sync',
-    value: '2 min ago',
-    helper: 'Most recent confirmed update',
-  },
-  {
-    label: 'Active Workflows',
-    value: '8',
-    helper: 'Bookings, follow-up, and lead routing',
-  },
-  {
-    label: 'Sync Health',
-    value: 'Healthy',
-    helper: 'All critical connections running',
-  },
-];
-
-export const integrationSections = [
+export const integrationDefinitions = [
   {
     title: 'CRM Integrations',
-    description: 'Keep leads, call outcomes, and pipeline stages aligned across your sales system.',
+    category: 'crm',
+    description: 'Keep leads, customer records, and follow-up actions aligned inside your business systems.',
     features: [
       'Create new leads',
       'Update contact records',
       'Track call outcomes',
-      'Move opportunities into pipeline stages',
+      'Support cleaner pipeline follow-up',
     ],
     items: [
       {
         appName: 'GoHighLevel',
         appCode: 'GHL',
-        status: 'Connected',
-        syncState: 'Healthy',
-        lastSync: '4 minutes ago',
-        description: 'Push new enquiries into GoHighLevel and keep follow-up activity visible for your team.',
-        primaryAction: 'Manage',
-        secondaryAction: 'Disconnect',
-      },
-      {
-        appName: 'HubSpot',
-        appCode: 'HS',
-        status: 'Connected',
-        syncState: 'Healthy',
-        lastSync: '11 minutes ago',
-        description: 'Create contacts, log call outcomes, and keep deal stages updated automatically.',
-        primaryAction: 'Manage',
-        secondaryAction: 'Disconnect',
-      },
-      {
-        appName: 'Salesforce',
-        appCode: 'SF',
-        status: 'Not Connected',
-        syncState: 'Ready to connect',
-        lastSync: 'No sync yet',
-        description: 'Sync captured leads and opportunity updates into your Salesforce workflow.',
-        primaryAction: 'Connect',
-      },
-      {
-        appName: 'Pipedrive',
-        appCode: 'PD',
-        status: 'Not Connected',
-        syncState: 'Ready to connect',
-        lastSync: 'No sync yet',
-        description: 'Send fresh enquiries into Pipedrive and keep sales progress current.',
-        primaryAction: 'Connect',
-      },
-      {
-        appName: 'Zoho',
-        appCode: 'ZO',
-        status: 'Needs Attention',
-        syncState: 'Reconnect recommended',
-        lastSync: '2 hours ago',
-        description: 'Reconnect Zoho CRM to resume lead updates and call outcome syncing.',
-        primaryAction: 'Reconnect',
-        secondaryAction: 'Manage',
+        description: 'Keep lead details, notes, and workflow actions aligned inside GoHighLevel.',
       },
     ],
   },
   {
     title: 'Calendar Integrations',
-    description: 'Sync real availability so bookings stay accurate and admin work stays low.',
+    category: 'calendar',
+    description: 'Sync live availability so bookings stay accurate and easier to manage.',
     features: [
       'Sync availability',
       'Support appointment booking',
@@ -95,58 +31,37 @@ export const integrationSections = [
       {
         appName: 'Google Calendar',
         appCode: 'GC',
-        status: 'Connected',
-        syncState: 'Healthy',
-        lastSync: '2 minutes ago',
-        description: 'Keep your live calendar availability in sync so AssistantAI can book confidently.',
-        primaryAction: 'Manage',
-        secondaryAction: 'Disconnect',
+        description: 'Connect Google Calendar so AssistantAI can work with real availability and booking workflows.',
       },
       {
         appName: 'Outlook Calendar',
         appCode: 'OC',
-        status: 'Not Connected',
-        syncState: 'Ready to connect',
-        lastSync: 'No sync yet',
-        description: 'Connect Outlook Calendar to align bookings with Microsoft-based schedules.',
-        primaryAction: 'Connect',
+        description: 'Connect Outlook Calendar to keep Microsoft-based schedules and appointments aligned.',
       },
     ],
   },
   {
     title: 'Messaging Integrations',
-    description: 'Send confirmations, missed-call follow-up, and internal notifications automatically.',
+    category: 'messaging',
+    description: 'Send confirmations, follow-up messages, and notifications with less manual work.',
     features: [
       'Send confirmations',
-      'Send missed-call follow-up messages',
+      'Trigger missed-call follow-up',
       'Notify staff',
-      'Trigger follow-up sequences',
+      'Support nurture flows',
     ],
     items: [
       {
         appName: 'Twilio',
         appCode: 'TW',
-        status: 'Connected',
-        syncState: 'Healthy',
-        lastSync: '7 minutes ago',
-        description: 'Deliver SMS confirmations and follow-up messages immediately after each call.',
-        primaryAction: 'Manage',
-        secondaryAction: 'Disconnect',
-      },
-      {
-        appName: 'GoHighLevel SMS',
-        appCode: 'SMS',
-        status: 'Not Connected',
-        syncState: 'Ready to connect',
-        lastSync: 'No sync yet',
-        description: 'Use GoHighLevel SMS for reminders, staff notifications, and nurture sequences.',
-        primaryAction: 'Connect',
+        description: 'Use Twilio for confirmations, reminders, and SMS follow-up after calls or bookings.',
       },
     ],
   },
   {
-    title: 'Billing & Payments',
-    description: 'Keep billing simple with secure payments, saved methods, and subscription management.',
+    title: 'Payments',
+    category: 'payments',
+    description: 'Keep billing and payment workflows visible and easier to manage.',
     features: [
       'Manage secure payments',
       'Store billing methods',
@@ -157,61 +72,88 @@ export const integrationSections = [
       {
         appName: 'Stripe',
         appCode: 'ST',
-        status: 'Connected',
-        syncState: 'Healthy',
-        lastSync: '15 minutes ago',
-        description: 'Manage subscriptions, invoices, and card details in one secure billing connection.',
-        primaryAction: 'Manage',
-        secondaryAction: 'Disconnect',
+        description: 'Use Stripe for subscription billing, saved methods, and invoice visibility.',
       },
     ],
   },
   {
-    title: 'Future / Optional Integrations',
-    description: 'Additional tools that can extend reporting, notifications, and cross-system automation later on.',
+    title: 'Future Integrations',
+    category: 'future',
+    description: 'Prepare for future workflow expansion without implying anything is live before it is connected.',
     features: [
-      'Expand automation coverage',
-      'Connect team notifications',
-      'Support broader workflows',
+      'Extend automation coverage',
+      'Support cross-system workflows',
       'Prepare for future growth',
+      'Keep visibility clean and safe',
     ],
     items: [
       {
         appName: 'Zapier',
         appCode: 'ZA',
-        status: 'Not Connected',
-        syncState: 'Optional setup',
-        lastSync: 'No sync yet',
-        description: 'Link AssistantAI with thousands of business tools through flexible workflow automation.',
-        primaryAction: 'Connect',
-      },
-      {
-        appName: 'Slack',
-        appCode: 'SL',
-        status: 'Not Connected',
-        syncState: 'Optional setup',
-        lastSync: 'No sync yet',
-        description: 'Send team alerts and internal updates into the right Slack channels.',
-        primaryAction: 'Connect',
-      },
-      {
-        appName: 'Microsoft Teams',
-        appCode: 'MT',
-        status: 'Not Connected',
-        syncState: 'Optional setup',
-        lastSync: 'No sync yet',
-        description: 'Keep staff notified inside Teams when bookings, missed calls, or urgent jobs come in.',
-        primaryAction: 'Connect',
-      },
-      {
-        appName: 'Email Platform',
-        appCode: 'EM',
-        status: 'Not Connected',
-        syncState: 'Optional setup',
-        lastSync: 'No sync yet',
-        description: 'Coordinate follow-up emails, reminders, and nurture campaigns from one connected platform.',
-        primaryAction: 'Connect',
+        description: 'Use Zapier later to connect AssistantAI with broader workflow tools and automations.',
       },
     ],
   },
 ];
+
+export function mergeIntegrationState(records = []) {
+  return integrationDefinitions.map((section) => ({
+    ...section,
+    items: section.items.map((item) => {
+      const record = records.find((entry) => entry.app_name === item.appName);
+      return {
+        ...item,
+        id: record?.id,
+        status: record?.connection_status || 'not_connected',
+        connectedAccountIdentifier: record?.connected_account_identifier || '',
+        lastSyncTime: record?.last_sync_time || '',
+        lastErrorMessage: record?.last_error_message || '',
+        managedBy: record?.managed_by || 'admin',
+        clientAccountId: record?.client_account_id || null,
+      };
+    }),
+  }));
+}
+
+export function buildIntegrationSummary(records = []) {
+  const connected = records.filter((item) => item.connection_status === 'connected').length;
+  const lastSyncRecord = records
+    .filter((item) => item.last_sync_time)
+    .sort((a, b) => new Date(b.last_sync_time).getTime() - new Date(a.last_sync_time).getTime())[0];
+  const pending = records.filter((item) => item.connection_status === 'pending').length;
+  const errors = records.filter((item) => item.connection_status === 'error').length;
+
+  return [
+    {
+      label: 'Connected Apps',
+      value: connected,
+      helper: connected > 0 ? 'Apps currently connected' : 'No live connections yet',
+    },
+    {
+      label: 'Last Successful Sync',
+      value: lastSyncRecord?.last_sync_time ? new Date(lastSyncRecord.last_sync_time).toLocaleString() : 'No sync yet',
+      helper: 'Most recent stored sync timestamp',
+    },
+    {
+      label: 'Pending Connections',
+      value: pending,
+      helper: pending > 0 ? 'Waiting for setup or verification' : 'No pending connection requests',
+    },
+    {
+      label: 'Sync Health',
+      value: errors > 0 ? 'Needs Attention' : connected > 0 ? 'Healthy' : 'Not connected',
+      helper: errors > 0 ? `${errors} integration issue${errors > 1 ? 's' : ''} stored` : 'Based on current saved state',
+    },
+  ];
+}
+
+export function getPrimaryAction(status) {
+  if (status === 'connected' || status === 'pending') return 'manage';
+  if (status === 'error') return 'reconnect';
+  return 'connect';
+}
+
+export function getSecondaryAction(status) {
+  if (status === 'connected' || status === 'pending' || status === 'error') return 'disconnect';
+  return null;
+}

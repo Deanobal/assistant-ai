@@ -2,14 +2,35 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { getPrimaryAction, getSecondaryAction } from './integrationsData';
 
-const statusClasses = {
-  Connected: 'bg-green-500/10 text-green-400 border-green-500/20',
-  'Not Connected': 'bg-white/5 text-gray-300 border-white/10',
-  'Needs Attention': 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+const statusLabel = {
+  not_connected: 'Not Connected',
+  pending: 'Pending',
+  connected: 'Connected',
+  error: 'Error',
+  disconnected: 'Disconnected',
 };
 
-export default function IntegrationCard({ item, features }) {
+const statusClasses = {
+  connected: 'bg-green-500/10 text-green-400 border-green-500/20',
+  pending: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  error: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  not_connected: 'bg-white/5 text-gray-300 border-white/10',
+  disconnected: 'bg-white/5 text-gray-300 border-white/10',
+};
+
+const actionLabel = {
+  connect: 'Connect',
+  manage: 'Manage',
+  reconnect: 'Reconnect',
+  disconnect: 'Disconnect',
+};
+
+export default function IntegrationCard({ item, features, onAction, isSaving }) {
+  const primaryAction = getPrimaryAction(item.status);
+  const secondaryAction = getSecondaryAction(item.status);
+
   return (
     <Card className="bg-[#12121a] border-white/5 h-full shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
       <CardContent className="p-6 space-y-5">
@@ -20,23 +41,32 @@ export default function IntegrationCard({ item, features }) {
             </div>
             <div className="min-w-0">
               <h4 className="text-lg font-semibold text-white truncate">{item.appName}</h4>
-              <p className="text-sm text-gray-500">{item.syncState}</p>
+              <p className="text-sm text-gray-500">{item.status === 'error' ? 'Connection needs attention' : item.status === 'pending' ? 'Connection setup in progress' : item.status === 'connected' ? 'Stored connection state is active' : 'No live connection saved yet'}</p>
             </div>
           </div>
-          <Badge className={statusClasses[item.status]}>{item.status}</Badge>
+          <Badge className={statusClasses[item.status]}>{statusLabel[item.status]}</Badge>
         </div>
 
         <p className="text-sm leading-relaxed text-gray-400">{item.description}</p>
 
         <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 space-y-3">
           <div className="flex items-center justify-between gap-4 text-sm">
-            <span className="text-gray-500">Connection Status</span>
-            <span className="text-white">{item.status}</span>
+            <span className="text-gray-500">Last Sync</span>
+            <span className="text-white text-right">{item.lastSyncTime ? new Date(item.lastSyncTime).toLocaleString() : 'No sync yet'}</span>
           </div>
           <div className="flex items-center justify-between gap-4 text-sm">
-            <span className="text-gray-500">Last Sync</span>
-            <span className="text-white">{item.lastSync}</span>
+            <span className="text-gray-500">Managed By</span>
+            <span className="text-white capitalize">{item.managedBy}</span>
           </div>
+          <div className="flex items-center justify-between gap-4 text-sm">
+            <span className="text-gray-500">Account</span>
+            <span className="text-white text-right">{item.connectedAccountIdentifier || 'Not linked yet'}</span>
+          </div>
+          {item.lastErrorMessage && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              {item.lastErrorMessage}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -49,12 +79,21 @@ export default function IntegrationCard({ item, features }) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
-          <Button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-            {item.primaryAction}
+          <Button
+            disabled={isSaving}
+            onClick={() => onAction(item, primaryAction)}
+            className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50"
+          >
+            {actionLabel[primaryAction]}
           </Button>
-          {item.secondaryAction && (
-            <Button variant="outline" className="border-white/10 text-white hover:bg-white/5">
-              {item.secondaryAction}
+          {secondaryAction && (
+            <Button
+              variant="outline"
+              disabled={isSaving}
+              onClick={() => onAction(item, secondaryAction)}
+              className="border-white/10 bg-transparent text-white hover:bg-white/5 disabled:opacity-50"
+            >
+              {actionLabel[secondaryAction]}
             </Button>
           )}
         </div>

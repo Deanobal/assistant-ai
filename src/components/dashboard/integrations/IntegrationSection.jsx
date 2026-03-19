@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import IntegrationCard from './IntegrationCard';
 
-export default function IntegrationSection({ section }) {
+export default function IntegrationSection({ section, onAction, isSaving }) {
   return (
     <section className="space-y-5">
       <div className="space-y-2">
@@ -18,7 +18,7 @@ export default function IntegrationSection({ section }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <IntegrationCard item={item} features={section.features} />
+            <IntegrationCard item={item} features={section.features} onAction={onAction} isSaving={isSaving} />
           </motion.div>
         ))}
       </div>

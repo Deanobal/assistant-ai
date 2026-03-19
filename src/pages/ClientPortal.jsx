@@ -134,7 +134,7 @@ export default function ClientPortal() {
             <BillingSection />
           </TabsContent>
           <TabsContent value="integrations">
-            <PortalIntegrations />
+            <PortalIntegrations clientAccountId={currentUser.client_account_id} />
           </TabsContent>
           <TabsContent value="support">
             <SupportSection />
