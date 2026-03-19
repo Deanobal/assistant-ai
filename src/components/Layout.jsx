@@ -34,33 +34,33 @@ function Navbar() {
           <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
         </Link>
 
-        <div className="hidden xl:flex items-center gap-6 min-w-0">
-          {navLinks.map((link) =>
+        <div className="hidden md:flex items-center justify-end gap-6 flex-1 min-w-0">
+          <div className="flex items-center gap-6 min-w-0">
+            {navLinks.map((link) =>
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`text-sm font-medium whitespace-nowrap transition-colors ${
+              location.pathname === link.path ?
+              'text-cyan-400' :
+              'text-gray-400 hover:text-cyan-400'}`
+              }>
+
+                {link.label}
+              </Link>
+            )}
+          </div>
+
           <Link
-            key={link.path}
-            to={link.path}
-            className={`text-sm font-medium whitespace-nowrap transition-colors ${
-            location.pathname === link.path ?
-            'text-cyan-400' :
-            'text-gray-400 hover:text-white'}`
-            }>
+            to="/ClientLogin"
+            className="shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20 hover:text-white">
 
-              {link.label}
-            </Link>
-          )}
-        </div>
-
-        <div className="hidden xl:block shrink-0">
-          <Link
-            to="/Contact"
-            className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/20 transition-all whitespace-nowrap">
-
-            Book Demo
+            Client Login
           </Link>
         </div>
 
         <button
-          className="xl:hidden text-white"
+          className="md:hidden text-white"
           onClick={() => setMobileOpen(!mobileOpen)}>
 
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
