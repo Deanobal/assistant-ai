@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export default function OnboardingCard({ onboarding, onSave, isSaving }) {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-[220px_1fr_auto] gap-4 items-start">
+        <div className="grid lg:grid-cols-[220px_1fr] gap-4 items-start">
           <Select value={draft.onboarding_stage} onValueChange={(value) => setDraft({ ...draft, onboarding_stage: value })}>
             <SelectTrigger className="bg-white/[0.03] border-white/10 text-white">
               <SelectValue />
@@ -72,6 +73,14 @@ export default function OnboardingCard({ onboarding, onSave, isSaving }) {
             className="bg-white/[0.03] border-white/10 text-white min-h-[92px]"
             placeholder="Onboarding notes, blockers, next actions, and progress details."
           />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          <Link to={`/OnboardingIntake?id=${draft.id}`}>
+            <Button variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/5 w-full sm:w-auto">
+              Open Intake Form
+            </Button>
+          </Link>
           <Button
             onClick={() => onSave(draft)}
             disabled={isSaving}
