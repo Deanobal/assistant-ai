@@ -46,7 +46,7 @@ export default function Platform() {
                 Client Login
               </Link>
             </div>
-            <p className="mt-4 text-gray-500 text-sm">This page uses realistic sample data to show the software experience without exposing private client information.</p>
+            <p className="mt-4 text-gray-500 text-sm">This is a public preview only. All data shown here is sample data and not real client performance.</p>
           </motion.div>
 
           <div className="mb-12">
