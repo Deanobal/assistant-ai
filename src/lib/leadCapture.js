@@ -16,9 +16,11 @@ function buildLeadScore(volume) {
   return 25;
 }
 
-function buildEnquiryLog({ timestamp, sourcePage, enquiryType, message }) {
-  const header = `[${timestamp}] ${sourcePage}${enquiryType ? ` • ${enquiryType}` : ''}`;
-  return `${header}\n${message || 'No message provided.'}`;
+function buildEnquiryLog({ timestamp, sourcePage, enquiryType, bookingSource, preferredDate, preferredTime, message }) {
+  const parts = [sourcePage, enquiryType, bookingSource].filter(Boolean);
+  const timing = [preferredDate, preferredTime].filter(Boolean).join(' ');
+  const header = `[${timestamp}] ${parts.join(' • ')}`;
+  return `${header}${timing ? `\nPreferred meeting: ${timing}` : ''}\n${message || 'No message provided.'}`;
 }
 
 export async function submitLeadCapture(form, options = {}) {
@@ -40,6 +42,10 @@ export async function submitLeadCapture(form, options = {}) {
     assigned_owner: '',
     lead_score: buildLeadScore(form.monthly_enquiry_volume),
     last_activity_at: now,
+    booking_intent: options.bookingIntent || false,
+    booking_source: options.bookingSource || '',
+    preferred_meeting_date: form.preferred_meeting_date || '',
+    preferred_meeting_time: form.preferred_meeting_time || '',
   };
 
   const byEmail = email ? await base44.entities.Lead.filter({ email }, '-updated_date', 10) : [];
@@ -52,6 +58,9 @@ export async function submitLeadCapture(form, options = {}) {
       timestamp: now,
       sourcePage,
       enquiryType: basePayload.enquiry_type,
+      bookingSource: basePayload.booking_source,
+      preferredDate: basePayload.preferred_meeting_date,
+      preferredTime: basePayload.preferred_meeting_time,
       message: basePayload.message,
     });
 
@@ -61,7 +70,7 @@ export async function submitLeadCapture(form, options = {}) {
       ...existing,
       ...basePayload,
       created_at: existing.created_at || existing.created_date || now,
-      status: options.matchedLeadStatus || existing.status || 'New Lead',
+      status: options.matchedLeadStatus || existing.status || options.createStatus || 'New Lead',
       next_action: options.nextActionText || existing.next_action || '',
       notes: nextNotes,
     });
@@ -70,12 +79,15 @@ export async function submitLeadCapture(form, options = {}) {
   return base44.entities.Lead.create({
     ...basePayload,
     created_at: now,
-    status: 'New Lead',
+    status: options.createStatus || 'New Lead',
     next_action: options.nextActionText || '',
     notes: buildEnquiryLog({
       timestamp: now,
       sourcePage,
       enquiryType: basePayload.enquiry_type,
+      bookingSource: basePayload.booking_source,
+      preferredDate: basePayload.preferred_meeting_date,
+      preferredTime: basePayload.preferred_meeting_time,
       message: basePayload.message,
     }),
   });
