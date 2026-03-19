@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import OverviewPreview from '../components/portal/OverviewPreview';
+import ClientOverviewSection from '../components/portal/ClientOverviewSection';
 import CallRecordings from '../components/dashboard/CallRecordings';
 import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import BillingSection from '../components/dashboard/BillingSection';
@@ -122,10 +122,10 @@ export default function ClientPortal() {
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewPreview />
+            <ClientOverviewSection clientAccountId={currentUser.client_account_id} />
           </TabsContent>
           <TabsContent value="calls">
-            <CallRecordings />
+            <CallRecordings clientAccountId={currentUser.client_account_id} />
           </TabsContent>
           <TabsContent value="analytics">
             <AnalyticsSection clientAccountId={currentUser.client_account_id} />

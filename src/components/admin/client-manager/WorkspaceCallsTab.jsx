@@ -3,6 +3,17 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function WorkspaceCallsTab({ client }) {
+  if (!client.recent_calls || client.recent_calls.length === 0) {
+    return (
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-10 text-center space-y-3">
+          <h3 className="text-xl font-semibold text-white">No Call Activity Yet</h3>
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Recent calls, summaries, sentiment, and follow-up states will appear here once live call records are linked to this client.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="grid gap-4">
       {client.recent_calls.map((call, index) => (

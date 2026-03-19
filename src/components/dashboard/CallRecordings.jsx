@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
 import { Play, Pause, SmilePlus, Frown, Meh, Clock, User, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const callRecordings = [
+const sampleCallRecordings = [
   {
     id: 1,
     caller: 'Demo Caller A',
@@ -35,36 +37,6 @@ const callRecordings = [
     followUpStatus: 'Reminder queued',
     leadQuality: 'Qualified',
   },
-  {
-    id: 3,
-    caller: 'Demo Caller C',
-    phone: '+61 4XX XXX 789',
-    duration: '4:52',
-    timestamp: '8 hours ago',
-    sentiment: 'positive',
-    sentimentScore: 0.91,
-    summary: 'Repeat caller booked a maintenance appointment and confirmed they preferred the same technician as their previous visit.',
-    topics: ['Repeat Customer', 'Booking', 'Maintenance'],
-    outcome: 'Booked',
-    urgency: 'Standard',
-    followUpStatus: 'Booking confirmation sent',
-    leadQuality: 'Hot Lead',
-  },
-  {
-    id: 4,
-    caller: 'Demo Caller D',
-    phone: '+61 4XX XXX 321',
-    duration: '1:38',
-    timestamp: '10 hours ago',
-    sentiment: 'negative',
-    sentimentScore: 0.28,
-    summary: 'Caller raised a service issue and requested priority follow-up from the team. The AI collected details and escalated internally.',
-    topics: ['Complaint', 'Escalation', 'Reschedule'],
-    outcome: 'Follow Up Needed',
-    urgency: 'Urgent',
-    followUpStatus: 'Escalated to team',
-    leadQuality: 'Needs Review',
-  },
 ];
 
 const labelColors = {
@@ -80,8 +52,36 @@ const labelColors = {
   'Needs Review': 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
 };
 
-export default function CallRecordings() {
+export default function CallRecordings({ mode = 'live', clientAccountId = null }) {
   const [playingId, setPlayingId] = useState(null);
+  const isSample = mode === 'sample';
+
+  const { data: records = [], isLoading } = useQuery({
+    queryKey: ['call-recordings', clientAccountId || 'all', mode],
+    queryFn: () => clientAccountId
+      ? base44.entities.CallRecord.filter({ client_account_id: clientAccountId }, '-timestamp', 100)
+      : base44.entities.CallRecord.list('-timestamp', 100),
+    initialData: [],
+    enabled: !isSample,
+  });
+
+  const callRecordings = isSample
+    ? sampleCallRecordings
+    : records.map((record) => ({
+        id: record.id,
+        caller: record.caller_name,
+        phone: record.caller_phone,
+        duration: `${Math.floor((record.duration || 0) / 60)}:${String((record.duration || 0) % 60).padStart(2, '0')}`,
+        timestamp: record.timestamp ? new Date(record.timestamp).toLocaleString() : 'Unknown',
+        sentiment: record.sentiment,
+        sentimentScore: record.sentiment === 'positive' ? 0.8 : record.sentiment === 'negative' ? 0.3 : 0.5,
+        summary: record.ai_summary,
+        topics: [record.enquiry_category, record.outcome_label].filter(Boolean),
+        outcome: record.outcome_label || record.status,
+        urgency: record.enquiry_category === 'urgent service' ? 'Urgent' : 'Standard',
+        followUpStatus: record.follow_up_required ? 'Follow-up required' : 'No follow-up needed',
+        leadQuality: record.lead_id ? 'Qualified' : 'Needs Review',
+      }));
 
   const getSentimentIcon = (sentiment) => {
     switch (sentiment) {
@@ -99,15 +99,34 @@ export default function CallRecordings() {
     }
   };
 
+  if (!isSample && isLoading) {
+    return (
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-8 text-center text-gray-400">Loading call recordings…</CardContent>
+      </Card>
+    );
+  }
+
+  if (!isSample && callRecordings.length === 0) {
+    return (
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-10 text-center space-y-3">
+          <h2 className="text-2xl font-bold text-white">No Call Recordings Yet</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Once live calls are stored for this client, recordings, summaries, sentiment, and follow-up states will appear here automatically.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-white">Call Recordings</h2>
-          <p className="text-gray-400 text-sm mt-1">Demo call examples showing how summaries, labels, and sentiment can appear inside the client portal.</p>
+          <p className="text-gray-400 text-sm mt-1">{isSample ? 'Demo call examples showing how summaries, labels, and sentiment can appear inside the client portal.' : 'Live call records and AI summaries for this client account.'}</p>
         </div>
         <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
-          {callRecordings.length} Sample Calls
+          {isSample ? `${callRecordings.length} Sample Calls` : `${callRecordings.length} Live Calls`}
         </Badge>
       </div>
 
@@ -172,10 +191,10 @@ export default function CallRecordings() {
               </div>
 
               <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-3">
-                <Badge className={labelColors[call.outcome]}>{call.outcome}</Badge>
-                <Badge className={labelColors[call.urgency]}>{call.urgency}</Badge>
+                <Badge className={labelColors[call.outcome] || 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}>{call.outcome}</Badge>
+                <Badge className={labelColors[call.urgency] || 'bg-white/5 text-gray-300 border-white/10'}>{call.urgency}</Badge>
                 <Badge className="bg-white/5 text-gray-300 border-white/10">{call.followUpStatus}</Badge>
-                <Badge className={labelColors[call.leadQuality]}>{call.leadQuality}</Badge>
+                <Badge className={labelColors[call.leadQuality] || 'bg-white/5 text-gray-300 border-white/10'}>{call.leadQuality}</Badge>
               </div>
 
               <div>
