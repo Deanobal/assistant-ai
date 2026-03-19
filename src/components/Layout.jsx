@@ -73,10 +73,10 @@ function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="xl:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
+          className="md:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
 
             <div className="px-6 py-4 space-y-3">
-              {navLinks.map((link) =>
+              {mobileNavLinks.map((link) =>
             <Link
               key={link.path}
               to={link.path}
@@ -88,13 +88,6 @@ function Navbar() {
                   {link.label}
                 </Link>
             )}
-              <Link
-              to="/Contact"
-              onClick={() => setMobileOpen(false)}
-              className="block w-full text-center px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full mt-3">
-
-                Book Demo
-              </Link>
             </div>
           </motion.div>
         }
