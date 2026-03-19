@@ -13,7 +13,9 @@ export default function WorkspaceNotesTab({ client, onAddNote }) {
       <Card className="bg-[#12121a] border-white/5">
         <CardContent className="p-6 space-y-4">
           <h3 className="text-white font-semibold">Internal Notes</h3>
-          {client.notes_entries.map((note, index) => (
+          {client.notes_entries.length === 0 ? (
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 text-gray-400">No internal notes saved yet.</div>
+          ) : client.notes_entries.map((note, index) => (
             <div key={`${note.title}-${index}`} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 space-y-2">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
                 <div>
