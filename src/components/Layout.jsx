@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ChatWidget from './chat/ChatWidget';
 
 const navLinks = [
-{ label: 'Home', path: '/Home' },
+{ label: 'Home', path: '/' },
 { label: 'Services', path: '/Services' },
 { label: 'Integrations', path: '/Integrations' },
 { label: 'Pricing', path: '/Pricing' },
@@ -25,7 +25,7 @@ function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
-        <Link to="/Home" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png"
             alt="AssistantAI Logo"

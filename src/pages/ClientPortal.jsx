@@ -40,7 +40,7 @@ export default function ClientPortal() {
   }
 
   const handleLogout = () => {
-    base44.auth.logout('/Home');
+    base44.auth.logout('/');
   };
 
   return (

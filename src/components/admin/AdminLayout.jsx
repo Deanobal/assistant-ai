@@ -54,7 +54,7 @@ export default function AdminLayout() {
               <h1 className="text-2xl font-bold text-white mb-2">Admin Access Only</h1>
               <p className="text-gray-400">This internal workspace is reserved for the AssistantAI team.</p>
             </div>
-            <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
+            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
               Return to Website
             </Button>
           </CardContent>
