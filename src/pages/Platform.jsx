@@ -66,7 +66,7 @@ export default function Platform() {
           <div className="space-y-12">
             <OverviewPreview />
             <CallRecordings />
-            <AnalyticsSection />
+            <AnalyticsSection mode="sample" />
             <BillingSection />
             <PortalIntegrations />
             <SupportSection />
