@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, ArrowRight } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 export default function ClientLogin() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (email && password === 'client2026') {
-      localStorage.setItem('client_portal_authenticated', 'true');
-      navigate('/ClientPortal');
+    if (!email || !password) {
+      setError('Please enter your email and password');
       return;
     }
-    setError('Incorrect login details');
+    setError('');
+    base44.auth.redirectToLogin('/ClientPortal');
   };
 
   return (
@@ -35,9 +35,7 @@ export default function ClientLogin() {
               <Lock className="w-7 h-7 text-cyan-400" />
             </div>
             <h1 className="text-2xl font-bold text-white text-center mb-2">Client Login</h1>
-            <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI client portal to review call activity, billing, integrations, and performance.
-
-            </p>
+            <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI client portal to review call activity, billing, integrations, and performance.</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
@@ -65,12 +63,16 @@ export default function ClientLogin() {
                 Sign In
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Secure sign-in continues through the protected login flow.
+              </p>
             </form>
 
-            <div className="mt-6 text-center text-sm">
-              <Link to="/Contact" className="text-gray-400 text-lg hover:text-white transition-colors">Need help? Contact support
-
+            <div className="mt-6 text-center text-sm space-y-2">
+              <Link to="/Contact" className="block text-cyan-400 hover:text-cyan-300 transition-colors">
+                Need help? Contact support
               </Link>
+              <p className="text-gray-500 text-xs">Protected access for approved AssistantAI clients only.</p>
             </div>
           </CardContent>
         </Card>

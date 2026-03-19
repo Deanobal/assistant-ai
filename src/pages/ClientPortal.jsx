@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -13,15 +14,33 @@ import PortalIntegrations from '../components/dashboard/PortalIntegrations';
 import SupportSection from '../components/dashboard/SupportSection';
 
 export default function ClientPortal() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('client_portal_authenticated') === 'true');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const authenticated = await base44.auth.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setIsLoading(false);
+    };
+
+    checkAccess();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
+        <div className="w-8 h-8 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/ClientLogin" replace />;
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('client_portal_authenticated');
-    setIsAuthenticated(false);
+    base44.auth.logout('/Home');
   };
 
   return (
@@ -40,7 +59,7 @@ export default function ClientPortal() {
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI Client Portal</h1>
             <p className="text-gray-400">Review call activity, billing, integrations, and support from one private client workspace.</p>
           </div>
-          <Button variant="outline" onClick={handleLogout} className="border-white/10 text-white hover:bg-white/5 w-fit">
+          <Button variant="outline" onClick={handleLogout} className="border-white/10 bg-transparent text-white hover:bg-white/5 w-fit">
             <LogOut className="w-4 h-4 mr-2" />
             Log Out
           </Button>
