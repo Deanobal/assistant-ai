@@ -1,12 +1,10 @@
-import { mockClientAccounts } from './mockClients';
-
 const STORAGE_KEY = 'assistantai_client_accounts';
 
 export function loadClientAccounts() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockClientAccounts));
-    return mockClientAccounts;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    return [];
   }
   return JSON.parse(stored);
 }
