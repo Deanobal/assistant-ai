@@ -1,0 +1,71 @@
+import React from 'react';
+import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+export default function BookingSupportPanel({ bookingUrl, heading = 'What Happens Next?', intro, responseText }) {
+  return (
+    <div className="space-y-6">
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-white font-semibold text-lg">{heading}</h3>
+          {intro && <p className="text-gray-400 leading-relaxed">{intro}</p>}
+          <ol className="space-y-4">
+            {[
+              'We review your enquiry and business needs.',
+              'We confirm the right next step for your strategy call.',
+              'We reply with timing, recommendations, or booking options.',
+            ].map((step, index) => (
+              <li key={step} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0 text-xs font-bold text-white">
+                  {index + 1}
+                </div>
+                <p className="text-gray-300 leading-relaxed">{step}</p>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
+
+      {bookingUrl && (
+        <Card className="bg-gradient-to-b from-cyan-500/10 to-transparent border-cyan-500/20">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-cyan-300" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Book Instantly</h3>
+                <p className="text-sm text-gray-400">Choose a live calendar slot for your strategy call.</p>
+              </div>
+            </div>
+            <a href={bookingUrl} target="_blank" rel="noreferrer" className="block">
+              <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                Book Free Strategy Call
+                <ArrowUpRight className="w-4 h-4 ml-2" />
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-white font-semibold">Contact Details</h3>
+          <div className="flex items-start gap-3 text-gray-300 text-sm">
+            <Mail className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+            <a href="mailto:sales@assistantai.com.au" className="hover:text-cyan-300 transition-colors">sales@assistantai.com.au</a>
+          </div>
+          <div className="flex items-start gap-3 text-gray-300 text-sm">
+            <Phone className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+            <span>Phone support available by request during the strategy call process.</span>
+          </div>
+          <div className="flex items-start gap-3 text-gray-300 text-sm">
+            <Clock3 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+            <span>{responseText}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

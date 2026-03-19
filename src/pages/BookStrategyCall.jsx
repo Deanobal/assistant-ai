@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import LeadForm from '../components/LeadForm';
-import BookingSupportPanel from '../components/contact/BookingSupportPanel';
+import LeadForm from '@/components/LeadForm';
+import BookingSupportPanel from '@/components/contact/BookingSupportPanel';
+import { STRATEGY_CALL_BOOKING_URL } from '@/lib/booking';
 
-export default function Contact() {
+export default function BookStrategyCall() {
   return (
     <div>
       <section className="relative py-24 md:py-28 bg-grid">
@@ -14,12 +15,12 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-14"
           >
-            <p className="text-cyan-400 mb-3 text-base font-medium">CONTACT ASSISTANTAI</p>
+            <p className="text-cyan-400 mb-3 text-base font-medium">BOOK FREE STRATEGY CALL</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-              Talk to Our Team
+              Book Your Free Strategy Call
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              Tell us what is slowing down your lead handling, bookings, or follow-up, and we’ll show you the right next step.
+              Tell us about your business and we’ll show you how AssistantAI can help answer more calls, capture better leads, and automate follow-up.
             </p>
           </motion.div>
 
@@ -31,9 +32,9 @@ export default function Contact() {
               className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
             >
               <LeadForm
-                submitLabel="Request a Call Back"
-                successTitle="Enquiry Received"
-                successText="Thanks — your enquiry has been received. We’ll review your details and reply with the next step within one business day."
+                submitLabel="Book Free Strategy Call"
+                successTitle="Strategy Call Request Received"
+                successText="Thanks — your enquiry has been received. We’ll review your details and send you the next step for your strategy call shortly."
               />
             </motion.div>
 
@@ -44,9 +45,9 @@ export default function Contact() {
               className="lg:col-span-2"
             >
               <BookingSupportPanel
-                heading="What Happens Next?"
-                intro="Once you send your enquiry, we’ll review your workflow and confirm whether a strategy call, follow-up discussion, or direct recommendation is the best next step."
-                responseText="We usually respond within one business day."
+                bookingUrl={STRATEGY_CALL_BOOKING_URL}
+                intro="Use the form to request a strategy call now, or use the live booking button when a calendar link is connected."
+                responseText="We usually respond within one business day with the next step."
               />
             </motion.div>
           </div>

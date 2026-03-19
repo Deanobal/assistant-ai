@@ -15,17 +15,40 @@ const industries = [
   { value: 'law_firm', label: 'Law Firm' },
   { value: 'automotive', label: 'Automotive' },
   { value: 'hospitality', label: 'Hospitality' },
+  { value: 'professional_services', label: 'Professional Services' },
   { value: 'other', label: 'Other' },
 ];
 
-export default function LeadForm() {
+const helpOptions = [
+  { value: 'lead_capture', label: 'Lead capture' },
+  { value: 'booking_automation', label: 'Booking automation' },
+  { value: 'integrations', label: 'Integrations' },
+  { value: 'call_handling', label: 'Call handling' },
+  { value: 'support', label: 'Support' },
+  { value: 'other', label: 'Something else' },
+];
+
+const volumeOptions = [
+  { value: '0_20', label: '0–20 per month' },
+  { value: '21_100', label: '21–100 per month' },
+  { value: '101_300', label: '101–300 per month' },
+  { value: '301_plus', label: '301+ per month' },
+];
+
+export default function LeadForm({
+  submitLabel = 'Request a Call Back',
+  successTitle = 'Enquiry Received',
+  successText = 'Thanks — your enquiry has been received. We’ll review your details and get back to you with the next step within one business day.',
+}) {
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
-    phone: '',
     email: '',
+    phone: '',
     industry: '',
-    automation_interest: '',
+    help_type: '',
+    monthly_enquiry_volume: '',
+    message: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -33,7 +56,7 @@ export default function LeadForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    await base44.entities.Lead.create(form);
+    await base44.entities.Lead.create({ ...form, status: 'new' });
     setSubmitting(false);
     setSubmitted(true);
   };
@@ -48,8 +71,8 @@ export default function LeadForm() {
         <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-cyan-400" />
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
-        <p className="text-gray-400">We'll be in touch within 24 hours to schedule your free strategy call.</p>
+        <h3 className="text-2xl font-bold text-white mb-2">{successTitle}</h3>
+        <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{successText}</p>
       </motion.div>
     );
   }
@@ -80,16 +103,6 @@ export default function LeadForm() {
 
       <div className="grid sm:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <Label className="text-gray-400 text-sm">Phone</Label>
-          <Input
-            type="tel"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-            placeholder="+61 4XX XXX XXX"
-          />
-        </div>
-        <div className="space-y-2">
           <Label className="text-gray-400 text-sm">Email *</Label>
           <Input
             required
@@ -100,32 +113,69 @@ export default function LeadForm() {
             placeholder="john@business.com.au"
           />
         </div>
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm">Mobile Number</Label>
+          <Input
+            type="tel"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            placeholder="+61 4XX XXX XXX"
+          />
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm">Industry</Label>
+          <Select value={form.industry} onValueChange={(value) => setForm({ ...form, industry: value })}>
+            <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+              <SelectValue placeholder="Select your industry" />
+            </SelectTrigger>
+            <SelectContent>
+              {industries.map((industry) => (
+                <SelectItem key={industry.value} value={industry.value}>{industry.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm">What do you need help with?</Label>
+          <Select value={form.help_type} onValueChange={(value) => setForm({ ...form, help_type: value })}>
+            <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+              <SelectValue placeholder="Choose one" />
+            </SelectTrigger>
+            <SelectContent>
+              {helpOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-gray-400 text-sm">Industry</Label>
-        <Select
-          value={form.industry}
-          onValueChange={(value) => setForm({ ...form, industry: value })}
-        >
+        <Label className="text-gray-400 text-sm">Estimated Monthly Enquiry Volume</Label>
+        <Select value={form.monthly_enquiry_volume} onValueChange={(value) => setForm({ ...form, monthly_enquiry_volume: value })}>
           <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
-            <SelectValue placeholder="Select your industry" />
+            <SelectValue placeholder="Select volume" />
           </SelectTrigger>
           <SelectContent>
-            {industries.map(ind => (
-              <SelectItem key={ind.value} value={ind.value}>{ind.label}</SelectItem>
+            {volumeOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-gray-400 text-sm">What do you want to automate?</Label>
+        <Label className="text-gray-400 text-sm">Message</Label>
         <Textarea
-          value={form.automation_interest}
-          onChange={(e) => setForm({ ...form, automation_interest: e.target.value })}
-          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 h-24"
-          placeholder="e.g. answering phone calls, booking appointments, following up with leads..."
+          value={form.message}
+          onChange={(e) => setForm({ ...form, message: e.target.value })}
+          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 min-h-28"
+          placeholder="Tell us about your workflow, what needs fixing, or what you want AssistantAI to help with."
         />
       </div>
 
@@ -138,7 +188,7 @@ export default function LeadForm() {
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <>
-            Book Free Strategy Call
+            {submitLabel}
             <ArrowRight className="w-4 h-4" />
           </>
         )}

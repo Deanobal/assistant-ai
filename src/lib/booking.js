@@ -1,0 +1,1 @@
+export const STRATEGY_CALL_BOOKING_URL = '';

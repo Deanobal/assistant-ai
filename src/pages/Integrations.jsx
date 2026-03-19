@@ -41,7 +41,7 @@ export default function Integrations() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/Contact"
+                to="/BookStrategyCall"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
               >
                 Book Free Strategy Call
@@ -164,7 +164,7 @@ export default function Integrations() {
               Book a strategy call and we’ll map out the right CRM, calendar, and communication workflow for your business.
             </p>
             <Link
-              to="/Contact"
+              to="/BookStrategyCall"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
               Book Free Strategy Call

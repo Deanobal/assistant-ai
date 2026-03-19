@@ -77,7 +77,7 @@ export default function PricingPreview() {
               </div>
 
               <Link
-                to="/Contact"
+                to="/BookStrategyCall"
                 className={`mt-8 block w-full text-center py-3 rounded-full text-sm font-medium transition-all ${
                   plan.featured
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'

@@ -114,7 +114,7 @@ export default function Services() {
               Book a strategy call and we’ll recommend the right combination of voice AI, integrations, booking automation, and follow-up for your business.
             </p>
             <Link
-              to="/Contact"
+              to="/BookStrategyCall"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
               Book Free Strategy Call
