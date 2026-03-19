@@ -2,19 +2,20 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Calendar, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const stats = [
-  { icon: Phone, label: 'Calls handled', value: '1,247', note: 'Last 30 days' },
-  { icon: Users, label: 'Leads captured', value: '589', note: 'Qualified and tracked' },
-  { icon: Calendar, label: 'Appointments booked', value: '342', note: 'Calendar synced' },
-  { icon: TrendingUp, label: 'Response time', value: '< 2s', note: 'Average first response' },
+  { icon: Phone, label: 'Calls handled', value: '1,247', note: 'Example snapshot' },
+  { icon: Users, label: 'Leads captured', value: '589', note: 'Example tracked enquiries' },
+  { icon: Calendar, label: 'Appointments booked', value: '342', note: 'Example booking view' },
+  { icon: TrendingUp, label: 'Response time', value: '< 2s', note: 'Example response benchmark' },
 ];
 
 const recentActivity = [
-  { contact: 'Sarah M.', detail: 'Call captured and qualified', status: 'Qualified' },
-  { contact: 'Emma D.', detail: 'Appointment booked automatically', status: 'Booked' },
-  { contact: 'Mark J.', detail: 'Follow-up queued by SMS', status: 'Follow Up' },
-  { contact: 'David C.', detail: 'Urgent enquiry escalated', status: 'Urgent' },
+  { contact: 'Demo Caller A', detail: 'Example workflow: call captured and qualified', status: 'Qualified' },
+  { contact: 'Demo Caller B', detail: 'Example workflow: appointment booked automatically', status: 'Booked' },
+  { contact: 'Demo Caller C', detail: 'Example workflow: follow-up queued by SMS', status: 'Follow Up' },
+  { contact: 'Demo Caller D', detail: 'Example workflow: urgent enquiry escalated', status: 'Urgent' },
 ];
 
 const supportItems = ['Contact support', 'Onboarding help', 'Optimisation help'];
@@ -22,6 +23,13 @@ const supportItems = ['Contact support', 'Onboarding help', 'Optimisation help']
 export default function OverviewPreview() {
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center gap-3 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Overview Preview</h2>
+          <p className="text-sm text-gray-400 mt-1">Sample dashboard data shown for preview purposes only.</p>
+        </div>
+        <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Sample Snapshot</Badge>
+      </div>
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <motion.div

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 const callRecordings = [
   {
     id: 1,
-    caller: 'Sarah M.',
+    caller: 'Demo Caller A',
     phone: '+61 4XX XXX 123',
     duration: '3:24',
     timestamp: '2 hours ago',
@@ -22,7 +22,7 @@ const callRecordings = [
   },
   {
     id: 2,
-    caller: 'Mark J.',
+    caller: 'Demo Caller B',
     phone: '+61 4XX XXX 456',
     duration: '2:15',
     timestamp: '5 hours ago',
@@ -37,7 +37,7 @@ const callRecordings = [
   },
   {
     id: 3,
-    caller: 'Emma D.',
+    caller: 'Demo Caller C',
     phone: '+61 4XX XXX 789',
     duration: '4:52',
     timestamp: '8 hours ago',
@@ -52,7 +52,7 @@ const callRecordings = [
   },
   {
     id: 4,
-    caller: 'David C.',
+    caller: 'Demo Caller D',
     phone: '+61 4XX XXX 321',
     duration: '1:38',
     timestamp: '10 hours ago',
@@ -104,7 +104,7 @@ export default function CallRecordings() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-white">Call Recordings</h2>
-          <p className="text-gray-400 text-sm mt-1">Sample call library showing how summaries, labels, and sentiment can appear inside the client portal.</p>
+          <p className="text-gray-400 text-sm mt-1">Demo call examples showing how summaries, labels, and sentiment can appear inside the client portal.</p>
         </div>
         <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
           {callRecordings.length} Sample Calls

@@ -113,7 +113,7 @@ export default function CaseStudies() {
                           <div>
                             <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
                               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                              The Workflow
+                              Example Workflow
                             </h4>
                             <p className="text-gray-400 leading-relaxed">{study.solution}</p>
                           </div>
@@ -123,7 +123,7 @@ export default function CaseStudies() {
                       <div className="lg:col-span-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-8 md:p-10">
                         <div className="flex items-center gap-2 mb-6">
                           <TrendingUp className="w-5 h-5 text-cyan-400" />
-                          <h4 className="text-white font-semibold">Typical Outcome Example</h4>
+                          <h4 className="text-white font-semibold">Example Outcome</h4>
                         </div>
                         <div className="space-y-3">
                           {study.results.map((result, idx) =>

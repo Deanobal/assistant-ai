@@ -39,7 +39,7 @@ export default function BillingSection() {
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Billing & Subscription</h2>
-        <p className="text-gray-400">Sample billing preview showing plans, invoices, renewal details, and secure payment management.</p>
+        <p className="text-gray-400">Sample billing preview showing how plans, invoices, renewal details, and secure payment management can appear.</p>
       </div>
 
       <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
