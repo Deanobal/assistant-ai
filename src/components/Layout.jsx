@@ -11,8 +11,12 @@ const navLinks = [
 { label: 'Pricing', path: '/Pricing' },
 { label: 'Case Studies', path: '/CaseStudies' },
 { label: 'About', path: '/About' },
-{ label: 'Contact', path: '/Contact' },
-{ label: 'Client Login', path: '/ClientLogin' }];
+{ label: 'Contact', path: '/Contact' }];
+
+const mobileNavLinks = [
+  ...navLinks,
+  { label: 'Client Login', path: '/ClientLogin' }
+];
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
