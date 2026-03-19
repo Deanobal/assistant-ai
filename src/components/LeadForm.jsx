@@ -39,14 +39,15 @@ export default function LeadForm({
   submitLabel = 'Request a Call Back',
   successTitle = 'Enquiry Received',
   successText = 'Thanks — your enquiry has been received. We’ll review your details and get back to you with the next step within one business day.',
+  statusOnSubmit = 'New Lead',
 }) {
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
     email: '',
-    phone: '',
+    mobile_number: '',
     industry: '',
-    help_type: '',
+    enquiry_type: '',
     monthly_enquiry_volume: '',
     message: '',
   });
@@ -56,7 +57,31 @@ export default function LeadForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    await base44.entities.Lead.create({ ...form, status: 'new' });
+
+    const source_page = window.location.pathname;
+    const created_at = new Date().toISOString();
+    const lead_score = form.monthly_enquiry_volume === '301_plus' ? 90 : form.monthly_enquiry_volume === '101_300' ? 70 : form.monthly_enquiry_volume === '21_100' ? 50 : 25;
+    const payload = {
+      ...form,
+      source_page,
+      created_at,
+      status: statusOnSubmit,
+      lead_score,
+      assigned_owner: '',
+      notes: '',
+    };
+
+    const existingLeads = await base44.entities.Lead.filter({ email: form.email }, '-created_date', 1);
+
+    if (existingLeads.length > 0) {
+      await base44.entities.Lead.update(existingLeads[0].id, {
+        ...existingLeads[0],
+        ...payload,
+      });
+    } else {
+      await base44.entities.Lead.create(payload);
+    }
+
     setSubmitting(false);
     setSubmitted(true);
   };
@@ -117,8 +142,8 @@ export default function LeadForm({
           <Label className="text-gray-400 text-sm">Mobile Number</Label>
           <Input
             type="tel"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            value={form.mobile_number}
+            onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
             placeholder="+61 4XX XXX XXX"
           />
@@ -142,7 +167,7 @@ export default function LeadForm({
 
         <div className="space-y-2">
           <Label className="text-gray-400 text-sm">What do you need help with?</Label>
-          <Select value={form.help_type} onValueChange={(value) => setForm({ ...form, help_type: value })}>
+          <Select value={form.enquiry_type} onValueChange={(value) => setForm({ ...form, enquiry_type: value })}>
             <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
               <SelectValue placeholder="Choose one" />
             </SelectTrigger>
