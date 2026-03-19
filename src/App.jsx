@@ -23,6 +23,8 @@ import ClientPortal from './pages/ClientPortal';
 import Dashboard from './pages/Dashboard';
 import ClientManager from './pages/ClientManager';
 import ClientWorkspace from './pages/ClientWorkspace';
+import LeadDashboard from './pages/LeadDashboard';
+import LeadDetail from './pages/LeadDetail';
 import OnboardingDashboard from './pages/OnboardingDashboard';
 import TeamAccess from './pages/TeamAccess';
 import AdminLayout from './components/admin/AdminLayout';
@@ -71,6 +73,8 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/Dashboard" element={<Dashboard />} />
       <Route element={<AdminLayout />}>
+        <Route path="/LeadDashboard" element={<LeadDashboard />} />
+        <Route path="/LeadDetail" element={<LeadDetail />} />
         <Route path="/ClientManager" element={<ClientManager />} />
         <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
         <Route path="/Onboarding" element={<OnboardingDashboard />} />
