@@ -30,6 +30,7 @@ import OnboardingDashboard from './pages/OnboardingDashboard';
 import OnboardingIntake from './pages/OnboardingIntake';
 import TeamAccess from './pages/TeamAccess';
 import SystemReadiness from './pages/SystemReadiness';
+import SupportInbox from './pages/SupportInbox';
 import AdminLayout from './components/admin/AdminLayout';
 
 const AuthenticatedApp = () => {
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
         <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
         <Route path="/Onboarding" element={<OnboardingDashboard />} />
         <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
+        <Route path="/SupportInbox" element={<SupportInbox />} />
         <Route path="/TeamAccess" element={<TeamAccess />} />
         <Route path="/SystemReadiness" element={<SystemReadiness />} />
       </Route>

@@ -22,7 +22,10 @@ Deno.serve(async (req) => {
 
     const messages = await base44.asServiceRole.entities.SupportMessage.filter({ conversation_id: conversationId }, 'created_at', 200);
 
-    return Response.json({ conversation, messages });
+    return Response.json({
+      conversation,
+      messages: messages.filter((message) => !message.is_internal_note),
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
