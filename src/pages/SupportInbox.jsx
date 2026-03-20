@@ -35,6 +35,12 @@ export default function SupportInbox() {
     initialData: [],
   });
 
+  const { data: leads = [] } = useQuery({
+    queryKey: ['support-inbox-leads'],
+    queryFn: () => base44.entities.Lead.list('-updated_date', 200),
+    initialData: [],
+  });
+
   const filteredConversations = useMemo(
     () => conversations.filter((conversation) => matchesFilter(conversation, activeFilter)),
     [activeFilter, conversations]
@@ -134,6 +140,7 @@ export default function SupportInbox() {
           conversation={selectedConversation}
           messages={messages}
           admins={admins.filter((user) => user.role === 'admin')}
+          leads={leads}
           currentAdmin={currentAdmin}
           isSaving={replyMutation.isPending || updateConversationMutation.isPending}
           onReply={({ messageBody, isInternalNote, reset }) => {
@@ -162,6 +169,17 @@ export default function SupportInbox() {
               assigned_admin_id: assignedAdminId === 'unassigned' ? null : assignedAdminId,
             },
           })}
+          onLinkLead={(leadId) => {
+            const linkedLead = leadId === 'unlinked' ? null : leads.find((lead) => lead.id === leadId) || null;
+            updateConversationMutation.mutate({
+              id: selectedConversation.id,
+              data: {
+                ...selectedConversation,
+                linked_lead_id: linkedLead?.id || null,
+                linked_client_account_id: linkedLead?.client_account_id || null,
+              },
+            });
+          }}
         />
       </div>
     </div>

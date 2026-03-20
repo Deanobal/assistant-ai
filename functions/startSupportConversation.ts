@@ -5,6 +5,15 @@ function buildSubject(sourcePage, name) {
   return `Website message from ${name} (${pageLabel})`;
 }
 
+function uniqueById(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    if (!item?.id || seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -16,6 +25,10 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
     const preview = message.slice(0, 180);
+    const byEmail = email ? await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 10) : [];
+    const byMobile = mobile ? await base44.asServiceRole.entities.Lead.filter({ mobile_number: mobile }, '-updated_date', 10) : [];
+    const matchedLeads = uniqueById([...byEmail, ...byMobile]);
+    const matchedLead = matchedLeads.length === 1 ? matchedLeads[0] : null;
 
     const conversation = await base44.asServiceRole.entities.SupportConversation.create({
       created_at: now,
@@ -28,8 +41,8 @@ Deno.serve(async (req) => {
       visitor_phone: mobile || '',
       subject: buildSubject(sourcePage, name),
       assigned_admin_id: null,
-      linked_lead_id: null,
-      linked_client_account_id: null,
+      linked_lead_id: matchedLead?.id || null,
+      linked_client_account_id: matchedLead?.client_account_id || null,
       unread_for_admin: true,
       unread_for_client: false,
       last_message_at: now,

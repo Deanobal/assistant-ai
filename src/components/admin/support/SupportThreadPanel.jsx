@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ const senderStyles = {
   system: 'bg-cyan-500/8 text-cyan-100 border border-cyan-500/20',
 };
 
-export default function SupportThreadPanel({ conversation, messages, admins, currentAdmin, isSaving, onReply, onResolve, onPriorityChange, onAssignAdmin }) {
+export default function SupportThreadPanel({ conversation, messages, admins, leads, currentAdmin, isSaving, onReply, onResolve, onPriorityChange, onAssignAdmin, onLinkLead }) {
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
 
@@ -36,7 +37,7 @@ export default function SupportThreadPanel({ conversation, messages, admins, cur
             </div>
             <Button onClick={onResolve} disabled={isSaving || conversation.status === 'resolved'} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50">Mark resolved</Button>
           </div>
-          <div className="grid lg:grid-cols-2 gap-3">
+          <div className="grid lg:grid-cols-3 gap-3">
             <Select value={conversation.priority} onValueChange={onPriorityChange}>
               <SelectTrigger className="bg-white/[0.03] border-white/10 text-white"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -55,12 +56,26 @@ export default function SupportThreadPanel({ conversation, messages, admins, cur
                 ))}
               </SelectContent>
             </Select>
+            <Select value={conversation.linked_lead_id || 'unlinked'} onValueChange={onLinkLead}>
+              <SelectTrigger className="bg-white/[0.03] border-white/10 text-white"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unlinked">No linked lead</SelectItem>
+                {leads.map((lead) => (
+                  <SelectItem key={lead.id} value={lead.id}>{lead.business_name || lead.full_name} • {lead.email}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
             <Badge className="bg-white/5 text-gray-300 border-white/10">{conversation.status}</Badge>
             <Badge className="bg-white/5 text-gray-300 border-white/10">{conversation.priority}</Badge>
             <Badge className="bg-white/5 text-gray-300 border-white/10">{conversation.source_type}</Badge>
             {conversation.assigned_admin_id && <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-500/20">Assigned</Badge>}
+            {conversation.linked_lead_id && (
+              <Button asChild variant="outline" className="h-7 border-cyan-500/20 bg-cyan-500/5 px-2 text-cyan-300 hover:bg-cyan-500/10">
+                <Link to={`/LeadDetail?id=${conversation.linked_lead_id}`}>Open linked lead</Link>
+              </Button>
+            )}
           </div>
         </div>
 
