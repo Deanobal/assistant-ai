@@ -54,22 +54,31 @@ Deno.serve(async (req) => {
       }
     };
 
-    const updateBilling = async ({ customerId, subscriptionId, invoiceId, billingStatus, paymentMethodStatus, lastPaymentDate, nextPaymentDate, planName }) => {
+    const updateBilling = async ({ customerId, subscriptionId, sessionId, invoiceId, billingStatus, paymentMethodStatus, lastPaymentDate, nextPaymentDate, planName, clientId }) => {
+      const sessionMatches = sessionId
+        ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_checkout_session_id: sessionId }, '-updated_date', 1)
+        : [];
       const customerMatches = customerId
         ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_customer_id: customerId }, '-updated_date', 1)
         : [];
       const subscriptionMatches = subscriptionId
         ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_subscription_id: subscriptionId }, '-updated_date', 1)
         : [];
-      const billing = subscriptionMatches[0] || customerMatches[0];
+      let billing = sessionMatches[0] || subscriptionMatches[0] || customerMatches[0];
+      if (!billing && clientId) {
+        const clientBillingMatches = await base44.asServiceRole.entities.BillingRecord.filter({ client_id: clientId }, '-updated_date', 1);
+        billing = clientBillingMatches[0] || null;
+      }
       if (!billing) return null;
 
       const updated = await base44.asServiceRole.entities.BillingRecord.update(billing.id, {
         ...billing,
+        client_id: clientId || billing.client_id,
         billing_status: billingStatus || billing.billing_status,
         payment_method_status: paymentMethodStatus || billing.payment_method_status,
         invoice_reference: invoiceId || billing.invoice_reference,
         stripe_customer_id: customerId || billing.stripe_customer_id,
+        stripe_checkout_session_id: sessionId || billing.stripe_checkout_session_id,
         stripe_subscription_id: subscriptionId || billing.stripe_subscription_id,
         last_payment_date: lastPaymentDate || billing.last_payment_date,
         next_payment_date: nextPaymentDate || billing.next_payment_date,
@@ -86,6 +95,8 @@ Deno.serve(async (req) => {
       const billing = await updateBilling({
         customerId,
         subscriptionId,
+        sessionId: session.id,
+        clientId: session.metadata?.clientAccountId || null,
         invoiceId: session.id,
         billingStatus: 'active',
         paymentMethodStatus: 'valid',

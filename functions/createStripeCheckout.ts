@@ -132,18 +132,18 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: stripeCustomerId,
-      success_url: `${payload.origin}/GetStartedNow?plan=${payload.planKey}&checkout=success`,
+      success_url: `${payload.origin}/GetStartedNow?plan=${payload.planKey}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${payload.origin}/GetStartedNow?plan=${payload.planKey}&checkout=cancelled`,
       allow_promotion_codes: false,
       metadata: {
-        leadId: payload.leadId,
+        leadId: lead.id,
         clientAccountId: clientRecord.id,
         planKey: payload.planKey,
         planName: plan.name,
       },
       subscription_data: {
         metadata: {
-          leadId: payload.leadId,
+          leadId: lead.id,
           clientAccountId: clientRecord.id,
           planKey: payload.planKey,
           planName: plan.name,
@@ -185,6 +185,7 @@ Deno.serve(async (req) => {
       payment_method_status: 'pending',
       invoice_reference: session.id,
       stripe_customer_id: stripeCustomerId,
+      stripe_checkout_session_id: session.id,
       stripe_subscription_id: existingBilling?.stripe_subscription_id || null,
       last_payment_date: existingBilling?.last_payment_date || null,
       next_payment_date: existingBilling?.next_payment_date || null,

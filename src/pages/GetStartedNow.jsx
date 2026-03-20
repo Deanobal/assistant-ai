@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
 import DirectStartPanel from '@/components/pricing/DirectStartPanel';
+import CheckoutReturnCard from '@/components/pricing/CheckoutReturnCard';
 
 const plans = {
   starter: {
@@ -24,6 +25,8 @@ const plans = {
 export default function GetStartedNow() {
   const urlParams = new URLSearchParams(window.location.search);
   const planKey = (urlParams.get('plan') || 'growth').toLowerCase();
+  const checkoutState = urlParams.get('checkout') || '';
+  const sessionId = urlParams.get('session_id') || '';
   const plan = plans[planKey] || plans.growth;
 
   return (
@@ -45,14 +48,19 @@ export default function GetStartedNow() {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-5 gap-10">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
-            >
-              <LeadForm
+          {checkoutState ? (
+            <div className="max-w-4xl mx-auto">
+              <CheckoutReturnCard planName={plan.name} checkoutState={checkoutState} sessionId={sessionId} />
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-5 gap-10">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
+              >
+                <LeadForm
                 submitLabel={`Start ${plan.name} Setup`}
                 successTitle="Direct Start Request Received"
                 successText={`Your ${plan.name} onboarding request has been saved.`}
@@ -76,15 +84,16 @@ export default function GetStartedNow() {
               />
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-2"
-            >
-              <DirectStartPanel plan={plan} />
-            </motion.div>
-          </div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="lg:col-span-2"
+              >
+                <DirectStartPanel plan={plan} />
+              </motion.div>
+            </div>
+          )}
         </div>
       </section>
     </div>
