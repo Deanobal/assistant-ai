@@ -210,6 +210,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
+      session_id: session.id,
       checkout_url: session.url,
       title: 'Continue to Secure Checkout',
       message: `Your ${plan.name} onboarding start has been saved. Continue to Stripe to pay the setup fee and begin your monthly plan.`,
