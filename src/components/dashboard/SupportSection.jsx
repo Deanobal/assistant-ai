@@ -81,8 +81,8 @@ export default function SupportSection({ clientAccountId, currentUser }) {
             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Support Messaging</Badge>
             <Badge className="bg-white/5 text-gray-300 border-white/10">Private client portal</Badge>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Contact AssistantAI Support</h2>
-          <p className="text-gray-400 max-w-3xl">Send support or success messages from your portal and keep the full conversation history in one secure thread.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Chat with Support</h2>
+          <p className="text-gray-400 max-w-3xl">Send us a message from your portal and keep the full support conversation history in one secure thread.</p>
         </div>
       </div>
 

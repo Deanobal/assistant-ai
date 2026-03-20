@@ -11,7 +11,7 @@ export default function ClientSupportConversationList({ conversations, selectedI
         <div className="border-b border-white/5 px-5 py-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-white font-semibold">Support Conversations</h3>
-            <p className="text-xs text-gray-500 mt-1">Your support messages in one place.</p>
+            <p className="text-xs text-gray-500 mt-1">Your support messages in one secure place.</p>
           </div>
           <Button onClick={onNewConversation} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">New</Button>
         </div>

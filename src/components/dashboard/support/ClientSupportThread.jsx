@@ -21,7 +21,7 @@ export default function ClientSupportThread({ conversation, messages, isSaving, 
       <Card className="bg-[#12121a] border-white/5 h-full">
         <CardContent className="p-6 space-y-4">
           <div>
-            <h3 className="text-white font-semibold text-lg">New Support Message</h3>
+            <h3 className="text-white font-semibold text-lg">Send us a message</h3>
             <p className="text-sm text-gray-400 mt-1">Use this space to contact the AssistantAI support team from your portal.</p>
           </div>
           <Input
@@ -36,7 +36,7 @@ export default function ClientSupportThread({ conversation, messages, isSaving, 
             placeholder="Tell us what you need help with"
             className="min-h-[140px] bg-white/[0.03] border-white/10 text-white"
           />
-          <p className="text-xs text-gray-500">Messages are reviewed by the AssistantAI team. If no one is currently available, we will reply in the thread when reviewed.</p>
+          <p className="text-xs text-gray-500">Messages are reviewed by the AssistantAI team. We’ll get back to you shortly in this thread once your message has been reviewed.</p>
           <Button
             onClick={() => {
               onCreateConversation({
@@ -65,7 +65,7 @@ export default function ClientSupportThread({ conversation, messages, isSaving, 
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-white font-semibold text-lg">{conversation.subject}</h3>
-              <p className="text-sm text-gray-400">We’ll reply here when the message has been reviewed.</p>
+              <p className="text-sm text-gray-400">We’ll get back to you shortly here once the message has been reviewed.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-white/5 text-gray-300 border-white/10">{conversation.status}</Badge>

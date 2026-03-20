@@ -12,13 +12,13 @@ const STORAGE_KEY = 'assistantai-support-chat';
 const systemIntro = {
   id: 'intro',
   sender_type: 'system',
-  message_body: 'Send us a message and our team will review it as soon as possible. This is not live agent chat, so if we are away we will reply by email.',
+  message_body: 'Send us a message and our team will review it shortly. This is not live monitored chat, so replies may come a little later by email or in the thread.',
 };
 
 const systemSuccess = {
   id: 'success',
   sender_type: 'system',
-  message_body: 'Thanks — your message has been received and your conversation is now saved. You can reply here if you need to add more details.',
+  message_body: 'Thanks — your message has been received and your conversation is now saved. We’ll get back to you shortly, and you can reply here if you need to add more detail.',
 };
 
 export default function ChatWidget() {
@@ -145,7 +145,7 @@ export default function ChatWidget() {
                     Chat with Support
                   </div>
                   <h3 className="mt-3 text-sm font-semibold text-white">Send us a message</h3>
-                  <p className="mt-1 text-xs text-gray-400">Public support and sales enquiries for AssistantAI.</p>
+                  <p className="mt-1 text-xs text-gray-400">Support and sales enquiries for AssistantAI.</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -182,7 +182,7 @@ export default function ChatWidget() {
               ) : (
                 <>
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-gray-400">
-                    Conversation status: {conversation.status}. Our team reviews messages and replies when available.
+                    Conversation status: {conversation.status}. Our team reviews messages and will get back to you shortly.
                   </div>
                   <SupportChatComposer
                     value={replyBody}
