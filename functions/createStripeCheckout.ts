@@ -164,13 +164,13 @@ Deno.serve(async (req) => {
       setup_fee_amount: plan.setupFee,
       monthly_fee_amount: plan.monthlyFee,
       billing_status: 'pending',
-      renewal_date: existingBilling?.renewal_date || null,
       payment_method_status: 'pending',
       invoice_reference: session.id,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: existingBilling?.stripe_subscription_id || null,
       last_payment_date: existingBilling?.last_payment_date || null,
       next_payment_date: existingBilling?.next_payment_date || null,
+      ...(existingBilling?.renewal_date ? { renewal_date: existingBilling.renewal_date } : {}),
     };
 
     if (existingBilling) {

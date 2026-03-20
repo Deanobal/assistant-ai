@@ -32,10 +32,14 @@ Deno.serve(async (req) => {
       const clientMatches = await base44.asServiceRole.entities.ClientAccount.filter({ id: clientId }, '-updated_date', 1);
       const client = clientMatches[0];
       if (client) {
-        await base44.asServiceRole.entities.ClientAccount.update(client.id, {
+        const nextClient = {
           ...client,
           ...updates,
-        });
+        };
+        if (!nextClient.renewal_date) {
+          delete nextClient.renewal_date;
+        }
+        await base44.asServiceRole.entities.ClientAccount.update(client.id, nextClient);
       }
 
       const onboardingMatches = await base44.asServiceRole.entities.Onboarding.filter({ client_account_id: clientId }, '-updated_date', 1);
