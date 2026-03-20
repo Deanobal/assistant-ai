@@ -43,26 +43,44 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'leadId, fullName, email, and origin are required' }, { status: 400 });
     }
 
-    const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: payload.leadId }, '-updated_date', 1);
-    const lead = leadMatches[0];
+    const emailLeadMatches = await base44.asServiceRole.entities.Lead.filter({ email: payload.email }, '-updated_date', 10);
+    let lead = emailLeadMatches.find((item) => item.id === payload.leadId) || emailLeadMatches[0] || null;
+
     if (!lead) {
-      return Response.json({ error: 'Lead not found' }, { status: 404 });
+      lead = await base44.asServiceRole.entities.Lead.create({
+        full_name: payload.fullName,
+        business_name: payload.businessName || payload.fullName,
+        email: payload.email,
+        mobile_number: payload.mobile || '',
+        industry: payload.industry || 'other',
+        enquiry_type: 'other',
+        monthly_enquiry_volume: '',
+        source_page: '/GetStartedNow',
+        message: `${plan.name} direct-start checkout created.`,
+        created_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+        status: 'Onboarding',
+        next_action: 'Stripe checkout created. Monitor payment and onboarding progress.',
+        booking_intent: false,
+        booking_source: `direct_start_${payload.planKey}`,
+        notes: `[${new Date().toISOString()}] Lead created automatically for Stripe checkout.`,
+      });
     }
 
-    const clientMatches = await base44.asServiceRole.entities.ClientAccount.filter({ lead_id: payload.leadId }, '-updated_date', 1);
+    const clientMatches = await base44.asServiceRole.entities.ClientAccount.filter({ lead_id: lead.id }, '-updated_date', 1);
     const existingClient = clientMatches[0];
     const clientRecord = existingClient
       ? await base44.asServiceRole.entities.ClientAccount.update(existingClient.id, {
           ...existingClient,
           ...buildClientBase(payload, plan),
-          lead_id: payload.leadId,
+          lead_id: lead.id,
         })
       : await base44.asServiceRole.entities.ClientAccount.create({
           ...buildClientBase(payload, plan),
-          lead_id: payload.leadId,
+          lead_id: lead.id,
         });
 
-    const onboardingMatches = await base44.asServiceRole.entities.Onboarding.filter({ lead_id: payload.leadId }, '-updated_date', 1);
+    const onboardingMatches = await base44.asServiceRole.entities.Onboarding.filter({ lead_id: lead.id }, '-updated_date', 1);
     const onboardingBase = {
       client_name: clientRecord.business_name,
       contact_name: payload.fullName,
@@ -79,7 +97,7 @@ Deno.serve(async (req) => {
       testing_status: 'not_started',
       go_live_status: 'not_ready',
       onboarding_stage: 'Checkout Started',
-      lead_id: payload.leadId,
+      lead_id: lead.id,
       client_account_id: clientRecord.id,
       onboarding_notes: 'Stripe checkout started from direct-start flow.',
     };
@@ -103,7 +121,7 @@ Deno.serve(async (req) => {
         email: payload.email,
         phone: payload.mobile || undefined,
         metadata: {
-          leadId: payload.leadId,
+          leadId: lead.id,
           clientAccountId: clientRecord.id,
           planKey: payload.planKey,
         },

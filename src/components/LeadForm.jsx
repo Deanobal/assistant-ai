@@ -91,7 +91,8 @@ export default function LeadForm({
       setSubmitted(true);
     } catch (error) {
       console.error('Lead submission failed', error);
-      setSubmitError('Something went wrong while sending your enquiry. Please try again or email sales@assistantai.com.au.');
+      const errorMessage = error?.response?.data?.error || error?.message || 'Something went wrong while sending your enquiry.';
+      setSubmitError(errorMessage);
     } finally {
       setSubmitting(false);
     }
