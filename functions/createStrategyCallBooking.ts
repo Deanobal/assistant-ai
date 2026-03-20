@@ -20,6 +20,32 @@ Deno.serve(async (req) => {
     }
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
+
+    const busyResponse = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        timeMin: slotStart,
+        timeMax: slotEnd,
+        timeZone: timezone,
+        items: [{ id: 'primary' }],
+      }),
+    });
+
+    if (!busyResponse.ok) {
+      const details = await busyResponse.text();
+      return Response.json({ error: details || 'Unable to verify calendar availability' }, { status: 500 });
+    }
+
+    const busyData = await busyResponse.json();
+    const busyWindows = busyData.calendars?.primary?.busy || [];
+    if (busyWindows.length > 0) {
+      return Response.json({ error: 'That slot is no longer available. Please choose another time.' }, { status: 409 });
+    }
+
     const eventResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
       headers: {
