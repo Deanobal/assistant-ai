@@ -33,8 +33,8 @@ export default function Integrations() {
             className="text-center mb-16">
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">INTEGRATIONS</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
-              Connect AssistantAI.com.au to the Tools Your Business Already Uses
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">Connect AssistantAI to the Tools Your Business Already Uses
+
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
               Connect the tools your business already uses so calls, bookings, follow-up, and customer data stay aligned.
@@ -42,15 +42,15 @@ export default function Integrations() {
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/BookStrategyCall"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-              >
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
+                
                 Book Free Strategy Call
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/Platform"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all text-sm"
-              >
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all text-sm">
+                
                 View Platform Preview
               </Link>
             </div>
