@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
 import DirectStartPanel from '@/components/pricing/DirectStartPanel';
 
@@ -54,11 +55,24 @@ export default function GetStartedNow() {
               <LeadForm
                 submitLabel={`Start ${plan.name} Setup`}
                 successTitle="Direct Start Request Received"
-                successText={`Your ${plan.name} setup request has been saved. Stripe checkout is not live yet, so our team will confirm the next onboarding step manually.`}
+                successText={`Your ${plan.name} onboarding request has been saved.`}
                 matchedLeadStatus="Onboarding"
                 createStatus="Onboarding"
                 nextActionText={`${plan.name} direct-start request received. Review for checkout and onboarding handoff.`}
                 bookingSource={`direct_start_${plan.key}`}
+                onSubmitted={async ({ lead, form }) => {
+                  const response = await base44.functions.invoke('createStripeCheckout', {
+                    leadId: lead.id,
+                    planKey: plan.key,
+                    fullName: form.full_name,
+                    businessName: form.business_name,
+                    email: form.email,
+                    mobile: form.mobile_number,
+                    industry: form.industry,
+                    origin: window.location.origin,
+                  });
+                  return response.data;
+                }}
               />
             </motion.div>
 

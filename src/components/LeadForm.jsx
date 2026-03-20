@@ -69,6 +69,7 @@ export default function LeadForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [submitResult, setSubmitResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,7 +85,8 @@ export default function LeadForm({
         bookingSource,
       });
       if (onSubmitted) {
-        await onSubmitted({ lead, form });
+        const result = await onSubmitted({ lead, form });
+        setSubmitResult(result || null);
       }
       setSubmitted(true);
     } catch (error) {
@@ -105,16 +107,16 @@ export default function LeadForm({
         <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-cyan-400" />
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">{successTitle}</h3>
-        <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{successText}</p>
-        {successActionHref && successActionLabel && (
-          <a href={successActionHref} target="_blank" rel="noreferrer" className="inline-flex mt-6 items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
-            {successActionLabel}
+        <h3 className="text-2xl font-bold text-white mb-2">{submitResult?.title || successTitle}</h3>
+        <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{submitResult?.message || successText}</p>
+        {(submitResult?.checkout_url || successActionHref) && (submitResult?.actionLabel || successActionLabel) && (
+          <a href={submitResult?.checkout_url || successActionHref} target="_blank" rel="noreferrer" className="inline-flex mt-6 items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+            {submitResult?.actionLabel || successActionLabel}
             <ArrowRight className="w-4 h-4" />
           </a>
         )}
-        {successEmbedUrl && (
-          <BookingEmbedCard embedUrl={successEmbedUrl} title={successEmbedLabel || 'Live Booking Widget'} />
+        {(submitResult?.embed_url || successEmbedUrl) && (
+          <BookingEmbedCard embedUrl={submitResult?.embed_url || successEmbedUrl} title={submitResult?.embed_label || successEmbedLabel || 'Live Booking Widget'} />
         )}
       </motion.div>
     );

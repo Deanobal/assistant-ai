@@ -21,14 +21,14 @@ export default function DirectStartPanel({ plan }) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-b from-amber-500/10 to-transparent border-amber-500/20">
+      <Card className="bg-gradient-to-b from-cyan-500/10 to-transparent border-cyan-500/20">
         <CardContent className="p-6 space-y-3">
           <h3 className="text-white font-semibold">Checkout Status</h3>
-          <p className="text-sm text-amber-200 leading-relaxed">
-            Stripe checkout is not live yet, so this page does not take payment or show fake purchase success.
+          <p className="text-sm text-cyan-200 leading-relaxed">
+            Stripe checkout is live for this direct-start path and opens only after your details are saved.
           </p>
           <p className="text-sm text-gray-300 leading-relaxed">
-            Once you submit this form, AssistantAI stores your direct-start intent and our team can move you into the next onboarding step manually until live billing is connected.
+            AssistantAI creates your customer record, prepares the setup fee plus monthly plan checkout, and keeps billing records honest until payment and webhook confirmation are received.
           </p>
         </CardContent>
       </Card>
