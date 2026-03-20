@@ -21,15 +21,17 @@ const statusClasses = {
 };
 
 const actionLabel = {
-  connect: 'Connect',
-  manage: 'Manage',
-  reconnect: 'Reconnect',
-  disconnect: 'Disconnect',
+  connect: 'Request Connection',
+  pending: 'Request Pending',
+  manage: 'Request Review',
+  reconnect: 'Request Reconnect',
+  disconnect: 'Request Disconnect',
 };
 
 export default function IntegrationCard({ item, features, onAction, isSaving }) {
   const primaryAction = getPrimaryAction(item.status);
   const secondaryAction = getSecondaryAction(item.status);
+  const isPendingRequest = item.status === 'pending';
 
   return (
     <Card className="bg-[#12121a] border-white/5 h-full shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
@@ -41,7 +43,7 @@ export default function IntegrationCard({ item, features, onAction, isSaving }) 
             </div>
             <div className="min-w-0">
               <h4 className="text-lg font-semibold text-white truncate">{item.appName}</h4>
-              <p className="text-sm text-gray-500">{item.status === 'error' ? 'Connection needs attention' : item.status === 'pending' ? 'Connection setup in progress' : item.status === 'connected' ? 'Stored connection state is active' : 'No live connection saved yet'}</p>
+              <p className="text-sm text-gray-500">{item.status === 'error' ? 'Needs admin review before this can be considered active' : item.status === 'pending' ? 'A connection request has been stored for admin review' : item.status === 'connected' ? 'Stored connection state is active' : 'No live connection saved yet'}</p>
             </div>
           </div>
           <Badge className={statusClasses[item.status]}>{statusLabel[item.status]}</Badge>
@@ -80,7 +82,7 @@ export default function IntegrationCard({ item, features, onAction, isSaving }) 
 
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <Button
-            disabled={isSaving}
+            disabled={isSaving || isPendingRequest}
             onClick={() => onAction(item, primaryAction)}
             className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50"
           >

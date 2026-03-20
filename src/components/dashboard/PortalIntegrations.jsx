@@ -22,26 +22,26 @@ export default function PortalIntegrations({ clientAccountId = null, mode = 'liv
 
   const mutation = useMutation({
     mutationFn: async ({ item, action }) => {
-      const now = new Date().toISOString();
       const existing = item.id ? records.find((record) => record.id === item.id) : null;
+      const requestNote = action === 'connect'
+        ? 'Connection request stored for admin setup.'
+        : action === 'manage'
+          ? 'Review request stored for admin follow-up.'
+          : action === 'reconnect'
+            ? 'Reconnect request stored for admin follow-up.'
+            : 'Disconnect request stored for admin follow-up.';
 
       const nextData = {
         category: item.category,
         app_name: item.appName,
         client_account_id: clientAccountId,
-        managed_by: 'client',
-        connected_account_identifier: action === 'connect' || action === 'reconnect'
-          ? item.connectedAccountIdentifier || `${item.appName} workspace`
-          : existing?.connected_account_identifier || null,
-        last_sync_time: action === 'manage' || action === 'connect' || action === 'reconnect' ? now : existing?.last_sync_time || null,
-        last_error_message: action === 'reconnect' ? null : action === 'disconnect' ? null : existing?.last_error_message || null,
-        connection_status: action === 'connect'
-          ? 'pending'
-          : action === 'manage'
-            ? 'connected'
-            : action === 'reconnect'
-              ? 'pending'
-              : 'disconnected',
+        managed_by: existing?.managed_by || 'client',
+        connected_account_identifier: existing?.connected_account_identifier || null,
+        last_sync_time: existing?.last_sync_time || null,
+        last_error_message: requestNote,
+        connection_status: action === 'manage'
+          ? existing?.connection_status || item.status || 'not_connected'
+          : 'pending',
       };
 
       if (existing) {
@@ -81,7 +81,7 @@ export default function PortalIntegrations({ clientAccountId = null, mode = 'liv
       </div>
 
       <div className="rounded-[28px] border border-white/5 bg-gradient-to-r from-cyan-500/8 via-blue-500/6 to-transparent px-6 py-5">
-        <p className="text-sm text-gray-200 leading-relaxed">{hasLiveRecords ? 'These cards now read from saved integration records and only show live states when they actually exist.' : 'No live integrations are connected yet. Safe empty states are shown until real connections are stored.'}</p>
+        <p className="text-sm text-gray-200 leading-relaxed">{hasLiveRecords ? 'These cards read from saved integration records. Where no provider is connected yet, actions create admin-managed requests instead of pretending the connection is live.' : 'No live integrations are connected yet. Safe empty states are shown until real connections are stored.'}</p>
       </div>
 
       <IntegrationSummaryStrip items={summary} />
