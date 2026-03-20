@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { clientStatusStyles } from './mockClients';
 
-export default function ClientCard({ client }) {
+export default function ClientCard({ client, onboarding }) {
   return (
     <Card className="bg-[#12121a] border-white/5 shadow-[0_18px_60px_rgba(0,0,0,0.28)] h-full">
       <CardContent className="p-6 space-y-5">
@@ -33,6 +33,14 @@ export default function ClientCard({ client }) {
           <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
             <p className="text-gray-500">Last Activity</p>
             <p className="text-white mt-1 line-clamp-2">{client.last_activity}</p>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
+            <p className="text-gray-500">Onboarding Stage</p>
+            <p className="text-white mt-1">{onboarding?.onboarding_stage || 'Not started'}</p>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
+            <p className="text-gray-500">Payment Status</p>
+            <p className="text-white mt-1">{onboarding?.payment_status || client.setup_fee_status}</p>
           </div>
         </div>
 

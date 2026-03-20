@@ -24,6 +24,12 @@ export default function ClientManager() {
     initialData: [],
   });
 
+  const { data: onboardings = [] } = useQuery({
+    queryKey: ['client-manager-onboardings'],
+    queryFn: () => base44.entities.Onboarding.list('-updated_date', 200),
+    initialData: [],
+  });
+
   const createClientMutation = useMutation({
     mutationFn: (data) => base44.entities.ClientAccount.create({
       ...data,
@@ -165,6 +171,7 @@ export default function ClientManager() {
 
   const visibleClients = clients.filter((client) => !client.is_archived);
   const convertibleWonLeads = wonLeads.filter((lead) => !lead.client_account_id);
+  const onboardingByClientId = Object.fromEntries(onboardings.filter((item) => item.client_account_id).map((item) => [item.client_account_id, item]));
 
   return (
     <div className="space-y-8">
@@ -196,7 +203,7 @@ export default function ClientManager() {
 
       <div className="grid xl:grid-cols-2 gap-6">
         {visibleClients.map((client) => (
-          <ClientCard key={client.id} client={client} />
+          <ClientCard key={client.id} client={client} onboarding={onboardingByClientId[client.id] || null} />
         ))}
       </div>
     </div>
