@@ -28,6 +28,7 @@ import LeadDetail from './pages/LeadDetail';
 import OnboardingDashboard from './pages/OnboardingDashboard';
 import OnboardingIntake from './pages/OnboardingIntake';
 import TeamAccess from './pages/TeamAccess';
+import SystemReadiness from './pages/SystemReadiness';
 import AdminLayout from './components/admin/AdminLayout';
 
 const AuthenticatedApp = () => {
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
         <Route path="/Onboarding" element={<OnboardingDashboard />} />
         <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
         <Route path="/TeamAccess" element={<TeamAccess />} />
+        <Route path="/SystemReadiness" element={<SystemReadiness />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
