@@ -6,38 +6,46 @@ import { Check, ArrowRight, HelpCircle } from 'lucide-react';
 const plans = [
 {
   name: 'Starter',
+  slug: 'starter',
   setup: '$1,500',
   monthly: '$497',
   desc: 'Best for businesses starting with AI call handling and lead capture.',
+  valueLine: 'Setup, monthly management, support, and reporting in one premium service path.',
   features: [
-  'Setup fee',
+  'Done-for-you setup',
   'Monthly management',
   'Support included',
   'Reporting included',
   'AI call handling and lead capture'],
 
-  featured: false
+  featured: false,
+  directStart: true
 },
 {
   name: 'Growth',
+  slug: 'growth',
   setup: '$3,000',
   monthly: '$1,500',
   desc: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
+  valueLine: 'Setup, management, support, and optimisation for businesses ready to scale faster.',
   features: [
-  'Setup fee',
+  'Done-for-you setup',
   'Monthly management',
   'Optimisation included',
   'Support included',
   'Reporting included',
   'CRM, calendar, and follow-up automation'],
 
-  featured: true
+  featured: true,
+  directStart: true
 },
 {
   name: 'Enterprise',
+  slug: 'enterprise',
   setup: '$7,500+',
   monthly: '$3,000+',
   desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
+  valueLine: 'Custom setup, management, support, optimisation, and workflow design for larger operations.',
   features: [
   'Advanced setup',
   'Monthly management',
@@ -46,7 +54,8 @@ const plans = [
   'Reporting included',
   'Custom integrations and workflow design'],
 
-  featured: false
+  featured: false,
+  directStart: false
 }];
 
 
