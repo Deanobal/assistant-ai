@@ -45,6 +45,28 @@ Deno.serve(async (req) => {
       last_message_preview: message.slice(0, 180),
     });
 
+    await base44.asServiceRole.entities.NotificationLog.create({
+      event_type: 'support_conversation_reply',
+      entity_name: 'SupportConversation',
+      entity_id: conversation.id,
+      client_account_id: conversation.linked_client_account_id || null,
+      recipient_role: 'admin',
+      recipient_email: null,
+      channel: 'in_app',
+      delivery_status: 'stored',
+      provider_name: 'SupportChat',
+      provider_message: 'Stored for internal admin review. No external delivery configured yet.',
+      title: 'New visitor reply in support conversation',
+      message: `${name || conversation.visitor_name || 'Visitor'} sent a new unread reply.`,
+      triggered_at: now,
+      actor_email: email,
+      metadata: {
+        conversation_id: conversation.id,
+        source_page: sourcePage || conversation.source_page || '/',
+        linked_lead_id: conversation.linked_lead_id || null,
+      },
+    });
+
     return Response.json({ message: reply });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

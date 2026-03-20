@@ -62,6 +62,28 @@ Deno.serve(async (req) => {
       is_internal_note: false,
     });
 
+    await base44.asServiceRole.entities.NotificationLog.create({
+      event_type: 'support_conversation_created',
+      entity_name: 'SupportConversation',
+      entity_id: conversation.id,
+      client_account_id: conversation.linked_client_account_id || null,
+      recipient_role: 'admin',
+      recipient_email: null,
+      channel: 'in_app',
+      delivery_status: 'stored',
+      provider_name: 'SupportChat',
+      provider_message: 'Stored for internal admin review. No external delivery configured yet.',
+      title: 'New public support conversation',
+      message: `${name} started a new support conversation from ${sourcePage || '/'}.`,
+      triggered_at: now,
+      actor_email: email,
+      metadata: {
+        conversation_id: conversation.id,
+        source_page: sourcePage || '/',
+        linked_lead_id: conversation.linked_lead_id || null,
+      },
+    });
+
     return Response.json({
       conversation,
       messages: [firstMessage],
