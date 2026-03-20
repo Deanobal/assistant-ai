@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,15 @@ export default function AdminLayout() {
     );
   }
 
+  const { data: unreadConversations = [] } = useQuery({
+    queryKey: ['admin-support-unread-count'],
+    queryFn: () => base44.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
+  const unreadSupportCount = unreadConversations.length;
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-[#07070d] flex items-center justify-center px-6">
@@ -80,16 +90,24 @@ export default function AdminLayout() {
           </Link>
 
           <div className="space-y-2 flex-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 border transition-colors ${location.pathname === item.path ? 'border-cyan-500/30 bg-cyan-500/10 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/[0.03]'}`}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const showUnreadCount = item.path === '/SupportInbox' && unreadSupportCount > 0;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-colors ${location.pathname === item.path ? 'border-cyan-500/30 bg-cyan-500/10 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/[0.03]'}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {showUnreadCount && (
+                    <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-500/20 shrink-0">{unreadSupportCount}</Badge>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="border-white/10 text-white hover:bg-white/5">
