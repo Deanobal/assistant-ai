@@ -140,6 +140,7 @@ Deno.serve(async (req) => {
         clientAccountId: clientRecord.id,
         planKey: payload.planKey,
         planName: plan.name,
+        origin: payload.origin,
       },
       subscription_data: {
         metadata: {
@@ -147,6 +148,7 @@ Deno.serve(async (req) => {
           clientAccountId: clientRecord.id,
           planKey: payload.planKey,
           planName: plan.name,
+          origin: payload.origin,
         },
       },
       line_items: [
