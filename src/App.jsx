@@ -14,6 +14,7 @@ import Pricing from './pages/Pricing';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import BookStrategyCall from './pages/BookStrategyCall';
+import GetStartedNow from './pages/GetStartedNow';
 import CaseStudies from './pages/CaseStudies';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
         <Route path="/About" element={<About />} />
         <Route path="/Contact" element={<Contact />} />
         <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
+        <Route path="/GetStartedNow" element={<GetStartedNow />} />
         <Route path="/CaseStudies" element={<CaseStudies />} />
         <Route path="/Integrations" element={<Integrations />} />
         <Route path="/Platform" element={<Platform />} />
