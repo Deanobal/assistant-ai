@@ -138,7 +138,8 @@ export default function Pricing() {
                   <span className="text-4xl font-bold text-white">{plan.monthly}</span>
                   <span className="text-gray-500 text-sm">/month</span>
                 </div>
-                <p className="text-gray-500 mb-8 text-base">{plan.setup} setup fee</p>
+                <p className="text-gray-500 text-base">{plan.setup} setup fee</p>
+                <p className="text-gray-300 text-sm leading-relaxed mt-3 mb-8">{plan.valueLine}</p>
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f) =>
@@ -149,16 +150,32 @@ export default function Pricing() {
                 )}
                 </ul>
 
-                <Link
-                to="/BookStrategyCall"
-                className={`block w-full text-center py-3.5 rounded-full text-sm font-medium transition-all ${
-                plan.featured ?
-                'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
-                'border border-white/10 text-white hover:bg-white/5'}`
-                }>
+                <div className="space-y-3">
+                  <Link
+                  to="/BookStrategyCall"
+                  className={`block w-full text-center py-3.5 rounded-full text-sm font-medium transition-all ${
+                  plan.featured ?
+                  'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
+                  'border border-white/10 text-white hover:bg-white/5'}`
+                  }>
 
-                  Book Free Strategy Call
-                </Link>
+                    Book Free Strategy Call
+                  </Link>
+
+                  {plan.directStart && (
+                    <>
+                      <Link
+                        to={`/GetStartedNow?plan=${plan.slug}`}
+                        className="block w-full text-center py-3.5 rounded-full text-sm font-medium border border-cyan-500/20 bg-cyan-500/5 text-white hover:bg-cyan-500/10 transition-all"
+                      >
+                        Get Started Now
+                      </Link>
+                      <p className="text-xs text-gray-500 text-center px-2">
+                        Start your setup immediately and we’ll begin onboarding your system.
+                      </p>
+                    </>
+                  )}
+                </div>
               </motion.div>
             )}
           </div>
