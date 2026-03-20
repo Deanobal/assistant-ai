@@ -4,12 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request', bookingProvider = 'Live Calendar', heading = 'What Happens Next?', intro, responseText, adminWarning }) {
-  const hasLiveBooking = bookingMode !== 'request' && !!bookingUrl;
+  const hasLiveBooking = bookingMode === 'calendar' || (bookingMode !== 'request' && !!bookingUrl);
   const steps = hasLiveBooking
     ? [
         'Complete the short form so AssistantAI stores the lead details correctly.',
-        bookingMode === 'embed' ? 'Choose an available slot in the embedded booking widget.' : `Continue to ${bookingProvider} to choose an available slot.`,
-        'Your meeting is only fully booked once the external calendar confirms it.',
+        bookingMode === 'embed'
+          ? 'Choose an available slot in the embedded booking widget.'
+          : bookingMode === 'calendar'
+            ? 'Choose an available slot from the live Google Calendar availability list.'
+            : `Continue to ${bookingProvider} to choose an available slot.`,
+        bookingMode === 'calendar'
+          ? 'The booking is created directly in Google Calendar once you submit the form.'
+          : 'Your meeting is only fully booked once the external calendar confirms it.',
       ]
     : [
         'We review your enquiry and business needs.',
@@ -45,11 +51,11 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
               </div>
               <div>
                 <h3 className="text-white font-semibold">Live Booking Enabled</h3>
-                <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `A ${bookingProvider} widget is ready on this page after the form step.` : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
+                <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `A ${bookingProvider} widget is ready on this page after the form step.` : bookingMode === 'calendar' ? 'Live Google Calendar slots are shown on this page and bookings are created directly after form submission.' : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
-              {bookingMode === 'embed' ? `${bookingProvider} embed is configured for live slot selection.` : `${bookingProvider} booking link is configured for live slot selection.`}
+              {bookingMode === 'embed' ? `${bookingProvider} embed is configured for live slot selection.` : bookingMode === 'calendar' ? 'Google Calendar is connected for live slot selection and booking sync.' : `${bookingProvider} booking link is configured for live slot selection.`}
             </div>
           </CardContent>
         </Card>

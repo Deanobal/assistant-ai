@@ -50,6 +50,9 @@ export default function LeadForm({
   successActionLabel,
   successEmbedUrl,
   successEmbedLabel,
+  onSubmitted,
+  isSubmitDisabled = false,
+  disabledNotice,
 }) {
   const [form, setForm] = useState({
     full_name: '',
@@ -73,13 +76,16 @@ export default function LeadForm({
     setSubmitError('');
 
     try {
-      await submitLeadCapture(form, {
+      const lead = await submitLeadCapture(form, {
         matchedLeadStatus,
         createStatus,
         nextActionText,
         bookingIntent,
         bookingSource,
       });
+      if (onSubmitted) {
+        await onSubmitted({ lead, form });
+      }
       setSubmitted(true);
     } catch (error) {
       console.error('Lead submission failed', error);
@@ -245,9 +251,15 @@ export default function LeadForm({
         </div>
       )}
 
+      {disabledNotice && isSubmitDisabled && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+          {disabledNotice}
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || isSubmitDisabled}
         className="w-full flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50"
       >
         {submitting ? (

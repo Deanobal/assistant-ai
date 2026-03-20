@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
 import BookingSupportPanel from '@/components/contact/BookingSupportPanel';
+import StrategyCallAvailability from '@/components/contact/StrategyCallAvailability';
 import {
   STRATEGY_CALL_BOOKING_PROVIDER,
   STRATEGY_CALL_BOOKING_URL,
@@ -12,9 +13,13 @@ import {
 
 export default function BookStrategyCall() {
   const [showAdminWarning, setShowAdminWarning] = useState(false);
-  const hasLiveBooking = STRATEGY_CALL_BOOKING_MODE !== 'request';
-  const isEmbeddedBooking = STRATEGY_CALL_BOOKING_MODE === 'embed';
-  const providerLabel = STRATEGY_CALL_BOOKING_PROVIDER || 'Live Calendar';
+  const [calendarAvailability, setCalendarAvailability] = useState({ isLive: false, hasSlots: false, error: '' });
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const hasConfiguredExternalBooking = STRATEGY_CALL_BOOKING_MODE !== 'request';
+  const hasGoogleCalendarLive = calendarAvailability.isLive;
+  const hasLiveBooking = hasGoogleCalendarLive || hasConfiguredExternalBooking;
+  const isEmbeddedBooking = !hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_MODE === 'embed';
+  const providerLabel = hasGoogleCalendarLive ? 'Google Calendar' : STRATEGY_CALL_BOOKING_PROVIDER || 'Live Calendar';
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -39,12 +44,14 @@ export default function BookStrategyCall() {
           >
             <p className="text-cyan-400 mb-3 text-base font-medium">{hasLiveBooking ? 'LIVE STRATEGY CALL BOOKING' : 'STRATEGY CALL REQUEST'}</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-              {hasLiveBooking ? 'Save Your Details and Pick a Strategy Call Time' : 'Request Your Free Strategy Call'}
+              {hasLiveBooking ? 'Pick a Live Strategy Call Slot' : 'Request Your Free Strategy Call'}
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              {hasLiveBooking
-                ? 'Tell us about your business first, then continue into the live booking flow to choose an available strategy call time.'
-                : 'Tell us about your business and request a strategy call. We’ll review your details and send the best next step.'}
+              {hasGoogleCalendarLive
+                ? 'Choose a live 60-minute slot from Google Calendar, then submit your details to book it instantly.'
+                : hasLiveBooking
+                  ? 'Tell us about your business first, then continue into the live booking flow to choose an available strategy call time.'
+                  : 'Tell us about your business and request a strategy call. We’ll review your details and send the best next step.'}
             </p>
           </motion.div>
 
@@ -55,26 +62,51 @@ export default function BookStrategyCall() {
               viewport={{ once: true }}
               className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
             >
+              <StrategyCallAvailability
+                selectedSlot={selectedSlot}
+                onSelectSlot={setSelectedSlot}
+                onAvailabilityStateChange={setCalendarAvailability}
+              />
+
               <LeadForm
-                submitLabel={hasLiveBooking ? 'Save Details and Continue' : 'Request Free Strategy Call'}
-                successTitle={isEmbeddedBooking ? 'Pick Your Strategy Call Time' : hasLiveBooking ? 'Continue to Live Booking' : 'Strategy Call Request Received'}
-                successText={isEmbeddedBooking
-                  ? 'Your details have been saved. Use the live booking widget below to choose an available slot.'
-                  : hasLiveBooking
-                    ? 'Your details have been saved. Continue to the live booking page to choose an available slot.'
-                    : 'Thanks — your strategy call request has been received. We’ll review your details and send the next step shortly.'}
+                submitLabel={hasGoogleCalendarLive ? 'Book 60-Minute Strategy Call' : hasLiveBooking ? 'Save Details and Continue' : 'Request Free Strategy Call'}
+                successTitle={hasGoogleCalendarLive ? 'Strategy Call Booked' : isEmbeddedBooking ? 'Pick Your Strategy Call Time' : hasLiveBooking ? 'Continue to Live Booking' : 'Strategy Call Request Received'}
+                successText={hasGoogleCalendarLive
+                  ? 'Your strategy call has been booked in Google Calendar and reminder emails will be sent before the meeting.'
+                  : isEmbeddedBooking
+                    ? 'Your details have been saved. Use the live booking widget below to choose an available slot.'
+                    : hasLiveBooking
+                      ? 'Your details have been saved. Continue to the live booking page to choose an available slot.'
+                      : 'Thanks — your strategy call request has been received. We’ll review your details and send the next step shortly.'}
                 matchedLeadStatus="Strategy Call Requested"
                 createStatus="Strategy Call Requested"
-                nextActionText={hasLiveBooking
-                  ? 'Lead requested a strategy call and still needs external booking confirmation.'
-                  : 'Follow up on strategy call request and send booking next step.'}
+                nextActionText={hasGoogleCalendarLive
+                  ? 'Lead selected a live Google Calendar slot and booking is being created.'
+                  : hasLiveBooking
+                    ? 'Lead requested a strategy call and still needs external booking confirmation.'
+                    : 'Follow up on strategy call request and send booking next step.'}
                 bookingIntent={true}
-                bookingSource={`strategy_call_${STRATEGY_CALL_BOOKING_MODE}`}
+                bookingSource={hasGoogleCalendarLive ? 'strategy_call_google_calendar' : `strategy_call_${STRATEGY_CALL_BOOKING_MODE}`}
                 showPreferredMeetingFields={!hasLiveBooking}
-                successActionHref={STRATEGY_CALL_BOOKING_URL || undefined}
-                successActionLabel={STRATEGY_CALL_BOOKING_URL ? `Open ${providerLabel}` : undefined}
-                successEmbedUrl={isEmbeddedBooking ? STRATEGY_CALL_BOOKING_EMBED_URL : undefined}
+                successActionHref={!hasGoogleCalendarLive ? STRATEGY_CALL_BOOKING_URL || undefined : undefined}
+                successActionLabel={!hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_URL ? `Open ${providerLabel}` : undefined}
+                successEmbedUrl={!hasGoogleCalendarLive && isEmbeddedBooking ? STRATEGY_CALL_BOOKING_EMBED_URL : undefined}
                 successEmbedLabel={`${providerLabel} booking widget`}
+                isSubmitDisabled={hasGoogleCalendarLive && !selectedSlot}
+                disabledNotice={hasGoogleCalendarLive ? 'Select one of the live 60-minute Google Calendar slots above before booking.' : undefined}
+                onSubmitted={hasGoogleCalendarLive ? async ({ lead, form }) => {
+                  const response = await base44.functions.invoke('createStrategyCallBooking', {
+                    leadId: lead.id,
+                    fullName: form.full_name,
+                    businessName: form.business_name,
+                    email: form.email,
+                    message: form.message,
+                    slotStart: selectedSlot.start,
+                    slotEnd: selectedSlot.end,
+                    timezone: 'UTC',
+                  });
+                  return response.data;
+                } : undefined}
               />
             </motion.div>
 
@@ -85,16 +117,20 @@ export default function BookStrategyCall() {
               className="lg:col-span-2"
             >
               <BookingSupportPanel
-                bookingUrl={STRATEGY_CALL_BOOKING_URL || STRATEGY_CALL_BOOKING_EMBED_URL}
-                bookingMode={STRATEGY_CALL_BOOKING_MODE}
+                bookingUrl={hasGoogleCalendarLive ? 'googlecalendar-live' : STRATEGY_CALL_BOOKING_URL || STRATEGY_CALL_BOOKING_EMBED_URL}
+                bookingMode={hasGoogleCalendarLive ? 'calendar' : STRATEGY_CALL_BOOKING_MODE}
                 bookingProvider={providerLabel}
-                adminWarning={showAdminWarning ? 'Admin warning: add a live booking URL or embed URL in src/lib/booking.js to enable real calendar scheduling.' : ''}
-                intro={hasLiveBooking
-                  ? 'Complete the short form first so AssistantAI can save the lead properly before the live scheduling step continues.'
-                  : 'Complete the short form to send a strategy call request. No live calendar is connected yet.'}
-                responseText={hasLiveBooking
-                  ? 'Live scheduling is available after the form step, but calendar confirmation still happens in the external booking tool.'
-                  : 'We usually respond within one business day when a live calendar is not connected.'}
+                adminWarning={showAdminWarning ? 'Admin warning: Google Calendar live booking is not available yet, so the page is staying in honest request mode.' : ''}
+                intro={hasGoogleCalendarLive
+                  ? 'Choose a live Google Calendar slot, then submit the short form to create the booking directly in your calendar.'
+                  : hasLiveBooking
+                    ? 'Complete the short form first so AssistantAI can save the lead properly before the live scheduling step continues.'
+                    : 'Complete the short form to send a strategy call request. No live calendar is connected yet.'}
+                responseText={hasGoogleCalendarLive
+                  ? 'Calendar updates are monitored for follow-up actions, and reminder emails are sent before scheduled meetings.'
+                  : hasLiveBooking
+                    ? 'Live scheduling is available after the form step, but calendar confirmation still happens in the external booking tool.'
+                    : 'We usually respond within one business day when a live calendar is not connected.'}
               />
             </motion.div>
           </div>
