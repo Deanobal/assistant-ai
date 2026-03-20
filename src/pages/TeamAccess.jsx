@@ -10,6 +10,7 @@ export default function TeamAccess() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('user');
   const [lastInvitedEmail, setLastInvitedEmail] = useState('');
+  const [lastResetEmail, setLastResetEmail] = useState('');
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
@@ -39,6 +40,13 @@ export default function TeamAccess() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: (targetEmail) => base44.auth.resetPasswordRequest(targetEmail),
+    onSuccess: (_, targetEmail) => {
+      setLastResetEmail(targetEmail);
+    },
+  });
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
@@ -48,7 +56,7 @@ export default function TeamAccess() {
             <Badge className="bg-white/5 text-gray-300 border-white/10">Admin-only control</Badge>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Manage Admin and User Access</h2>
-          <p className="text-gray-400 max-w-3xl">Invite people manually, control who is an admin, and keep the internal workspace restricted to approved team members only.</p>
+          <p className="text-gray-400 max-w-3xl">Invite people manually, control who is an admin, and send password reset emails when a team member needs to choose a new password.</p>
         </div>
       </div>
 
@@ -65,8 +73,10 @@ export default function TeamAccess() {
       <TeamMembersCard
         members={members}
         currentUserEmail={currentUser?.email}
-        isLoading={roleMutation.isPending}
+        isLoading={roleMutation.isPending || resetPasswordMutation.isPending}
+        lastResetEmail={lastResetEmail}
         onChangeRole={(userId, role) => roleMutation.mutate({ userId, role })}
+        onResetPassword={(targetEmail) => resetPasswordMutation.mutate(targetEmail)}
       />
     </div>
   );

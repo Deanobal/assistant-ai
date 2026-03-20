@@ -14,6 +14,10 @@ export default function InviteMemberCard({ email, role, setEmail, setRole, onInv
           <p className="text-sm text-gray-400 mt-1">Choose who should have access and whether they should be a regular user or an admin.</p>
         </div>
 
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+          Invited users accept their email invite first. If they need to choose or change a password, they can use the login screen’s forgot password flow, or you can send them a reset email from the team list below.
+        </div>
+
         <div className="grid md:grid-cols-[1fr_180px_auto] gap-4 items-end">
           <div className="space-y-2">
             <Label className="text-gray-400">Email</Label>
@@ -50,7 +54,7 @@ export default function InviteMemberCard({ email, role, setEmail, setRole, onInv
 
         {lastInvitedEmail && (
           <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-300">
-            Invite sent to {lastInvitedEmail}
+            Invite sent to {lastInvitedEmail}. They can accept the invite, then use the login screen to set or reset their password if needed.
           </div>
         )}
       </CardContent>

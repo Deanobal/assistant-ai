@@ -8,13 +8,13 @@ const roleBadgeStyles = {
   user: 'bg-white/5 text-gray-300 border-white/10',
 };
 
-export default function TeamMembersCard({ members, currentUserEmail, onChangeRole, isLoading }) {
+export default function TeamMembersCard({ members, currentUserEmail, onChangeRole, onResetPassword, isLoading, lastResetEmail }) {
   return (
     <Card className="bg-[#12121a] border-white/5">
       <CardContent className="p-6 space-y-4">
         <div>
           <h3 className="text-white font-semibold text-lg">Team Access</h3>
-          <p className="text-sm text-gray-400 mt-1">Only admin users can reach the internal admin area and manage other users.</p>
+          <p className="text-sm text-gray-400 mt-1">Only admin users can reach the internal admin area and manage other users. Passwords stay self-service, but admins can send reset emails.</p>
         </div>
 
         <div className="space-y-3">
@@ -29,6 +29,9 @@ export default function TeamMembersCard({ members, currentUserEmail, onChangeRol
                     {isCurrentUser && <Badge className="bg-white/5 text-gray-300 border-white/10">You</Badge>}
                   </div>
                   <p className="text-sm text-gray-400 break-all">{member.email}</p>
+                  {lastResetEmail === member.email && (
+                    <p className="text-sm text-cyan-300 mt-2">Password reset email sent.</p>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -46,6 +49,14 @@ export default function TeamMembersCard({ members, currentUserEmail, onChangeRol
                     className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50"
                   >
                     Make Admin
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => onResetPassword(member.email)}
+                    className="border-white/10 bg-transparent text-white hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Send Reset Email
                   </Button>
                 </div>
               </div>
