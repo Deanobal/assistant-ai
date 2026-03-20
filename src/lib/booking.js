@@ -1,1 +1,4 @@
+export const STRATEGY_CALL_BOOKING_PROVIDER = '';
 export const STRATEGY_CALL_BOOKING_URL = '';
+export const STRATEGY_CALL_BOOKING_EMBED_URL = '';
+export const STRATEGY_CALL_BOOKING_MODE = STRATEGY_CALL_BOOKING_EMBED_URL ? 'embed' : STRATEGY_CALL_BOOKING_URL ? 'external' : 'request';

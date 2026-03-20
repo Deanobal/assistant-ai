@@ -3,7 +3,20 @@ import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function BookingSupportPanel({ bookingUrl, heading = 'What Happens Next?', intro, responseText, adminWarning }) {
+export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request', bookingProvider = 'Live Calendar', heading = 'What Happens Next?', intro, responseText, adminWarning }) {
+  const hasLiveBooking = bookingMode !== 'request' && !!bookingUrl;
+  const steps = hasLiveBooking
+    ? [
+        'Complete the short form so AssistantAI stores the lead details correctly.',
+        bookingMode === 'embed' ? 'Choose an available slot in the embedded booking widget.' : `Continue to ${bookingProvider} to choose an available slot.`,
+        'Your meeting is only fully booked once the external calendar confirms it.',
+      ]
+    : [
+        'We review your enquiry and business needs.',
+        'We confirm the right next step for your strategy call.',
+        'We reply with timing, recommendations, or booking options.',
+      ];
+
   return (
     <div className="space-y-6">
       <Card className="bg-[#12121a] border-white/5">
@@ -11,11 +24,7 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
           <h3 className="text-white font-semibold text-lg">{heading}</h3>
           {intro && <p className="text-gray-400 leading-relaxed">{intro}</p>}
           <ol className="space-y-4">
-            {[
-              'We review your enquiry and business needs.',
-              'We confirm the right next step for your strategy call.',
-              'We reply with timing, recommendations, or booking options.',
-            ].map((step, index) => (
+            {steps.map((step, index) => (
               <li key={step} className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0 text-xs font-bold text-white">
                   {index + 1}
@@ -27,7 +36,7 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
         </CardContent>
       </Card>
 
-      {bookingUrl ? (
+      {hasLiveBooking ? (
         <Card className="bg-gradient-to-b from-cyan-500/10 to-transparent border-cyan-500/20">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-3">
@@ -36,11 +45,11 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
               </div>
               <div>
                 <h3 className="text-white font-semibold">Live Booking Enabled</h3>
-                <p className="text-sm text-gray-400">After submitting the short form, continue into the live booking calendar.</p>
+                <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `A ${bookingProvider} widget is ready on this page after the form step.` : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
-              Real booking link is connected and ready to use.
+              {bookingMode === 'embed' ? `${bookingProvider} embed is configured for live slot selection.` : `${bookingProvider} booking link is configured for live slot selection.`}
             </div>
           </CardContent>
         </Card>
@@ -52,12 +61,12 @@ export default function BookingSupportPanel({ bookingUrl, heading = 'What Happen
                 <CalendarDays className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Booking Fallback Active</h3>
-                <p className="text-sm text-gray-400">Submit the form and our team will arrange your strategy call directly.</p>
+                <h3 className="text-white font-semibold">Request Flow Only</h3>
+                <p className="text-sm text-gray-400">Submit the form and our team will arrange the next step for your strategy call.</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
-              No live calendar link is connected yet, so public users will see a safe request flow instead of a dead button.
+              No live booking URL or widget is connected yet, so public users see an honest request flow instead of fake scheduling.
             </div>
             {adminWarning && (
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">

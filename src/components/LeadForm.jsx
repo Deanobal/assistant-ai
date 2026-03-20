@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import BookingEmbedCard from '@/components/contact/BookingEmbedCard';
 import { submitLeadCapture } from '@/lib/leadCapture';
 
 const industries = [
@@ -47,6 +48,8 @@ export default function LeadForm({
   showPreferredMeetingFields = false,
   successActionHref,
   successActionLabel,
+  successEmbedUrl,
+  successEmbedLabel,
 }) {
   const [form, setForm] = useState({
     full_name: '',
@@ -103,6 +106,9 @@ export default function LeadForm({
             {successActionLabel}
             <ArrowRight className="w-4 h-4" />
           </a>
+        )}
+        {successEmbedUrl && (
+          <BookingEmbedCard embedUrl={successEmbedUrl} title={successEmbedLabel || 'Live Booking Widget'} />
         )}
       </motion.div>
     );
