@@ -52,6 +52,18 @@ export default function SupportInbox() {
 
   const selectedConversation = conversations.find((item) => item.id === selectedConversationId) || null;
 
+  useEffect(() => {
+    if (!selectedConversation?.unread_for_admin) return;
+    updateConversationMutation.mutate({
+      id: selectedConversation.id,
+      data: {
+        ...selectedConversation,
+        unread_for_admin: false,
+        status: selectedConversation.status === 'new' ? 'open' : selectedConversation.status,
+      },
+    });
+  }, [selectedConversation?.id]);
+
   const { data: messages = [] } = useQuery({
     queryKey: ['support-messages', selectedConversationId],
     queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: selectedConversationId }, 'created_at', 500),
@@ -133,6 +145,7 @@ export default function SupportInbox() {
               ...selectedConversation,
               status: 'resolved',
               unread_for_admin: false,
+              unread_for_client: false,
             },
           })}
           onPriorityChange={(priority) => updateConversationMutation.mutate({
