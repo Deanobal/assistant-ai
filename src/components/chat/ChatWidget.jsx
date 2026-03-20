@@ -1,184 +1,130 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { MessageCircle, X, Sparkles, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import ChatBubble from './ChatBubble';
+import { MessageCircle, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import SupportChatBubble from './SupportChatBubble';
+import SupportChatIntakeForm from './SupportChatIntakeForm';
+import SupportChatComposer from './SupportChatComposer';
 
-const baseQuestions = [
-  {
-    key: 'intent',
-    prompt: 'What can I help you with today?',
-    options: ['Support', 'AI Lead Qualification', 'Bookings & Appointments', 'General Enquiry'],
-  },
-];
+const STORAGE_KEY = 'assistantai-support-chat';
 
-const intentFlows = {
-  Support: [
-    {
-      key: 'supportType',
-      prompt: 'What kind of support do you need?',
-      options: ['Portal access', 'Billing question', 'Technical issue', 'Something urgent'],
-    },
-    {
-      key: 'supportUrgency',
-      prompt: 'How urgent is this?',
-      options: ['Not urgent', 'Soon today', 'Urgent now'],
-    },
-  ],
-  'AI Lead Qualification': [
-    {
-      key: 'businessType',
-      prompt: 'What type of business are you running?',
-      options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
-    },
-    {
-      key: 'goal',
-      prompt: 'What would you most like AssistantAI to help with?',
-      options: ['Answer missed calls', 'Book appointments', 'Automate follow-up'],
-    },
-    {
-      key: 'volume',
-      prompt: 'How many inbound calls or enquiries do you roughly get each week?',
-      options: ['Less than 20', '20–100', '100+'],
-    },
-  ],
-  'Bookings & Appointments': [
-    {
-      key: 'businessType',
-      prompt: 'What type of business are you running?',
-      options: ['Trades', 'Medical Clinic', 'Dental Clinic', 'Real Estate', 'Law Firm', 'Automotive', 'Hospitality', 'Other Service Business'],
-    },
-    {
-      key: 'bookingNeed',
-      prompt: 'What do you need help with?',
-      options: ['Book a strategy call', 'See booking features', 'Calendar integrations'],
-    },
-  ],
-  'General Enquiry': [
-    {
-      key: 'generalTopic',
-      prompt: 'What would you like to know more about?',
-      options: ['Pricing', 'Integrations', 'How it works', 'Something else'],
-    },
-  ],
+const systemIntro = {
+  id: 'intro',
+  sender_type: 'system',
+  message_body: 'Send us a message and our team will review it as soon as possible. This is not live agent chat, so if we are away we will reply by email.',
 };
 
-const getFlow = (answers) => {
-  if (!answers.intent) return baseQuestions;
-  return [...baseQuestions, ...(intentFlows[answers.intent] || [])];
-};
-
-const getFinalMessage = (answers) => {
-  if (answers.intent === 'Support') {
-    const shouldEscalate = answers.supportType === 'Technical issue' || answers.supportType === 'Something urgent' || answers.supportUrgency === 'Urgent now';
-    return shouldEscalate
-      ? 'Thanks — this looks like something more serious, so AssistantAI should route this straight to you for direct follow-up.'
-      : `Thanks — I can help with ${answers.supportType?.toLowerCase() || 'support'} and guide the client to the right next step.`;
-  }
-
-  if (answers.intent === 'Bookings & Appointments') {
-    return `Great — I can help with ${answers.bookingNeed?.toLowerCase() || 'bookings'} for your ${answers.businessType?.toLowerCase() || 'business'} setup.`;
-  }
-
-  if (answers.intent === 'General Enquiry') {
-    return `Happy to help — I can point you in the right direction for ${answers.generalTopic?.toLowerCase() || 'your enquiry'}.`;
-  }
-
-  return `Based on what you've shared, AssistantAI could likely help with ${answers.goal?.toLowerCase() || 'lead qualification'} for your ${answers.businessType?.toLowerCase() || 'business'} workflow.`;
-};
-
-const getPrimaryCta = (answers) => {
-  if (answers.intent === 'Support') {
-    const shouldEscalate = answers.supportType === 'Technical issue' || answers.supportType === 'Something urgent' || answers.supportUrgency === 'Urgent now';
-    return shouldEscalate
-      ? { label: 'Contact Support', to: '/Contact' }
-      : { label: 'Get Support', to: '/Contact' };
-  }
-
-  if (answers.intent === 'Bookings & Appointments') {
-    return { label: 'Book Free Strategy Call', to: '/Contact' };
-  }
-
-  return { label: 'Book Free Strategy Call', to: '/Contact' };
+const systemSuccess = {
+  id: 'success',
+  sender_type: 'system',
+  message_body: 'Thanks — your message has been received and your conversation is now saved. You can reply here if you need to add more details.',
 };
 
 export default function ChatWidget() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [name, setName] = useState('');
-  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
-  const typingTimeoutRef = useRef(null);
-
-  const questions = useMemo(() => getFlow(answers), [answers]);
-  const currentQuestion = questions[step];
-  const isComplete = step >= questions.length;
-  const primaryCta = getPrimaryCta(answers);
-
-  const messages = useMemo(() => {
-    const items = [
-      {
-        role: 'assistant',
-        content: 'Hi — welcome to AssistantAI live chat. I can help with support, lead qualification, bookings, or general questions in under a minute.',
-      },
-    ];
-
-    questions.forEach((question, index) => {
-      if (index <= step) {
-        items.push({ role: 'assistant', content: question.prompt });
-      }
-      if (answers[question.key]) {
-        items.push({ role: 'user', content: answers[question.key] });
-      }
-    });
-
-    if (isAssistantTyping) {
-      items.push({ role: 'assistant', content: '', isTyping: true });
-    } else if (isComplete) {
-      items.push({
-        role: 'assistant',
-        content: getFinalMessage(answers),
-      });
+  const [conversation, setConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [threadError, setThreadError] = useState('');
+  const [isLoadingThread, setIsLoadingThread] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyBody, setReplyBody] = useState('');
+  const [form, setForm] = useState({ name: '', email: '', mobile: '', message: '' });
+  const [storedThread, setStoredThread] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
     }
-
-    return items;
-  }, [answers, isAssistantTyping, isComplete, questions, step]);
-
-  const lastAssistantIndex = [...messages].map((message) => message.role).lastIndexOf('assistant');
+  });
 
   useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+    if (!isOpen || !storedThread?.conversationId || conversation) return;
+
+    const loadThread = async () => {
+      setIsLoadingThread(true);
+      setThreadError('');
+      try {
+        const response = await base44.functions.invoke('getSupportConversation', {
+          conversationId: storedThread.conversationId,
+          email: storedThread.email,
+        });
+        setConversation(response.data.conversation);
+        setMessages(response.data.messages || []);
+        setForm((prev) => ({
+          ...prev,
+          name: storedThread.name || prev.name,
+          email: storedThread.email || prev.email,
+        }));
+      } catch (error) {
+        localStorage.removeItem(STORAGE_KEY);
+        setStoredThread(null);
+        setThreadError(error?.response?.data?.error || error.message || 'Unable to load the saved conversation.');
+      } finally {
+        setIsLoadingThread(false);
       }
     };
-  }, []);
 
-  const handleOptionClick = (value) => {
-    if (isAssistantTyping) return;
+    loadThread();
+  }, [conversation, isOpen, storedThread]);
 
-    const key = currentQuestion.key;
-    const nextAnswers = { ...answers, [key]: value };
-    setAnswers(nextAnswers);
-    setIsAssistantTyping(true);
+  const threadMessages = useMemo(() => {
+    if (!conversation) {
+      return [systemIntro];
+    }
+    return [systemIntro, ...messages, systemSuccess];
+  }, [conversation, messages]);
 
-    typingTimeoutRef.current = setTimeout(() => {
-      const nextQuestions = getFlow(nextAnswers);
-      setStep((prev) => Math.min(prev + 1, nextQuestions.length));
-      setIsAssistantTyping(false);
-    }, 850);
+  const handleStartConversation = async () => {
+    setIsSubmitting(true);
+    setThreadError('');
+    try {
+      const response = await base44.functions.invoke('startSupportConversation', {
+        name: form.name,
+        email: form.email,
+        mobile: form.mobile,
+        message: form.message,
+        sourcePage: location.pathname,
+      });
+      const nextConversation = response.data.conversation;
+      const nextMessages = response.data.messages || [];
+      setConversation(nextConversation);
+      setMessages(nextMessages);
+      setForm((prev) => ({ ...prev, message: '' }));
+      const nextStored = {
+        conversationId: nextConversation.id,
+        email: nextConversation.visitor_email,
+        name: nextConversation.visitor_name,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStored));
+      setStoredThread(nextStored);
+    } catch (error) {
+      setThreadError(error?.response?.data?.error || error.message || 'Unable to send your message right now.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleRestart = () => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+  const handleReply = async () => {
+    setIsSubmitting(true);
+    setThreadError('');
+    try {
+      const response = await base44.functions.invoke('replySupportConversation', {
+        conversationId: conversation.id,
+        email: form.email,
+        name: form.name,
+        message: replyBody,
+        sourcePage: location.pathname,
+      });
+      setMessages((prev) => [...prev, response.data.message]);
+      setReplyBody('');
+    } catch (error) {
+      setThreadError(error?.response?.data?.error || error.message || 'Unable to send your reply right now.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setStep(0);
-    setAnswers({});
-    setName('');
-    setIsAssistantTyping(false);
   };
 
   return (
@@ -190,17 +136,16 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0b13]/95 shadow-2xl shadow-cyan-500/10 backdrop-blur-2xl"
+            className="mb-4 w-[380px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0b13]/95 shadow-2xl shadow-cyan-500/10 backdrop-blur-2xl"
           >
             <div className="border-b border-white/8 bg-white/[0.03] px-5 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-1 text-[11px] text-cyan-300">
-                    <Sparkles className="h-3 w-3" />
-                    Live Chat
+                    Chat with Support
                   </div>
-                  <h3 className="mt-3 text-sm font-semibold text-white">Chat with AssistantAI</h3>
-                  <p className="mt-1 text-xs text-gray-400">Support and qualification for current and future clients.</p>
+                  <h3 className="mt-3 text-sm font-semibold text-white">Send us a message</h3>
+                  <p className="mt-1 text-xs text-gray-400">Public support and sales enquiries for AssistantAI.</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -212,61 +157,40 @@ export default function ChatWidget() {
             </div>
 
             <div className="space-y-3 px-4 py-4 max-h-[420px] overflow-y-auto">
-              {messages.map((message, index) => (
-                <ChatBubble
-                  key={`${message.role}-${index}`}
-                  role={message.role}
-                  isTyping={message.isTyping}
-                  shouldAnimate={message.role === 'assistant' && !message.isTyping && index === lastAssistantIndex}
-                >
-                  {message.content}
-                </ChatBubble>
+              {threadMessages.map((message) => (
+                <SupportChatBubble key={message.id} message={message} />
               ))}
+              {isLoadingThread && (
+                <SupportChatBubble message={{ id: 'loading', sender_type: 'system', message_body: 'Loading your conversation…' }} />
+              )}
             </div>
 
-            <div className="border-t border-white/8 px-4 py-4">
-              {!isComplete ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {currentQuestion.options.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleOptionClick(option)}
-                      disabled={isAssistantTyping}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-gray-200 transition hover:border-cyan-500/30 hover:bg-cyan-500/5 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {option}
-                    </button>
-                  ))}
+            <div className="border-t border-white/8 px-4 py-4 space-y-3">
+              {threadError && (
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  {threadError}
                 </div>
+              )}
+
+              {!conversation ? (
+                <SupportChatIntakeForm
+                  form={form}
+                  setForm={setForm}
+                  onSubmit={handleStartConversation}
+                  isLoading={isSubmitting}
+                />
               ) : (
-                <div className="space-y-3">
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name (optional)"
-                    className="bg-white/[0.03] border-white/10 text-white placeholder:text-gray-500"
-                  />
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Link to={primaryCta.to} className="flex-1">
-                      <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-                        {primaryCta.label}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      onClick={handleRestart}
-                      className="border-white/10 bg-transparent text-white hover:bg-white/5"
-                    >
-                      Restart
-                    </Button>
+                <>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-gray-400">
+                    Conversation status: {conversation.status}. Our team reviews messages and replies when available.
                   </div>
-                  <p className="text-xs text-gray-500">
-                    {name ? `Thanks ${name}. ` : ''}{answers.intent === 'Support'
-                      ? 'If this needs hands-on help, we’ll route it through to you directly.'
-                      : 'When you’re ready, book a strategy call and we’ll map the right workflow for your business.'}
-                  </p>
-                </div>
+                  <SupportChatComposer
+                    value={replyBody}
+                    onChange={setReplyBody}
+                    onSend={handleReply}
+                    isLoading={isSubmitting}
+                  />
+                </>
               )}
             </div>
           </motion.div>
@@ -281,8 +205,8 @@ export default function ChatWidget() {
           <MessageCircle className="h-5 w-5 text-white" />
         </div>
         <div className="hidden sm:block text-left">
-          <p className="text-sm font-medium">Chat with AssistantAI</p>
-          <p className="text-xs text-gray-400">Support, bookings and enquiries</p>
+          <p className="text-sm font-medium">Chat with Support</p>
+          <p className="text-xs text-gray-400">Send us a message</p>
         </div>
       </button>
     </div>
