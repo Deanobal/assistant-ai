@@ -31,9 +31,9 @@ export default function About() {
             className="text-center mb-16">
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">ABOUT US</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              AssistantAI.com.au Helps Businesses{' '}
-              <span className="text-gradient">Work Smarter</span>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">AssistantAI Helps Businesses Work Smarter
+
+
             </h1>
           </motion.div>
 
@@ -44,8 +44,8 @@ export default function About() {
               viewport={{ once: true }}
               className="space-y-5 text-gray-400 leading-relaxed text-lg">
 
-              <p>
-                AssistantAI.com.au was built to help Australian businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.
+              <p>AssistantAI was built to help Australian businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.
+
               </p>
               <p>
                 We focus on practical automation that answers calls, captures customer details, books appointments, updates systems, and follows up automatically.
