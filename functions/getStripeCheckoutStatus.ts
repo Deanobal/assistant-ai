@@ -20,8 +20,12 @@ Deno.serve(async (req) => {
 
     const billingMatches = await base44.asServiceRole.entities.BillingRecord.filter({ stripe_checkout_session_id: session.id }, '-updated_date', 1);
     const billing = billingMatches[0] || null;
+    const onboardingMatches = billing?.client_id
+      ? await base44.asServiceRole.entities.Onboarding.filter({ client_account_id: billing.client_id }, '-updated_date', 1)
+      : [];
+    const onboarding = onboardingMatches[0] || null;
 
-    const isPaid = session.payment_status === 'paid' || session.status === 'complete';
+    const paymentConfirmed = billing?.billing_status === 'active' && session.payment_status === 'paid';
 
     return Response.json({
       success: true,
@@ -30,9 +34,11 @@ Deno.serve(async (req) => {
       status: session.status,
       customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id || null,
       subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null,
-      onboarding_started: !!billing && isPaid,
+      onboarding_started: !!onboarding && paymentConfirmed,
       billing_status: billing?.billing_status || 'pending',
       plan_name: billing?.plan_name || session.metadata?.planName || null,
+      onboarding_id: onboarding?.id || null,
+      intake_url: onboarding?.id ? `/OnboardingIntake?id=${onboarding.id}` : null,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

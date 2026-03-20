@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, CheckCircle2, Clock3, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, CheckCircle2, Clock3, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function CheckoutReturnCard({ planName, checkoutState, sessionId }) {
   const [state, setState] = useState({ loading: checkoutState === 'success', error: '', data: null });
@@ -57,21 +58,30 @@ export default function CheckoutReturnCard({ planName, checkoutState, sessionId 
           <>
             <CheckCircle2 className="w-10 h-10 text-cyan-300 mx-auto" />
             <h2 className="text-2xl font-bold text-white">Payment Confirmed — Onboarding Started</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Your {state.data?.plan_name || planName} payment has been confirmed by Stripe, your billing record is live, and onboarding has started.</p>
+            <p className="text-gray-400 max-w-2xl mx-auto">Your {state.data?.plan_name || planName} payment has been confirmed by Stripe, your billing record is active, and onboarding has started successfully.</p>
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-gray-300 text-left max-w-2xl mx-auto">
               <p className="text-white font-medium mb-2">Next steps</p>
               <ul className="space-y-1">
                 <li>• Your setup fee has been recorded as paid.</li>
-                <li>• Your billing and onboarding records have been updated automatically.</li>
-                <li>• AssistantAI can now move into intake, setup, and implementation.</li>
+                <li>• Your client, billing, and onboarding records have been updated automatically.</li>
+                <li>• Complete your onboarding intake form so AssistantAI can begin system setup.</li>
+                <li>• Our team will usually begin the onboarding handoff within one business day.</li>
               </ul>
             </div>
+            {state.data?.intake_url && (
+              <Button asChild className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                <a href={state.data.intake_url}>
+                  Go to Onboarding Intake Form
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </a>
+              </Button>
+            )}
           </>
         ) : (
           <>
             <Clock3 className="w-10 h-10 text-amber-300 mx-auto" />
-            <h2 className="text-2xl font-bold text-white">Checkout Complete — Waiting for Confirmation</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Stripe checkout was completed, but onboarding will only be confirmed here once the payment status is marked as paid.</p>
+            <h2 className="text-2xl font-bold text-white">Checkout Complete — Waiting for Stripe Confirmation</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Your return from Stripe was received, but nothing is marked as paid here until the Stripe checkout session and billing record are both confirmed.</p>
           </>
         )}
       </CardContent>
