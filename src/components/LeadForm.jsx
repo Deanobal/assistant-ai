@@ -45,6 +45,7 @@ export default function LeadForm({
   nextActionText,
   bookingIntent = false,
   bookingSource = '',
+  enquiryTypeOverride,
   showPreferredMeetingFields = false,
   successActionHref,
   successActionLabel,
@@ -83,6 +84,7 @@ export default function LeadForm({
         nextActionText,
         bookingIntent,
         bookingSource,
+        enquiryTypeOverride,
       });
       if (onSubmitted) {
         const result = await onSubmitted({ lead, form });

@@ -35,7 +35,7 @@ export async function submitLeadCapture(form, options = {}) {
     email,
     mobile_number: mobileNumber || '',
     industry: form.industry || '',
-    enquiry_type: form.enquiry_type || 'other',
+    enquiry_type: options.enquiryTypeOverride || form.enquiry_type || 'other',
     monthly_enquiry_volume: form.monthly_enquiry_volume || '',
     source_page: sourcePage,
     message: form.message?.trim() || '',

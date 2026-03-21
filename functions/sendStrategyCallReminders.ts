@@ -1,45 +1,66 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+function buildMeetingDateTime(date, time) {
+  if (!date || !time) return null;
+  const normalizedTime = time.length === 5 ? `${time}:00` : time;
+  return `${date}T${normalizedTime}Z`;
+}
+
+function appendNote(notes, line) {
+  return notes ? `${notes}\n\n${line}` : line;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const bookings = await base44.asServiceRole.entities.StrategyCallBooking.list('-start_time', 200);
+    const leads = await base44.asServiceRole.entities.Lead.list('-updated_date', 500);
     const now = Date.now();
     let sentCount = 0;
 
-    for (const booking of bookings) {
-      if (!booking?.email || !['scheduled', 'updated'].includes(booking.status)) {
+    for (const lead of leads) {
+      if (!lead?.email || !lead?.booking_intent || lead.status !== 'Strategy Call Booked') {
         continue;
       }
 
-      const startTime = new Date(booking.start_time).getTime();
+      const startTimeIso = buildMeetingDateTime(lead.preferred_meeting_date, lead.preferred_meeting_time);
+      if (!startTimeIso) {
+        continue;
+      }
+
+      const startTime = new Date(startTimeIso).getTime();
       const hoursUntil = (startTime - now) / (60 * 60 * 1000);
-      const updates = {};
+      const reminderKeyBase = `${lead.preferred_meeting_date} ${lead.preferred_meeting_time}`;
+      const notes = lead.notes || '';
+      let nextNotes = notes;
+      let hasUpdates = false;
 
-      if (!booking.reminder_24h_sent && hoursUntil <= 24 && hoursUntil > 23.5) {
+      if (!notes.includes(`[reminder_24h_sent:${reminderKeyBase}]`) && hoursUntil <= 24 && hoursUntil > 23.5) {
         await base44.asServiceRole.integrations.Core.SendEmail({
-          to: booking.email,
+          to: lead.email,
           subject: 'Reminder: your AssistantAI strategy call is tomorrow',
-          body: `Hi ${booking.full_name},\n\nThis is a reminder that your AssistantAI strategy call is scheduled for ${booking.start_time} (UTC).\n\nIf anything changes, please reply to this email.\n\nAssistantAI`,
+          body: `Hi ${lead.full_name},\n\nThis is a reminder that your AssistantAI strategy call is scheduled for ${startTimeIso} (UTC).\n\nIf anything changes, please reply to this email.\n\nAssistantAI`,
         });
-        updates.reminder_24h_sent = true;
+        nextNotes = appendNote(nextNotes, `[reminder_24h_sent:${reminderKeyBase}]`);
+        hasUpdates = true;
         sentCount += 1;
       }
 
-      if (!booking.reminder_1h_sent && hoursUntil <= 1 && hoursUntil > 0.5) {
+      if (!notes.includes(`[reminder_1h_sent:${reminderKeyBase}]`) && hoursUntil <= 1 && hoursUntil > 0.5) {
         await base44.asServiceRole.integrations.Core.SendEmail({
-          to: booking.email,
+          to: lead.email,
           subject: 'Reminder: your AssistantAI strategy call starts in 1 hour',
-          body: `Hi ${booking.full_name},\n\nYour AssistantAI strategy call starts in about 1 hour at ${booking.start_time} (UTC).\n\nAssistantAI`,
+          body: `Hi ${lead.full_name},\n\nYour AssistantAI strategy call starts in about 1 hour at ${startTimeIso} (UTC).\n\nAssistantAI`,
         });
-        updates.reminder_1h_sent = true;
+        nextNotes = appendNote(nextNotes, `[reminder_1h_sent:${reminderKeyBase}]`);
+        hasUpdates = true;
         sentCount += 1;
       }
 
-      if (Object.keys(updates).length > 0) {
-        await base44.asServiceRole.entities.StrategyCallBooking.update(booking.id, {
-          ...booking,
-          ...updates,
+      if (hasUpdates) {
+        await base44.asServiceRole.entities.Lead.update(lead.id, {
+          ...lead,
+          notes: nextNotes,
+          last_activity_at: new Date().toISOString(),
         });
       }
     }

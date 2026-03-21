@@ -86,7 +86,8 @@ export default function BookStrategyCall() {
                     ? 'Lead requested a strategy call and still needs external booking confirmation.'
                     : 'Follow up on strategy call request and send booking next step.'}
                 bookingIntent={true}
-                bookingSource={hasGoogleCalendarLive ? 'strategy_call_google_calendar' : `strategy_call_${STRATEGY_CALL_BOOKING_MODE}`}
+                bookingSource="strategy_call_page"
+                enquiryTypeOverride="strategy_call"
                 showPreferredMeetingFields={!hasLiveBooking}
                 successActionHref={!hasGoogleCalendarLive ? STRATEGY_CALL_BOOKING_URL || undefined : undefined}
                 successActionLabel={!hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_URL ? `Open ${providerLabel}` : undefined}
