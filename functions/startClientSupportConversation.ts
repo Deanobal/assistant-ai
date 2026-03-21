@@ -25,6 +25,14 @@ Deno.serve(async (req) => {
     const clientMatches = await base44.asServiceRole.entities.ClientAccount.filter({ id: user.client_account_id }, '-updated_date', 1);
     const client = clientMatches[0] || null;
     const now = new Date().toISOString();
+    const aiResponse = await base44.asServiceRole.functions.invoke('supportAiAssistant', {
+      visitorName: user.full_name || client?.contact_name || user.email,
+      subject,
+      latestMessage: message,
+      sourcePage: sourcePage || '/ClientPortal',
+      priorMessages: [],
+    });
+    const aiResult = aiResponse?.data || aiResponse;
 
     const conversation = await base44.asServiceRole.entities.SupportConversation.create({
       created_at: now,
@@ -43,13 +51,15 @@ Deno.serve(async (req) => {
       unread_for_client: false,
       last_message_at: now,
       last_message_preview: message.slice(0, 180),
-      priority: 'normal',
-      ai_mode: 'human_required',
-      enquiry_category: 'support',
-      urgency_level: 'normal',
-      ai_summary: 'Client portal conversation routed directly to human support.',
+      priority: aiResult.urgency_level === 'urgent' ? 'urgent' : aiResult.urgency_level === 'high' ? 'high' : aiResult.urgency_level === 'low' ? 'low' : 'normal',
+      ai_mode: aiResult.ai_mode === 'escalated' ? 'escalated' : 'human_required',
+      enquiry_category: aiResult.enquiry_category,
+      urgency_level: aiResult.urgency_level,
+      ai_summary: aiResult.ai_summary,
       ai_last_response_at: null,
-      ai_handover_reason: 'Client portal support starts with a human review.',
+      ai_handover_reason: aiResult.ai_mode === 'escalated'
+        ? aiResult.ai_handover_reason || 'Urgent client portal issue detected.'
+        : 'Client portal conversations are reviewed by a human team member.',
     });
 
     const firstMessage = await base44.asServiceRole.entities.SupportMessage.create({
@@ -76,13 +86,15 @@ Deno.serve(async (req) => {
       provider_name: 'SupportChat',
       provider_message: 'Stored for internal admin review. No external delivery configured yet.',
       title: 'New client portal support conversation',
-      message: `${user.full_name || user.email} started a new support conversation from the client portal.`,
+      message: `${user.full_name || user.email} started a new ${conversation.enquiry_category} conversation from the client portal.`,
       triggered_at: now,
       actor_email: user.email,
       metadata: {
         conversation_id: conversation.id,
         source_page: sourcePage || '/ClientPortal',
         linked_lead_id: conversation.linked_lead_id || null,
+        enquiry_category: conversation.enquiry_category,
+        urgency_level: conversation.urgency_level,
       },
     });
 

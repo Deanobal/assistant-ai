@@ -12,16 +12,63 @@ function normalizeText(value) {
   return String(value || '').toLowerCase();
 }
 
+function detectKeywordCategory(text) {
+  const salesKeywords = [
+    'pricing',
+    'price',
+    'book a demo',
+    'demo',
+    'get started',
+    'booking automation',
+    'ai receptionist',
+    'crm automation',
+    'call handling',
+    'lead capture'
+  ];
+
+  const onboardingKeywords = [
+    'already paid',
+    'setup help',
+    'setup question',
+    'onboarding question',
+    'onboarding help',
+    'intake form help',
+    'intake form',
+    'intake',
+    'go live',
+    'go-live',
+    'implementation'
+  ];
+
+  const supportKeywords = [
+    'portal issue',
+    'portal not working',
+    'non-urgent bug',
+    'question about current service',
+    'current service',
+    'support question',
+    'bug',
+    'portal help'
+  ];
+
+  if (includesAny(text, onboardingKeywords)) return 'onboarding';
+  if (includesAny(text, salesKeywords)) return 'sales';
+  if (includesAny(text, supportKeywords)) return 'support';
+  return 'general';
+}
+
 function buildForcedRouting(text) {
   const urgentKeywords = [
     'urgent',
-    'asap',
-    'immediately',
+    'broken',
+    'down',
     'outage',
+    'critical',
     'system down',
     'service down',
     'offline',
     'system broken',
+    'payment problem',
     'payment issue',
     'payment failed',
     'billing issue',
@@ -52,6 +99,8 @@ function buildForcedRouting(text) {
     'bespoke pricing'
   ];
 
+  const keywordCategory = detectKeywordCategory(text);
+
   if (includesAny(text, urgentKeywords)) {
     return {
       ai_mode: 'escalated',
@@ -64,8 +113,8 @@ function buildForcedRouting(text) {
   if (includesAny(text, humanKeywords)) {
     return {
       ai_mode: 'human_required',
-      enquiry_category: 'support',
-      urgency_level: 'high',
+      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
+      urgency_level: 'normal',
       ai_handover_reason: 'Visitor explicitly requested a human response.',
     };
   }
@@ -76,6 +125,15 @@ function buildForcedRouting(text) {
       enquiry_category: 'sales',
       urgency_level: 'normal',
       ai_handover_reason: 'Complex pricing enquiry requires human follow-up.',
+    };
+  }
+
+  if (keywordCategory !== 'general') {
+    return {
+      ai_mode: 'ai_active',
+      enquiry_category: keywordCategory,
+      urgency_level: 'normal',
+      ai_handover_reason: null,
     };
   }
 
