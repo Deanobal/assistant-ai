@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
       const startTime = new Date(startTimeIso).getTime();
       const hoursUntil = (startTime - now) / (60 * 60 * 1000);
-      const reminderKeyBase = `${lead.preferred_meeting_date} ${lead.preferred_meeting_time}`;
+      const reminderKeyBase = `${lead.confirmed_meeting_date || lead.preferred_meeting_date} ${lead.confirmed_meeting_time || lead.preferred_meeting_time}`;
       const notes = lead.notes || '';
       let nextNotes = notes;
       let hasUpdates = false;
