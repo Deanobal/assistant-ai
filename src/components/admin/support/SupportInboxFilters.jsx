@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 const filters = [
   { key: 'all', label: 'All' },
   { key: 'unread', label: 'Unread' },
+  { key: 'urgent', label: 'Urgent' },
+  { key: 'ai_active', label: 'AI Active' },
+  { key: 'human_required', label: 'Human Required' },
+  { key: 'escalated', label: 'Escalated' },
   { key: 'open', label: 'Open' },
   { key: 'waiting_on_admin', label: 'Waiting on Admin' },
   { key: 'waiting_on_customer', label: 'Waiting on Customer' },
