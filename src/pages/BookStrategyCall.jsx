@@ -78,8 +78,8 @@ export default function BookStrategyCall() {
                     : hasLiveBooking
                       ? 'Your details have been saved. Continue to the live booking page to choose an available slot.'
                       : 'Thanks — your strategy call request has been received. We’ll review your details and send the next step shortly.'}
-                matchedLeadStatus="Strategy Call Requested"
-                createStatus="Strategy Call Requested"
+                matchedLeadStatus="Contacted"
+                createStatus="New Lead"
                 nextActionText={hasGoogleCalendarLive
                   ? 'Lead selected a live Google Calendar slot and booking is being created.'
                   : hasLiveBooking
