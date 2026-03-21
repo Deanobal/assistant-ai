@@ -87,13 +87,43 @@ export default function SupportThreadPanel({ conversation, messages, admins, lea
             </Select>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 p-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-300/90">AI Summary</p>
-              <p className="mt-2 text-sm text-cyan-50/90">{conversation.ai_summary || 'No AI summary has been saved for this conversation yet.'}</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-300/90">AI Summary</p>
+                  <p className="mt-2 text-sm text-cyan-50/90">{conversation.ai_summary || 'No AI summary has been saved for this conversation yet.'}</p>
+                </div>
+                <div className="flex gap-2">
+                  {conversation.ai_mode === 'ai_active' ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => onAiModeChange('human_required')}
+                      className="border-amber-500/20 bg-amber-500/10 text-amber-200 hover:bg-amber-500/15"
+                    >
+                      Pause AI
+                    </Button>
+                  ) : conversation.ai_mode !== 'closed' ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => onAiModeChange('ai_active')}
+                      className="border-cyan-500/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/15"
+                    >
+                      Resume AI
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
               {conversation.ai_handover_reason && (
                 <p className="mt-3 text-xs text-cyan-200/75">Handover reason: {conversation.ai_handover_reason}</p>
               )}
+              <p className="mt-3 text-xs text-cyan-100/65">
+                {conversation.ai_mode === 'ai_active'
+                  ? 'AI is currently allowed to continue responding until a human takes over or the mode changes.'
+                  : 'AI is currently paused for this conversation unless an admin resumes it manually.'}
+              </p>
             </div>
 
             <div className="flex flex-wrap content-start items-center gap-2 text-xs text-gray-400">
@@ -142,7 +172,7 @@ export default function SupportThreadPanel({ conversation, messages, admins, lea
             Save as internal note
           </label>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-gray-500">{isInternalNote ? 'Internal notes stay inside the admin inbox and are hidden from public visitors.' : 'Admin replies take over the thread and pause further AI auto-replies until AI is re-enabled.'}</p>
+            <p className="text-xs text-gray-500">{isInternalNote ? 'Internal notes stay inside the admin inbox and are hidden from public visitors.' : 'Admin replies clearly take over the conversation and pause AI auto-replies until an admin resumes AI manually.'}</p>
             <Button
               onClick={() => {
                 onReply({

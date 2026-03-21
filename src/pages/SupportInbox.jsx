@@ -189,7 +189,11 @@ export default function SupportInbox() {
             data: {
               ...selectedConversation,
               ai_mode,
-              ai_handover_reason: ai_mode === 'ai_active' ? null : selectedConversation.ai_handover_reason || 'Updated manually by admin.',
+              ai_handover_reason: ai_mode === 'ai_active'
+                ? null
+                : ai_mode === 'human_required'
+                  ? 'AI paused manually by admin.'
+                  : selectedConversation.ai_handover_reason || 'Updated manually by admin.',
             },
           })}
           onAssignAdmin={(assignedAdminId) => updateConversationMutation.mutate({
