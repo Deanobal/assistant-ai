@@ -9,6 +9,7 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
     business_name: data.business_name || '',
     email: data.email || '',
     mobile_number: data.mobile_number || '',
+    enquiry_type: data.enquiry_type || '',
     industry: data.industry || '',
     message_preview: (data.message || '').slice(0, 180),
     source_page: data.source_page || '',
@@ -38,7 +39,7 @@ function buildEventPayload(entityName, eventType, data, oldData) {
       title: 'New lead created',
       message: `${leadLabel} was captured from ${data.source_page || 'an unknown source'}.`,
       unique_key: `new_lead_created:${data.created_at || data.created_date || data.id}`,
-      priority: 'normal',
+      priority: data.booking_intent ? 'high' : 'normal',
     });
 
     if (data.booking_intent && data.enquiry_type === 'strategy_call' && data.status !== 'Strategy Call Booked') {
@@ -85,22 +86,6 @@ function buildEventPayload(entityName, eventType, data, oldData) {
   return events;
 }
 
-async function createNotificationLog(base44, payload) {
-  const existing = await base44.asServiceRole.entities.NotificationLog.filter({
-    entity_id: payload.entity_id,
-    event_type: payload.event_type,
-    recipient_email: payload.recipient_email,
-    channel: payload.channel,
-    provider_message: payload.provider_message,
-  }, '-created_date', 1);
-
-  if (existing.length > 0) {
-    return null;
-  }
-
-  return base44.asServiceRole.entities.NotificationLog.create(payload);
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -116,99 +101,37 @@ Deno.serve(async (req) => {
 
     const user = await base44.auth.me().catch(() => null);
     const actorEmail = user?.email || null;
-    const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '-created_date', 100);
     const eventDefs = buildEventPayload(entityName, eventType, data, oldData);
 
     if (eventDefs.length === 0) {
       return Response.json({ ignored: true, reason: 'No notification events matched' });
     }
 
-    const created = [];
+    const results = [];
 
     for (const def of eventDefs) {
-      const metadata = entityName === 'Lead'
-        ? buildLeadMetadata(data, eventType, def.unique_key)
-        : { entity_event_type: eventType, unique_key: def.unique_key };
+      const metadata = buildLeadMetadata(data, eventType, def.unique_key);
+      const smsType = data.enquiry_type || def.event_type;
+      const smsMessage = `${def.priority === 'high' ? 'High priority: ' : ''}New lead: ${data.full_name || data.business_name || 'Unknown'} - ${data.mobile_number || 'No phone'} - ${smsType}`.slice(0, 160);
 
-      if (admins.length === 0) {
-        const storedLog = await createNotificationLog(base44, {
-          event_type: def.event_type,
-          entity_name: entityName,
-          entity_id: data.id,
-          client_account_id: data.client_account_id || null,
-          recipient_role: 'admin',
-          recipient_email: null,
-          channel: 'in_app',
-          delivery_status: 'stored',
-          provider_name: null,
-          provider_message: `event_key:${def.unique_key}`,
-          title: def.title,
-          message: def.message,
-          triggered_at: new Date().toISOString(),
-          actor_email: actorEmail,
-          metadata: {
-            ...metadata,
-            priority: def.priority,
-            intended_channels: ['email', 'sms'],
-          },
-        });
-        if (storedLog) {
-          created.push(storedLog.id);
-        }
-        continue;
-      }
+      const response = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+        eventType: def.event_type,
+        entityName,
+        entityId: data.id,
+        clientAccountId: data.client_account_id || null,
+        title: def.title,
+        message: def.message,
+        actorEmail,
+        metadata,
+        uniqueKey: def.unique_key,
+        priority: def.priority,
+        smsMessage,
+      });
 
-      for (const admin of admins) {
-        const storedLog = await createNotificationLog(base44, {
-          event_type: def.event_type,
-          entity_name: entityName,
-          entity_id: data.id,
-          client_account_id: data.client_account_id || null,
-          recipient_role: 'admin',
-          recipient_email: admin.email || null,
-          channel: 'in_app',
-          delivery_status: 'stored',
-          provider_name: null,
-          provider_message: `event_key:${def.unique_key}`,
-          title: def.title,
-          message: def.message,
-          triggered_at: new Date().toISOString(),
-          actor_email: actorEmail,
-          metadata: {
-            ...metadata,
-            priority: def.priority,
-            intended_channels: ['email', 'sms'],
-          },
-        });
-        if (storedLog) {
-          created.push(storedLog.id);
-        }
-
-        if (admin.email) {
-          await base44.asServiceRole.integrations.Core.SendEmail({
-            to: admin.email,
-            subject: def.priority === 'high' ? `[High Priority] ${def.title}` : def.title,
-            body: [
-              def.message,
-              '',
-              `Full name: ${data.full_name || ''}`,
-              `Business name: ${data.business_name || ''}`,
-              `Email: ${data.email || ''}`,
-              `Mobile: ${data.mobile_number || ''}`,
-              `Industry: ${data.industry || ''}`,
-              `Message preview: ${(data.message || '').slice(0, 180) || 'No message provided'}`,
-              `Source page: ${data.source_page || ''}`,
-              `Booking intent: ${data.booking_intent ? 'Yes' : 'No'}`,
-              `Preferred time: ${[data.preferred_meeting_date, data.preferred_meeting_time].filter(Boolean).join(' ') || 'Not provided'}`,
-              `Confirmed time: ${[data.confirmed_meeting_date, data.confirmed_meeting_time].filter(Boolean).join(' ') || 'Not confirmed yet'}`,
-              `Admin link: /LeadDetail?id=${data.id}`,
-            ].join('\n'),
-          });
-        }
-      }
+      results.push(response.data || response);
     }
 
-    return Response.json({ success: true, notification_log_ids: created });
+    return Response.json({ success: true, results });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
