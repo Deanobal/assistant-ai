@@ -13,13 +13,8 @@ const STORAGE_KEY = 'assistantai-support-chat';
 const systemIntro = {
   id: 'intro',
   sender_type: 'system',
-  message_body: 'Send us a message and our team will review it shortly. This is not live monitored chat, so replies may come a little later by email or in the thread.',
-};
-
-const systemSuccess = {
-  id: 'success',
-  sender_type: 'system',
-  message_body: 'Thanks — your message has been received and your conversation is now saved. We’ll get back to you shortly, and you can reply here if you need to add more detail.',
+  sender_name: 'AssistantAI Assistant',
+  message_body: 'You’re chatting with AssistantAI Assistant. I can help qualify your enquiry, answer straightforward questions, and route anything urgent or complex to our human team.',
 };
 
 export default function ChatWidget() {
@@ -78,7 +73,7 @@ export default function ChatWidget() {
     if (!conversation) {
       return [systemIntro];
     }
-    return [systemIntro, ...messages, systemSuccess];
+    return [systemIntro, ...messages];
   }, [conversation, messages]);
 
   const handleStartConversation = async () => {
@@ -124,7 +119,8 @@ export default function ChatWidget() {
         sourcePage: location.pathname,
         runtimeDataEnv,
       });
-      setMessages((prev) => [...prev, response.data.message]);
+      setMessages((prev) => response.data.aiMessage ? [...prev, response.data.message, response.data.aiMessage] : [...prev, response.data.message]);
+      setConversation((prev) => response.data.conversation || prev);
       setReplyBody('');
     } catch (error) {
       setThreadError(error?.response?.data?.error || error.message || 'Unable to send your reply right now.');
@@ -148,7 +144,7 @@ export default function ChatWidget() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-1 text-[11px] text-cyan-300">
-                    Chat with Support
+                    Chat with AssistantAI Assistant
                   </div>
                   <h3 className="mt-3 text-sm font-semibold text-white">Send us a message</h3>
                   <p className="mt-1 text-xs text-gray-400">Support and sales enquiries for AssistantAI.</p>

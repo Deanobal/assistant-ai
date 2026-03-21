@@ -178,7 +178,7 @@ Context:
 
 Return a JSON object with:
 - ai_mode
-n- enquiry_category
+- enquiry_category
 - urgency_level
 - ai_summary
 - ai_handover_reason
