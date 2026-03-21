@@ -14,7 +14,7 @@ const senderStyles = {
   system: 'bg-cyan-500/8 text-cyan-100 border border-cyan-500/20',
 };
 
-export default function SupportThreadPanel({ conversation, messages, admins, leads, currentAdmin, isSaving, onReply, onResolve, onPriorityChange, onAiModeChange, onAssignAdmin, onLinkLead }) {
+export default function SupportThreadPanel({ conversation, messages, admins, leads, currentAdmin, isSaving, onReply, onResolve, onPriorityChange, onCategoryChange, onAiModeChange, onAssignAdmin, onLinkLead }) {
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
 
@@ -38,14 +38,24 @@ export default function SupportThreadPanel({ conversation, messages, admins, lea
             <Button onClick={onResolve} disabled={isSaving || conversation.status === 'resolved'} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50">Mark resolved</Button>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-4">
+          <div className="grid gap-3 lg:grid-cols-5">
             <Select value={conversation.priority || 'normal'} onValueChange={onPriorityChange}>
               <SelectTrigger className="border-white/10 bg-white/[0.03] text-white"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low priority</SelectItem>
-                <SelectItem value="normal">Normal priority</SelectItem>
-                <SelectItem value="high">High priority</SelectItem>
-                <SelectItem value="urgent">Urgent priority</SelectItem>
+                <SelectItem value="low">Low urgency</SelectItem>
+                <SelectItem value="normal">Normal urgency</SelectItem>
+                <SelectItem value="high">High urgency</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={conversation.enquiry_category || 'general'} onValueChange={onCategoryChange}>
+              <SelectTrigger className="border-white/10 bg-white/[0.03] text-white"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sales">Sales</SelectItem>
+                <SelectItem value="onboarding">Onboarding</SelectItem>
+                <SelectItem value="support">Support</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="general">General</SelectItem>
               </SelectContent>
             </Select>
             <Select value={conversation.ai_mode || 'human_required'} onValueChange={onAiModeChange}>

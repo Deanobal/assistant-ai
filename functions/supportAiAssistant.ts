@@ -18,19 +18,18 @@ function buildForcedRouting(text) {
     'asap',
     'immediately',
     'outage',
-    'down',
+    'system down',
+    'service down',
     'offline',
-    'broken',
-    'not working',
-    'stopped working',
     'system broken',
     'payment issue',
     'payment failed',
     'billing issue',
     'charged twice',
+    'blocked access',
+    'locked out',
     'cant access',
     'cannot access',
-    'missed calls',
     'site is down'
   ];
 
@@ -155,6 +154,14 @@ Classification rules:
 - support = standard support questions that are not urgent
 - urgent = broken system, outage, blocked payment issue, urgent operational problem
 - general = everything else
+
+Examples:
+- "I want to know your pricing" = sales
+- "I want to get started" = sales
+- "I paid and need help with setup" = onboarding
+- "My portal is not working" = support unless there is clear urgency or outage language
+- "This is urgent, something is broken" = urgent
+- "Can you tell me what you do?" = general
 
 AI mode rules:
 - ai_active = AI can continue the conversation safely

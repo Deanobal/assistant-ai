@@ -177,6 +177,13 @@ export default function SupportInbox() {
               urgency_level: priority,
             },
           })}
+          onCategoryChange={(enquiry_category) => updateConversationMutation.mutate({
+            id: selectedConversation.id,
+            data: {
+              ...selectedConversation,
+              enquiry_category,
+            },
+          })}
           onAiModeChange={(ai_mode) => updateConversationMutation.mutate({
             id: selectedConversation.id,
             data: {
