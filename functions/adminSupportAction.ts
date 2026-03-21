@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
       status: isInternalNote ? conversation.status : 'waiting_on_customer',
       unread_for_admin: false,
       unread_for_client: isInternalNote ? conversation.unread_for_client : true,
-      last_message_at: now,
-      last_message_preview: messageBody.slice(0, 180),
+      last_message_at: isInternalNote ? conversation.last_message_at : now,
+      last_message_preview: isInternalNote ? conversation.last_message_preview : messageBody.slice(0, 180),
     });
 
     return Response.json({ conversation: updatedConversation, message: supportMessage });

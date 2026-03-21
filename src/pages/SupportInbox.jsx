@@ -108,8 +108,8 @@ export default function SupportInbox() {
         status: isInternalNote ? selectedConversation.status : 'waiting_on_customer',
         unread_for_admin: false,
         unread_for_client: isInternalNote ? selectedConversation.unread_for_client : true,
-        last_message_at: now,
-        last_message_preview: messageBody.slice(0, 180),
+        last_message_at: isInternalNote ? selectedConversation.last_message_at : now,
+        last_message_preview: isInternalNote ? selectedConversation.last_message_preview : messageBody.slice(0, 180),
       });
     },
     onSuccess: refreshAll,
