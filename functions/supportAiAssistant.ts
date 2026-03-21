@@ -34,9 +34,19 @@ function detectKeywordCategory(text) {
     'setup question',
     'onboarding question',
     'onboarding help',
+    'i just signed up',
+    'just signed up',
+    'where is the intake form',
     'intake form help',
     'intake form',
     'intake',
+    'how do i start setup',
+    'what happens next',
+    'change my business details',
+    'business details',
+    'connect my tools',
+    'connect my tool',
+    'tool connection',
     'go live',
     'go-live',
     'implementation'
@@ -73,6 +83,14 @@ function inferSalesPlanFit(text, salesUseCase) {
   if (salesUseCase === 'booking_automation' || includesAny(text, ['crm', 'follow-up', 'follow up', 'calendar', 'booking automation'])) return 'Growth';
   if (salesUseCase === 'missed_calls' || salesUseCase === 'direct_start' || includesAny(text, ['ai receptionist', 'lead capture', 'call handling'])) return 'Starter';
   return 'Not clear yet';
+}
+
+function detectOnboardingNeed(text) {
+  if (includesAny(text, ['where is the intake form', 'intake form help', 'intake form'])) return 'onboarding_intake';
+  if (includesAny(text, ['connect my tools', 'connect my tool', 'tool connection', 'integrations', 'connect tools'])) return 'tool_connection';
+  if (includesAny(text, ['change my business details', 'business details', 'update my details'])) return 'business_details';
+  if (includesAny(text, ['what happens next', 'just signed up', 'i just signed up', 'how do i start setup'])) return 'next_step';
+  return 'general_onboarding';
 }
 
 function buildForcedRouting(text) {
@@ -240,7 +258,25 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverR
   }
 
   if (enquiryCategory === 'onboarding') {
-    return `${greeting} I’m AssistantAI Assistant. I can help with onboarding guidance. To point you in the right direction, what stage are you at right now — setup, integrations, intake, or go-live?`;
+    const onboardingNeed = detectOnboardingNeed(rawText || '');
+
+    if (onboardingNeed === 'onboarding_intake') {
+      return `${greeting} I’m AssistantAI Assistant. This sounds like an onboarding intake question. The right next step is the onboarding intake stage so the team can collect the details needed for setup. If you have not received it yet, our team can follow up with you directly. Have you already been sent the intake form?`;
+    }
+
+    if (onboardingNeed === 'tool_connection') {
+      return `${greeting} I’m AssistantAI Assistant. Tool connection questions usually sit in onboarding rather than urgent support. The best next step is to confirm which tools you want connected and where you are in setup, then the team can guide the onboarding step properly. Which tools are you trying to connect first?`;
+    }
+
+    if (onboardingNeed === 'business_details') {
+      return `${greeting} I’m AssistantAI Assistant. Updating business details is usually part of the onboarding process rather than an urgent support issue. The best next step is to note what needs changing so the team can update the setup correctly. Which business details do you need changed?`;
+    }
+
+    if (onboardingNeed === 'next_step') {
+      return `${greeting} I’m AssistantAI Assistant. This sounds like a new onboarding question. The usual next step is completing the onboarding intake and then moving into setup with team follow-up where needed. Are you looking for the intake step, setup guidance, or an update on what happens next?`;
+    }
+
+    return `${greeting} I’m AssistantAI Assistant. I can help with onboarding guidance. To point you in the right direction, what stage are you at right now — intake, setup, tool connection, or go-live?`;
   }
 
   return `${greeting} I’m AssistantAI Assistant. I can help qualify your enquiry and guide you to the right next step. Could you share a little more about what you need help with so I can route this correctly?`;
@@ -287,14 +323,14 @@ Rules:
 - Ask for business type, main problem, urgency, and likely fit when they are missing
 - For direct-start sales intent, suggest Get Started Now when Starter or Growth seems to fit
 - For complex or custom intent, suggest Book Free Strategy Call
-- For onboarding questions, guide toward onboarding help
+- For onboarding questions, guide toward the right onboarding next step such as intake, setup guidance, tool connection, or team follow-up
 - For operational issues, route to support or escalate
 - Ask one clarifying question when useful
 - When handing over, do not say you cannot help; say you are passing this to the team so they can help properly
 
 Classification rules:
 - sales = new system interest, pricing interest, bookings automation, lead capture, demos, fit checks
-- onboarding = setup, implementation, integrations, intake, go-live, onboarding help
+- onboarding = setup, implementation, integrations, intake, go-live, onboarding help, signed-up questions, intake form questions, business detail changes, and tool connection questions
 - support = standard support questions that are not urgent
 - urgent = broken system, outage, blocked payment issue, urgent operational problem
 - general = everything else
@@ -303,6 +339,9 @@ Examples:
 - "I want to know your pricing" = sales
 - "I want to get started" = sales
 - "I paid and need help with setup" = onboarding
+- "I just signed up" = onboarding
+- "Where is the intake form" = onboarding
+- "How do I start setup" = onboarding
 - "My portal is not working" = support unless there is clear urgency or outage language
 - "This is urgent, something is broken" = urgent
 - "Can you tell me what you do?" = general
