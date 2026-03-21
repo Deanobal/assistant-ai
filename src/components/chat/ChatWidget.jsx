@@ -213,7 +213,7 @@ export default function ChatWidget() {
           <MessageCircle className="h-5 w-5 text-white" />
         </div>
         <div className="hidden sm:block text-left">
-          <p className="text-sm font-medium">Chat with Support</p>
+          <p className="text-sm font-medium">AI Assistant</p>
           <p className="text-xs text-gray-400">Send us a message</p>
         </div>
       </button>
