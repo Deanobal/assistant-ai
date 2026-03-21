@@ -18,11 +18,14 @@ Deno.serve(async (req) => {
     let sentCount = 0;
 
     for (const lead of leads) {
-      if (!lead?.email || !lead?.booking_intent || lead.status !== 'Strategy Call Booked') {
+      if (!lead?.email || !lead?.booking_intent || lead.status !== 'Strategy Call Booked' || lead.booking_status !== 'confirmed') {
         continue;
       }
 
-      const startTimeIso = buildMeetingDateTime(lead.preferred_meeting_date, lead.preferred_meeting_time);
+      const startTimeIso = buildMeetingDateTime(
+        lead.confirmed_meeting_date || lead.preferred_meeting_date,
+        lead.confirmed_meeting_time || lead.preferred_meeting_time,
+      );
       if (!startTimeIso) {
         continue;
       }

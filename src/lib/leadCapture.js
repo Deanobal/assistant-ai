@@ -46,6 +46,7 @@ export async function submitLeadCapture(form, options = {}) {
     booking_source: options.bookingSource || '',
     preferred_meeting_date: form.preferred_meeting_date || '',
     preferred_meeting_time: form.preferred_meeting_time || '',
+    booking_status: options.bookingIntent ? 'requested' : '',
   };
 
   const byEmail = email ? await base44.entities.Lead.filter({ email }, '-updated_date', 10) : [];

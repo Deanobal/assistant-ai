@@ -96,8 +96,13 @@ Deno.serve(async (req) => {
         ...lead,
         status: 'Strategy Call Booked',
         booking_source: lead.booking_source || 'strategy_call_page',
-        preferred_meeting_date: slotStart.split('T')[0],
-        preferred_meeting_time: slotStart.slice(11, 16),
+        preferred_meeting_date: lead.preferred_meeting_date || slotStart.split('T')[0],
+        preferred_meeting_time: lead.preferred_meeting_time || slotStart.slice(11, 16),
+        confirmed_meeting_date: slotStart.split('T')[0],
+        confirmed_meeting_time: slotStart.slice(11, 16),
+        booking_status: 'confirmed',
+        booking_provider: 'googlecalendar',
+        booking_reference: event.id,
         last_activity_at: now,
         next_action: 'Prepare for booked strategy call.',
         notes: lead.notes ? `${lead.notes}\n\n${bookingNote}` : bookingNote,
@@ -109,6 +114,10 @@ Deno.serve(async (req) => {
       provider: 'Google Calendar',
       event_id: event.id,
       event_link: event.htmlLink || null,
+      title: 'Strategy Call Booked',
+      message: 'Your strategy call has been confirmed and added to Google Calendar.',
+      actionLabel: event.htmlLink ? 'Open Calendar Event' : null,
+      checkout_url: event.htmlLink || null,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
