@@ -16,7 +16,7 @@ export default function BookStrategyCall() {
   const [calendarAvailability, setCalendarAvailability] = useState({ isLive: false, hasSlots: false, error: '' });
   const [selectedSlot, setSelectedSlot] = useState(null);
   const hasConfiguredExternalBooking = STRATEGY_CALL_BOOKING_MODE !== 'request';
-  const hasGoogleCalendarLive = calendarAvailability.isLive;
+  const hasGoogleCalendarLive = calendarAvailability.isLive && calendarAvailability.hasSlots;
   const hasLiveBooking = hasGoogleCalendarLive || hasConfiguredExternalBooking;
   const isEmbeddedBooking = !hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_MODE === 'embed';
   const providerLabel = hasGoogleCalendarLive ? 'Google Calendar' : STRATEGY_CALL_BOOKING_PROVIDER || 'Live Calendar';
