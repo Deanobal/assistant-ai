@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +50,10 @@ export default function LeadForm({
   showPreferredMeetingFields = false,
   successActionHref,
   successActionLabel,
+  successSecondaryActionHref,
+  successSecondaryActionLabel,
+  successTertiaryActionHref,
+  successTertiaryActionLabel,
   successEmbedUrl,
   successEmbedLabel,
   onSubmitted,
@@ -101,23 +106,78 @@ export default function LeadForm({
   };
 
   if (submitted) {
+    const primaryActionHref = submitResult?.checkout_url || successActionHref;
+    const primaryActionLabel = submitResult?.actionLabel || successActionLabel;
+    const confirmedStart = submitResult?.confirmed_start ? new Date(submitResult.confirmed_start) : null;
+    const hasConfirmedBooking = submitResult?.booking_status === 'confirmed' || !!submitResult?.confirmed_start;
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-16"
+        className="py-16"
       >
-        <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-cyan-400" />
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-cyan-400" />
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2">{submitResult?.title || successTitle}</h3>
+          <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{submitResult?.message || successText}</p>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">{submitResult?.title || successTitle}</h3>
-        <p className="text-gray-400 max-w-xl mx-auto leading-relaxed">{submitResult?.message || successText}</p>
-        {(submitResult?.checkout_url || successActionHref) && (submitResult?.actionLabel || successActionLabel) && (
-          <a href={submitResult?.checkout_url || successActionHref} target="_blank" rel="noreferrer" className="inline-flex mt-6 items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
-            {submitResult?.actionLabel || successActionLabel}
-            <ArrowRight className="w-4 h-4" />
-          </a>
+
+        {hasConfirmedBooking && (
+          <div className="mt-8 max-w-2xl mx-auto rounded-[28px] border border-cyan-500/20 bg-cyan-500/5 p-6 text-left space-y-3">
+            <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Confirmed Booking</p>
+            {confirmedStart && (
+              <div>
+                <p className="text-sm text-gray-400">Confirmed date and time</p>
+                <p className="text-white font-medium mt-1">{confirmedStart.toLocaleString()}</p>
+              </div>
+            )}
+            {submitResult?.provider && (
+              <div>
+                <p className="text-sm text-gray-400">Booking provider</p>
+                <p className="text-white font-medium mt-1">{submitResult.provider}</p>
+              </div>
+            )}
+            <p className="text-sm text-gray-300">What happens next: we’ll send reminder details before the meeting and prepare for the strategy call using the information you submitted.</p>
+          </div>
         )}
+
+        {primaryActionHref && primaryActionLabel && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a href={primaryActionHref} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+              {primaryActionLabel}
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            {successSecondaryActionHref && successSecondaryActionLabel && (
+              <Link to={successSecondaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-white/[0.03] text-white font-medium rounded-full hover:bg-white/[0.05] transition-all">
+                {successSecondaryActionLabel}
+              </Link>
+            )}
+            {successTertiaryActionHref && successTertiaryActionLabel && (
+              <Link to={successTertiaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-transparent text-gray-300 font-medium rounded-full hover:bg-white/[0.03] transition-all">
+                {successTertiaryActionLabel}
+              </Link>
+            )}
+          </div>
+        )}
+
+        {!primaryActionHref && (successSecondaryActionHref || successTertiaryActionHref) && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            {successSecondaryActionHref && successSecondaryActionLabel && (
+              <Link to={successSecondaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+                {successSecondaryActionLabel}
+              </Link>
+            )}
+            {successTertiaryActionHref && successTertiaryActionLabel && (
+              <Link to={successTertiaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-white/[0.03] text-white font-medium rounded-full hover:bg-white/[0.05] transition-all">
+                {successTertiaryActionLabel}
+              </Link>
+            )}
+          </div>
+        )}
+
         {(submitResult?.embed_url || successEmbedUrl) && (
           <BookingEmbedCard embedUrl={submitResult?.embed_url || successEmbedUrl} title={submitResult?.embed_label || successEmbedLabel || 'Live Booking Widget'} />
         )}

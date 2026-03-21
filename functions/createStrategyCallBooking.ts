@@ -229,8 +229,11 @@ Deno.serve(async (req) => {
       provider: 'Google Calendar',
       event_id: event.id,
       event_link: event.htmlLink || null,
-      title: 'Strategy Call Booked',
-      message: 'Your strategy call has been confirmed and added to Google Calendar.',
+      booking_status: 'confirmed',
+      confirmed_start: slotStart,
+      confirmed_end: slotEnd,
+      title: 'Strategy Call Confirmed',
+      message: 'Your strategy call is confirmed and has been added to Google Calendar.',
       actionLabel: event.htmlLink ? 'Open Calendar Event' : null,
       checkout_url: event.htmlLink || null,
     });

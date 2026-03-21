@@ -70,14 +70,14 @@ export default function BookStrategyCall() {
 
               <LeadForm
                 submitLabel={hasGoogleCalendarLive ? 'Book 60-Minute Strategy Call' : hasLiveBooking ? 'Save Details and Continue' : 'Request Free Strategy Call'}
-                successTitle={hasGoogleCalendarLive ? 'Strategy Call Booked' : isEmbeddedBooking ? 'Pick Your Strategy Call Time' : hasLiveBooking ? 'Continue to Live Booking' : 'Strategy Call Request Received'}
+                successTitle={hasGoogleCalendarLive ? 'Strategy Call Confirmed' : isEmbeddedBooking ? 'Details Saved — Continue to Booking' : hasLiveBooking ? 'Details Saved — Continue to Booking' : 'Strategy Call Request Received'}
                 successText={hasGoogleCalendarLive
-                  ? 'Your strategy call has been booked in Google Calendar and reminder emails will be sent before the meeting.'
+                  ? 'Your strategy call is confirmed. We’ve added the booking details below and will send reminder information before the meeting.'
                   : isEmbeddedBooking
-                    ? 'Your details have been saved. Use the live booking widget below to choose an available slot.'
+                    ? 'Your details have been saved. The next step is to choose a suitable time in the live booking widget below.'
                     : hasLiveBooking
-                      ? 'Your details have been saved. Continue to the live booking page to choose an available slot.'
-                      : 'Thanks — your strategy call request has been received. We’ll review your details and send the next step shortly.'}
+                      ? 'Your details have been saved. The next step is to choose a suitable time in the live booking page.'
+                      : 'Thanks — your strategy call request has been received. Our team will contact you shortly to confirm a suitable time.'}
                 matchedLeadStatus="Contacted"
                 createStatus="New Lead"
                 nextActionText={hasGoogleCalendarLive
@@ -95,6 +95,10 @@ export default function BookStrategyCall() {
                 successEmbedLabel={`${providerLabel} booking widget`}
                 isSubmitDisabled={hasGoogleCalendarLive && !selectedSlot}
                 disabledNotice={hasGoogleCalendarLive ? 'Select one of the live 60-minute Google Calendar slots above before booking.' : undefined}
+                successSecondaryActionHref="/"
+                successSecondaryActionLabel="Back to Home"
+                successTertiaryActionHref="/Contact"
+                successTertiaryActionLabel="Contact Our Team"
                 onSubmitted={hasGoogleCalendarLive ? async ({ lead, form }) => {
                   const response = await base44.functions.invoke('createStrategyCallBooking', {
                     leadId: lead.id,
