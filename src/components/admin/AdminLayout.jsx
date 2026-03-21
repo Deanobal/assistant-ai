@@ -37,6 +37,15 @@ export default function AdminLayout() {
     checkAccess();
   }, []);
 
+  const { data: unreadConversations = [] } = useQuery({
+    queryKey: ['admin-support-unread-count'],
+    queryFn: () => base44.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
+    initialData: [],
+    enabled: !isLoading && isAdmin,
+  });
+
+  const unreadSupportCount = unreadConversations.length;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#07070d] flex items-center justify-center">
@@ -44,15 +53,6 @@ export default function AdminLayout() {
       </div>
     );
   }
-
-  const { data: unreadConversations = [] } = useQuery({
-    queryKey: ['admin-support-unread-count'],
-    queryFn: () => base44.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
-    initialData: [],
-    enabled: isAdmin,
-  });
-
-  const unreadSupportCount = unreadConversations.length;
 
   if (!isAdmin) {
     return (
