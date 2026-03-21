@@ -4,7 +4,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    const { conversationId } = await req.json();
+    const { conversationId, runtimeDataEnv } = await req.json();
+
+    if (runtimeDataEnv === 'dev') {
+      return Response.json({ error: 'Client support messaging is disabled in preview test mode so test actions do not read production support data.' }, { status: 409 });
+    }
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });

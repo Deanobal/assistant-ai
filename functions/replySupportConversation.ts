@@ -3,7 +3,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { conversationId, email, name, message, sourcePage } = await req.json();
+    const { conversationId, email, name, message, sourcePage, runtimeDataEnv } = await req.json();
+
+    if (runtimeDataEnv === 'dev') {
+      return Response.json({ error: 'Support messaging is disabled in preview test mode so test actions do not write into production data.' }, { status: 409 });
+    }
 
     if (!conversationId || !email || !message) {
       return Response.json({ error: 'conversationId, email, and message are required' }, { status: 400 });

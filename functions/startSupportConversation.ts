@@ -17,7 +17,11 @@ function uniqueById(items) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { name, email, mobile, message, sourcePage } = await req.json();
+    const { name, email, mobile, message, sourcePage, runtimeDataEnv } = await req.json();
+
+    if (runtimeDataEnv === 'dev') {
+      return Response.json({ error: 'Support messaging is disabled in preview test mode so test actions do not write into production data.' }, { status: 409 });
+    }
 
     if (!name || !email || !message) {
       return Response.json({ error: 'name, email, and message are required' }, { status: 400 });

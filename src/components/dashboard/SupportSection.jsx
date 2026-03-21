@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { getRuntimeDataEnv, isPreviewTestMode } from '@/lib/runtimeDataEnv';
 import { Badge } from '@/components/ui/badge';
 import ClientSupportConversationList from './support/ClientSupportConversationList';
 import ClientSupportThread from './support/ClientSupportThread';
 
 export default function SupportSection({ clientAccountId, currentUser }) {
   const queryClient = useQueryClient();
+  const runtimeDataEnv = getRuntimeDataEnv();
+  const previewTestMode = isPreviewTestMode();
   const [selectedConversationId, setSelectedConversationId] = useState(null);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['client-support-conversations', clientAccountId],
     queryFn: async () => {
-      const response = await base44.functions.invoke('listClientSupportConversations', {});
+      const response = await base44.functions.invoke('listClientSupportConversations', { runtimeDataEnv });
       return response.data.conversations || [];
     },
     initialData: [],
@@ -34,7 +37,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
   const { data: thread = { conversation: null, messages: [] } } = useQuery({
     queryKey: ['client-support-thread', selectedConversationId],
     queryFn: async () => {
-      const response = await base44.functions.invoke('getClientSupportConversation', { conversationId: selectedConversationId });
+      const response = await base44.functions.invoke('getClientSupportConversation', { conversationId: selectedConversationId, runtimeDataEnv });
       return response.data;
     },
     enabled: !!selectedConversationId,
@@ -52,6 +55,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
         subject,
         message: messageBody,
         sourcePage: '/ClientPortal',
+        runtimeDataEnv,
       });
       return response.data;
     },
@@ -67,6 +71,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
         conversationId: selectedConversationId,
         message: messageBody,
         sourcePage: '/ClientPortal',
+        runtimeDataEnv,
       });
       return response.data;
     },
@@ -85,6 +90,12 @@ export default function SupportSection({ clientAccountId, currentUser }) {
           <p className="text-gray-400 max-w-3xl">Send us a message from your portal and keep the full support conversation history in one secure thread.</p>
         </div>
       </div>
+
+      {previewTestMode && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+          Client support messaging is disabled in preview test mode so test actions do not touch production support data.
+        </div>
+      )}
 
       <div className="grid xl:grid-cols-[340px_minmax(0,1fr)] gap-6 items-start">
         <ClientSupportConversationList
