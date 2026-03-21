@@ -1,101 +1,104 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+function buildLeadMetadata(data, eventType, uniqueKey) {
+  return {
+    entity_event_type: eventType,
+    unique_key: uniqueKey,
+    admin_link: `/LeadDetail?id=${data.id}`,
+    full_name: data.full_name || '',
+    business_name: data.business_name || '',
+    email: data.email || '',
+    mobile_number: data.mobile_number || '',
+    industry: data.industry || '',
+    message_preview: (data.message || '').slice(0, 180),
+    source_page: data.source_page || '',
+    booking_intent: !!data.booking_intent,
+    preferred_meeting_date: data.preferred_meeting_date || '',
+    preferred_meeting_time: data.preferred_meeting_time || '',
+    confirmed_meeting_date: data.confirmed_meeting_date || '',
+    confirmed_meeting_time: data.confirmed_meeting_time || '',
+    booking_provider: data.booking_provider || '',
+    booking_reference: data.booking_reference || '',
+  };
+}
+
 function buildEventPayload(entityName, eventType, data, oldData) {
-  if (entityName === 'Lead') {
-    const events = [];
-
-    if (eventType === 'create') {
-      events.push({
-        event_type: 'new_lead_created',
-        title: 'New lead created',
-        message: `${data.business_name || data.full_name || 'A new lead'} was captured from ${data.source_page || 'an unknown source'}.`,
-      });
-
-      if (data.booking_intent) {
-        events.push({
-          event_type: 'strategy_call_requested',
-          title: 'Strategy call requested',
-          message: `${data.full_name || 'A lead'} requested a strategy call.`,
-        });
-      }
-
-      if (data.status === 'Strategy Call Booked') {
-        events.push({
-          event_type: 'booking_confirmed',
-          title: 'Booking confirmed',
-          message: `${data.full_name || 'A lead'} is marked as Strategy Call Booked.`,
-        });
-      }
-    }
-
-    if (eventType === 'update') {
-      if (!oldData?.booking_intent && data.booking_intent) {
-        events.push({
-          event_type: 'strategy_call_requested',
-          title: 'Strategy call requested',
-          message: `${data.full_name || 'A lead'} requested a strategy call.`,
-        });
-      }
-
-      if (oldData?.status !== data.status) {
-        events.push({
-          event_type: data.status === 'Won' ? 'lead_marked_won' : data.status === 'Strategy Call Booked' ? 'booking_confirmed' : 'status_changed',
-          title: `Lead status changed to ${data.status}`,
-          message: `${data.business_name || data.full_name || 'Lead'} moved from ${oldData?.status || 'Unknown'} to ${data.status}.`,
-        });
-      }
-
-      if (!oldData?.notes && data.notes) {
-        events.push({
-          event_type: 'note_added',
-          title: 'Lead note added',
-          message: `A new note was added to ${data.business_name || data.full_name || 'this lead'}.`,
-        });
-      }
-    }
-
-    return events;
+  if (entityName !== 'Lead') {
+    return [];
   }
 
-  if (entityName === 'Onboarding' && eventType === 'update') {
-    const events = [];
+  const events = [];
+  const leadLabel = data.business_name || data.full_name || 'A lead';
+  const requestKey = `strategy_call_requested:${data.last_activity_at || data.created_at || data.created_date || data.updated_date || ''}`;
+  const bookingKey = `booking_confirmed:${data.booking_reference || `${data.confirmed_meeting_date || ''}_${data.confirmed_meeting_time || ''}`}`;
 
-    if (oldData?.intake_form_status !== 'completed' && data.intake_form_status === 'completed') {
+  if (eventType === 'create') {
+    events.push({
+      event_type: 'new_lead_created',
+      title: 'New lead created',
+      message: `${leadLabel} was captured from ${data.source_page || 'an unknown source'}.`,
+      unique_key: `new_lead_created:${data.created_at || data.created_date || data.id}`,
+      priority: 'normal',
+    });
+
+    if (data.booking_intent && data.enquiry_type === 'strategy_call' && data.status !== 'Strategy Call Booked') {
       events.push({
-        event_type: 'onboarding_intake_submitted',
-        title: 'Onboarding intake submitted',
-        message: `${data.client_name || 'A client'} completed the onboarding intake form.`,
+        event_type: 'strategy_call_requested',
+        title: 'New strategy call request',
+        message: `${data.full_name || 'A lead'} requested a strategy call from ${data.source_page || 'the website'}.`,
+        unique_key: requestKey,
+        priority: 'high',
+      });
+    }
+  }
+
+  if (eventType === 'update') {
+    const isNewStrategyCallRequest = data.booking_intent
+      && data.enquiry_type === 'strategy_call'
+      && data.status !== 'Strategy Call Booked'
+      && oldData?.last_activity_at !== data.last_activity_at;
+
+    if (isNewStrategyCallRequest) {
+      events.push({
+        event_type: 'strategy_call_requested',
+        title: 'Updated lead requested a strategy call',
+        message: `${data.full_name || leadLabel} submitted another strategy call request.`,
+        unique_key: requestKey,
+        priority: 'high',
       });
     }
 
-    if (!oldData && data.client_account_id) {
+    const bookingJustConfirmed = (oldData?.status !== 'Strategy Call Booked' && data.status === 'Strategy Call Booked')
+      || (oldData?.booking_status !== 'confirmed' && data.booking_status === 'confirmed');
+
+    if (bookingJustConfirmed) {
       events.push({
-        event_type: 'onboarding_created',
-        title: 'Onboarding created',
-        message: `${data.client_name || 'A client'} entered the onboarding workflow.`,
+        event_type: 'booking_confirmed',
+        title: 'Strategy call booking confirmed',
+        message: `${data.full_name || leadLabel} has a confirmed strategy call${data.confirmed_meeting_date ? ` on ${data.confirmed_meeting_date}` : ''}.`,
+        unique_key: bookingKey,
+        priority: 'high',
       });
     }
-
-    return events;
   }
 
-  if (entityName === 'BillingRecord' && eventType === 'update' && oldData?.billing_status !== data.billing_status) {
-    return [{
-      event_type: 'billing_status_changed',
-      title: 'Billing status changed',
-      message: `${data.plan_name || 'Billing record'} moved from ${oldData?.billing_status || 'Unknown'} to ${data.billing_status}.`,
-    }];
+  return events;
+}
+
+async function createNotificationLog(base44, payload) {
+  const existing = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: payload.entity_id,
+    event_type: payload.event_type,
+    recipient_email: payload.recipient_email,
+    channel: payload.channel,
+    provider_message: payload.provider_message,
+  }, '-created_date', 1);
+
+  if (existing.length > 0) {
+    return null;
   }
 
-  if (entityName === 'IntegrationConnection' && eventType === 'update' && oldData?.connection_status !== data.connection_status) {
-    return [{
-      event_type: 'integration_status_changed',
-      title: 'Integration status changed',
-      message: `${data.app_name || 'Integration'} moved from ${oldData?.connection_status || 'Unknown'} to ${data.connection_status}.`,
-    }];
-  }
-
-  return [];
+  return base44.asServiceRole.entities.NotificationLog.create(payload);
 }
 
 Deno.serve(async (req) => {
@@ -123,8 +126,12 @@ Deno.serve(async (req) => {
     const created = [];
 
     for (const def of eventDefs) {
+      const metadata = entityName === 'Lead'
+        ? buildLeadMetadata(data, eventType, def.unique_key)
+        : { entity_event_type: eventType, unique_key: def.unique_key };
+
       if (admins.length === 0) {
-        const log = await base44.asServiceRole.entities.NotificationLog.create({
+        const storedLog = await createNotificationLog(base44, {
           event_type: def.event_type,
           entity_name: entityName,
           entity_id: data.id,
@@ -134,21 +141,25 @@ Deno.serve(async (req) => {
           channel: 'in_app',
           delivery_status: 'stored',
           provider_name: null,
-          provider_message: 'No admin users available yet; event stored only.',
+          provider_message: `event_key:${def.unique_key}`,
           title: def.title,
           message: def.message,
           triggered_at: new Date().toISOString(),
           actor_email: actorEmail,
           metadata: {
-            entity_event_type: eventType,
+            ...metadata,
+            priority: def.priority,
+            intended_channels: ['email', 'sms'],
           },
         });
-        created.push(log.id);
+        if (storedLog) {
+          created.push(storedLog.id);
+        }
         continue;
       }
 
       for (const admin of admins) {
-        const log = await base44.asServiceRole.entities.NotificationLog.create({
+        const storedLog = await createNotificationLog(base44, {
           event_type: def.event_type,
           entity_name: entityName,
           entity_id: data.id,
@@ -158,17 +169,42 @@ Deno.serve(async (req) => {
           channel: 'in_app',
           delivery_status: 'stored',
           provider_name: null,
-          provider_message: 'Stored internally. Email/SMS provider not connected yet.',
+          provider_message: `event_key:${def.unique_key}`,
           title: def.title,
           message: def.message,
           triggered_at: new Date().toISOString(),
           actor_email: actorEmail,
           metadata: {
-            entity_event_type: eventType,
+            ...metadata,
+            priority: def.priority,
             intended_channels: ['email', 'sms'],
           },
         });
-        created.push(log.id);
+        if (storedLog) {
+          created.push(storedLog.id);
+        }
+
+        if (admin.email) {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: admin.email,
+            subject: def.priority === 'high' ? `[High Priority] ${def.title}` : def.title,
+            body: [
+              def.message,
+              '',
+              `Full name: ${data.full_name || ''}`,
+              `Business name: ${data.business_name || ''}`,
+              `Email: ${data.email || ''}`,
+              `Mobile: ${data.mobile_number || ''}`,
+              `Industry: ${data.industry || ''}`,
+              `Message preview: ${(data.message || '').slice(0, 180) || 'No message provided'}`,
+              `Source page: ${data.source_page || ''}`,
+              `Booking intent: ${data.booking_intent ? 'Yes' : 'No'}`,
+              `Preferred time: ${[data.preferred_meeting_date, data.preferred_meeting_time].filter(Boolean).join(' ') || 'Not provided'}`,
+              `Confirmed time: ${[data.confirmed_meeting_date, data.confirmed_meeting_time].filter(Boolean).join(' ') || 'Not confirmed yet'}`,
+              `Admin link: /LeadDetail?id=${data.id}`,
+            ].join('\n'),
+          });
+        }
       }
     }
 
