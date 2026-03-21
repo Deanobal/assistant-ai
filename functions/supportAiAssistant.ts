@@ -59,6 +59,22 @@ function detectKeywordCategory(text) {
   return 'general';
 }
 
+function detectSalesUseCase(text) {
+  if (includesAny(text, ['missed calls', 'missed call', 'lead capture', 'call handling', 'ai receptionist'])) return 'missed_calls';
+  if (includesAny(text, ['booking automation', 'bookings', 'calendar', 'appointments', 'scheduling'])) return 'booking_automation';
+  if (includesAny(text, ['pricing', 'price', 'cost', 'plan', 'plans'])) return 'pricing';
+  if (includesAny(text, ['get started', 'ready to start', 'direct start', 'start now'])) return 'direct_start';
+  if (includesAny(text, ['enterprise', 'custom', 'multiple teams', 'multi-site', 'multi site', 'complex workflow', 'custom integration'])) return 'complex_custom';
+  return 'general_sales';
+}
+
+function inferSalesPlanFit(text, salesUseCase) {
+  if (salesUseCase === 'complex_custom' || includesAny(text, ['enterprise', 'multiple teams', 'multi-site', 'multi site', 'custom workflow', 'custom integration'])) return 'Enterprise';
+  if (salesUseCase === 'booking_automation' || includesAny(text, ['crm', 'follow-up', 'follow up', 'calendar', 'booking automation'])) return 'Growth';
+  if (salesUseCase === 'missed_calls' || salesUseCase === 'direct_start' || includesAny(text, ['ai receptionist', 'lead capture', 'call handling'])) return 'Starter';
+  return 'Not clear yet';
+}
+
 function buildForcedRouting(text) {
   const urgentKeywords = [
     'urgent',
@@ -186,7 +202,7 @@ function ensureAllowed(value, allowedValues, fallback) {
   return allowedValues.includes(value) ? value : fallback;
 }
 
-function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverReason }) {
+function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverReason, rawText }) {
   const greeting = visitorName ? `Hi ${visitorName},` : 'Hi,';
 
   if (aiMode === 'escalated') {
@@ -198,7 +214,29 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverR
   }
 
   if (enquiryCategory === 'sales') {
-    return `${greeting} I’m AssistantAI Assistant. It sounds like you’re exploring whether AssistantAI is the right fit. The best next step is usually a strategy call. What kind of enquiries, bookings, or follow-up volume are you trying to improve?`;
+    const salesUseCase = detectSalesUseCase(rawText || '');
+
+    if (salesUseCase === 'missed_calls') {
+      return `${greeting} I’m AssistantAI Assistant. AssistantAI can answer calls, capture lead details, and automate follow-up so missed enquiries do not just disappear. If that is your main problem, Starter is often the best fit. What type of business are you in, and how often are missed calls happening?`;
+    }
+
+    if (salesUseCase === 'booking_automation') {
+      return `${greeting} I’m AssistantAI Assistant. AssistantAI can support a cleaner booking flow with lead capture, calendar handling, and follow-up automation. Growth is usually the best fit for that type of workflow. Is your main priority more bookings, less admin, or better follow-up?`;
+    }
+
+    if (salesUseCase === 'pricing') {
+      return `${greeting} I’m AssistantAI Assistant. Broadly, Starter is for businesses starting with AI call handling and lead capture, Growth is for booking automation, CRM sync, and follow-up, and Enterprise is for more complex workflows or teams. If you already know you want Starter or Growth, the best next step is Get Started Now. If the workflow is more custom, Book Free Strategy Call is the better fit.`;
+    }
+
+    if (salesUseCase === 'direct_start') {
+      return `${greeting} I’m AssistantAI Assistant. If you are ready to move now, Starter or Growth can go through the Get Started Now path, while more complex or custom setups are better suited to a Book Free Strategy Call first. What business are you in, and what do you want the system to handle first?`;
+    }
+
+    if (salesUseCase === 'complex_custom') {
+      return `${greeting} I’m AssistantAI Assistant. This sounds more custom, so the best next step is usually Book Free Strategy Call. That gives the team room to map the workflow properly and recommend the right scope. What is the main workflow or outcome you want solved first?`;
+    }
+
+    return `${greeting} I’m AssistantAI Assistant. It sounds like you’re exploring whether AssistantAI is the right fit. I can help narrow down the likely use case and best next step without overcomplicating it. What type of business are you in, what is the main problem, and how urgent is it for you to solve?`;
   }
 
   if (enquiryCategory === 'onboarding') {
@@ -245,7 +283,10 @@ Rules:
 - If pricing is complex, custom, enterprise-level, or unclear, route to a human instead of quoting numbers
 - If the issue is account-specific, billing-related, urgent, or confidence is low, route to a human
 - If the visitor seems frustrated repeatedly, route to a human
-- For sales leads, encourage a strategy call when appropriate
+- For sales leads, identify the most likely use case, briefly explain the most relevant AssistantAI outcome, and suggest only the best next step
+- Ask for business type, main problem, urgency, and likely fit when they are missing
+- For direct-start sales intent, suggest Get Started Now when Starter or Growth seems to fit
+- For complex or custom intent, suggest Book Free Strategy Call
 - For onboarding questions, guide toward onboarding help
 - For operational issues, route to support or escalate
 - Ask one clarifying question when useful
@@ -265,6 +306,18 @@ Examples:
 - "My portal is not working" = support unless there is clear urgency or outage language
 - "This is urgent, something is broken" = urgent
 - "Can you tell me what you do?" = general
+
+Sales handling:
+- missed calls or lead capture = explain AI call answering, detail capture, and automated follow-up
+- booking automation = explain calendar flow, lead capture, and follow-up automation
+- pricing = explain Starter, Growth, Enterprise briefly and accurately
+- direct-start intent = guide to Get Started Now when Starter or Growth is the likely fit
+- complex or custom intent = guide to Book Free Strategy Call
+
+Plan guidance:
+- Starter = $497/month + $1,500 setup, best for businesses starting with AI call handling and lead capture
+- Growth = $1,500/month + $3,000 setup, best for voice AI, booking automation, CRM sync, and follow-up
+- Enterprise = $3,000+/month + $7,500+ setup, best for advanced workflows, multiple teams, or complex integration requirements
 
 AI mode rules:
 - ai_active = AI can continue the conversation safely
@@ -310,6 +363,8 @@ The response should be concise, honest, action-oriented, and suitable for a prem
           urgency_level: { type: 'string' },
           ai_summary: { type: 'string' },
           ai_handover_reason: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+          likely_use_case: { type: 'string' },
+          likely_plan_fit: { type: 'string' },
           response: { type: 'string' }
         },
         required: ['ai_mode', 'enquiry_category', 'urgency_level', 'ai_summary', 'response']
@@ -320,8 +375,10 @@ The response should be concise, honest, action-oriented, and suitable for a prem
     const enquiry_category = ensureAllowed(forcedRouting?.enquiry_category || result?.enquiry_category, allowedCategories, 'general');
     const urgency_level = ensureAllowed(forcedRouting?.urgency_level || result?.urgency_level, allowedUrgencyLevels, 'normal');
     const ai_handover_reason = forcedRouting?.ai_handover_reason || result?.ai_handover_reason || null;
-    const ai_summary = result?.ai_summary || `AI classified this conversation as ${enquiry_category} with ${urgency_level} urgency.`;
-    const response = result?.response || buildFallbackResponse({ visitorName, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason });
+    const likely_use_case = result?.likely_use_case || (enquiry_category === 'sales' ? detectSalesUseCase(combinedText) : 'n/a');
+    const likely_plan_fit = result?.likely_plan_fit || (enquiry_category === 'sales' ? inferSalesPlanFit(combinedText, likely_use_case) : 'n/a');
+    const ai_summary = result?.ai_summary || `Visitor: ${visitorName || 'Unknown'}. Category: ${enquiry_category}. Urgency: ${urgency_level}. Likely use case: ${likely_use_case}. Likely plan fit: ${likely_plan_fit}.`;
+    const response = result?.response || buildFallbackResponse({ visitorName, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason, rawText: combinedText });
 
     return Response.json({
       ai_mode,
@@ -329,6 +386,8 @@ The response should be concise, honest, action-oriented, and suitable for a prem
       urgency_level,
       ai_summary,
       ai_handover_reason,
+      likely_use_case,
+      likely_plan_fit,
       response,
     });
   } catch (error) {
