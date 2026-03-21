@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { isPreviewTestMode, getRuntimeDataEnv } from '@/lib/runtimeDataEnv';
 import SupportChatBubble from './SupportChatBubble';
 import SupportChatIntakeForm from './SupportChatIntakeForm';
 import SupportChatComposer from './SupportChatComposer';
@@ -23,6 +24,8 @@ const systemSuccess = {
 
 export default function ChatWidget() {
   const location = useLocation();
+  const previewTestMode = isPreviewTestMode();
+  const runtimeDataEnv = getRuntimeDataEnv();
   const [isOpen, setIsOpen] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -50,6 +53,7 @@ export default function ChatWidget() {
         const response = await base44.functions.invoke('getSupportConversation', {
           conversationId: storedThread.conversationId,
           email: storedThread.email,
+          runtimeDataEnv,
         });
         setConversation(response.data.conversation);
         setMessages(response.data.messages || []);
@@ -87,6 +91,7 @@ export default function ChatWidget() {
         mobile: form.mobile,
         message: form.message,
         sourcePage: location.pathname,
+        runtimeDataEnv,
       });
       const nextConversation = response.data.conversation;
       const nextMessages = response.data.messages || [];
@@ -117,6 +122,7 @@ export default function ChatWidget() {
         name: form.name,
         message: replyBody,
         sourcePage: location.pathname,
+        runtimeDataEnv,
       });
       setMessages((prev) => [...prev, response.data.message]);
       setReplyBody('');
@@ -172,12 +178,18 @@ export default function ChatWidget() {
                 </div>
               )}
 
+              {previewTestMode && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+                  Support messaging is disabled in preview test mode so test actions do not write into production data.
+                </div>
+              )}
+
               {!conversation ? (
                 <SupportChatIntakeForm
                   form={form}
                   setForm={setForm}
                   onSubmit={handleStartConversation}
-                  isLoading={isSubmitting}
+                  isLoading={isSubmitting || previewTestMode}
                 />
               ) : (
                 <>
@@ -188,7 +200,7 @@ export default function ChatWidget() {
                     value={replyBody}
                     onChange={setReplyBody}
                     onSend={handleReply}
-                    isLoading={isSubmitting}
+                    isLoading={isSubmitting || previewTestMode}
                   />
                 </>
               )}
