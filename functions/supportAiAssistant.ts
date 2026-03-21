@@ -150,11 +150,11 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverR
   const greeting = visitorName ? `Hi ${visitorName},` : 'Hi,';
 
   if (aiMode === 'escalated') {
-    return `${greeting} I’m AssistantAI Assistant. I’ve flagged this as urgent and passed it to our human team for review. Please share any key details like what changed, what is affected, and when it started so we can prioritise it properly.`;
+    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly. If useful, please share what changed, what is affected, and when it started.`;
   }
 
   if (aiMode === 'human_required') {
-    return `${greeting} I’m AssistantAI Assistant. A human team member needs to review this next${handoverReason ? ` because ${handoverReason.toLowerCase()}` : ''}. Please share any extra context that would help us respond faster.`;
+    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly${handoverReason ? `.${` `}For context, I’ve noted: ${handoverReason.toLowerCase()}` : ''}`;
   }
 
   if (enquiryCategory === 'sales') {
@@ -202,11 +202,14 @@ Rules:
 - Keep responses concise, clear, premium, and commercially intelligent
 - Never invent features, integrations, testimonials, case studies, pricing, performance claims, or guarantees
 - Do not give legal, financial, technical, uptime, or implementation guarantees
-- If pricing is complex, custom, or unclear, route to a human instead of quoting numbers
+- If pricing is complex, custom, enterprise-level, or unclear, route to a human instead of quoting numbers
+- If the issue is account-specific, billing-related, urgent, or confidence is low, route to a human
+- If the visitor seems frustrated repeatedly, route to a human
 - For sales leads, encourage a strategy call when appropriate
 - For onboarding questions, guide toward onboarding help
 - For operational issues, route to support or escalate
 - Ask one clarifying question when useful
+- When handing over, do not say you cannot help; say you are passing this to the team so they can help properly
 
 Classification rules:
 - sales = new system interest, pricing interest, bookings automation, lead capture, demos, fit checks
@@ -225,7 +228,7 @@ Examples:
 
 AI mode rules:
 - ai_active = AI can continue the conversation safely
-- human_required = human review needed, requested, or pricing is too complex
+- human_required = human review needed, requested, account-specific, low-confidence, repeated frustration, or pricing is too complex
 - escalated = urgent operational or payment issue
 - closed = only if the conversation is clearly complete
 
@@ -251,7 +254,14 @@ Return a JSON object with:
 - ai_handover_reason
 - response
 
-The response should be concise, honest, and action-oriented.`,
+The ai_summary must be a short admin-ready summary covering:
+- who the visitor is
+- likely category
+- urgency
+- what they need
+- what the AI already asked or answered
+
+The response should be concise, honest, action-oriented, and suitable for a premium brand.`,
       response_json_schema: {
         type: 'object',
         properties: {

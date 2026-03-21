@@ -133,6 +133,33 @@ Deno.serve(async (req) => {
       },
     });
 
+    if (['human_required', 'escalated'].includes(aiResult.ai_mode)) {
+      await base44.asServiceRole.entities.NotificationLog.create({
+        event_type: 'support_conversation_created',
+        entity_name: 'SupportConversation',
+        entity_id: conversation.id,
+        client_account_id: conversation.linked_client_account_id || null,
+        recipient_role: 'admin',
+        recipient_email: null,
+        channel: 'in_app',
+        delivery_status: 'stored',
+        provider_name: 'SupportAIHandover',
+        provider_message: aiResult.ai_handover_reason || 'AI requested human review.',
+        title: aiResult.ai_mode === 'escalated' ? 'Urgent AI escalation required' : 'AI handover required',
+        message: `${name} has been handed to the team. ${aiResult.ai_handover_reason || 'Human review requested.'}`,
+        triggered_at: now,
+        actor_email: email,
+        metadata: {
+          conversation_id: conversation.id,
+          ai_mode: aiResult.ai_mode,
+          enquiry_category: aiResult.enquiry_category,
+          urgency_level: aiResult.urgency_level,
+          ai_handover_reason: aiResult.ai_handover_reason || null,
+          ai_summary: aiResult.ai_summary,
+        },
+      });
+    }
+
     return Response.json({
       conversation,
       messages: aiMessage ? [firstMessage, aiMessage] : [firstMessage],
