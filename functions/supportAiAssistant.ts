@@ -13,19 +13,6 @@ function normalizeText(value) {
 }
 
 function detectKeywordCategory(text) {
-  const salesKeywords = [
-    'pricing',
-    'price',
-    'book a demo',
-    'demo',
-    'get started',
-    'booking automation',
-    'ai receptionist',
-    'crm automation',
-    'call handling',
-    'lead capture'
-  ];
-
   const onboardingKeywords = [
     'already paid',
     'paid and need help',
@@ -37,6 +24,7 @@ function detectKeywordCategory(text) {
     'i just signed up',
     'just signed up',
     'where is the intake form',
+    'where is my intake form',
     'intake form help',
     'intake form',
     'intake',
@@ -50,6 +38,20 @@ function detectKeywordCategory(text) {
     'go live',
     'go-live',
     'implementation'
+  ];
+
+  const salesKeywords = [
+    'pricing',
+    'price',
+    'i want pricing',
+    'book a demo',
+    'demo',
+    'get started',
+    'booking automation',
+    'ai receptionist',
+    'crm automation',
+    'call handling',
+    'lead capture'
   ];
 
   const supportKeywords = [
@@ -86,7 +88,7 @@ function inferSalesPlanFit(text, salesUseCase) {
 }
 
 function detectOnboardingNeed(text) {
-  if (includesAny(text, ['where is the intake form', 'intake form help', 'intake form'])) return 'onboarding_intake';
+  if (includesAny(text, ['where is the intake form', 'where is my intake form', 'intake form help', 'intake form'])) return 'onboarding_intake';
   if (includesAny(text, ['connect my tools', 'connect my tool', 'tool connection', 'integrations', 'connect tools'])) return 'tool_connection';
   if (includesAny(text, ['change my business details', 'business details', 'update my details'])) return 'business_details';
   if (includesAny(text, ['what happens next', 'just signed up', 'i just signed up', 'how do i start setup'])) return 'next_step';
@@ -96,6 +98,8 @@ function detectOnboardingNeed(text) {
 function buildForcedRouting(text) {
   const urgentKeywords = [
     'urgent',
+    'my system is broken',
+    'something is broken',
     'broken',
     'down',
     'outage',
@@ -161,6 +165,7 @@ function buildForcedRouting(text) {
 
   if (includesAny(text, urgentKeywords)) {
     return {
+      classification_source: 'deterministic_urgent',
       ai_mode: 'escalated',
       enquiry_category: 'urgent',
       urgency_level: 'urgent',
@@ -170,6 +175,7 @@ function buildForcedRouting(text) {
 
   if (includesAny(text, humanKeywords)) {
     return {
+      classification_source: 'deterministic_human_request',
       ai_mode: 'human_required',
       enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
       urgency_level: 'normal',
@@ -177,17 +183,9 @@ function buildForcedRouting(text) {
     };
   }
 
-  if (includesAny(text, pricingKeywords)) {
-    return {
-      ai_mode: 'human_required',
-      enquiry_category: 'sales',
-      urgency_level: 'normal',
-      ai_handover_reason: 'Complex or enterprise pricing enquiry requires human follow-up.',
-    };
-  }
-
   if (includesAny(text, accountSpecificKeywords)) {
     return {
+      classification_source: 'deterministic_account_issue',
       ai_mode: 'human_required',
       enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
       urgency_level: 'high',
@@ -195,8 +193,19 @@ function buildForcedRouting(text) {
     };
   }
 
+  if (includesAny(text, pricingKeywords)) {
+    return {
+      classification_source: 'deterministic_complex_pricing',
+      ai_mode: 'human_required',
+      enquiry_category: 'sales',
+      urgency_level: 'normal',
+      ai_handover_reason: 'Complex or enterprise pricing enquiry requires human follow-up.',
+    };
+  }
+
   if (includesAny(text, frustrationKeywords)) {
     return {
+      classification_source: 'deterministic_frustration',
       ai_mode: 'human_required',
       enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
       urgency_level: 'high',
@@ -204,10 +213,31 @@ function buildForcedRouting(text) {
     };
   }
 
-  if (keywordCategory !== 'general') {
+  if (keywordCategory === 'onboarding') {
     return {
+      classification_source: 'deterministic_onboarding',
       ai_mode: 'ai_active',
-      enquiry_category: keywordCategory,
+      enquiry_category: 'onboarding',
+      urgency_level: 'normal',
+      ai_handover_reason: null,
+    };
+  }
+
+  if (keywordCategory === 'sales') {
+    return {
+      classification_source: 'deterministic_sales',
+      ai_mode: 'ai_active',
+      enquiry_category: 'sales',
+      urgency_level: 'normal',
+      ai_handover_reason: null,
+    };
+  }
+
+  if (keywordCategory === 'support') {
+    return {
+      classification_source: 'deterministic_support',
+      ai_mode: 'ai_active',
+      enquiry_category: 'support',
       urgency_level: 'normal',
       ai_handover_reason: null,
     };
