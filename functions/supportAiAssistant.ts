@@ -28,6 +28,8 @@ function detectKeywordCategory(text) {
 
   const onboardingKeywords = [
     'already paid',
+    'paid and need help',
+    'need help with setup',
     'setup help',
     'setup question',
     'onboarding question',
