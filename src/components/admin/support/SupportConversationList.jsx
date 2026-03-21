@@ -19,6 +19,21 @@ const priorityStyles = {
   urgent: 'bg-red-500/10 text-red-300 border-red-500/20',
 };
 
+const aiModeStyles = {
+  ai_active: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
+  human_required: 'bg-amber-500/10 text-amber-200 border-amber-500/20',
+  escalated: 'bg-red-500/10 text-red-300 border-red-500/20',
+  closed: 'bg-white/5 text-gray-300 border-white/10',
+};
+
+const enquiryStyles = {
+  sales: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
+  onboarding: 'bg-violet-500/10 text-violet-200 border-violet-500/20',
+  support: 'bg-white/5 text-gray-300 border-white/10',
+  urgent: 'bg-red-500/10 text-red-300 border-red-500/20',
+  general: 'bg-white/5 text-gray-300 border-white/10',
+};
+
 export default function SupportConversationList({ conversations, selectedId, onSelect }) {
   return (
     <Card className="bg-[#12121a] border-white/5 h-full">
@@ -44,10 +59,15 @@ export default function SupportConversationList({ conversations, selectedId, onS
                 <p className="text-xs text-gray-500 shrink-0">{conversation.last_message_at ? format(new Date(conversation.last_message_at), 'dd MMM p') : '—'}</p>
               </div>
               <p className="text-sm text-gray-300 truncate">{conversation.subject || conversation.last_message_preview || 'Support conversation'}</p>
-              <p className="text-xs text-gray-500 truncate mt-1">{conversation.last_message_preview || 'No messages yet'}</p>
-              <div className="flex flex-wrap gap-2 mt-3">
+              <p className="mt-1 text-xs text-gray-500 truncate">{conversation.last_message_preview || 'No messages yet'}</p>
+              {conversation.ai_summary && (
+                <p className="mt-2 truncate text-xs text-cyan-200/80">AI: {conversation.ai_summary}</p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Badge className={statusStyles[conversation.status] || statusStyles.open}>{conversation.status}</Badge>
-                <Badge className={priorityStyles[conversation.priority] || priorityStyles.normal}>{conversation.priority}</Badge>
+                <Badge className={priorityStyles[conversation.priority] || priorityStyles.normal}>{conversation.urgency_level || conversation.priority || 'normal'}</Badge>
+                <Badge className={aiModeStyles[conversation.ai_mode] || aiModeStyles.human_required}>{conversation.ai_mode || 'human_required'}</Badge>
+                <Badge className={enquiryStyles[conversation.enquiry_category] || enquiryStyles.general}>{conversation.enquiry_category || 'general'}</Badge>
               </div>
             </button>
           ))}

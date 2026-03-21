@@ -9,8 +9,18 @@ import SupportThreadPanel from '@/components/admin/support/SupportThreadPanel';
 function matchesFilter(conversation, filter) {
   if (filter === 'all') return true;
   if (filter === 'unread') return conversation.unread_for_admin;
+  if (filter === 'urgent') return conversation.enquiry_category === 'urgent' || conversation.urgency_level === 'urgent';
+  if (filter === 'ai_active' || filter === 'human_required' || filter === 'escalated') return conversation.ai_mode === filter;
   if (filter === 'open') return ['new', 'open'].includes(conversation.status);
   return conversation.status === filter;
+}
+
+function urgencyRank(conversation) {
+  const level = conversation.urgency_level || conversation.priority || 'normal';
+  if (level === 'urgent') return 0;
+  if (level === 'high') return 1;
+  if (level === 'normal') return 2;
+  return 3;
 }
 
 export default function SupportInbox() {
@@ -42,7 +52,9 @@ export default function SupportInbox() {
   });
 
   const filteredConversations = useMemo(
-    () => conversations.filter((conversation) => matchesFilter(conversation, activeFilter)),
+    () => [...conversations]
+      .filter((conversation) => matchesFilter(conversation, activeFilter))
+      .sort((a, b) => urgencyRank(a) - urgencyRank(b) || new Date(b.updated_at || b.updated_date || 0) - new Date(a.updated_at || a.updated_date || 0)),
     [activeFilter, conversations]
   );
 
@@ -57,6 +69,16 @@ export default function SupportInbox() {
   }, [filteredConversations, selectedConversationId]);
 
   const selectedConversation = conversations.find((item) => item.id === selectedConversationId) || null;
+
+  const refreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
+    queryClient.invalidateQueries({ queryKey: ['support-messages', selectedConversationId] });
+  };
+
+  const updateConversationMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SupportConversation.update(id, data),
+    onSuccess: refreshAll,
+  });
 
   useEffect(() => {
     if (!selectedConversation?.unread_for_admin) return;
@@ -75,16 +97,6 @@ export default function SupportInbox() {
     queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: selectedConversationId }, 'created_at', 500),
     initialData: [],
     enabled: !!selectedConversationId,
-  });
-
-  const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
-    queryClient.invalidateQueries({ queryKey: ['support-messages', selectedConversationId] });
-  };
-
-  const updateConversationMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SupportConversation.update(id, data),
-    onSuccess: refreshAll,
   });
 
   const replyMutation = useMutation({
@@ -110,6 +122,8 @@ export default function SupportInbox() {
         unread_for_client: isInternalNote ? selectedConversation.unread_for_client : true,
         last_message_at: isInternalNote ? selectedConversation.last_message_at : now,
         last_message_preview: isInternalNote ? selectedConversation.last_message_preview : messageBody.slice(0, 180),
+        ai_mode: isInternalNote ? selectedConversation.ai_mode : 'human_required',
+        ai_handover_reason: isInternalNote ? selectedConversation.ai_handover_reason : 'Admin replied manually and took over the conversation.',
       });
     },
     onSuccess: refreshAll,
@@ -117,19 +131,19 @@ export default function SupportInbox() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Support Inbox</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Admin-only</Badge>
+          <div className="mb-3 flex items-center gap-3">
+            <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-400">Support Inbox</Badge>
+            <Badge className="border-white/10 bg-white/5 text-gray-300">Admin-only</Badge>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Manage Support Conversations</h2>
-          <p className="text-gray-400 max-w-3xl">Review public support and sales enquiries, reply as admin, add internal notes, and move each conversation through the right support status.</p>
+          <h2 className="mb-2 text-3xl font-bold text-white">Manage Support Conversations</h2>
+          <p className="max-w-3xl text-gray-400">Review AI-assisted conversations, qualify incoming enquiries, escalate when needed, and step in manually at any point.</p>
         </div>
         <SupportInboxFilters activeFilter={activeFilter} onChange={setActiveFilter} />
       </div>
 
-      <div className="grid xl:grid-cols-[380px_minmax(0,1fr)] gap-6 items-start">
+      <div className="grid items-start gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <SupportConversationList
           conversations={filteredConversations}
           selectedId={selectedConversationId}
@@ -160,6 +174,15 @@ export default function SupportInbox() {
             data: {
               ...selectedConversation,
               priority,
+              urgency_level: priority,
+            },
+          })}
+          onAiModeChange={(ai_mode) => updateConversationMutation.mutate({
+            id: selectedConversation.id,
+            data: {
+              ...selectedConversation,
+              ai_mode,
+              ai_handover_reason: ai_mode === 'ai_active' ? null : selectedConversation.ai_handover_reason || 'Updated manually by admin.',
             },
           })}
           onAssignAdmin={(assignedAdminId) => updateConversationMutation.mutate({

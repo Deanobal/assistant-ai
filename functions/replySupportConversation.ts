@@ -1,5 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+function mapPriorityFromUrgency(urgencyLevel) {
+  if (urgencyLevel === 'urgent') return 'urgent';
+  if (urgencyLevel === 'high') return 'high';
+  if (urgencyLevel === 'low') return 'low';
+  return 'normal';
+}
+
+function mapStatusFromAiMode(aiMode) {
+  if (aiMode === 'closed') return 'closed';
+  if (aiMode === 'ai_active') return 'waiting_on_customer';
+  return 'waiting_on_admin';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -37,16 +50,53 @@ Deno.serve(async (req) => {
       is_internal_note: false,
     });
 
-    const nextStatus = ['resolved', 'closed'].includes(conversation.status) ? 'open' : 'waiting_on_admin';
-    await base44.asServiceRole.entities.SupportConversation.update(conversation.id, {
+    const visibleMessages = await base44.asServiceRole.entities.SupportMessage.filter({ conversation_id: conversationId }, 'created_at', 50);
+    const priorMessages = visibleMessages.filter((item) => !item.is_internal_note);
+
+    let aiResult = null;
+    let aiMessage = null;
+
+    if (conversation.ai_mode === 'ai_active') {
+      const aiResponse = await base44.asServiceRole.functions.invoke('supportAiAssistant', {
+        visitorName: name || conversation.visitor_name || 'Visitor',
+        subject: conversation.subject,
+        latestMessage: message,
+        sourcePage: sourcePage || conversation.source_page || '/',
+        priorMessages,
+      });
+      aiResult = aiResponse?.data || aiResponse;
+
+      if (aiResult?.response) {
+        aiMessage = await base44.asServiceRole.entities.SupportMessage.create({
+          conversation_id: conversationId,
+          sender_type: 'system',
+          sender_user_id: null,
+          sender_name: 'AssistantAI Assistant',
+          sender_email: 'assistant@assistantai.com.au',
+          message_body: aiResult.response,
+          attachment_url: null,
+          created_at: now,
+          is_internal_note: false,
+        });
+      }
+    }
+
+    const nextConversation = await base44.asServiceRole.entities.SupportConversation.update(conversation.id, {
       ...conversation,
       updated_at: now,
-      status: nextStatus,
+      status: aiResult ? mapStatusFromAiMode(aiResult.ai_mode) : 'waiting_on_admin',
       source_page: sourcePage || conversation.source_page,
       unread_for_admin: true,
       unread_for_client: false,
       last_message_at: now,
       last_message_preview: message.slice(0, 180),
+      priority: aiResult ? mapPriorityFromUrgency(aiResult.urgency_level) : conversation.priority,
+      ai_mode: aiResult ? aiResult.ai_mode : conversation.ai_mode,
+      enquiry_category: aiResult ? aiResult.enquiry_category : conversation.enquiry_category,
+      urgency_level: aiResult ? aiResult.urgency_level : conversation.urgency_level,
+      ai_summary: aiResult ? aiResult.ai_summary : conversation.ai_summary,
+      ai_last_response_at: aiMessage ? now : conversation.ai_last_response_at,
+      ai_handover_reason: aiResult ? aiResult.ai_handover_reason || null : conversation.ai_handover_reason,
     });
 
     await base44.asServiceRole.entities.NotificationLog.create({
@@ -68,10 +118,13 @@ Deno.serve(async (req) => {
         conversation_id: conversation.id,
         source_page: sourcePage || conversation.source_page || '/',
         linked_lead_id: conversation.linked_lead_id || null,
+        ai_mode: aiResult?.ai_mode || conversation.ai_mode || null,
+        enquiry_category: aiResult?.enquiry_category || conversation.enquiry_category || null,
+        urgency_level: aiResult?.urgency_level || conversation.urgency_level || null,
       },
     });
 
-    return Response.json({ message: reply });
+    return Response.json({ message: reply, aiMessage, conversation: nextConversation });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

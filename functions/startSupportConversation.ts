@@ -14,6 +14,19 @@ function uniqueById(items) {
   });
 }
 
+function mapPriorityFromUrgency(urgencyLevel) {
+  if (urgencyLevel === 'urgent') return 'urgent';
+  if (urgencyLevel === 'high') return 'high';
+  if (urgencyLevel === 'low') return 'low';
+  return 'normal';
+}
+
+function mapStatusFromAiMode(aiMode) {
+  if (aiMode === 'closed') return 'closed';
+  if (aiMode === 'ai_active') return 'waiting_on_customer';
+  return 'waiting_on_admin';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -29,21 +42,30 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
     const preview = message.slice(0, 180);
+    const subject = buildSubject(sourcePage, name);
     const byEmail = email ? await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 10) : [];
     const byMobile = mobile ? await base44.asServiceRole.entities.Lead.filter({ mobile_number: mobile }, '-updated_date', 10) : [];
     const matchedLeads = uniqueById([...byEmail, ...byMobile]);
     const matchedLead = matchedLeads.length === 1 ? matchedLeads[0] : null;
+    const aiResponse = await base44.asServiceRole.functions.invoke('supportAiAssistant', {
+      visitorName: name,
+      subject,
+      latestMessage: message,
+      sourcePage: sourcePage || '/',
+      priorMessages: [],
+    });
+    const aiResult = aiResponse?.data || aiResponse;
 
     const conversation = await base44.asServiceRole.entities.SupportConversation.create({
       created_at: now,
       updated_at: now,
-      status: 'new',
+      status: mapStatusFromAiMode(aiResult.ai_mode),
       source_type: 'public_site',
       source_page: sourcePage || '/',
       visitor_name: name,
       visitor_email: email,
       visitor_phone: mobile || '',
-      subject: buildSubject(sourcePage, name),
+      subject,
       assigned_admin_id: null,
       linked_lead_id: matchedLead?.id || null,
       linked_client_account_id: matchedLead?.client_account_id || null,
@@ -51,7 +73,13 @@ Deno.serve(async (req) => {
       unread_for_client: false,
       last_message_at: now,
       last_message_preview: preview,
-      priority: 'normal',
+      priority: mapPriorityFromUrgency(aiResult.urgency_level),
+      ai_mode: aiResult.ai_mode,
+      enquiry_category: aiResult.enquiry_category,
+      urgency_level: aiResult.urgency_level,
+      ai_summary: aiResult.ai_summary,
+      ai_last_response_at: aiResult.response ? now : null,
+      ai_handover_reason: aiResult.ai_handover_reason || null,
     });
 
     const firstMessage = await base44.asServiceRole.entities.SupportMessage.create({
@@ -66,6 +94,20 @@ Deno.serve(async (req) => {
       is_internal_note: false,
     });
 
+    const aiMessage = aiResult.response
+      ? await base44.asServiceRole.entities.SupportMessage.create({
+          conversation_id: conversation.id,
+          sender_type: 'system',
+          sender_user_id: null,
+          sender_name: 'AssistantAI Assistant',
+          sender_email: 'assistant@assistantai.com.au',
+          message_body: aiResult.response,
+          attachment_url: null,
+          created_at: now,
+          is_internal_note: false,
+        })
+      : null;
+
     await base44.asServiceRole.entities.NotificationLog.create({
       event_type: 'support_conversation_created',
       entity_name: 'SupportConversation',
@@ -78,19 +120,22 @@ Deno.serve(async (req) => {
       provider_name: 'SupportChat',
       provider_message: 'Stored for internal admin review. No external delivery configured yet.',
       title: 'New public support conversation',
-      message: `${name} started a new support conversation from ${sourcePage || '/'}.`,
+      message: `${name} started a new ${aiResult.enquiry_category} conversation from ${sourcePage || '/'}.`,
       triggered_at: now,
       actor_email: email,
       metadata: {
         conversation_id: conversation.id,
         source_page: sourcePage || '/',
         linked_lead_id: conversation.linked_lead_id || null,
+        ai_mode: aiResult.ai_mode,
+        enquiry_category: aiResult.enquiry_category,
+        urgency_level: aiResult.urgency_level,
       },
     });
 
     return Response.json({
       conversation,
-      messages: [firstMessage],
+      messages: aiMessage ? [firstMessage, aiMessage] : [firstMessage],
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
