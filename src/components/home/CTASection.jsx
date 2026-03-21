@@ -22,7 +22,7 @@ export default function CTASection() {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/Contact"
+              to="/BookStrategyCall"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
             >
               Book Free Strategy Call
