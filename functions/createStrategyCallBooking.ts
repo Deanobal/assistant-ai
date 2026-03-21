@@ -44,7 +44,7 @@ async function notifyAdmins(base44, lead, details) {
       recipient_email: admin.email || null,
       channel: 'in_app',
       delivery_status: 'stored',
-      provider_name: 'StrategyCallBooking',
+      provider_name: 'StrategyCallCalendar',
       provider_message: `event_key:${details.uniqueKey}`,
       title: details.title,
       message: details.message,
