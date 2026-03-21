@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const conversation = await base44.asServiceRole.entities.SupportConversation.create({
       created_at: now,
       updated_at: now,
-      status: 'new',
+      status: 'waiting_on_admin',
       source_type: 'client_portal',
       source_page: sourcePage || '/ClientPortal',
       visitor_name: user.full_name || client?.contact_name || user.email,
@@ -44,6 +44,12 @@ Deno.serve(async (req) => {
       last_message_at: now,
       last_message_preview: message.slice(0, 180),
       priority: 'normal',
+      ai_mode: 'human_required',
+      enquiry_category: 'support',
+      urgency_level: 'normal',
+      ai_summary: 'Client portal conversation routed directly to human support.',
+      ai_last_response_at: null,
+      ai_handover_reason: 'Client portal support starts with a human review.',
     });
 
     const firstMessage = await base44.asServiceRole.entities.SupportMessage.create({
