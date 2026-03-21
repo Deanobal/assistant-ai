@@ -192,7 +192,7 @@ The response should be concise, honest, and action-oriented.`,
           enquiry_category: { type: 'string' },
           urgency_level: { type: 'string' },
           ai_summary: { type: 'string' },
-          ai_handover_reason: { type: ['string', 'null'] },
+          ai_handover_reason: { anyOf: [{ type: 'string' }, { type: 'null' }] },
           response: { type: 'string' }
         },
         required: ['ai_mode', 'enquiry_category', 'urgency_level', 'ai_summary', 'response']
