@@ -95,10 +95,32 @@ function buildForcedRouting(text) {
   const pricingKeywords = [
     'custom pricing',
     'enterprise pricing',
+    'custom enterprise pricing',
     'discount',
     'quote',
     'proposal',
     'bespoke pricing'
+  ];
+
+  const accountSpecificKeywords = [
+    'my account',
+    'account issue',
+    'account-specific',
+    'my subscription',
+    'my invoice',
+    'invoice issue',
+    'login issue',
+    'login problem'
+  ];
+
+  const frustrationKeywords = [
+    'frustrated',
+    'annoyed',
+    'this is ridiculous',
+    'not helpful',
+    'still not working',
+    'again',
+    'upset'
   ];
 
   const keywordCategory = detectKeywordCategory(text);
@@ -126,7 +148,25 @@ function buildForcedRouting(text) {
       ai_mode: 'human_required',
       enquiry_category: 'sales',
       urgency_level: 'normal',
-      ai_handover_reason: 'Complex pricing enquiry requires human follow-up.',
+      ai_handover_reason: 'Complex or enterprise pricing enquiry requires human follow-up.',
+    };
+  }
+
+  if (includesAny(text, accountSpecificKeywords)) {
+    return {
+      ai_mode: 'human_required',
+      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
+      urgency_level: 'high',
+      ai_handover_reason: 'Account-specific issue requires human review.',
+    };
+  }
+
+  if (includesAny(text, frustrationKeywords)) {
+    return {
+      ai_mode: 'human_required',
+      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
+      urgency_level: 'high',
+      ai_handover_reason: 'Repeated user frustration detected.',
     };
   }
 
@@ -154,7 +194,7 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverR
   }
 
   if (aiMode === 'human_required') {
-    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly${handoverReason ? `.${` `}For context, I’ve noted: ${handoverReason.toLowerCase()}` : ''}`;
+    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly.${handoverReason ? ` For context, I’ve noted: ${handoverReason.toLowerCase()}.` : ''}`;
   }
 
   if (enquiryCategory === 'sales') {
