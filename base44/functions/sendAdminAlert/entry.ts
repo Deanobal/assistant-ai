@@ -547,6 +547,9 @@ Deno.serve(async (req) => {
         sent: false,
         recipient: null,
         error: smsDiagnostics.error,
+        provider_response: null,
+        from_number_used: smsDiagnostics.fromNumberUsed,
+        config_source: smsDiagnostics.configSource,
       };
     } else {
       smsDiagnostics.attempted = true;
@@ -577,6 +580,7 @@ Deno.serve(async (req) => {
         recipient: configuredAdminPhone,
         error: smsDiagnostics.error,
         provider_message_id: smsDiagnostics.providerMessageId,
+        provider_response: smsDiagnostics.providerResponse,
         from_number_used: smsDiagnostics.fromNumberUsed,
         config_source: smsDiagnostics.configSource,
       };
