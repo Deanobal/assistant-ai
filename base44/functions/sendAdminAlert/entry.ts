@@ -31,6 +31,10 @@ function normalizeEventType(eventType) {
   return EVENT_TYPE_ALIASES[eventType] || eventType;
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -121,6 +125,7 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     [`${channel}_configured_recipient`]: diagnostics.configuredRecipient || null,
     [`${channel}_delivery_path`]: diagnostics.deliveryPath || null,
     [`${channel}_fallback_reason`]: diagnostics.fallbackReason || null,
+    [`${channel}_from_address`]: diagnostics.fromAddress || null,
   };
 }
 
@@ -157,49 +162,89 @@ async function updateLog(base44, record, updates) {
   });
 }
 
-async function resolveEmailRecipient(base44, configuredEmail) {
+function resolveEmailRecipient(configuredEmail) {
   const normalizedConfiguredEmail = normalizeEmail(configuredEmail);
-  const users = await base44.asServiceRole.entities.User.list('-created_date', 100);
-  const adminEmails = [];
 
-  for (const user of users) {
-    if (user?.role !== 'admin') {
-      continue;
-    }
-
-    const email = normalizeEmail(user.email);
-    if (email && !adminEmails.includes(email)) {
-      adminEmails.push(email);
-    }
-  }
-
-  if (normalizedConfiguredEmail && adminEmails.includes(normalizedConfiguredEmail)) {
+  if (!normalizedConfiguredEmail) {
     return {
-      configuredRecipient: normalizedConfiguredEmail,
-      actualRecipient: normalizedConfiguredEmail,
-      deliveryPath: 'configured_admin_email',
-      fallbackReason: null,
+      configuredRecipient: null,
+      actualRecipient: null,
+      deliveryPath: 'unavailable',
+      fallbackReason: 'ADMIN_NOTIFICATION_EMAIL is missing.',
     };
   }
 
-  if (adminEmails.length > 0) {
+  if (!isValidEmail(normalizedConfiguredEmail)) {
     return {
-      configuredRecipient: normalizedConfiguredEmail || null,
-      actualRecipient: adminEmails[0],
-      deliveryPath: normalizedConfiguredEmail ? 'admin_user_fallback' : 'admin_user_default',
-      fallbackReason: normalizedConfiguredEmail
-        ? 'Configured admin email is not a registered app user, so Base44 Email cannot deliver to it.'
-        : 'No configured admin email found, so a registered admin user email is being used.',
+      configuredRecipient: normalizedConfiguredEmail,
+      actualRecipient: null,
+      deliveryPath: 'invalid_configured_email',
+      fallbackReason: 'ADMIN_NOTIFICATION_EMAIL is not a valid email address.',
     };
   }
 
   return {
-    configuredRecipient: normalizedConfiguredEmail || null,
-    actualRecipient: null,
-    deliveryPath: 'unavailable',
-    fallbackReason: normalizedConfiguredEmail
-      ? 'Configured admin email is not a registered app user, and there are no admin user emails available for Base44 Email.'
-      : 'No admin email is configured and no admin user email is available for Base44 Email.',
+    configuredRecipient: normalizedConfiguredEmail,
+    actualRecipient: normalizedConfiguredEmail,
+    deliveryPath: 'configured_admin_email',
+    fallbackReason: null,
+  };
+}
+
+async function sendResendEmail(to, subject, text) {
+  const apiKey = String(Deno.env.get('RESEND_API_KEY') || '').trim();
+  const fromEmail = String(Deno.env.get('RESEND_FROM_EMAIL') || '').trim();
+  const destination = normalizeEmail(to);
+
+  if (!apiKey || !fromEmail || !destination) {
+    return {
+      status: 'not_configured',
+      details: 'Resend API key, sender email, or destination email are missing.',
+      providerMessageId: null,
+      providerResponse: null,
+      fromEmail: fromEmail || null,
+    };
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: [destination],
+      subject,
+      text,
+    }),
+  });
+
+  const resultText = await response.text();
+  let parsed = null;
+
+  try {
+    parsed = JSON.parse(resultText);
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    return {
+      status: 'failed',
+      details: parsed?.message || parsed?.error || resultText || 'Resend email send failed.',
+      providerMessageId: parsed?.id || null,
+      providerResponse: parsed || resultText || null,
+      fromEmail,
+    };
+  }
+
+  return {
+    status: 'sent',
+    details: 'Email sent via Resend.',
+    providerMessageId: parsed?.id || null,
+    providerResponse: parsed || resultText || null,
+    fromEmail,
   };
 }
 
@@ -290,7 +335,8 @@ Deno.serve(async (req) => {
 
     const configuredAdminEmail = normalizeEmail(Deno.env.get('ADMIN_NOTIFICATION_EMAIL'));
     const configuredAdminPhone = normalizePhone(Deno.env.get('ADMIN_NOTIFICATION_PHONE'));
-    const emailRecipient = await resolveEmailRecipient(base44, configuredAdminEmail);
+    const resendFromEmail = String(Deno.env.get('RESEND_FROM_EMAIL') || '').trim();
+    const emailRecipient = resolveEmailRecipient(configuredAdminEmail);
     const triggeredAt = new Date().toISOString();
     const subject = priority === 'high' || priority === 'urgent' ? `[High Priority] ${title}` : title;
     const textMessage = (smsMessage || `${title}: ${message}`).slice(0, 160);
@@ -327,6 +373,7 @@ Deno.serve(async (req) => {
       configuredRecipient: emailRecipient.configuredRecipient,
       deliveryPath: emailRecipient.deliveryPath,
       fallbackReason: emailRecipient.fallbackReason,
+      fromAddress: resendFromEmail || null,
     };
 
     const emailResult = await createLog(base44, {
@@ -338,7 +385,7 @@ Deno.serve(async (req) => {
       recipient_email: emailRecipient.actualRecipient || configuredAdminEmail || null,
       channel: 'email',
       delivery_status: emailRecipient.actualRecipient ? 'queued' : 'not_configured',
-      provider_name: 'Base44 Email',
+      provider_name: 'Resend',
       provider_message: buildProviderMessage(uniqueKey),
       title,
       message,
@@ -348,7 +395,15 @@ Deno.serve(async (req) => {
     }, uniqueKey);
 
     if (emailResult.isDuplicate) {
-      results.email = { status: 'duplicate_skipped', attempted: false, sent: false, recipient: emailRecipient.actualRecipient || null, error: null };
+      results.email = {
+        status: 'duplicate_skipped',
+        attempted: false,
+        sent: false,
+        recipient: emailRecipient.actualRecipient || null,
+        error: null,
+        provider: 'resend',
+        from_address: resendFromEmail || null,
+      };
     } else if (!emailRecipient.actualRecipient) {
       emailDiagnostics.error = emailRecipient.fallbackReason || 'No valid admin email recipient available.';
       await updateLog(base44, emailResult.record, {
@@ -362,35 +417,43 @@ Deno.serve(async (req) => {
         sent: false,
         recipient: null,
         error: emailDiagnostics.error,
+        provider: 'resend',
+        from_address: resendFromEmail || null,
       };
     } else {
       emailDiagnostics.attempted = true;
 
       try {
-        const emailResponse = await base44.asServiceRole.integrations.Core.SendEmail({
-          to: emailRecipient.actualRecipient,
+        const resendResult = await sendResendEmail(
+          emailRecipient.actualRecipient,
           subject,
-          body: buildEmailBody(title, message, alertMetadata, normalizedEventType, priority),
-        });
-        emailDiagnostics.sent = true;
-        emailDiagnostics.providerMessageId = getProviderMessageId(emailResponse);
-        emailDiagnostics.providerResponse = emailResponse || 'Email sent via Base44 Email';
+          buildEmailBody(title, message, alertMetadata, normalizedEventType, priority),
+        );
+        emailDiagnostics.sent = resendResult.status === 'sent';
+        emailDiagnostics.error = resendResult.status === 'sent' ? null : resendResult.details;
+        emailDiagnostics.providerMessageId = resendResult.providerMessageId || null;
+        emailDiagnostics.providerResponse = resendResult.providerResponse || null;
+        emailDiagnostics.fromAddress = resendResult.fromEmail || emailDiagnostics.fromAddress || null;
         await updateLog(base44, emailResult.record, {
-          delivery_status: 'sent',
+          delivery_status: resendResult.status === 'sent' ? 'sent' : resendResult.status === 'not_configured' ? 'not_configured' : 'failed',
           provider_message: buildProviderMessage(uniqueKey, {
-            status: 'sent',
+            status: resendResult.status,
+            error: emailDiagnostics.error,
             provider_message_id: emailDiagnostics.providerMessageId,
             provider_response: emailDiagnostics.providerResponse,
+            from_address: emailDiagnostics.fromAddress,
           }),
           metadata: buildChannelMetadata(alertMetadata, 'email', emailDiagnostics),
         });
         results.email = {
-          status: 'sent',
+          status: resendResult.status,
           attempted: true,
-          sent: true,
+          sent: emailDiagnostics.sent,
           recipient: emailRecipient.actualRecipient,
-          error: null,
+          error: emailDiagnostics.error,
           provider_message_id: emailDiagnostics.providerMessageId,
+          provider: 'resend',
+          from_address: emailDiagnostics.fromAddress,
         };
       } catch (error) {
         emailDiagnostics.error = getErrorMessage(error);
@@ -399,6 +462,7 @@ Deno.serve(async (req) => {
           provider_message: buildProviderMessage(uniqueKey, {
             status: 'failed',
             error: emailDiagnostics.error,
+            from_address: emailDiagnostics.fromAddress,
           }),
           metadata: buildChannelMetadata(alertMetadata, 'email', emailDiagnostics),
         });
@@ -409,6 +473,8 @@ Deno.serve(async (req) => {
           recipient: emailRecipient.actualRecipient,
           error: emailDiagnostics.error,
           fallback_reason: emailRecipient.fallbackReason,
+          provider: 'resend',
+          from_address: emailDiagnostics.fromAddress,
         };
       }
     }
