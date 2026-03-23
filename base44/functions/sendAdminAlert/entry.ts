@@ -132,6 +132,8 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     [`${channel}_delivery_path`]: diagnostics.deliveryPath || null,
     [`${channel}_fallback_reason`]: diagnostics.fallbackReason || null,
     [`${channel}_from_address`]: diagnostics.fromAddress || null,
+    [`${channel}_from_number_used`]: diagnostics.fromNumberUsed || diagnostics.fromAddress || null,
+    [`${channel}_config_source`]: diagnostics.configSource || null,
   };
 }
 
@@ -255,10 +257,11 @@ async function sendResendEmail(to, subject, text) {
 }
 
 async function sendTwilioSms(message, to) {
-  const accountSid = normalizeEmail(Deno.env.get('TWILIO_ACCOUNT_SID')).toUpperCase();
-  const authToken = String(Deno.env.get('TWILIO_AUTH_TOKEN') || '').trim();
-  const fromNumber = normalizePhone(Deno.env.get('TWILIO_FROM_NUMBER'));
+  const accountSid = String(readSecretValue('TWILIO_ACCOUNT_SID') || '').trim();
+  const authToken = String(readSecretValue('TWILIO_AUTH_TOKEN') || '').trim();
+  const fromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
   const destination = normalizePhone(to);
+  const configSource = fromNumber ? 'env' : 'missing';
 
   if (!accountSid || !authToken || !fromNumber || !destination) {
     return {
@@ -266,6 +269,8 @@ async function sendTwilioSms(message, to) {
       details: 'Twilio credentials, from number, or destination number are missing.',
       providerMessageId: null,
       providerResponse: null,
+      fromNumberUsed: fromNumber || null,
+      configSource,
     };
   }
 
@@ -294,12 +299,18 @@ async function sendTwilioSms(message, to) {
     parsed = null;
   }
 
+  const mismatchError = parsed?.message && /from/i.test(String(parsed.message))
+    ? `Twilio rejected sender ${fromNumber}: ${parsed.message}`
+    : null;
+
   if (!response.ok) {
     return {
       status: 'failed',
-      details: parsed?.message || resultText || 'Twilio SMS send failed.',
+      details: mismatchError || parsed?.message || resultText || 'Twilio SMS send failed.',
       providerMessageId: getProviderMessageId(parsed),
       providerResponse: parsed || resultText || null,
+      fromNumberUsed: fromNumber,
+      configSource,
     };
   }
 
@@ -308,6 +319,8 @@ async function sendTwilioSms(message, to) {
     details: parsed?.status || 'Twilio SMS sent.',
     providerMessageId: getProviderMessageId(parsed),
     providerResponse: parsed || resultText || null,
+    fromNumberUsed: parsed?.from || fromNumber,
+    configSource,
   };
 }
 
@@ -485,6 +498,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    const twilioFromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
     const smsDiagnostics = {
       attempted: false,
       sent: false,
@@ -495,6 +509,9 @@ Deno.serve(async (req) => {
       configuredRecipient: configuredAdminPhone || null,
       deliveryPath: configuredAdminPhone ? 'configured_admin_phone' : 'unavailable',
       fallbackReason: configuredAdminPhone ? null : 'No admin phone is configured.',
+      fromAddress: twilioFromNumber || null,
+      fromNumberUsed: twilioFromNumber || null,
+      configSource: twilioFromNumber ? 'env' : 'missing',
     };
 
     const smsResultLog = await createLog(base44, {
@@ -538,6 +555,9 @@ Deno.serve(async (req) => {
       smsDiagnostics.error = smsResult.status === 'sent' ? null : smsResult.details;
       smsDiagnostics.providerMessageId = smsResult.providerMessageId || null;
       smsDiagnostics.providerResponse = smsResult.providerResponse || null;
+      smsDiagnostics.fromAddress = smsResult.fromNumberUsed || smsDiagnostics.fromAddress || null;
+      smsDiagnostics.fromNumberUsed = smsResult.fromNumberUsed || smsDiagnostics.fromNumberUsed || null;
+      smsDiagnostics.configSource = smsResult.configSource || smsDiagnostics.configSource || null;
       await updateLog(base44, smsResultLog.record, {
         delivery_status: smsResult.status === 'sent' ? 'sent' : smsResult.status === 'not_configured' ? 'not_configured' : 'failed',
         provider_message: buildProviderMessage(uniqueKey, {
@@ -545,6 +565,8 @@ Deno.serve(async (req) => {
           error: smsDiagnostics.error,
           provider_message_id: smsDiagnostics.providerMessageId,
           provider_response: smsDiagnostics.providerResponse,
+          from_number_used: smsDiagnostics.fromNumberUsed,
+          config_source: smsDiagnostics.configSource,
         }),
         metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
       });
@@ -555,6 +577,8 @@ Deno.serve(async (req) => {
         recipient: configuredAdminPhone,
         error: smsDiagnostics.error,
         provider_message_id: smsDiagnostics.providerMessageId,
+        from_number_used: smsDiagnostics.fromNumberUsed,
+        config_source: smsDiagnostics.configSource,
       };
     }
 
