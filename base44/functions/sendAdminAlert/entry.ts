@@ -43,6 +43,12 @@ function normalizePhone(value) {
   return String(value || '').trim().replace(/\s+/g, '');
 }
 
+function readSecretValue(name) {
+  const raw = String(Deno.env.get(name) || '').trim();
+  const prefix = `${name}=`;
+  return raw.startsWith(prefix) ? raw.slice(prefix.length).trim() : raw;
+}
+
 function buildEventKey(uniqueKey) {
   return `event_key:${uniqueKey}`;
 }
@@ -192,8 +198,8 @@ function resolveEmailRecipient(configuredEmail) {
 }
 
 async function sendResendEmail(to, subject, text) {
-  const apiKey = String(Deno.env.get('RESEND_API_KEY') || '').trim();
-  const fromEmail = String(Deno.env.get('RESEND_FROM_EMAIL') || '').trim();
+  const apiKey = readSecretValue('RESEND_API_KEY');
+  const fromEmail = readSecretValue('RESEND_FROM_EMAIL');
   const destination = normalizeEmail(to);
 
   if (!apiKey || !fromEmail || !destination) {
@@ -335,7 +341,7 @@ Deno.serve(async (req) => {
 
     const configuredAdminEmail = normalizeEmail(Deno.env.get('ADMIN_NOTIFICATION_EMAIL'));
     const configuredAdminPhone = normalizePhone(Deno.env.get('ADMIN_NOTIFICATION_PHONE'));
-    const resendFromEmail = String(Deno.env.get('RESEND_FROM_EMAIL') || '').trim();
+    const resendFromEmail = readSecretValue('RESEND_FROM_EMAIL');
     const emailRecipient = resolveEmailRecipient(configuredAdminEmail);
     const triggeredAt = new Date().toISOString();
     const subject = priority === 'high' || priority === 'urgent' ? `[High Priority] ${title}` : title;
