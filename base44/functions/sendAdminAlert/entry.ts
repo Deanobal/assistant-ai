@@ -337,14 +337,15 @@ async function sendTwilioSms(message, to) {
   }
 
   return {
-    status: 'sent',
-    details: parsed?.status || 'Twilio SMS sent.',
-    providerMessageId: getProviderMessageId(parsed),
-    providerResponse: parsed || resultText || null,
-    fromNumberUsed: parsed?.from || fromNumber,
-    configSource,
-  };
-}
+      status: 'sent',
+      details: parsed?.status || 'Twilio SMS sent.',
+      providerStatus: parsed?.status || null,
+      providerMessageId: getProviderMessageId(parsed),
+      providerResponse: parsed || resultText || null,
+      fromNumberUsed: parsed?.from || fromNumber,
+      configSource,
+    };
+  }
 
 Deno.serve(async (req) => {
   try {
