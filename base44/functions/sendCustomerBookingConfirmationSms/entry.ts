@@ -1,0 +1,311 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+
+function getErrorMessage(error) {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message);
+  }
+
+  return 'Unknown error';
+}
+
+function normalizePhone(value) {
+  return String(value || '').trim().replace(/\s+/g, '');
+}
+
+function readSecretValue(name) {
+  const raw = String(Deno.env.get(name) || '').trim();
+  const prefix = `${name}=`;
+  return raw.startsWith(prefix) ? raw.slice(prefix.length).trim() : raw;
+}
+
+function buildEventKey(uniqueKey) {
+  return `event_key:${uniqueKey}`;
+}
+
+function serializeDetails(details) {
+  if (!details) {
+    return '';
+  }
+
+  if (typeof details === 'string') {
+    return details;
+  }
+
+  try {
+    return JSON.stringify(details);
+  } catch {
+    return String(details);
+  }
+}
+
+function buildProviderMessage(uniqueKey, details) {
+  const text = serializeDetails(details);
+  return text ? `${buildEventKey(uniqueKey)}\n${text}` : buildEventKey(uniqueKey);
+}
+
+function getProviderMessageId(data) {
+  return data?.sid || data?.id || data?.messageId || data?.message_id || null;
+}
+
+function mapTwilioDeliveryStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+
+  if (!normalized) {
+    return 'sent';
+  }
+
+  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+    return 'queued';
+  }
+
+  if (['sent', 'delivered', 'received', 'read'].includes(normalized)) {
+    return 'sent';
+  }
+
+  if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
+    return 'failed';
+  }
+
+  return 'sent';
+}
+
+function buildMessage(confirmedDate, confirmedTime, bookingProvider, bookingReference) {
+  const confirmedLabel = [confirmedDate || '', confirmedTime || ''].filter(Boolean).join(' ').trim();
+  let message = confirmedLabel
+    ? `Your strategy call is confirmed for ${confirmedLabel}. We look forward to speaking with you.`
+    : 'Your strategy call is confirmed. We look forward to speaking with you.';
+
+  if (bookingReference) {
+    message += ` Ref: ${bookingReference}.`;
+  } else if (bookingProvider) {
+    message += ` Via ${bookingProvider}.`;
+  }
+
+  message += ' - AssistantAI';
+  return message.slice(0, 160);
+}
+
+async function findExistingLog(base44, entityId, mobileNumber, uniqueKey) {
+  const existing = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: entityId,
+    event_type: 'booking_confirmed',
+    recipient_email: mobileNumber,
+    channel: 'sms',
+  }, '-created_date', 20);
+
+  return existing.find((item) => {
+    const providerMessage = typeof item.provider_message === 'string' ? item.provider_message : '';
+    const metadataUniqueKey = item.metadata?.unique_key;
+    const smsKind = item.metadata?.sms_kind;
+    return (providerMessage.includes(buildEventKey(uniqueKey)) || metadataUniqueKey === uniqueKey) && smsKind === 'customer_booking_confirmation';
+  }) || null;
+}
+
+async function sendTwilioSms(message, to) {
+  const accountSid = String(readSecretValue('TWILIO_ACCOUNT_SID') || '').trim();
+  const authToken = String(readSecretValue('TWILIO_AUTH_TOKEN') || '').trim();
+  const fromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
+  const destination = normalizePhone(to);
+
+  if (!accountSid || !authToken || !fromNumber || !destination) {
+    return {
+      status: 'not_configured',
+      details: 'Twilio credentials, from number, or destination number are missing.',
+      providerMessageId: null,
+      providerResponse: null,
+      providerStatus: null,
+      fromNumberUsed: fromNumber || null,
+    };
+  }
+
+  const body = new URLSearchParams({
+    From: fromNumber,
+    To: destination,
+    Body: message,
+  });
+
+  const auth = btoa(`${accountSid}:${authToken}`);
+  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  const resultText = await response.text();
+  let parsed = null;
+
+  try {
+    parsed = JSON.parse(resultText);
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    return {
+      status: 'failed',
+      details: parsed?.message || resultText || 'Twilio SMS send failed.',
+      providerMessageId: getProviderMessageId(parsed),
+      providerResponse: parsed || resultText || null,
+      providerStatus: parsed?.status || null,
+      fromNumberUsed: fromNumber,
+    };
+  }
+
+  return {
+    status: 'sent',
+    details: parsed?.status || 'Twilio SMS sent.',
+    providerMessageId: getProviderMessageId(parsed),
+    providerResponse: parsed || resultText || null,
+    providerStatus: parsed?.status || null,
+    fromNumberUsed: parsed?.from || fromNumber,
+  };
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const payload = await req.json();
+    const {
+      leadId,
+      clientAccountId = null,
+      fullName = '',
+      mobileNumber,
+      confirmedDate = '',
+      confirmedTime = '',
+      bookingProvider = '',
+      bookingReference = '',
+      actorEmail = null,
+      uniqueKey,
+    } = payload;
+
+    if (!leadId || !uniqueKey) {
+      return Response.json({ error: 'leadId and uniqueKey are required' }, { status: 400 });
+    }
+
+    const destination = normalizePhone(mobileNumber);
+    const message = buildMessage(confirmedDate, confirmedTime, bookingProvider, bookingReference);
+    const existing = await findExistingLog(base44, leadId, destination || null, uniqueKey);
+
+    if (existing) {
+      return Response.json({
+        success: true,
+        duplicate: true,
+        status: 'duplicate_skipped',
+        recipient: destination || null,
+      });
+    }
+
+    const metadata = {
+      unique_key: uniqueKey,
+      sms_kind: 'customer_booking_confirmation',
+      full_name: fullName || '',
+      confirmed_meeting_date: confirmedDate || '',
+      confirmed_meeting_time: confirmedTime || '',
+      booking_provider: bookingProvider || '',
+      booking_reference: bookingReference || '',
+    };
+
+    const record = await base44.asServiceRole.entities.NotificationLog.create({
+      event_type: 'booking_confirmed',
+      entity_name: 'Lead',
+      entity_id: leadId,
+      client_account_id: clientAccountId,
+      recipient_role: 'client',
+      recipient_email: destination || null,
+      channel: 'sms',
+      delivery_status: destination ? 'queued' : 'not_configured',
+      provider_name: 'Twilio',
+      provider_message: buildProviderMessage(uniqueKey),
+      title: 'Strategy call confirmed',
+      message,
+      triggered_at: new Date().toISOString(),
+      actor_email: actorEmail,
+      metadata,
+    });
+
+    if (!destination) {
+      await base44.asServiceRole.entities.NotificationLog.update(record.id, {
+        ...record,
+        delivery_status: 'not_configured',
+        provider_message: buildProviderMessage(uniqueKey, 'No mobile number available for booking confirmation SMS.'),
+      });
+
+      return Response.json({
+        success: true,
+        duplicate: false,
+        status: 'not_configured',
+        recipient: null,
+      });
+    }
+
+    try {
+      const smsResult = await sendTwilioSms(message, destination);
+      const deliveryStatus = smsResult.status === 'sent'
+        ? mapTwilioDeliveryStatus(smsResult.providerStatus)
+        : smsResult.status === 'not_configured'
+          ? 'not_configured'
+          : 'failed';
+
+      await base44.asServiceRole.entities.NotificationLog.update(record.id, {
+        ...record,
+        delivery_status: deliveryStatus,
+        provider_message: buildProviderMessage(uniqueKey, {
+          status: smsResult.status,
+          provider_status: smsResult.providerStatus,
+          error: smsResult.status === 'sent' ? null : smsResult.details,
+          provider_message_id: smsResult.providerMessageId,
+          provider_response: smsResult.providerResponse,
+          from_number_used: smsResult.fromNumberUsed,
+        }),
+        metadata: {
+          ...metadata,
+          sms_attempted: true,
+          sms_sent: smsResult.status === 'sent',
+          sms_error: smsResult.status === 'sent' ? null : smsResult.details,
+          sms_provider_message_id: smsResult.providerMessageId,
+          sms_provider_response: smsResult.providerResponse,
+          sms_from_number_used: smsResult.fromNumberUsed,
+        },
+      });
+
+      return Response.json({
+        success: true,
+        duplicate: false,
+        status: smsResult.status,
+        delivery_status: deliveryStatus,
+        recipient: destination,
+        provider_message_id: smsResult.providerMessageId,
+      });
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+
+      await base44.asServiceRole.entities.NotificationLog.update(record.id, {
+        ...record,
+        delivery_status: 'failed',
+        provider_message: buildProviderMessage(uniqueKey, {
+          status: 'failed',
+          error: errorMessage,
+        }),
+        metadata: {
+          ...metadata,
+          sms_attempted: true,
+          sms_sent: false,
+          sms_error: errorMessage,
+        },
+      });
+
+      return Response.json({
+        success: true,
+        duplicate: false,
+        status: 'failed',
+        recipient: destination,
+        error: errorMessage,
+      });
+    }
+  } catch (error) {
+    return Response.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
+});

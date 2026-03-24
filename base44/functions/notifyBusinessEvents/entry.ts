@@ -107,6 +107,14 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
   };
 }
 
+function buildCustomerBookingSmsKey(data) {
+  if (data?.booking_reference) {
+    return `customer_booking_confirmed:${data.id}:${sanitizeKeyPart(data.booking_reference)}`;
+  }
+
+  return `customer_booking_confirmed:${data.id}:${sanitizeKeyPart(data?.confirmed_meeting_date || 'unknown-date')}:${sanitizeKeyPart(data?.confirmed_meeting_time || 'unknown-time')}`;
+}
+
 function buildSmsMessage(def, data) {
   const leadName = data.full_name || data.business_name || 'Lead';
   const enquiryType = data.enquiry_type || 'general';
@@ -227,7 +235,7 @@ Deno.serve(async (req) => {
 
     for (const def of eventDefs) {
       const metadata = buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
-      const response = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+      const adminResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
         eventType: def.event_type,
         entityName,
         entityId: data.id,
@@ -241,7 +249,29 @@ Deno.serve(async (req) => {
         smsMessage: buildSmsMessage(def, data),
       });
 
-      results.push(response && typeof response === 'object' && 'data' in response ? response.data : response);
+      const resultEntry = {
+        event_type: def.logical_event_type || def.event_type,
+        admin_alert: adminResponse && typeof adminResponse === 'object' && 'data' in adminResponse ? adminResponse.data : adminResponse,
+      };
+
+      if (def.event_type === 'booking_confirmed') {
+        const customerResponse = await base44.asServiceRole.functions.invoke('sendCustomerBookingConfirmationSms', {
+          leadId: data.id,
+          clientAccountId: data.client_account_id || null,
+          fullName: data.full_name || data.business_name || '',
+          mobileNumber: data.mobile_number || '',
+          confirmedDate: data.confirmed_meeting_date || '',
+          confirmedTime: data.confirmed_meeting_time || '',
+          bookingProvider: data.booking_provider || '',
+          bookingReference: data.booking_reference || '',
+          actorEmail,
+          uniqueKey: buildCustomerBookingSmsKey(data),
+        });
+
+        resultEntry.customer_confirmation_sms = customerResponse && typeof customerResponse === 'object' && 'data' in customerResponse ? customerResponse.data : customerResponse;
+      }
+
+      results.push(resultEntry);
     }
 
     return Response.json({
