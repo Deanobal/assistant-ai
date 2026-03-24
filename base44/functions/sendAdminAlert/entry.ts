@@ -576,37 +576,70 @@ Deno.serve(async (req) => {
       };
     } else {
       smsDiagnostics.attempted = true;
-      const smsResult = await sendTwilioSms(textMessage, configuredAdminPhone);
-      smsDiagnostics.sent = smsResult.status === 'sent';
-      smsDiagnostics.error = smsResult.status === 'sent' ? null : smsResult.details;
-      smsDiagnostics.providerMessageId = smsResult.providerMessageId || null;
-      smsDiagnostics.providerResponse = smsResult.providerResponse || null;
-      smsDiagnostics.fromAddress = smsResult.fromNumberUsed || smsDiagnostics.fromAddress || null;
-      smsDiagnostics.fromNumberUsed = smsResult.fromNumberUsed || smsDiagnostics.fromNumberUsed || null;
-      smsDiagnostics.configSource = smsResult.configSource || smsDiagnostics.configSource || null;
-      await updateLog(base44, smsResultLog.record, {
-        delivery_status: smsResult.status === 'sent' ? 'sent' : smsResult.status === 'not_configured' ? 'not_configured' : 'failed',
-        provider_message: buildProviderMessage(uniqueKey, {
+
+      try {
+        const smsResult = await sendTwilioSms(textMessage, configuredAdminPhone);
+        const smsDeliveryStatus = smsResult.status === 'sent'
+          ? mapTwilioDeliveryStatus(smsResult.providerStatus)
+          : smsResult.status === 'not_configured'
+            ? 'not_configured'
+            : 'failed';
+
+        smsDiagnostics.sent = smsResult.status === 'sent';
+        smsDiagnostics.error = smsResult.status === 'sent' ? null : smsResult.details;
+        smsDiagnostics.providerMessageId = smsResult.providerMessageId || null;
+        smsDiagnostics.providerResponse = smsResult.providerResponse || null;
+        smsDiagnostics.fromAddress = smsResult.fromNumberUsed || smsDiagnostics.fromAddress || null;
+        smsDiagnostics.fromNumberUsed = smsResult.fromNumberUsed || smsDiagnostics.fromNumberUsed || null;
+        smsDiagnostics.configSource = smsResult.configSource || smsDiagnostics.configSource || null;
+        await updateLog(base44, smsResultLog.record, {
+          delivery_status: smsDeliveryStatus,
+          provider_message: buildProviderMessage(uniqueKey, {
+            status: smsResult.status,
+            provider_status: smsResult.providerStatus || null,
+            error: smsDiagnostics.error,
+            provider_message_id: smsDiagnostics.providerMessageId,
+            provider_response: smsDiagnostics.providerResponse,
+            from_number_used: smsDiagnostics.fromNumberUsed,
+            config_source: smsDiagnostics.configSource,
+          }),
+          metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
+        });
+        results.sms = {
           status: smsResult.status,
+          attempted: true,
+          sent: smsDiagnostics.sent,
+          recipient: configuredAdminPhone,
           error: smsDiagnostics.error,
           provider_message_id: smsDiagnostics.providerMessageId,
           provider_response: smsDiagnostics.providerResponse,
           from_number_used: smsDiagnostics.fromNumberUsed,
           config_source: smsDiagnostics.configSource,
-        }),
-        metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
-      });
-      results.sms = {
-        status: smsResult.status,
-        attempted: true,
-        sent: smsDiagnostics.sent,
-        recipient: configuredAdminPhone,
-        error: smsDiagnostics.error,
-        provider_message_id: smsDiagnostics.providerMessageId,
-        provider_response: smsDiagnostics.providerResponse,
-        from_number_used: smsDiagnostics.fromNumberUsed,
-        config_source: smsDiagnostics.configSource,
-      };
+        };
+      } catch (error) {
+        smsDiagnostics.error = getErrorMessage(error);
+        await updateLog(base44, smsResultLog.record, {
+          delivery_status: 'failed',
+          provider_message: buildProviderMessage(uniqueKey, {
+            status: 'failed',
+            error: smsDiagnostics.error,
+            from_number_used: smsDiagnostics.fromNumberUsed,
+            config_source: smsDiagnostics.configSource,
+          }),
+          metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
+        });
+        results.sms = {
+          status: 'failed',
+          attempted: true,
+          sent: false,
+          recipient: configuredAdminPhone,
+          error: smsDiagnostics.error,
+          provider_message_id: null,
+          provider_response: null,
+          from_number_used: smsDiagnostics.fromNumberUsed,
+          config_source: smsDiagnostics.configSource,
+        };
+      }
     }
 
     const duplicate = results.in_app === 'duplicate_skipped'
