@@ -137,6 +137,28 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
   };
 }
 
+function mapTwilioDeliveryStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+
+  if (!normalized) {
+    return 'sent';
+  }
+
+  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+    return 'queued';
+  }
+
+  if (['sent', 'delivered', 'received', 'read'].includes(normalized)) {
+    return 'sent';
+  }
+
+  if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
+    return 'failed';
+  }
+
+  return 'sent';
+}
+
 async function findExistingLog(base44, payload, uniqueKey) {
   const existing = await base44.asServiceRole.entities.NotificationLog.filter({
     entity_id: payload.entity_id,
