@@ -108,18 +108,17 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
 }
 
 function buildSmsMessage(def, data) {
-  const eventLabels = {
-    new_lead_created: 'new lead',
-    strategy_call_requested: 'strategy call request',
-    booking_confirmed: 'booking confirmed',
-    booking_request_failed: 'booking failed',
-  };
+  const leadName = data.full_name || data.business_name || 'Lead';
+  const enquiryType = data.enquiry_type || 'general';
+  const eventLabel = def.event_type === 'booking_confirmed'
+    ? 'booking confirmed'
+    : def.event_type === 'booking_request_failed'
+      ? 'booking failed'
+      : def.event_type === 'strategy_call_requested'
+        ? 'strategy call'
+        : 'new lead';
 
-  const leadName = data.full_name || data.business_name || 'Unknown';
-  const phone = data.mobile_number || 'No phone';
-  const eventLabel = eventLabels[def.event_type] || def.event_type;
-
-  return `${def.priority === 'high' ? 'High priority: ' : ''}${leadName} - ${phone} - ${eventLabel}`.slice(0, 160);
+  return `${def.priority === 'high' ? 'HIGH' : 'ALERT'}: ${enquiryType} | ${leadName} | ${eventLabel}`.slice(0, 160);
 }
 
 function buildEventPayload(entityName, eventType, data, oldData) {

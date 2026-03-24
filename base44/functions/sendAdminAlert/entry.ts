@@ -91,28 +91,92 @@ function formatMeetingDateTime(date, time) {
   return [date || '', time || ''].filter(Boolean).join(' ');
 }
 
+function formatPhoneForDisplay(value) {
+  const phone = String(value || '').trim();
+
+  if (!phone) {
+    return '';
+  }
+
+  if (phone.startsWith('+61') && phone.length === 12) {
+    return `0${phone.slice(3, 4)} ${phone.slice(4, 8)} ${phone.slice(8)}`;
+  }
+
+  return phone;
+}
+
+function buildAdminUrl(path) {
+  const trimmedPath = String(path || '').trim();
+
+  if (!trimmedPath) {
+    return '';
+  }
+
+  const appId = String(Deno.env.get('BASE44_APP_ID') || '').trim();
+  if (!appId) {
+    return trimmedPath;
+  }
+
+  return `https://app.base44.com/apps/${appId}${trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`}`;
+}
+
 function buildEmailBody(title, message, metadata, normalizedEventType, priority) {
-  return [
-    title,
-    '',
-    message,
-    '',
-    `Event type: ${normalizedEventType}`,
-    `Priority: ${priority}`,
-    `Full name: ${metadata.full_name || ''}`,
-    `Business name: ${metadata.business_name || ''}`,
-    `Email: ${metadata.email || ''}`,
-    `Mobile number: ${metadata.mobile_number || ''}`,
-    `Enquiry type: ${metadata.enquiry_type || metadata.enquiry_category || ''}`,
-    `Industry: ${metadata.industry || ''}`,
-    `Source page: ${metadata.source_page || ''}`,
-    `Preferred meeting: ${formatMeetingDateTime(metadata.preferred_meeting_date, metadata.preferred_meeting_time)}`,
-    `Confirmed meeting: ${formatMeetingDateTime(metadata.confirmed_meeting_date, metadata.confirmed_meeting_time)}`,
-    `Booking provider: ${metadata.booking_provider || ''}`,
-    `Booking reference: ${metadata.booking_reference || ''}`,
-    `Message preview: ${metadata.message_preview || ''}`,
-    `Admin link: ${metadata.admin_link || ''}`,
-  ].join('\n');
+  const enquiryType = metadata.enquiry_type || metadata.enquiry_category || '';
+  const leadName = metadata.full_name || metadata.business_name || 'New lead';
+  const businessName = metadata.business_name || '';
+  const leadPhone = formatPhoneForDisplay(metadata.mobile_number);
+  const adminUrl = buildAdminUrl(metadata.admin_link);
+  const phoneHref = metadata.mobile_number ? `tel:${String(metadata.mobile_number).replace(/\s+/g, '')}` : '';
+  const priorityLabel = priority === 'high' || priority === 'urgent' ? 'HIGH PRIORITY' : 'Standard priority';
+  const confirmedMeeting = formatMeetingDateTime(metadata.confirmed_meeting_date, metadata.confirmed_meeting_time);
+  const preferredMeeting = formatMeetingDateTime(metadata.preferred_meeting_date, metadata.preferred_meeting_time);
+
+  return {
+    text: [
+      `${priorityLabel} — ${title}`,
+      message,
+      '',
+      `Lead: ${leadName}`,
+      businessName ? `Business: ${businessName}` : null,
+      enquiryType ? `Enquiry: ${enquiryType}` : null,
+      leadPhone ? `Call now: ${leadPhone}` : null,
+      metadata.email ? `Email: ${metadata.email}` : null,
+      confirmedMeeting ? `Confirmed: ${confirmedMeeting}` : null,
+      !confirmedMeeting && preferredMeeting ? `Preferred: ${preferredMeeting}` : null,
+      adminUrl ? `Open lead: ${adminUrl}` : null,
+      `Event: ${normalizedEventType}`,
+    ].filter(Boolean).join('\n'),
+    html: [
+      '<div style="font-family:Arial,sans-serif;line-height:1.45;color:#0f172a;padding:12px 0;">',
+      `<div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${priority === 'high' || priority === 'urgent' ? '#b91c1c' : '#475569'};margin-bottom:8px;">${priorityLabel}</div>`,
+      `<div style="font-size:18px;font-weight:700;margin-bottom:8px;">${title}</div>`,
+      `<div style="font-size:14px;color:#334155;margin-bottom:14px;">${message}</div>`,
+      '<div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#f8fafc;">',
+      `<div style="font-size:16px;font-weight:700;margin-bottom:8px;">${leadName}</div>`,
+      enquiryType ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Enquiry:</strong> ${enquiryType}</div>` : '',
+      businessName ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Business:</strong> ${businessName}</div>` : '',
+      metadata.email ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Email:</strong> <a href="mailto:${metadata.email}" style="color:#2563eb;text-decoration:none;">${metadata.email}</a></div>` : '',
+      leadPhone ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Call:</strong> <a href="${phoneHref}" style="color:#2563eb;text-decoration:none;font-weight:700;">${leadPhone}</a></div>` : '',
+      confirmedMeeting ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Confirmed:</strong> ${confirmedMeeting}</div>` : '',
+      !confirmedMeeting && preferredMeeting ? `<div style="font-size:14px;margin-bottom:6px;"><strong>Preferred:</strong> ${preferredMeeting}</div>` : '',
+      '</div>',
+      adminUrl ? `<div style="margin-top:14px;"><a href="${adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:700;">Open Lead in Admin</a></div>` : '',
+      '</div>',
+    ].join(''),
+  };
+}
+
+function buildSmsAlertMessage(title, message, metadata, priority) {
+  const leadName = metadata?.full_name || metadata?.business_name || 'Lead';
+  const enquiryType = metadata?.enquiry_type || metadata?.enquiry_category || 'general';
+  const priorityPrefix = priority === 'high' || priority === 'urgent' ? 'HIGH' : 'ALERT';
+  const fallbackMessage = String(message || title || '').trim();
+  const base = `${priorityPrefix}: ${enquiryType} | ${leadName}`;
+  const body = fallbackMessage && !fallbackMessage.toLowerCase().includes(String(enquiryType).toLowerCase())
+    ? `${base} | ${fallbackMessage}`
+    : base;
+
+  return body.slice(0, 160);
 }
 
 function getProviderMessageId(data) {
@@ -221,7 +285,7 @@ function resolveEmailRecipient(configuredEmail) {
   };
 }
 
-async function sendResendEmail(to, subject, text) {
+async function sendResendEmail(to, subject, body) {
   const apiKey = readSecretValue('RESEND_API_KEY');
   const fromEmail = readSecretValue('RESEND_FROM_EMAIL');
   const destination = normalizeEmail(to);
@@ -246,7 +310,8 @@ async function sendResendEmail(to, subject, text) {
       from: fromEmail,
       to: [destination],
       subject,
-      text,
+      text: body.text,
+      html: body.html,
     }),
   });
 
@@ -381,8 +446,9 @@ Deno.serve(async (req) => {
     const emailRecipient = resolveEmailRecipient(configuredAdminEmail);
     const triggeredAt = new Date().toISOString();
     const subject = priority === 'high' || priority === 'urgent' ? `[High Priority] ${title}` : title;
-    const textMessage = (smsMessage || `${title}: ${message}`).slice(0, 160);
     const alertMetadata = buildAlertMetadata(metadata, normalizedEventType, uniqueKey, priority);
+    const emailBody = buildEmailBody(title, message, alertMetadata, normalizedEventType, priority);
+    const textMessage = buildSmsAlertMessage(title, smsMessage || message, alertMetadata, priority);
 
     const results = { in_app: null, email: null, sms: null };
 
@@ -469,7 +535,7 @@ Deno.serve(async (req) => {
         const resendResult = await sendResendEmail(
           emailRecipient.actualRecipient,
           subject,
-          buildEmailBody(title, message, alertMetadata, normalizedEventType, priority),
+          emailBody,
         );
         emailDiagnostics.sent = resendResult.status === 'sent';
         emailDiagnostics.error = resendResult.status === 'sent' ? null : resendResult.details;
