@@ -58,14 +58,14 @@ Deno.serve(async (req) => {
       },
     });
 
-    const matchedResponse = await base44.functions.invoke('twilioInboundSms', {
+    const matchedResponse = await base44.asServiceRole.functions.invoke('twilioInboundSms', {
       From: phone,
       To: '+12603059865',
       Body: 'YES call me tomorrow at 3pm',
       MessageSid: `audit-match-${stamp}`,
     });
 
-    const unmatchedResponse = await base44.functions.invoke('twilioInboundSms', {
+    const unmatchedResponse = await base44.asServiceRole.functions.invoke('twilioInboundSms', {
       From: '+61411111111',
       To: '+12603059865',
       Body: 'Can you call me?',
