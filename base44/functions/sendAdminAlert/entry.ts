@@ -484,6 +484,7 @@ Deno.serve(async (req) => {
     const emailDiagnostics = {
       attempted: false,
       sent: false,
+      deliveryStatus: null,
       error: null,
       providerMessageId: null,
       providerResponse: null,
@@ -515,14 +516,19 @@ Deno.serve(async (req) => {
     if (emailResult.isDuplicate) {
       results.email = {
         status: 'duplicate_skipped',
+        delivery_status: 'duplicate_skipped',
         attempted: false,
         sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: emailRecipient.actualRecipient || null,
         error: null,
         provider: 'resend',
         from_address: resendFromEmail || null,
       };
     } else if (!emailRecipient.actualRecipient) {
+      emailDiagnostics.deliveryStatus = 'not_configured';
       emailDiagnostics.error = emailRecipient.fallbackReason || 'No valid admin email recipient available.';
       await updateLog(base44, emailResult.record, {
         delivery_status: 'not_configured',
@@ -531,8 +537,12 @@ Deno.serve(async (req) => {
       });
       results.email = {
         status: 'not_configured',
+        delivery_status: 'not_configured',
         attempted: false,
         sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: null,
         error: emailDiagnostics.error,
         provider: 'resend',
@@ -547,15 +557,17 @@ Deno.serve(async (req) => {
           subject,
           emailBody,
         );
-        emailDiagnostics.sent = resendResult.status === 'sent';
-        emailDiagnostics.error = resendResult.status === 'sent' ? null : resendResult.details;
+        emailDiagnostics.deliveryStatus = resendResult.status;
+        emailDiagnostics.sent = isProviderAcceptanceStatus(resendResult.status);
+        emailDiagnostics.error = resendResult.status === 'failed' ? resendResult.details : null;
         emailDiagnostics.providerMessageId = resendResult.providerMessageId || null;
         emailDiagnostics.providerResponse = resendResult.providerResponse || null;
         emailDiagnostics.fromAddress = resendResult.fromEmail || emailDiagnostics.fromAddress || null;
         await updateLog(base44, emailResult.record, {
-          delivery_status: resendResult.status === 'sent' ? 'sent' : resendResult.status === 'not_configured' ? 'not_configured' : 'failed',
+          delivery_status: resendResult.status,
           provider_message: buildProviderMessage(uniqueKey, {
             status: resendResult.status,
+            delivery_status: resendResult.status,
             error: emailDiagnostics.error,
             provider_message_id: emailDiagnostics.providerMessageId,
             provider_response: emailDiagnostics.providerResponse,
@@ -565,8 +577,12 @@ Deno.serve(async (req) => {
         });
         results.email = {
           status: resendResult.status,
+          delivery_status: resendResult.status,
           attempted: true,
           sent: emailDiagnostics.sent,
+          sent_definition: 'provider acceptance only',
+          provider_accepted: resendResult.status === 'provider_accepted' || resendResult.status === 'queued' || resendResult.status === 'delivered',
+          delivered: resendResult.status === 'delivered',
           recipient: emailRecipient.actualRecipient,
           error: emailDiagnostics.error,
           provider_message_id: emailDiagnostics.providerMessageId,
@@ -574,11 +590,13 @@ Deno.serve(async (req) => {
           from_address: emailDiagnostics.fromAddress,
         };
       } catch (error) {
+        emailDiagnostics.deliveryStatus = 'failed';
         emailDiagnostics.error = getErrorMessage(error);
         await updateLog(base44, emailResult.record, {
           delivery_status: 'failed',
           provider_message: buildProviderMessage(uniqueKey, {
             status: 'failed',
+            delivery_status: 'failed',
             error: emailDiagnostics.error,
             from_address: emailDiagnostics.fromAddress,
           }),
@@ -586,8 +604,12 @@ Deno.serve(async (req) => {
         });
         results.email = {
           status: 'failed',
+          delivery_status: 'failed',
           attempted: true,
           sent: false,
+          sent_definition: 'provider acceptance only',
+          provider_accepted: false,
+          delivered: false,
           recipient: emailRecipient.actualRecipient,
           error: emailDiagnostics.error,
           fallback_reason: emailRecipient.fallbackReason,
@@ -601,6 +623,7 @@ Deno.serve(async (req) => {
     const smsDiagnostics = {
       attempted: false,
       sent: false,
+      deliveryStatus: null,
       error: null,
       providerMessageId: null,
       providerResponse: null,
@@ -632,8 +655,19 @@ Deno.serve(async (req) => {
     }, uniqueKey);
 
     if (smsResultLog.isDuplicate) {
-      results.sms = { status: 'duplicate_skipped', attempted: false, sent: false, recipient: configuredAdminPhone || null, error: null };
+      results.sms = {
+        status: 'duplicate_skipped',
+        delivery_status: 'duplicate_skipped',
+        attempted: false,
+        sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
+        recipient: configuredAdminPhone || null,
+        error: null,
+      };
     } else if (!configuredAdminPhone) {
+      smsDiagnostics.deliveryStatus = 'not_configured';
       smsDiagnostics.error = smsDiagnostics.fallbackReason;
       await updateLog(base44, smsResultLog.record, {
         delivery_status: 'not_configured',
@@ -642,8 +676,12 @@ Deno.serve(async (req) => {
       });
       results.sms = {
         status: 'not_configured',
+        delivery_status: 'not_configured',
         attempted: false,
         sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: null,
         error: smsDiagnostics.error,
         provider_response: null,
@@ -655,14 +693,11 @@ Deno.serve(async (req) => {
 
       try {
         const smsResult = await sendTwilioSms(textMessage, configuredAdminPhone);
-        const smsDeliveryStatus = smsResult.status === 'sent'
-          ? mapTwilioDeliveryStatus(smsResult.providerStatus)
-          : smsResult.status === 'not_configured'
-            ? 'not_configured'
-            : 'failed';
+        const smsDeliveryStatus = smsResult.status;
 
-        smsDiagnostics.sent = smsResult.status === 'sent';
-        smsDiagnostics.error = smsResult.status === 'sent' ? null : smsResult.details;
+        smsDiagnostics.deliveryStatus = smsDeliveryStatus;
+        smsDiagnostics.sent = isProviderAcceptanceStatus(smsDeliveryStatus);
+        smsDiagnostics.error = smsDeliveryStatus === 'failed' ? smsResult.details : null;
         smsDiagnostics.providerMessageId = smsResult.providerMessageId || null;
         smsDiagnostics.providerResponse = smsResult.providerResponse || null;
         smsDiagnostics.fromAddress = smsResult.fromNumberUsed || smsDiagnostics.fromAddress || null;
@@ -672,6 +707,7 @@ Deno.serve(async (req) => {
           delivery_status: smsDeliveryStatus,
           provider_message: buildProviderMessage(uniqueKey, {
             status: smsResult.status,
+            delivery_status: smsDeliveryStatus,
             provider_status: smsResult.providerStatus || null,
             error: smsDiagnostics.error,
             provider_message_id: smsDiagnostics.providerMessageId,
@@ -683,8 +719,12 @@ Deno.serve(async (req) => {
         });
         results.sms = {
           status: smsResult.status,
+          delivery_status: smsDeliveryStatus,
           attempted: true,
           sent: smsDiagnostics.sent,
+          sent_definition: 'provider acceptance only',
+          provider_accepted: smsDeliveryStatus === 'provider_accepted' || smsDeliveryStatus === 'queued' || smsDeliveryStatus === 'delivered',
+          delivered: smsDeliveryStatus === 'delivered',
           recipient: configuredAdminPhone,
           error: smsDiagnostics.error,
           provider_message_id: smsDiagnostics.providerMessageId,
@@ -693,11 +733,13 @@ Deno.serve(async (req) => {
           config_source: smsDiagnostics.configSource,
         };
       } catch (error) {
+        smsDiagnostics.deliveryStatus = 'failed';
         smsDiagnostics.error = getErrorMessage(error);
         await updateLog(base44, smsResultLog.record, {
           delivery_status: 'failed',
           provider_message: buildProviderMessage(uniqueKey, {
             status: 'failed',
+            delivery_status: 'failed',
             error: smsDiagnostics.error,
             from_number_used: smsDiagnostics.fromNumberUsed,
             config_source: smsDiagnostics.configSource,
@@ -706,8 +748,12 @@ Deno.serve(async (req) => {
         });
         results.sms = {
           status: 'failed',
+          delivery_status: 'failed',
           attempted: true,
           sent: false,
+          sent_definition: 'provider acceptance only',
+          provider_accepted: false,
+          delivered: false,
           recipient: configuredAdminPhone,
           error: smsDiagnostics.error,
           provider_message_id: null,
