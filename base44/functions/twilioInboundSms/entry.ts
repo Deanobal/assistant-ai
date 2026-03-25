@@ -211,7 +211,17 @@ async function findLeadMatch(base44, fromNumber) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const payload = await parsePayload(req);
+    const { contentType, payload } = await parseRequest(req);
+
+    if (!contentType.includes('application/json')) {
+      const providedSignature = normalizeValue(req.headers.get('x-twilio-signature'));
+      const expectedSignature = await signTwilioPayload(req.url, payload);
+
+      if (!providedSignature || !expectedSignature || providedSignature !== expectedSignature) {
+        return Response.json({ error: 'Invalid Twilio signature' }, { status: 403 });
+      }
+    }
+
     const fromNumber = normalizePhone(payload.From || payload.from || payload.sender_number);
     const toNumber = normalizePhone(payload.To || payload.to || payload.receiver_number);
     const messageBody = String(payload.Body || payload.body || '').trim();
