@@ -130,6 +130,13 @@ function buildFunctionUrl(requestUrl, functionName) {
   return url.toString();
 }
 
+function formatHumanLabel(value, fallback) {
+  const raw = String(value || '').trim();
+  if (!raw) return fallback;
+  if (raw === 'general') return 'General enquiry';
+  return raw.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function buildAlertPresentation(title, message, metadata, priority) {
   const leadName = metadata?.full_name || metadata?.business_name || 'New contact';
   const businessName = metadata?.business_name || '';
@@ -141,6 +148,9 @@ function buildAlertPresentation(title, message, metadata, priority) {
   const phoneHref = metadata?.mobile_number ? `tel:${String(metadata.mobile_number).replace(/\s+/g, '')}` : '';
   const priorityLabel = priority === 'high' || priority === 'urgent' ? 'High Priority' : 'Needs Review';
   const ctaLabel = metadata?.cta_label || (metadata?.conversation_id ? 'Reply Now' : 'Open Item');
+  const categoryLabel = formatHumanLabel(metadata?.enquiry_category, 'General enquiry');
+  const urgencyLabel = formatHumanLabel(metadata?.urgency_level, 'Normal');
+  const recommendedAction = formatHumanLabel(metadata?.recommended_action, metadata?.mobile_number ? 'Call lead' : 'Reply now');
 
   return {
     leadName,
@@ -153,32 +163,38 @@ function buildAlertPresentation(title, message, metadata, priority) {
     phoneHref,
     priorityLabel,
     ctaLabel,
+    categoryLabel,
+    urgencyLabel,
+    recommendedAction,
   };
 }
 
 function buildEmailBody(title, message, metadata, normalizedEventType, priority) {
   const alert = buildAlertPresentation(title, message, metadata, priority);
-  const enquiryType = metadata.enquiry_type || metadata.enquiry_category || '';
-  const confirmedMeeting = formatMeetingDateTime(metadata.confirmed_meeting_date, metadata.confirmed_meeting_time);
-  const preferredMeeting = formatMeetingDateTime(metadata.preferred_meeting_date, metadata.preferred_meeting_time);
 
   return {
     text: [
       title,
       `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
       alert.summary || message,
+      `Category: ${alert.categoryLabel}`,
+      `Urgency: ${alert.urgencyLabel}`,
       `Waiting: ${alert.waitLabel}`,
-      alert.adminUrl ? `Link:\n${alert.adminUrl}` : null,
+      `Next action: ${alert.recommendedAction}`,
+      alert.adminUrl ? `Reply now:\n${alert.adminUrl}` : null,
     ].filter(Boolean).join('\n'),
     html: [
       '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;padding:12px 0;">',
       `<div style="font-size:22px;font-weight:700;margin-bottom:10px;">${title}</div>`,
       `<div style="font-size:15px;color:#334155;margin-bottom:8px;">${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}</div>`,
       '<div style="border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;">',
-      `<div style="font-size:15px;font-weight:600;margin-bottom:8px;">${alert.summary || message}</div>`,
-      `<div style="font-size:14px;color:#475569;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`,
+      `<div style="font-size:15px;font-weight:600;margin-bottom:10px;">${alert.summary || message}</div>`,
+      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Category:</strong> ${alert.categoryLabel}</div>`,
+      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Urgency:</strong> ${alert.urgencyLabel}</div>`,
+      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`,
+      `<div style="font-size:14px;color:#475569;"><strong>Next action:</strong> ${alert.recommendedAction}</div>`,
       '</div>',
-      alert.adminUrl ? `<div style="margin-top:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">Link</div><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">Open Conversation</a></div>` : '',
+      alert.adminUrl ? `<div style="margin-top:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">Reply now</div><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">Open Conversation</a></div>` : '',
       '</div>',
     ].join(''),
   };
@@ -190,8 +206,11 @@ function buildSmsAlertMessage(title, message, metadata, priority) {
     title,
     `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
     alert.summary || message,
+    `Category: ${alert.categoryLabel}`,
+    `Urgency: ${alert.urgencyLabel}`,
     `Waiting: ${alert.waitLabel}`,
-    alert.adminUrl ? `Link:\n${alert.adminUrl}` : null,
+    `Next action: ${alert.recommendedAction}`,
+    alert.adminUrl ? `Reply now:\n${alert.adminUrl}` : null,
   ].filter(Boolean).join('\n').slice(0, 480);
 }
 

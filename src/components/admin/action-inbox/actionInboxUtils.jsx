@@ -48,6 +48,14 @@ export const channelStyles = {
   Support: 'border-slate-700 bg-slate-800 text-slate-200',
 };
 
+export const triageStyles = {
+  needs_reply_now: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+  high_intent: 'border-violet-500/30 bg-violet-500/10 text-violet-200',
+  waiting_on_admin: 'border-orange-500/30 bg-orange-500/10 text-orange-200',
+  waiting_on_customer: 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300',
+  resolved: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
+};
+
 const attentionOrder = { overdue: 0, high_intent: 1, needs_reply: 2, normal: 3 };
 const heatOrder = { hot: 0, warm: 1, cold: 2 };
 
@@ -166,11 +174,13 @@ function getAttentionState({ overdue, needsReply, intentLevel }) {
   return 'normal';
 }
 
-function getRecommendedNextAction(lead, intentLevel, hasPhone) {
+function getRecommendedNextAction(lead, intentLevel, hasPhone, category = 'general', status = 'open') {
   if (lead?.next_action) return lead.next_action;
+  if (status === 'waiting_on_customer') return 'Wait for customer';
   if (lead?.booking_status === 'requested') return 'Send booking link';
-  if (lead?.booking_status === 'confirmed') return 'Confirm time';
-  if (intentLevel === 'HIGH INTENT' && hasPhone) return 'Call now';
+  if (lead?.booking_status === 'confirmed') return 'Resolve after answering';
+  if ((category === 'sales' || intentLevel === 'HIGH INTENT') && hasPhone) return 'Call lead';
+  if (category === 'sales') return 'Reply now';
   if (intentLevel === 'HIGH INTENT') return 'Reply now';
   if (intentLevel === 'MEDIUM') return 'Ask qualifying question';
   return 'Send short reply';
@@ -192,8 +202,17 @@ function buildSnoozeLabel(conversation) {
   return `Snoozed until ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, logId = null, isSnoozed = false, snoozeLabel = null }) {
+function getTriageState(status, needsReply, intentLevel) {
+  if (['resolved', 'closed'].includes(status)) return 'resolved';
+  if (intentLevel === 'HIGH INTENT' && needsReply) return 'high_intent';
+  if (needsReply) return 'needs_reply_now';
+  if (status === 'waiting_on_customer') return 'waiting_on_customer';
+  return 'waiting_on_admin';
+}
+
+function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, category = 'general', urgency = 'normal', aiSummary = '', logId = null, isSnoozed = false, snoozeLabel = null }) {
   const overdue = needsReply && getSlaState(waitMinutes) === 'overdue';
+  const triageState = getTriageState(status, needsReply, intentLevel);
   return {
     id,
     kind,
@@ -221,6 +240,10 @@ function buildBaseAction({ id, kind, entityId, name, business, channel, intentSu
     email,
     sourcePage,
     status,
+    triageState,
+    category,
+    urgency,
+    aiSummary,
     primaryLabel,
     secondaryUrl,
     actionUrl,
@@ -270,11 +293,14 @@ export function buildConversationAction(conversation, leadsById, adminsById, cur
     status: cleanText(conversation.status, 'open'),
     primaryLabel: 'Reply Now',
     secondaryUrl: conversation.linked_lead_id ? `/LeadDetail?id=${conversation.linked_lead_id}` : null,
-    actionUrl: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
+    actionUrl: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}&focusReply=1`,
     bookingStatus: getBookingStatus(linkedLead),
     lastActivity: formatActivity(linkedLead?.last_activity_at || conversation.last_message_at || conversation.updated_at),
     intentLevel,
-    recommendedNextAction: getRecommendedNextAction(linkedLead, intentLevel, !!conversation.visitor_phone),
+    recommendedNextAction: getRecommendedNextAction(linkedLead, intentLevel, !!conversation.visitor_phone, conversation.enquiry_category, conversation.status),
+    category: cleanText(conversation.enquiry_category, 'general'),
+    urgency: cleanText(conversation.urgency_level || conversation.priority, 'normal'),
+    aiSummary: cleanText(conversation.ai_summary, ''),
     isSnoozed,
     snoozeLabel: buildSnoozeLabel(conversation),
   });

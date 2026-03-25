@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     const matchedLead = matchedLeads.length === 1 ? matchedLeads[0] : null;
     const aiResponse = await base44.asServiceRole.functions.invoke('supportAiAssistant', {
       visitorName: name,
+      visitorEmail: email,
+      visitorPhone: mobile || '',
       subject,
       latestMessage: message,
       sourcePage: sourcePage || '/',
@@ -159,6 +161,7 @@ Deno.serve(async (req) => {
           wait_label: 'Just now',
           channel_label: 'Chat',
           cta_label: 'Reply Now',
+          recommended_action: mobile ? 'Call lead' : 'Reply now',
           source_page: sourcePage || '/',
           ai_mode: aiResult.ai_mode,
           ai_handover_reason: aiResult.ai_handover_reason || null,

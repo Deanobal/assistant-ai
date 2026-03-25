@@ -19,6 +19,20 @@ const pricingKeywords = ['pricing', 'price', 'cost', 'quote'];
 const readyToBookKeywords = ['ready to book', 'ready to start', 'book now', 'get started now', 'sign me up', 'start now'];
 const callMeKeywords = ['call me', 'call me back', 'give me a call', 'ring me'];
 const urgentHelpKeywords = ['urgent help', 'need urgent help', 'help asap', 'asap', 'urgent', 'right now'];
+const frustrationKeywords = ['frustrated', 'annoyed', 'upset', 'this is ridiculous', 'still not working', 'unhappy'];
+const humanInterventionKeywords = [
+  'billing issue',
+  'billing problem',
+  'invoice issue',
+  'payment failed',
+  'cannot access',
+  'cant access',
+  'locked out',
+  'portal not working',
+  'my account',
+  'need someone to do it',
+  'please handle this for me'
+];
 const aiFailureKeywords = [
   'that did not help',
   'that didnt help',
@@ -161,6 +175,8 @@ function buildForcedRouting(text, priorMessages = []) {
   const keywordCategory = detectKeywordCategory(text);
   const hasHighIntent = includesAny(text, [...pricingKeywords, ...readyToBookKeywords, ...callMeKeywords]);
   const hasUrgentHelp = includesAny(text, urgentHelpKeywords);
+  const hasFrustration = includesAny(text, frustrationKeywords);
+  const requiresHumanIntervention = includesAny(text, humanInterventionKeywords);
 
   if (includesAny(text, explicitHumanKeywords)) {
     return {
@@ -202,6 +218,26 @@ function buildForcedRouting(text, priorMessages = []) {
     };
   }
 
+  if (hasFrustration) {
+    return {
+      classification_source: 'deterministic_frustration',
+      ai_mode: 'human_required',
+      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
+      urgency_level: 'high',
+      ai_handover_reason: 'Visitor sounds unhappy and needs a human follow-up.',
+    };
+  }
+
+  if (requiresHumanIntervention) {
+    return {
+      classification_source: 'deterministic_human_intervention',
+      ai_mode: 'human_required',
+      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
+      urgency_level: keywordCategory === 'onboarding' ? 'normal' : 'high',
+      ai_handover_reason: 'This issue likely needs a human to review or action directly.',
+    };
+  }
+
   if (keywordCategory === 'onboarding') {
     return {
       classification_source: 'deterministic_onboarding',
@@ -239,15 +275,15 @@ function ensureAllowed(value, allowedValues, fallback) {
   return allowedValues.includes(value) ? value : fallback;
 }
 
-function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverReason, rawText }) {
+function buildFallbackResponse({ visitorName, visitorEmail, visitorPhone, aiMode, enquiryCategory, handoverReason, rawText }) {
   const greeting = visitorName ? `Hi ${visitorName},` : 'Hi,';
 
   if (aiMode === 'escalated') {
-    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly. If useful, please share what changed, what is affected, and when it started.`;
+    return `${greeting} I’m AssistantAI Assistant. I’m passing this to our team now so they can help properly. We’ve already captured the main issue and urgency. ${visitorPhone || visitorEmail ? 'You do not need to repeat yourself.' : 'If useful, reply with your best phone or email so the team can reach you faster.'}`;
   }
 
   if (aiMode === 'human_required') {
-    return `${greeting} I’m AssistantAI Assistant. Thanks — I’m passing this to our team so they can help properly. We’ll get back to you shortly.${handoverReason ? ` For context, I’ve noted: ${handoverReason.toLowerCase()}.` : ''}`;
+    return `${greeting} I’m AssistantAI Assistant. I’m passing this to our team so they can help properly.${handoverReason ? ` I’ve noted that ${handoverReason.toLowerCase()}.` : ''} ${visitorPhone || visitorEmail ? 'They now have enough context to reply quickly.' : 'If you want a faster follow-up, reply with your best phone or email.'}`;
   }
 
   if (enquiryCategory === 'sales') {
@@ -304,7 +340,7 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, handoverR
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { visitorName, subject, latestMessage, sourcePage, priorMessages = [] } = await req.json();
+    const { visitorName, visitorEmail, visitorPhone, subject, latestMessage, sourcePage, priorMessages = [] } = await req.json();
 
     if (!latestMessage) {
       return Response.json({ error: 'latestMessage is required' }, { status: 400 });
@@ -335,8 +371,9 @@ Rules:
 - Keep responses concise, clear, premium, and commercially intelligent
 - Never invent features, integrations, testimonials, case studies, pricing, performance claims, or guarantees
 - Do not give legal, financial, technical, uptime, or implementation guarantees
-- Only escalate when the visitor explicitly asks for a human, shows clear high intent (pricing, ready to book, call me, urgent help), or the AI has already failed after multiple replies
-- Do not escalate general questions, early-stage chats, low-intent chats, or broad information requests
+- Only escalate when the visitor explicitly asks for a human, shows clear high intent (pricing, quote, ready to book, call me, wants to proceed now, urgent help), the AI has already failed after multiple replies, the visitor sounds unhappy, or the issue clearly needs human intervention
+- Do not escalate general questions, early-stage chats, low-intent chats, simple FAQs, or broad browsing questions
+- Before handing over, gather or confirm the most useful qualification details you can from the conversation: name, phone/email if possible, short intent summary, category, and urgency
 - For pricing questions, keep the answer brief and useful, then hand over only when the visitor clearly wants to move now
 - For sales leads, identify the most likely use case, briefly explain the most relevant AssistantAI outcome, and suggest only the best next step
 - Ask for business type, main problem, urgency, and likely fit when they are missing
@@ -391,6 +428,8 @@ Urgency rules:
 
 Context:
 - Visitor name: ${visitorName || 'Unknown'}
+- Visitor email: ${visitorEmail || 'Not provided'}
+- Visitor phone: ${visitorPhone || 'Not provided'}
 - Subject: ${subject || 'Not provided'}
 - Source page: ${sourcePage || '/'}
 - Latest message: ${latestMessage}
@@ -433,7 +472,7 @@ The response should be concise, honest, action-oriented, and suitable for a prem
     const ai_handover_reason = forcedRouting?.ai_handover_reason || result?.ai_handover_reason || null;
     const likely_use_case = result?.likely_use_case || (enquiry_category === 'sales' ? detectSalesUseCase(combinedText) : 'n/a');
     const likely_plan_fit = result?.likely_plan_fit || (enquiry_category === 'sales' ? inferSalesPlanFit(combinedText, likely_use_case) : 'n/a');
-    const response = result?.response || buildFallbackResponse({ visitorName, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason, rawText: combinedText });
+    const response = result?.response || buildFallbackResponse({ visitorName, visitorEmail, visitorPhone, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason, rawText: combinedText });
     const ai_summary = sanitizeAdminSummary(result?.ai_summary, latestMessage, visitorName);
 
     return Response.json({

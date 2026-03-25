@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { attentionStyles, channelStyles, intentLevelStyles, priorityStyles } from './actionInboxUtils';
+import { channelStyles, intentLevelStyles, priorityStyles, triageStyles } from './actionInboxUtils';
 
 export default function ActionInboxContextPanel({ item, conversation, admins, leads, onAssignAdmin, onPriorityChange, onSnooze }) {
   if (!item) {
@@ -27,9 +27,7 @@ export default function ActionInboxContextPanel({ item, conversation, admins, le
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Lead Context</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-              <Badge className={attentionStyles[item.attentionState] || attentionStyles.normal}>
-                {item.attentionState === 'overdue' ? 'Overdue' : item.attentionState === 'high_intent' ? 'High Intent' : item.attentionState === 'needs_reply' ? 'Needs Reply' : 'Normal'}
-              </Badge>
+              <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{item.triageState.replace(/_/g, ' ')}</Badge>
               <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
             </div>
           </div>
@@ -37,10 +35,17 @@ export default function ActionInboxContextPanel({ item, conversation, admins, le
           <div className="space-y-2 text-sm text-slate-300">
             <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Owner</span><span>{item.owner}</span></div>
             <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Wait time</span><span className="tabular-nums">{item.waitLabel}</span></div>
+            <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Category</span><span className="text-right">{item.category.replace(/_/g, ' ')}</span></div>
+            <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Urgency</span><span className="text-right">{item.urgency.replace(/_/g, ' ')}</span></div>
             <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Booking</span><span className="text-right">{item.bookingStatus}</span></div>
             <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Last activity</span><span className="text-right">{item.lastActivity}</span></div>
             <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Business</span><span className="text-right">{item.business}</span></div>
             {item.sourcePage && <div className="flex items-center justify-between gap-4"><span className="text-slate-500">Source</span><span className="text-right">{item.sourcePage}</span></div>}
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Current AI Summary</p>
+            <p className="mt-2 text-sm leading-6 text-slate-200">{item.aiSummary || item.intentSummary}</p>
           </div>
 
           <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">

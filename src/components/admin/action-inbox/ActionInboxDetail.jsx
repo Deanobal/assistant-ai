@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { attentionStyles, channelStyles, intentLevelStyles, slaStyles } from './actionInboxUtils';
+import { channelStyles, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
 
 const senderStyles = {
   visitor: 'border border-white/10 bg-slate-900 text-slate-100',
@@ -25,6 +25,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
   const replyInputRef = useRef(null);
+  const messageListRef = useRef(null);
 
   useEffect(() => {
     if (!item || item.kind !== 'conversation') return;
@@ -38,6 +39,16 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
       window.clearTimeout(secondTimeout);
     };
   }, [item?.id]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (messageListRef.current) {
+        messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+      }
+    }, 40);
+
+    return () => window.clearTimeout(timeout);
+  }, [item?.id, messages.length]);
 
   if (!item) {
     return (
@@ -113,12 +124,11 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xl font-semibold text-white">{item.name}</h3>
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                <Badge className={attentionStyles[item.attentionState] || attentionStyles.normal}>
-                  {item.attentionState === 'overdue' ? 'Overdue' : item.attentionState === 'high_intent' ? 'High Intent' : item.attentionState === 'needs_reply' ? 'Needs Reply' : 'Normal'}
-                </Badge>
+                <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{item.triageState.replace(/_/g, ' ')}</Badge>
                 <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
               </div>
-              <p className="mt-2 break-words text-sm text-slate-400">{item.email}{item.phone ? ` · ${item.phone}` : ''}</p>
+              <p className="mt-2 break-words text-sm text-slate-300">{item.business}</p>
+              <p className="mt-1 break-words text-sm text-slate-400">{item.email}{item.phone ? ` · ${item.phone}` : ''}</p>
               <p className="mt-1 text-sm text-slate-500">{item.intentSummary}</p>
             </div>
 
@@ -152,15 +162,21 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
             </div>
           </div>
 
-          <div className="mt-4 rounded-3xl border border-white/5 bg-[#111827] p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recommended Next Action</p>
-            <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
-            {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Current AI Summary</p>
+              <p className="mt-3 text-base leading-7 text-slate-100">{item.aiSummary || item.intentSummary}</p>
+            </div>
+            <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recommended Next Action</p>
+              <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
+              {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
+            </div>
           </div>
 
           {lastVisibleMessage && (
             <div className="mt-5 rounded-3xl border border-cyan-500/15 bg-cyan-500/5 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">Last message</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">Latest customer message</p>
               <p className="mt-2 text-sm font-medium text-white">{lastVisibleMessage.sender_name || item.name}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-100">{lastVisibleMessage.message_body}</p>
             </div>
