@@ -31,7 +31,6 @@ function getWorkspaceConfig(mode) {
 function getSelectedKeyFromUrl() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('conversationId')) return `conversation:${params.get('conversationId')}`;
-  if (params.get('leadId')) return `lead-alert:${params.get('leadId')}`;
   if (params.get('logId')) return `unmatched-sms:${params.get('logId')}`;
   return null;
 }
