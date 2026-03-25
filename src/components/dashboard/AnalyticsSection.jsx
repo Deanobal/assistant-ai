@@ -7,6 +7,7 @@ import KpiCards from './analytics/KpiCards';
 import TrendPanel from './analytics/TrendPanel';
 import CategoryPanel from './analytics/CategoryPanel';
 import InsightsPanel from './analytics/InsightsPanel';
+import LiveVisitorWorld from './analytics/LiveVisitorWorld';
 import { getAnalyticsSnapshot as getSampleAnalyticsSnapshot } from './analytics/mockData';
 import { getLiveAnalyticsSnapshot } from './analytics/liveData';
 
@@ -62,6 +63,7 @@ export default function AnalyticsSection({ mode = 'live', clientAccountId = null
           </div>
           <Badge className="bg-white/5 text-gray-300 border-white/10 w-fit">Live data ready</Badge>
         </div>
+        <LiveVisitorWorld mode={mode} />
         <Card className="bg-[#12121a] border-white/5">
           <CardContent className="p-10 text-center space-y-3">
             <h3 className="text-xl font-semibold text-white">No Live Analytics Yet</h3>
@@ -81,6 +83,8 @@ export default function AnalyticsSection({ mode = 'live', clientAccountId = null
         </div>
         <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 w-fit">{isSample ? 'Presentation-ready sample data' : 'Live entity data'}</Badge>
       </div>
+
+      <LiveVisitorWorld mode={mode} />
 
       <KpiCards kpis={analytics.kpis} stageRates={analytics.stageRates} />
 
