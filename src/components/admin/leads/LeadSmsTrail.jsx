@@ -62,6 +62,10 @@ export default function LeadSmsTrail({ leadId, mobileNumber, fullName }) {
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="space-y-2 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">{direction === 'inbound' ? 'Customer reply' : 'Admin reply'}</p>
+                    {log.provider_status && <span className="text-[11px] text-gray-500">Twilio: {log.provider_status}</span>}
+                  </div>
                   <p className="text-white whitespace-pre-wrap break-words">{log.message}</p>
                   <div className="text-xs text-gray-500 space-y-1">
                     <p>From: {senderNumber}</p>
