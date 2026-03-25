@@ -68,6 +68,99 @@ function buildEscalationBucket(nowIso) {
   return Math.floor(new Date(nowIso).getTime() / (1000 * 60 * 60 * ESCALATION_DEDUPE_HOURS));
 }
 
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizePhone(value) {
+  return String(value || '').trim().replace(/\s+/g, '');
+}
+
+function readSecretValue(name) {
+  const raw = String(Deno.env.get(name) || '').trim();
+  const prefix = `${name}=`;
+  return raw.startsWith(prefix) ? raw.slice(prefix.length).trim() : raw;
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+}
+
+function buildEventKey(uniqueKey) {
+  return `event_key:${uniqueKey}`;
+}
+
+function serializeDetails(details) {
+  if (!details) {
+    return '';
+  }
+
+  if (typeof details === 'string') {
+    return details;
+  }
+
+  try {
+    return JSON.stringify(details);
+  } catch {
+    return String(details);
+  }
+}
+
+function buildProviderMessage(uniqueKey, details) {
+  const text = serializeDetails(details);
+  return text ? `${buildEventKey(uniqueKey)}\n${text}` : buildEventKey(uniqueKey);
+}
+
+function buildFunctionUrl(requestUrl, functionName) {
+  const url = new URL(requestUrl);
+  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+function getProviderMessageId(data) {
+  return data?.sid || data?.id || data?.messageId || data?.message_id || null;
+}
+
+function isProviderAcceptanceStatus(status) {
+  return ['provider_accepted', 'queued', 'delivered'].includes(String(status || '').trim());
+}
+
+function isSmsProviderAcceptanceStatus(status) {
+  return ['queued', 'sent', 'delivered'].includes(String(status || '').trim());
+}
+
+function mapTwilioSmsDeliveryStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+
+  if (!normalized) {
+    return 'queued';
+  }
+
+  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+    return 'queued';
+  }
+
+  if (normalized === 'sent') {
+    return 'sent';
+  }
+
+  if (['delivered', 'received', 'read'].includes(normalized)) {
+    return 'delivered';
+  }
+
+  if (normalized === 'undelivered') {
+    return 'undelivered';
+  }
+
+  if (['failed', 'canceled', 'cancelled'].includes(normalized)) {
+    return 'failed';
+  }
+
+  return 'queued';
+}
+
 async function getLead(base44, leadId) {
   const leads = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
   return leads[0] || null;
@@ -167,29 +260,345 @@ function buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, la
   };
 }
 
-function buildFunctionUrl(requestUrl, functionName) {
-  const url = new URL(requestUrl);
-  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
-  url.search = '';
-  url.hash = '';
-  return url.toString();
+function buildEscalationEmailBody(alertPayload) {
+  const metadata = alertPayload.metadata || {};
+  const adminUrl = metadata.admin_link ? `https://app.base44.com/apps/${String(Deno.env.get('BASE44_APP_ID') || '').trim()}${metadata.admin_link}` : '';
+  const latestReminderAt = metadata.latest_reminder_at ? new Date(metadata.latest_reminder_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' }) : 'Not previously raised';
+  const dueAt = metadata.booking_nudge_due_at ? new Date(metadata.booking_nudge_due_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' }) : 'Unknown';
+  const tags = (metadata.high_intent_tags || []).join(', ');
+
+  return {
+    text: [
+      alertPayload.title,
+      alertPayload.message,
+      '',
+      `Lead: ${metadata.business_name || metadata.full_name || 'Lead'}`,
+      metadata.mobile_number ? `Phone: ${metadata.mobile_number}` : null,
+      metadata.email ? `Email: ${metadata.email}` : null,
+      tags ? `Intent tags: ${tags}` : null,
+      `Reminder due: ${dueAt}`,
+      `Latest reminder: ${latestReminderAt}`,
+      `Customer message: ${metadata.latest_customer_message || ''}`,
+      'Truthful status: internal follow-up prompt only. Not a confirmed booking.',
+      adminUrl ? `Open lead: ${adminUrl}` : null,
+    ].filter(Boolean).join('\n'),
+    html: [
+      '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;">',
+      `<h2 style="margin:0 0 12px;">${alertPayload.title}</h2>`,
+      `<p style="margin:0 0 12px;">${alertPayload.message}</p>`,
+      '<div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;background:#f8fafc;">',
+      `<p style="margin:0 0 8px;"><strong>Lead:</strong> ${metadata.business_name || metadata.full_name || 'Lead'}</p>`,
+      metadata.mobile_number ? `<p style="margin:0 0 8px;"><strong>Phone:</strong> ${metadata.mobile_number}</p>` : '',
+      metadata.email ? `<p style="margin:0 0 8px;"><strong>Email:</strong> ${metadata.email}</p>` : '',
+      tags ? `<p style="margin:0 0 8px;"><strong>Intent tags:</strong> ${tags}</p>` : '',
+      `<p style="margin:0 0 8px;"><strong>Reminder due:</strong> ${dueAt}</p>`,
+      `<p style="margin:0 0 8px;"><strong>Latest reminder:</strong> ${latestReminderAt}</p>`,
+      `<p style="margin:0;"><strong>Customer message:</strong> ${metadata.latest_customer_message || ''}</p>`,
+      '</div>',
+      '<p style="margin:12px 0 0;font-weight:700;">Internal follow-up prompt only — not a confirmed booking.</p>',
+      adminUrl ? `<p style="margin:12px 0 0;"><a href="${adminUrl}" style="color:#2563eb;">Open lead in admin</a></p>` : '',
+      '</div>',
+    ].join(''),
+  };
 }
 
-async function invokeSendAdminAlert(req, payload) {
-  const response = await fetch(buildFunctionUrl(req.url, 'sendAdminAlert'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+async function findExistingLog(base44, payload, uniqueKey) {
+  const existing = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: payload.entity_id,
+    event_type: payload.event_type,
+    recipient_email: payload.recipient_email,
+    channel: payload.channel,
+  }, '-created_date', 20);
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data?.error || `sendAdminAlert failed with status ${response.status}`);
+  return existing.find((item) => {
+    const providerMessage = typeof item.provider_message === 'string' ? item.provider_message : '';
+    return providerMessage.includes(buildEventKey(uniqueKey)) || item.metadata?.unique_key === uniqueKey;
+  }) || null;
+}
+
+async function createLog(base44, payload, uniqueKey) {
+  const existing = await findExistingLog(base44, payload, uniqueKey);
+  if (existing) {
+    return { record: existing, isDuplicate: true };
   }
 
-  return data;
+  const record = await base44.asServiceRole.entities.NotificationLog.create(payload);
+  return { record, isDuplicate: false };
+}
+
+async function updateLog(base44, record, updates) {
+  return base44.asServiceRole.entities.NotificationLog.update(record.id, {
+    ...record,
+    ...updates,
+  });
+}
+
+async function sendResendEmail(to, subject, body) {
+  const apiKey = readSecretValue('RESEND_API_KEY');
+  const fromEmail = readSecretValue('RESEND_FROM_EMAIL');
+  const destination = normalizeEmail(to);
+
+  if (!apiKey || !fromEmail || !destination) {
+    return {
+      status: 'not_configured',
+      details: 'Resend API key, sender email, or destination email are missing.',
+      providerMessageId: null,
+      providerResponse: null,
+      fromEmail: fromEmail || null,
+    };
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: [destination],
+      subject,
+      text: body.text,
+      html: body.html,
+    }),
+  });
+
+  const resultText = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(resultText);
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    return {
+      status: 'failed',
+      details: parsed?.message || parsed?.error || resultText || 'Resend email send failed.',
+      providerMessageId: parsed?.id || null,
+      providerResponse: parsed || resultText || null,
+      fromEmail: fromEmail || null,
+    };
+  }
+
+  return {
+    status: 'provider_accepted',
+    details: 'Email accepted by Resend.',
+    providerMessageId: parsed?.id || null,
+    providerResponse: parsed || resultText || null,
+    fromEmail: fromEmail || null,
+  };
+}
+
+async function sendTwilioSms(message, to, statusCallbackUrl) {
+  const accountSid = String(readSecretValue('TWILIO_ACCOUNT_SID') || '').trim();
+  const authToken = String(readSecretValue('TWILIO_AUTH_TOKEN') || '').trim();
+  const fromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
+  const destination = normalizePhone(to);
+
+  if (!accountSid || !authToken || !fromNumber || !destination) {
+    return {
+      status: 'not_configured',
+      details: 'Twilio credentials, from number, or destination number are missing.',
+      providerMessageId: null,
+      providerResponse: null,
+      providerStatus: null,
+      providerErrorCode: null,
+      fromNumberUsed: fromNumber || null,
+    };
+  }
+
+  const body = new URLSearchParams({ From: fromNumber, To: destination, Body: message });
+  if (statusCallbackUrl) {
+    body.set('StatusCallback', statusCallbackUrl);
+  }
+
+  const auth = btoa(`${accountSid}:${authToken}`);
+  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  const resultText = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(resultText);
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    return {
+      status: 'failed',
+      details: parsed?.message || resultText || 'Twilio SMS send failed.',
+      providerMessageId: getProviderMessageId(parsed),
+      providerResponse: parsed || resultText || null,
+      providerStatus: parsed?.status || null,
+      providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
+      fromNumberUsed: fromNumber || null,
+    };
+  }
+
+  return {
+    status: mapTwilioSmsDeliveryStatus(parsed?.status),
+    details: parsed?.status || 'Twilio SMS accepted.',
+    providerMessageId: getProviderMessageId(parsed),
+    providerResponse: parsed || resultText || null,
+    providerStatus: parsed?.status || null,
+    providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
+    fromNumberUsed: parsed?.from || fromNumber,
+  };
+}
+
+async function sendBookingNudgeEscalation(base44, req, alertPayload, nowIso) {
+  const metadata = {
+    ...(alertPayload.metadata || {}),
+    unique_key: alertPayload.uniqueKey,
+    priority: alertPayload.priority,
+    entity_event_type: alertPayload.eventType,
+  };
+  const adminEmail = normalizeEmail(Deno.env.get('ADMIN_NOTIFICATION_EMAIL'));
+  const adminPhone = normalizePhone(Deno.env.get('ADMIN_NOTIFICATION_PHONE'));
+  const emailRecipient = isValidEmail(adminEmail) ? adminEmail : null;
+  const smsStatusCallbackUrl = buildFunctionUrl(req.url, 'twilioStatusCallback');
+  const emailBody = buildEscalationEmailBody({ ...alertPayload, metadata });
+  const results = { in_app: null, email: null, sms: null };
+
+  const inAppResult = await createLog(base44, {
+    event_type: alertPayload.eventType,
+    entity_name: alertPayload.entityName,
+    entity_id: alertPayload.entityId,
+    client_account_id: alertPayload.clientAccountId,
+    recipient_role: 'admin',
+    recipient_email: emailRecipient,
+    channel: 'in_app',
+    delivery_status: 'stored',
+    provider_name: 'AssistantAI Alerts',
+    provider_message: buildProviderMessage(alertPayload.uniqueKey),
+    title: alertPayload.title,
+    message: alertPayload.message,
+    triggered_at: nowIso,
+    actor_email: alertPayload.actorEmail,
+    metadata,
+  }, alertPayload.uniqueKey);
+  results.in_app = inAppResult.isDuplicate ? 'duplicate_skipped' : 'stored';
+
+  const emailLog = await createLog(base44, {
+    event_type: alertPayload.eventType,
+    entity_name: alertPayload.entityName,
+    entity_id: alertPayload.entityId,
+    client_account_id: alertPayload.clientAccountId,
+    recipient_role: 'admin',
+    recipient_email: emailRecipient,
+    channel: 'email',
+    delivery_status: emailRecipient ? 'queued' : 'not_configured',
+    provider_name: 'Resend',
+    provider_message: buildProviderMessage(alertPayload.uniqueKey),
+    title: alertPayload.title,
+    message: alertPayload.message,
+    triggered_at: nowIso,
+    actor_email: alertPayload.actorEmail,
+    metadata,
+  }, alertPayload.uniqueKey);
+
+  if (emailLog.isDuplicate) {
+    results.email = { status: 'duplicate_skipped', delivery_status: 'duplicate_skipped', attempted: false, sent: false };
+  } else if (!emailRecipient) {
+    await updateLog(base44, emailLog.record, {
+      delivery_status: 'not_configured',
+      provider_message: buildProviderMessage(alertPayload.uniqueKey, 'No valid admin email recipient available.'),
+      metadata: { ...metadata, email_attempted: false, email_sent: false, email_delivery_status: 'not_configured' },
+    });
+    results.email = { status: 'not_configured', delivery_status: 'not_configured', attempted: false, sent: false };
+  } else {
+    const emailResult = await sendResendEmail(emailRecipient, `[High Priority] ${alertPayload.title}`, emailBody);
+    await updateLog(base44, emailLog.record, {
+      delivery_status: emailResult.status,
+      provider_message: buildProviderMessage(alertPayload.uniqueKey, emailResult.providerResponse || emailResult.details),
+      provider_message_id: emailResult.providerMessageId,
+      metadata: {
+        ...metadata,
+        email_attempted: true,
+        email_sent: isProviderAcceptanceStatus(emailResult.status),
+        email_delivery_status: emailResult.status,
+        email_provider_message_id: emailResult.providerMessageId || null,
+      },
+    });
+    results.email = {
+      status: emailResult.status,
+      delivery_status: emailResult.status,
+      attempted: true,
+      sent: isProviderAcceptanceStatus(emailResult.status),
+      provider_message_id: emailResult.providerMessageId || null,
+    };
+  }
+
+  const smsLog = await createLog(base44, {
+    event_type: alertPayload.eventType,
+    entity_name: alertPayload.entityName,
+    entity_id: alertPayload.entityId,
+    client_account_id: alertPayload.clientAccountId,
+    recipient_role: 'admin',
+    recipient_email: adminPhone || null,
+    channel: 'sms',
+    delivery_status: adminPhone ? 'queued' : 'not_configured',
+    provider_name: 'Twilio',
+    provider_message: buildProviderMessage(alertPayload.uniqueKey),
+    title: alertPayload.title,
+    message: alertPayload.smsMessage,
+    triggered_at: nowIso,
+    actor_email: alertPayload.actorEmail,
+    metadata,
+  }, alertPayload.uniqueKey);
+
+  if (smsLog.isDuplicate) {
+    results.sms = { status: 'duplicate_skipped', delivery_status: 'duplicate_skipped', attempted: false, sent: false };
+  } else if (!adminPhone) {
+    await updateLog(base44, smsLog.record, {
+      delivery_status: 'not_configured',
+      provider_message: buildProviderMessage(alertPayload.uniqueKey, 'No admin phone is configured.'),
+      metadata: { ...metadata, sms_attempted: false, sms_sent: false, sms_delivery_status: 'not_configured' },
+    });
+    results.sms = { status: 'not_configured', delivery_status: 'not_configured', attempted: false, sent: false };
+  } else {
+    const smsResult = await sendTwilioSms(alertPayload.smsMessage, adminPhone, smsStatusCallbackUrl);
+    await updateLog(base44, smsLog.record, {
+      delivery_status: smsResult.status,
+      provider_message: buildProviderMessage(alertPayload.uniqueKey, smsResult.providerResponse || smsResult.details),
+      provider_message_id: smsResult.providerMessageId,
+      provider_status: smsResult.providerStatus,
+      provider_error_code: smsResult.providerErrorCode,
+      provider_error_message: ['failed', 'undelivered'].includes(smsResult.status) ? smsResult.details : null,
+      delivered_at: smsResult.status === 'delivered' ? nowIso : null,
+      failed_at: ['failed', 'undelivered'].includes(smsResult.status) ? nowIso : null,
+      metadata: {
+        ...metadata,
+        sms_attempted: true,
+        sms_sent: isSmsProviderAcceptanceStatus(smsResult.status),
+        sms_delivery_status: smsResult.status,
+        sms_provider_message_id: smsResult.providerMessageId || null,
+        sms_provider_status: smsResult.providerStatus || null,
+        sms_status_callback_url: smsStatusCallbackUrl,
+      },
+    });
+    results.sms = {
+      status: smsResult.status,
+      delivery_status: smsResult.status,
+      attempted: true,
+      sent: isSmsProviderAcceptanceStatus(smsResult.status),
+      provider_message_id: smsResult.providerMessageId || null,
+      provider_status: smsResult.providerStatus || null,
+    };
+  }
+
+  return {
+    duplicate: results.in_app === 'duplicate_skipped' && results.email?.status === 'duplicate_skipped' && results.sms?.status === 'duplicate_skipped',
+    results,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -260,7 +669,7 @@ Deno.serve(async (req) => {
           entity_id: lead.id,
           client_account_id: lead.client_account_id || null,
           recipient_role: 'admin',
-          recipient_email: String(Deno.env.get('ADMIN_NOTIFICATION_EMAIL') || '').trim().toLowerCase() || null,
+          recipient_email: normalizeEmail(Deno.env.get('ADMIN_NOTIFICATION_EMAIL')) || null,
           channel: 'in_app',
           delivery_status: 'stored',
           provider_name: 'AssistantAI Alerts',
@@ -301,12 +710,14 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const escalationData = await invokeSendAdminAlert(
+      const escalationData = await sendBookingNudgeEscalation(
+        base44,
         req,
         buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, recentReminder),
+        nowIso,
       );
 
-      if (escalationData?.duplicate) {
+      if (escalationData.duplicate) {
         results.push({
           lead_id: lead.id,
           status: 'skipped_recent_escalation',
@@ -320,7 +731,7 @@ Deno.serve(async (req) => {
         status: 'escalated',
         due_at: dueAt.toISOString(),
         escalation_time: nowIso,
-        channels: escalationData?.results || null,
+        channels: escalationData.results,
       });
     }
 
