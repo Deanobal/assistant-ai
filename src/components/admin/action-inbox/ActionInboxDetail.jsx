@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { channelStyles, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
+import { channelStyles, getTriageLabel, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
 
 const senderStyles = {
   visitor: 'border border-white/10 bg-slate-900 text-slate-100',
@@ -76,9 +76,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xl font-semibold text-white">{item.name}</h3>
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                <Badge className={attentionStyles[item.attentionState] || attentionStyles.normal}>
-                  {item.attentionState === 'overdue' ? 'Overdue' : item.attentionState === 'high_intent' ? 'High Intent' : item.attentionState === 'needs_reply' ? 'Needs Reply' : 'Normal'}
-                </Badge>
+                <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
               </div>
               <p className="mt-2 text-sm text-slate-400">{item.business}</p>
             </div>
@@ -124,7 +122,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xl font-semibold text-white">{item.name}</h3>
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{item.triageState.replace(/_/g, ' ')}</Badge>
+                <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
                 <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
               </div>
               <p className="mt-2 break-words text-sm text-slate-300">{item.business}</p>
@@ -146,8 +144,8 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <div className="grid gap-3 md:grid-cols-3">
+        <div ref={messageListRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
               <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Booking</p>
               <p className="mt-2 text-sm font-medium text-white">{item.bookingStatus}</p>
@@ -159,6 +157,18 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
             <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
               <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Intent level</p>
               <p className="mt-2 text-sm font-medium text-white">{item.intentLevel}</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Category</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.category.replace(/_/g, ' ')}</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Urgency</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.urgency.replace(/_/g, ' ')}</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Owner</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.owner}</p>
             </div>
           </div>
 

@@ -4,7 +4,7 @@ import { ArrowUpRight, Bell, MessageSquareReply, Phone, UserPlus, UserRound } fr
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { channelStyles, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
+import { channelStyles, getTriageLabel, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
 
 export default function ActionInboxList({ title, items, selectedId, onSelect, onQuickAssign, onQuickSnooze }) {
   return (
@@ -28,7 +28,7 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
                   <p className="mt-1 truncate text-sm text-slate-400">{item.business}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                     <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                    <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{item.triageState.replace(/_/g, ' ')}</Badge>
+                    <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
                     <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
                   </div>
                 </div>

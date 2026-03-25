@@ -202,6 +202,15 @@ function buildSnoozeLabel(conversation) {
   return `Snoozed until ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
 
+export function getTriageLabel(state) {
+  if (state === 'needs_reply_now') return 'Needs Reply Now';
+  if (state === 'high_intent') return 'High Intent';
+  if (state === 'waiting_on_admin') return 'Waiting on Admin';
+  if (state === 'waiting_on_customer') return 'Waiting on Customer';
+  if (state === 'resolved') return 'Resolved';
+  return 'Waiting on Admin';
+}
+
 function getTriageState(status, needsReply, intentLevel) {
   if (['resolved', 'closed'].includes(status)) return 'resolved';
   if (intentLevel === 'HIGH INTENT' && needsReply) return 'high_intent';

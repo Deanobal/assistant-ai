@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { channelStyles, intentLevelStyles, priorityStyles, triageStyles } from './actionInboxUtils';
+import { channelStyles, getTriageLabel, intentLevelStyles, priorityStyles, triageStyles } from './actionInboxUtils';
 
 export default function ActionInboxContextPanel({ item, conversation, admins, leads, onAssignAdmin, onPriorityChange, onSnooze }) {
   if (!item) {
@@ -27,7 +27,7 @@ export default function ActionInboxContextPanel({ item, conversation, admins, le
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Lead Context</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-              <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{item.triageState.replace(/_/g, ' ')}</Badge>
+              <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
               <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
             </div>
           </div>
