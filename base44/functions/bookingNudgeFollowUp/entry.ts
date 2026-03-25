@@ -167,6 +167,31 @@ function buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, la
   };
 }
 
+function buildFunctionUrl(requestUrl, functionName) {
+  const url = new URL(requestUrl);
+  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+async function invokeSendAdminAlert(req, payload) {
+  const response = await fetch(buildFunctionUrl(req.url, 'sendAdminAlert'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || `sendAdminAlert failed with status ${response.status}`);
+  }
+
+  return data;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
