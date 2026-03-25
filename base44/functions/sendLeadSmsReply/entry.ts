@@ -49,7 +49,9 @@ function readSecretValue(name) {
 
 function buildFunctionUrl(requestUrl, functionName) {
   const url = new URL(requestUrl);
-  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.pathname = url.pathname === '/'
+    ? `/${functionName}`
+    : url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
   url.search = '';
   url.hash = '';
   return url.toString();

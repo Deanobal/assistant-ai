@@ -21,7 +21,9 @@ export default function LeadSmsTrail({ leadId, mobileNumber, fullName }) {
     initialData: [],
   });
 
-  const orderedLogs = [...logs].reverse();
+  const orderedLogs = [...logs]
+    .filter((log) => log.sender_role === 'client' || log.sender_role === 'admin' || log.recipient_role === 'client')
+    .reverse();
 
   return (
     <Card className="bg-[#12121a] border-white/5">
@@ -63,7 +65,9 @@ export default function LeadSmsTrail({ leadId, mobileNumber, fullName }) {
                 </div>
                 <div className="space-y-2 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">{direction === 'inbound' ? 'Customer reply' : 'Admin reply'}</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
+                      {direction === 'inbound' ? 'Customer reply' : log.sender_role === 'admin' ? 'Admin reply' : 'Outbound SMS'}
+                    </p>
                     {log.provider_status && <span className="text-[11px] text-gray-500">Twilio: {log.provider_status}</span>}
                   </div>
                   <p className="text-white whitespace-pre-wrap break-words">{log.message}</p>
