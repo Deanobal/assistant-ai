@@ -6,6 +6,7 @@ import LeadStats from '@/components/admin/leads/LeadStats';
 import LeadSourceSummary from '@/components/admin/leads/LeadSourceSummary';
 import OnboardingStatusView from '@/components/admin/leads/OnboardingStatusView';
 import PipelineBoard from '@/components/admin/leads/PipelineBoard';
+import AnalyticsSection from '@/components/dashboard/AnalyticsSection';
 
 const stages = ['New Lead', 'Contacted', 'Strategy Call Booked', 'Proposal Sent', 'Follow-Up', 'Won', 'Lost', 'Onboarding'];
 
@@ -69,6 +70,8 @@ export default function LeadDashboard() {
       </div>
 
       <LeadStats stats={stats} />
+
+      <AnalyticsSection />
 
       <div className="grid xl:grid-cols-[0.95fr_1.05fr] gap-6">
         <LeadSourceSummary sources={sourceCounts} />
