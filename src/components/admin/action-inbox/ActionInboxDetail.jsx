@@ -18,6 +18,7 @@ const senderStyles = {
 export default function ActionInboxDetail({ item, conversation, messages, isSaving, onReply, onResolve, onBack, showBack }) {
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
+  const replyInputRef = useRef(null);
 
   if (!item) {
     return (
