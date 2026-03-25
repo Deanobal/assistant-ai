@@ -78,12 +78,14 @@ async function waitForCustomerSms(base44, leadId, eventType, smsKind) {
   for (let index = 0; index < 20; index += 1) {
     const logs = await base44.asServiceRole.entities.NotificationLog.filter({
       entity_id: leadId,
-      event_type: eventType,
       channel: 'sms',
-      recipient_role: 'client',
     }, '-created_date', 20);
 
-    const match = logs.find((log) => log.metadata?.sms_kind === smsKind);
+    const match = logs.find((log) => (
+      log.event_type === eventType
+      && log.recipient_role === 'client'
+      && log.metadata?.sms_kind === smsKind
+    ));
     if (match) {
       return match;
     }
@@ -93,12 +95,14 @@ async function waitForCustomerSms(base44, leadId, eventType, smsKind) {
 
   const logs = await base44.asServiceRole.entities.NotificationLog.filter({
     entity_id: leadId,
-    event_type: eventType,
     channel: 'sms',
-    recipient_role: 'client',
   }, '-created_date', 20);
 
-  return logs.find((log) => log.metadata?.sms_kind === smsKind) || null;
+  return logs.find((log) => (
+    log.event_type === eventType
+    && log.recipient_role === 'client'
+    && log.metadata?.sms_kind === smsKind
+  )) || null;
 }
 
 Deno.serve(async (req) => {
