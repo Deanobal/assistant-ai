@@ -135,10 +135,10 @@ export function buildLeadAlertAction(log, leadsById) {
     email: cleanText(log.metadata?.email || linkedLead?.email, ''),
     sourcePage: cleanText(log.metadata?.source_page, '/'),
     status: cleanText(log.event_type, 'lead_alert'),
-    primaryLabel: 'Open Lead',
-    secondaryLabel: cleanText(log.metadata?.mobile_number || linkedLead?.mobile_number, '') ? 'Call' : null,
+    primaryLabel: 'Review',
+    secondaryLabel: null,
     actionUrl: linkedLead?.id || log.entity_id ? `/LeadDetail?id=${linkedLead?.id || log.entity_id}` : '/LeadDashboard',
-    secondaryUrl: cleanText(log.metadata?.mobile_number || linkedLead?.mobile_number, '') ? `tel:${cleanText(log.metadata?.mobile_number || linkedLead?.mobile_number, '').replace(/\s+/g, '')}` : null,
+    secondaryUrl: null,
   };
 }
 
