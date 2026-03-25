@@ -77,23 +77,45 @@ function getRecentActivityScore(lead) {
 }
 
 function getOutboundHistoryScore(inboundPhone, lead, outboundLogs) {
-  const matchingLogs = outboundLogs.filter((log) => {
+  const leadLogs = outboundLogs.filter((log) => log.entity_id === lead.id);
+  const scoredLogs = leadLogs.map((log) => {
     const logPhone = normalizePhone(log.recipient_email || log.metadata?.receiver_number || log.metadata?.sms_actual_recipient);
-    return log.entity_id === lead.id && logPhone && inboundPhone && logPhone === inboundPhone;
-  });
 
-  if (matchingLogs.length === 0) {
+    if (!logPhone || !inboundPhone) {
+      return null;
+    }
+
+    if (logPhone === inboundPhone) {
+      return { log, score: 70, reason: 'Recent outbound customer SMS history' };
+    }
+
+    const inboundDigits = inboundPhone.replace(/\D/g, '');
+    const logDigits = logPhone.replace(/\D/g, '');
+
+    if (inboundDigits.slice(-8) && inboundDigits.slice(-8) === logDigits.slice(-8)) {
+      return { log, score: 40, reason: 'Outbound SMS to a highly similar number' };
+    }
+
+    if (inboundDigits.slice(-6) && inboundDigits.slice(-6) === logDigits.slice(-6)) {
+      return { log, score: 20, reason: 'Outbound SMS to a partially similar number' };
+    }
+
+    return null;
+  }).filter(Boolean);
+
+  if (scoredLogs.length === 0) {
     return { score: 0, reason: null, count: 0 };
   }
 
-  const latest = matchingLogs[0];
+  const bestMatch = scoredLogs.sort((a, b) => b.score - a.score)[0];
+  const latest = bestMatch.log;
   const daysAgo = (Date.now() - new Date(latest.triggered_at || latest.created_date).getTime()) / (1000 * 60 * 60 * 24);
   const freshnessBonus = daysAgo <= 14 ? 12 : daysAgo <= 45 ? 6 : 0;
 
   return {
-    score: 70 + freshnessBonus,
-    reason: matchingLogs.length > 1 ? `${matchingLogs.length} recent outbound customer SMS messages` : 'Recent outbound customer SMS history',
-    count: matchingLogs.length,
+    score: bestMatch.score + freshnessBonus,
+    reason: scoredLogs.length > 1 && bestMatch.score >= 40 ? `${scoredLogs.length} related outbound customer SMS messages` : bestMatch.reason,
+    count: scoredLogs.length,
   };
 }
 
