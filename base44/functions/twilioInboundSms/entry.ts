@@ -47,27 +47,58 @@ function normalizePhone(value) {
   return cleaned;
 }
 
-async function parsePayload(req) {
+function encodeBase64(bytes) {
+  let binary = '';
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
+}
+
+async function signTwilioPayload(url, payload) {
+  const authToken = String(Deno.env.get('TWILIO_AUTH_TOKEN') || '').trim();
+  const secret = authToken.startsWith('TWILIO_AUTH_TOKEN=') ? authToken.slice('TWILIO_AUTH_TOKEN='.length).trim() : authToken;
+
+  if (!secret) {
+    return null;
+  }
+
+  const sortedKeys = Object.keys(payload).sort();
+  const data = sortedKeys.reduce((acc, key) => `${acc}${key}${payload[key] ?? ''}`, url);
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(data));
+  return encodeBase64(new Uint8Array(signature));
+}
+
+async function parseRequest(req) {
   const contentType = String(req.headers.get('content-type') || '').toLowerCase();
 
   if (contentType.includes('application/json')) {
-    return await req.json();
+    return { contentType, payload: await req.json() };
   }
 
   if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
     const formData = await req.formData();
-    return Object.fromEntries(formData.entries());
+    return { contentType, payload: Object.fromEntries(formData.entries()) };
   }
 
   const text = await req.text();
   if (!text) {
-    return {};
+    return { contentType, payload: {} };
   }
 
   try {
-    return JSON.parse(text);
+    return { contentType, payload: JSON.parse(text) };
   } catch {
-    return Object.fromEntries(new URLSearchParams(text).entries());
+    return { contentType, payload: Object.fromEntries(new URLSearchParams(text).entries()) };
   }
 }
 
