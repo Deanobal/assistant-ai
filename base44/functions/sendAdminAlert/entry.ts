@@ -188,6 +188,8 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     ...baseMetadata,
     [`${channel}_attempted`]: !!diagnostics.attempted,
     [`${channel}_sent`]: !!diagnostics.sent,
+    [`${channel}_delivery_status`]: diagnostics.deliveryStatus || null,
+    [`${channel}_sent_definition`]: 'provider acceptance only',
     [`${channel}_error`]: diagnostics.error || null,
     [`${channel}_provider_message_id`]: diagnostics.providerMessageId || null,
     [`${channel}_provider_response`]: diagnostics.providerResponse || null,
@@ -201,26 +203,34 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
   };
 }
 
+function isProviderAcceptanceStatus(status) {
+  return ['queued', 'provider_accepted', 'delivered'].includes(String(status || '').trim());
+}
+
 function mapTwilioDeliveryStatus(status) {
   const normalized = String(status || '').trim().toLowerCase();
 
   if (!normalized) {
-    return 'sent';
+    return 'provider_accepted';
   }
 
-  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+  if (['queued', 'scheduled', 'sending'].includes(normalized)) {
     return 'queued';
   }
 
-  if (['sent', 'delivered', 'received', 'read'].includes(normalized)) {
-    return 'sent';
+  if (['accepted', 'sent'].includes(normalized)) {
+    return 'provider_accepted';
+  }
+
+  if (['delivered', 'received', 'read'].includes(normalized)) {
+    return 'delivered';
   }
 
   if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
     return 'failed';
   }
 
-  return 'sent';
+  return 'provider_accepted';
 }
 
 async function findExistingLog(base44, payload, uniqueKey) {
@@ -335,8 +345,8 @@ async function sendResendEmail(to, subject, body) {
   }
 
   return {
-    status: 'sent',
-    details: 'Email sent via Resend.',
+    status: 'provider_accepted',
+    details: 'Email accepted by Resend.',
     providerMessageId: parsed?.id || null,
     providerResponse: parsed || resultText || null,
     fromEmail,
@@ -402,8 +412,8 @@ async function sendTwilioSms(message, to) {
   }
 
   return {
-      status: 'sent',
-      details: parsed?.status || 'Twilio SMS sent.',
+      status: mapTwilioDeliveryStatus(parsed?.status),
+      details: parsed?.status || 'Twilio SMS accepted by Twilio.',
       providerStatus: parsed?.status || null,
       providerMessageId: getProviderMessageId(parsed),
       providerResponse: parsed || resultText || null,
