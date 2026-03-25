@@ -107,6 +107,14 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
   };
 }
 
+function buildCustomerStrategyRequestSmsKey(data) {
+  return `customer_strategy_call_requested:${data.id}:${sanitizeKeyPart(getRequestTimestamp(data))}`;
+}
+
+function buildCustomerBookingFallbackSmsKey(data, errorValue) {
+  return `customer_booking_request_failed:${data.id}:${sanitizeKeyPart(getRequestTimestamp(data))}:${sanitizeKeyPart(errorValue || 'no-error')}`;
+}
+
 function buildCustomerBookingSmsKey(data) {
   if (data?.booking_reference) {
     return `customer_booking_confirmed:${data.id}:${sanitizeKeyPart(data.booking_reference)}`;
@@ -253,6 +261,34 @@ Deno.serve(async (req) => {
         event_type: def.logical_event_type || def.event_type,
         admin_alert: adminResponse && typeof adminResponse === 'object' && 'data' in adminResponse ? adminResponse.data : adminResponse,
       };
+
+      if (def.event_type === 'strategy_call_requested') {
+        const customerResponse = await base44.functions.invoke('sendCustomerStrategyCallSms', {
+          eventType: 'strategy_call_requested',
+          leadId: data.id,
+          clientAccountId: data.client_account_id || null,
+          fullName: data.full_name || data.business_name || '',
+          mobileNumber: data.mobile_number || '',
+          actorEmail,
+          uniqueKey: buildCustomerStrategyRequestSmsKey(data),
+        });
+
+        resultEntry.customer_request_sms = customerResponse && typeof customerResponse === 'object' && 'data' in customerResponse ? customerResponse.data : customerResponse;
+      }
+
+      if (def.event_type === 'booking_request_failed') {
+        const customerResponse = await base44.functions.invoke('sendCustomerStrategyCallSms', {
+          eventType: 'booking_request_failed',
+          leadId: data.id,
+          clientAccountId: data.client_account_id || null,
+          fullName: data.full_name || data.business_name || '',
+          mobileNumber: data.mobile_number || '',
+          actorEmail,
+          uniqueKey: buildCustomerBookingFallbackSmsKey(data, def.message),
+        });
+
+        resultEntry.customer_fallback_sms = customerResponse && typeof customerResponse === 'object' && 'data' in customerResponse ? customerResponse.data : customerResponse;
+      }
 
       if (def.event_type === 'booking_confirmed') {
         const customerResponse = await base44.functions.invoke('sendCustomerBookingConfirmationSms', {
