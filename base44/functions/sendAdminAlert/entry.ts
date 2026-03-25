@@ -120,6 +120,14 @@ function buildAdminUrl(path) {
   return `https://app.base44.com/apps/${appId}${trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`}`;
 }
 
+function buildFunctionUrl(requestUrl, functionName) {
+  const url = new URL(requestUrl);
+  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
 function buildEmailBody(title, message, metadata, normalizedEventType, priority) {
   const enquiryType = metadata.enquiry_type || metadata.enquiry_category || '';
   const leadName = metadata.full_name || metadata.business_name || 'New lead';
@@ -189,7 +197,9 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     [`${channel}_attempted`]: !!diagnostics.attempted,
     [`${channel}_sent`]: !!diagnostics.sent,
     [`${channel}_delivery_status`]: diagnostics.deliveryStatus || null,
-    [`${channel}_sent_definition`]: 'provider acceptance only',
+    [`${channel}_sent_definition`]: channel === 'sms'
+      ? 'Twilio accepted/send state only until callback confirms final delivery'
+      : 'provider acceptance only',
     [`${channel}_error`]: diagnostics.error || null,
     [`${channel}_provider_message_id`]: diagnostics.providerMessageId || null,
     [`${channel}_provider_response`]: diagnostics.providerResponse || null,
@@ -200,37 +210,48 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     [`${channel}_from_address`]: diagnostics.fromAddress || null,
     [`${channel}_from_number_used`]: diagnostics.fromNumberUsed || diagnostics.fromAddress || null,
     [`${channel}_config_source`]: diagnostics.configSource || null,
+    [`${channel}_provider_status`]: diagnostics.providerStatus || null,
+    [`${channel}_provider_error_code`]: diagnostics.providerErrorCode || null,
+    [`${channel}_status_callback_url`]: diagnostics.statusCallbackUrl || null,
   };
 }
 
 function isProviderAcceptanceStatus(status) {
-  return ['queued', 'provider_accepted', 'delivered'].includes(String(status || '').trim());
+  return ['provider_accepted', 'queued', 'delivered'].includes(String(status || '').trim());
 }
 
-function mapTwilioDeliveryStatus(status) {
+function isSmsProviderAcceptanceStatus(status) {
+  return ['queued', 'sent', 'delivered'].includes(String(status || '').trim());
+}
+
+function mapTwilioSmsDeliveryStatus(status) {
   const normalized = String(status || '').trim().toLowerCase();
 
   if (!normalized) {
-    return 'provider_accepted';
-  }
-
-  if (['queued', 'scheduled', 'sending'].includes(normalized)) {
     return 'queued';
   }
 
-  if (['accepted', 'sent'].includes(normalized)) {
-    return 'provider_accepted';
+  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+    return 'queued';
+  }
+
+  if (normalized === 'sent') {
+    return 'sent';
   }
 
   if (['delivered', 'received', 'read'].includes(normalized)) {
     return 'delivered';
   }
 
-  if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
+  if (normalized === 'undelivered') {
+    return 'undelivered';
+  }
+
+  if (['failed', 'canceled', 'cancelled'].includes(normalized)) {
     return 'failed';
   }
 
-  return 'provider_accepted';
+  return 'queued';
 }
 
 async function findExistingLog(base44, payload, uniqueKey) {
@@ -353,7 +374,7 @@ async function sendResendEmail(to, subject, body) {
   };
 }
 
-async function sendTwilioSms(message, to) {
+async function sendTwilioSms(message, to, statusCallbackUrl) {
   const accountSid = String(readSecretValue('TWILIO_ACCOUNT_SID') || '').trim();
   const authToken = String(readSecretValue('TWILIO_AUTH_TOKEN') || '').trim();
   const fromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
@@ -366,6 +387,8 @@ async function sendTwilioSms(message, to) {
       details: 'Twilio credentials, from number, or destination number are missing.',
       providerMessageId: null,
       providerResponse: null,
+      providerStatus: null,
+      providerErrorCode: null,
       fromNumberUsed: fromNumber || null,
       configSource,
     };
@@ -376,6 +399,10 @@ async function sendTwilioSms(message, to) {
     To: destination,
     Body: message,
   });
+
+  if (statusCallbackUrl) {
+    body.set('StatusCallback', statusCallbackUrl);
+  }
 
   const auth = btoa(`${accountSid}:${authToken}`);
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
@@ -406,21 +433,24 @@ async function sendTwilioSms(message, to) {
       details: mismatchError || parsed?.message || resultText || 'Twilio SMS send failed.',
       providerMessageId: getProviderMessageId(parsed),
       providerResponse: parsed || resultText || null,
+      providerStatus: parsed?.status || null,
+      providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
       fromNumberUsed: fromNumber,
       configSource,
     };
   }
 
   return {
-      status: mapTwilioDeliveryStatus(parsed?.status),
-      details: parsed?.status || 'Twilio SMS accepted by Twilio.',
-      providerStatus: parsed?.status || null,
-      providerMessageId: getProviderMessageId(parsed),
-      providerResponse: parsed || resultText || null,
-      fromNumberUsed: parsed?.from || fromNumber,
-      configSource,
-    };
-  }
+    status: mapTwilioSmsDeliveryStatus(parsed?.status),
+    details: parsed?.status || 'Twilio SMS accepted by Twilio.',
+    providerStatus: parsed?.status || null,
+    providerMessageId: getProviderMessageId(parsed),
+    providerResponse: parsed || resultText || null,
+    providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
+    fromNumberUsed: parsed?.from || fromNumber,
+    configSource,
+  };
+}
 
 Deno.serve(async (req) => {
   try {
@@ -459,6 +489,7 @@ Deno.serve(async (req) => {
     const alertMetadata = buildAlertMetadata(metadata, normalizedEventType, uniqueKey, priority);
     const emailBody = buildEmailBody(title, message, alertMetadata, normalizedEventType, priority);
     const textMessage = buildSmsAlertMessage(title, smsMessage || message, alertMetadata, priority);
+    const smsStatusCallbackUrl = buildFunctionUrl(req.url, 'twilioStatusCallback');
 
     const results = { in_app: null, email: null, sms: null };
 
@@ -493,6 +524,9 @@ Deno.serve(async (req) => {
       deliveryPath: emailRecipient.deliveryPath,
       fallbackReason: emailRecipient.fallbackReason,
       fromAddress: resendFromEmail || null,
+      providerStatus: null,
+      providerErrorCode: null,
+      statusCallbackUrl: null,
     };
 
     const emailResult = await createLog(base44, {
@@ -634,6 +668,9 @@ Deno.serve(async (req) => {
       fromAddress: twilioFromNumber || null,
       fromNumberUsed: twilioFromNumber || null,
       configSource: twilioFromNumber ? 'env' : 'missing',
+      providerStatus: null,
+      providerErrorCode: null,
+      statusCallbackUrl: smsStatusCallbackUrl,
     };
 
     const smsResultLog = await createLog(base44, {
@@ -647,9 +684,15 @@ Deno.serve(async (req) => {
       delivery_status: configuredAdminPhone ? 'queued' : 'not_configured',
       provider_name: 'Twilio',
       provider_message: buildProviderMessage(uniqueKey),
+      provider_message_id: null,
+      provider_status: null,
+      provider_error_code: null,
+      provider_error_message: null,
       title,
       message: textMessage,
       triggered_at: triggeredAt,
+      delivered_at: null,
+      failed_at: null,
       actor_email: actorEmail,
       metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
     }, uniqueKey);
@@ -660,7 +703,7 @@ Deno.serve(async (req) => {
         delivery_status: 'duplicate_skipped',
         attempted: false,
         sent: false,
-        sent_definition: 'provider acceptance only',
+        sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
         provider_accepted: false,
         delivered: false,
         recipient: configuredAdminPhone || null,
@@ -671,6 +714,7 @@ Deno.serve(async (req) => {
       smsDiagnostics.error = smsDiagnostics.fallbackReason;
       await updateLog(base44, smsResultLog.record, {
         delivery_status: 'not_configured',
+        provider_error_message: smsDiagnostics.error,
         provider_message: buildProviderMessage(uniqueKey, smsDiagnostics.error),
         metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
       });
@@ -679,7 +723,7 @@ Deno.serve(async (req) => {
         delivery_status: 'not_configured',
         attempted: false,
         sent: false,
-        sent_definition: 'provider acceptance only',
+        sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
         provider_accepted: false,
         delivered: false,
         recipient: null,
@@ -692,28 +736,39 @@ Deno.serve(async (req) => {
       smsDiagnostics.attempted = true;
 
       try {
-        const smsResult = await sendTwilioSms(textMessage, configuredAdminPhone);
+        const smsResult = await sendTwilioSms(textMessage, configuredAdminPhone, smsStatusCallbackUrl);
         const smsDeliveryStatus = smsResult.status;
+        const statusTimestamp = new Date().toISOString();
 
         smsDiagnostics.deliveryStatus = smsDeliveryStatus;
-        smsDiagnostics.sent = isProviderAcceptanceStatus(smsDeliveryStatus);
-        smsDiagnostics.error = smsDeliveryStatus === 'failed' ? smsResult.details : null;
+        smsDiagnostics.sent = isSmsProviderAcceptanceStatus(smsDeliveryStatus);
+        smsDiagnostics.error = ['failed', 'undelivered'].includes(smsDeliveryStatus) ? smsResult.details : null;
         smsDiagnostics.providerMessageId = smsResult.providerMessageId || null;
         smsDiagnostics.providerResponse = smsResult.providerResponse || null;
         smsDiagnostics.fromAddress = smsResult.fromNumberUsed || smsDiagnostics.fromAddress || null;
         smsDiagnostics.fromNumberUsed = smsResult.fromNumberUsed || smsDiagnostics.fromNumberUsed || null;
         smsDiagnostics.configSource = smsResult.configSource || smsDiagnostics.configSource || null;
+        smsDiagnostics.providerStatus = smsResult.providerStatus || null;
+        smsDiagnostics.providerErrorCode = smsResult.providerErrorCode || null;
         await updateLog(base44, smsResultLog.record, {
           delivery_status: smsDeliveryStatus,
+          provider_message_id: smsDiagnostics.providerMessageId,
+          provider_status: smsDiagnostics.providerStatus,
+          provider_error_code: smsDiagnostics.providerErrorCode,
+          provider_error_message: smsDiagnostics.error,
+          delivered_at: smsDeliveryStatus === 'delivered' ? statusTimestamp : null,
+          failed_at: ['failed', 'undelivered'].includes(smsDeliveryStatus) ? statusTimestamp : null,
           provider_message: buildProviderMessage(uniqueKey, {
             status: smsResult.status,
             delivery_status: smsDeliveryStatus,
             provider_status: smsResult.providerStatus || null,
+            error_code: smsDiagnostics.providerErrorCode,
             error: smsDiagnostics.error,
             provider_message_id: smsDiagnostics.providerMessageId,
             provider_response: smsDiagnostics.providerResponse,
             from_number_used: smsDiagnostics.fromNumberUsed,
             config_source: smsDiagnostics.configSource,
+            status_callback_url: smsStatusCallbackUrl,
           }),
           metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
         });
@@ -722,27 +777,34 @@ Deno.serve(async (req) => {
           delivery_status: smsDeliveryStatus,
           attempted: true,
           sent: smsDiagnostics.sent,
-          sent_definition: 'provider acceptance only',
-          provider_accepted: smsDeliveryStatus === 'provider_accepted' || smsDeliveryStatus === 'queued' || smsDeliveryStatus === 'delivered',
+          sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
+          provider_accepted: ['queued', 'sent', 'delivered'].includes(smsDeliveryStatus),
           delivered: smsDeliveryStatus === 'delivered',
           recipient: configuredAdminPhone,
           error: smsDiagnostics.error,
           provider_message_id: smsDiagnostics.providerMessageId,
           provider_response: smsDiagnostics.providerResponse,
+          provider_status: smsDiagnostics.providerStatus,
           from_number_used: smsDiagnostics.fromNumberUsed,
           config_source: smsDiagnostics.configSource,
+          status_callback_url: smsStatusCallbackUrl,
         };
       } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        const failedAt = new Date().toISOString();
         smsDiagnostics.deliveryStatus = 'failed';
-        smsDiagnostics.error = getErrorMessage(error);
+        smsDiagnostics.error = errorMessage;
         await updateLog(base44, smsResultLog.record, {
           delivery_status: 'failed',
+          provider_error_message: errorMessage,
+          failed_at: failedAt,
           provider_message: buildProviderMessage(uniqueKey, {
             status: 'failed',
             delivery_status: 'failed',
             error: smsDiagnostics.error,
             from_number_used: smsDiagnostics.fromNumberUsed,
             config_source: smsDiagnostics.configSource,
+            status_callback_url: smsStatusCallbackUrl,
           }),
           metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
         });
@@ -751,7 +813,7 @@ Deno.serve(async (req) => {
           delivery_status: 'failed',
           attempted: true,
           sent: false,
-          sent_definition: 'provider acceptance only',
+          sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
           provider_accepted: false,
           delivered: false,
           recipient: configuredAdminPhone,
@@ -760,6 +822,7 @@ Deno.serve(async (req) => {
           provider_response: null,
           from_number_used: smsDiagnostics.fromNumberUsed,
           config_source: smsDiagnostics.configSource,
+          status_callback_url: smsStatusCallbackUrl,
         };
       }
     }

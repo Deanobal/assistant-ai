@@ -65,38 +65,50 @@ function buildProviderMessage(uniqueKey, details) {
   return text ? `${buildEventKey(uniqueKey)}\n${text}` : buildEventKey(uniqueKey);
 }
 
+function buildFunctionUrl(requestUrl, functionName) {
+  const url = new URL(requestUrl);
+  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
 function getProviderMessageId(data) {
   return data?.sid || data?.id || data?.messageId || data?.message_id || null;
 }
 
-function mapTwilioDeliveryStatus(status) {
+function mapTwilioSmsDeliveryStatus(status) {
   const normalized = String(status || '').trim().toLowerCase();
 
   if (!normalized) {
-    return 'provider_accepted';
-  }
-
-  if (['queued', 'scheduled', 'sending'].includes(normalized)) {
     return 'queued';
   }
 
-  if (['accepted', 'sent'].includes(normalized)) {
-    return 'provider_accepted';
+  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+    return 'queued';
+  }
+
+  if (normalized === 'sent') {
+    return 'sent';
   }
 
   if (['delivered', 'received', 'read'].includes(normalized)) {
     return 'delivered';
   }
 
-  if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
+  if (normalized === 'undelivered') {
+    return 'undelivered';
+  }
+
+  if (['failed', 'canceled', 'cancelled'].includes(normalized)) {
     return 'failed';
   }
 
-  return 'provider_accepted';
+  return 'queued';
 }
 
-function isProviderAcceptanceStatus(status) {
-  return ['queued', 'provider_accepted', 'delivered'].includes(String(status || '').trim());
+function isSmsProviderAcceptanceStatus(status) {
+  return ['queued', 'sent', 'delivered'].includes(String(status || '').trim());
 }
 
 function isStrategyCallLead(data) {
@@ -189,7 +201,7 @@ function buildSmsEventConfig(eventType, data, errorValue = '') {
   };
 }
 
-async function sendTwilioSms(message, to) {
+async function sendTwilioSms(message, to, statusCallbackUrl) {
   const accountSid = String(readSecretValue('TWILIO_ACCOUNT_SID') || '').trim();
   const authToken = String(readSecretValue('TWILIO_AUTH_TOKEN') || '').trim();
   const fromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
@@ -202,6 +214,7 @@ async function sendTwilioSms(message, to) {
       providerMessageId: null,
       providerResponse: null,
       providerStatus: null,
+      providerErrorCode: null,
       fromNumberUsed: fromNumber || null,
     };
   }
@@ -211,6 +224,10 @@ async function sendTwilioSms(message, to) {
     To: destination,
     Body: message,
   });
+
+  if (statusCallbackUrl) {
+    body.set('StatusCallback', statusCallbackUrl);
+  }
 
   const auth = btoa(`${accountSid}:${authToken}`);
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
@@ -238,23 +255,26 @@ async function sendTwilioSms(message, to) {
       providerMessageId: getProviderMessageId(parsed),
       providerResponse: parsed || resultText || null,
       providerStatus: parsed?.status || null,
+      providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
       fromNumberUsed: fromNumber,
     };
   }
 
   return {
-    status: mapTwilioDeliveryStatus(parsed?.status),
+    status: mapTwilioSmsDeliveryStatus(parsed?.status),
     details: parsed?.status || 'Twilio SMS accepted by Twilio.',
     providerMessageId: getProviderMessageId(parsed),
     providerResponse: parsed || resultText || null,
     providerStatus: parsed?.status || null,
+    providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null,
     fromNumberUsed: parsed?.from || fromNumber,
   };
 }
 
-async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue = '') {
+async function sendCustomerSms(base44, eventType, data, actorEmail, requestUrl, errorValue = '') {
   const destination = normalizePhone(data.mobile_number || '');
   const config = buildSmsEventConfig(eventType, data, errorValue);
+  const statusCallbackUrl = buildFunctionUrl(requestUrl, 'twilioStatusCallback');
 
   const existing = await base44.asServiceRole.entities.NotificationLog.filter({
     entity_id: data.id,
@@ -278,7 +298,7 @@ async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue =
       status: 'duplicate_skipped',
       delivery_status: 'duplicate_skipped',
       sent: false,
-      sent_definition: 'provider acceptance only',
+      sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
       provider_accepted: false,
       delivered: false,
       recipient: destination || null,
@@ -303,9 +323,15 @@ async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue =
     delivery_status: destination ? 'queued' : 'not_configured',
     provider_name: 'Twilio',
     provider_message: buildProviderMessage(config.uniqueKey),
+    provider_message_id: null,
+    provider_status: null,
+    provider_error_code: null,
+    provider_error_message: null,
     title: config.title,
     message: config.message,
     triggered_at: new Date().toISOString(),
+    delivered_at: null,
+    failed_at: null,
     actor_email: actorEmail,
     metadata,
   });
@@ -314,13 +340,14 @@ async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue =
     await base44.asServiceRole.entities.NotificationLog.update(record.id, {
       ...record,
       delivery_status: 'not_configured',
+      provider_error_message: 'No mobile number available for customer strategy call SMS.',
       provider_message: buildProviderMessage(config.uniqueKey, 'No mobile number available for customer strategy call SMS.'),
       metadata: {
         ...metadata,
         sms_attempted: false,
         sms_sent: false,
         sms_delivery_status: 'not_configured',
-        sms_sent_definition: 'provider acceptance only',
+        sms_sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
         sms_error: 'No mobile number available for customer strategy call SMS.',
       },
     });
@@ -331,39 +358,51 @@ async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue =
       status: 'not_configured',
       delivery_status: 'not_configured',
       sent: false,
-      sent_definition: 'provider acceptance only',
+      sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
       provider_accepted: false,
       delivered: false,
       recipient: null,
     };
   }
 
-  const smsResult = await sendTwilioSms(config.message, destination);
+  const smsResult = await sendTwilioSms(config.message, destination, statusCallbackUrl);
   const deliveryStatus = smsResult.status;
-  const providerAccepted = isProviderAcceptanceStatus(deliveryStatus);
+  const providerAccepted = isSmsProviderAcceptanceStatus(deliveryStatus);
+  const statusTimestamp = new Date().toISOString();
 
   await base44.asServiceRole.entities.NotificationLog.update(record.id, {
     ...record,
     delivery_status: deliveryStatus,
+    provider_message_id: smsResult.providerMessageId,
+    provider_status: smsResult.providerStatus,
+    provider_error_code: smsResult.providerErrorCode,
+    provider_error_message: ['failed', 'undelivered'].includes(deliveryStatus) ? smsResult.details : null,
+    delivered_at: deliveryStatus === 'delivered' ? statusTimestamp : null,
+    failed_at: ['failed', 'undelivered'].includes(deliveryStatus) ? statusTimestamp : null,
     provider_message: buildProviderMessage(config.uniqueKey, {
       status: smsResult.status,
       delivery_status: deliveryStatus,
       provider_status: smsResult.providerStatus,
-      error: smsResult.status === 'failed' ? smsResult.details : null,
+      error_code: smsResult.providerErrorCode,
+      error: ['failed', 'undelivered'].includes(deliveryStatus) ? smsResult.details : null,
       provider_message_id: smsResult.providerMessageId,
       provider_response: smsResult.providerResponse,
       from_number_used: smsResult.fromNumberUsed,
+      status_callback_url: statusCallbackUrl,
     }),
     metadata: {
       ...metadata,
       sms_attempted: true,
       sms_sent: providerAccepted,
       sms_delivery_status: deliveryStatus,
-      sms_sent_definition: 'provider acceptance only',
-      sms_error: smsResult.status === 'failed' ? smsResult.details : null,
+      sms_sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
+      sms_error: ['failed', 'undelivered'].includes(deliveryStatus) ? smsResult.details : null,
       sms_provider_message_id: smsResult.providerMessageId,
       sms_provider_response: smsResult.providerResponse,
       sms_from_number_used: smsResult.fromNumberUsed,
+      sms_provider_status: smsResult.providerStatus,
+      sms_provider_error_code: smsResult.providerErrorCode,
+      sms_status_callback_url: statusCallbackUrl,
     },
   });
 
@@ -373,11 +412,12 @@ async function sendCustomerSms(base44, eventType, data, actorEmail, errorValue =
     status: smsResult.status,
     delivery_status: deliveryStatus,
     sent: providerAccepted,
-    sent_definition: 'provider acceptance only',
+    sent_definition: 'Twilio accepted/send state only until callback confirms final delivery',
     provider_accepted: providerAccepted,
     delivered: deliveryStatus === 'delivered',
     recipient: destination,
     provider_message_id: smsResult.providerMessageId,
+    provider_status: smsResult.providerStatus,
   };
 }
 
@@ -400,7 +440,7 @@ Deno.serve(async (req) => {
     const bookingConfirmed = isBookingConfirmed(data);
 
     if (eventType === 'create' && strategyCallLead && !bookingConfirmed) {
-      return Response.json(await sendCustomerSms(base44, 'strategy_call_requested', data, actorEmail));
+      return Response.json(await sendCustomerSms(base44, 'strategy_call_requested', data, actorEmail, req.url));
     }
 
     if (eventType === 'update') {
@@ -410,17 +450,17 @@ Deno.serve(async (req) => {
       const repeatStrategyCallRequest = strategyCallLead && !bookingConfirmed && oldWasStrategyCall && lastActivityChanged;
 
       if (newlyRequestedStrategyCall || repeatStrategyCallRequest) {
-        return Response.json(await sendCustomerSms(base44, 'strategy_call_requested', data, actorEmail));
+        return Response.json(await sendCustomerSms(base44, 'strategy_call_requested', data, actorEmail, req.url));
       }
 
       const failure = strategyCallLead && !bookingConfirmed ? getNewFailure(data, oldData) : null;
       if (failure) {
-        return Response.json(await sendCustomerSms(base44, 'booking_request_failed', data, actorEmail, failure.value));
+        return Response.json(await sendCustomerSms(base44, 'booking_request_failed', data, actorEmail, req.url, failure.value));
       }
 
       const bookingJustConfirmed = strategyCallLead && bookingConfirmed && !isBookingConfirmed(oldData);
       if (bookingJustConfirmed) {
-        return Response.json(await sendCustomerSms(base44, 'booking_confirmed', data, actorEmail));
+        return Response.json(await sendCustomerSms(base44, 'booking_confirmed', data, actorEmail, req.url));
       }
     }
 
