@@ -32,11 +32,20 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
+    const action = String(payload?.action || 'match').trim();
     const unmatchedLogId = String(payload?.unmatchedLogId || '').trim();
     const leadId = String(payload?.leadId || '').trim();
 
-    if (!isValidObjectId(unmatchedLogId) || !isValidObjectId(leadId)) {
-      return Response.json({ error: 'Valid unmatchedLogId and leadId are required' }, { status: 400 });
+    if (!isValidObjectId(unmatchedLogId)) {
+      return Response.json({ error: 'A valid unmatchedLogId is required' }, { status: 400 });
+    }
+
+    if (action === 'match' && !isValidObjectId(leadId)) {
+      return Response.json({ error: 'A valid leadId is required for manual matching' }, { status: 400 });
+    }
+
+    if (!['match', 'review_no_match'].includes(action)) {
+      return Response.json({ error: 'Unsupported action' }, { status: 400 });
     }
 
     const unmatchedLog = await getNotificationLog(base44, unmatchedLogId);
@@ -46,6 +55,43 @@ Deno.serve(async (req) => {
 
     if (unmatchedLog.event_type !== 'customer_sms_reply_unmatched' || unmatchedLog.channel !== 'sms' || unmatchedLog.sender_role !== 'client') {
       return Response.json({ error: 'Only unmatched inbound customer SMS records can be manually matched' }, { status: 400 });
+    }
+
+    if (action === 'review_no_match') {
+      if (unmatchedLog.metadata?.manual_match_copy_log_id) {
+        return Response.json({ error: 'This SMS was already manually matched to a lead' }, { status: 400 });
+      }
+
+      if (unmatchedLog.metadata?.resolution_status === 'reviewed_no_match') {
+        return Response.json({
+          success: true,
+          duplicate: true,
+          unmatched_log_id: unmatchedLog.id,
+          resolution_status: 'reviewed_no_match',
+        });
+      }
+
+      const reviewedAt = new Date().toISOString();
+      await base44.asServiceRole.entities.NotificationLog.update(unmatchedLog.id, {
+        ...unmatchedLog,
+        match_status: unmatchedLog.match_status || 'unmatched',
+        actor_email: user.email || null,
+        metadata: {
+          ...(unmatchedLog.metadata || {}),
+          resolution_status: 'reviewed_no_match',
+          no_match_reviewed_at: reviewedAt,
+          no_match_reviewed_by: user.email || null,
+        },
+      });
+
+      return Response.json({
+        success: true,
+        duplicate: false,
+        unmatched_log_id: unmatchedLog.id,
+        resolution_status: 'reviewed_no_match',
+        reviewed_at: reviewedAt,
+        reviewed_by: user.email || null,
+      });
     }
 
     const lead = await getLead(base44, leadId);

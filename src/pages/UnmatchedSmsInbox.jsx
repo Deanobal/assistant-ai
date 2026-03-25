@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import UnmatchedSmsCard from '@/components/admin/sms/UnmatchedSmsCard';
+import { getResolutionState } from '@/lib/smsMatching';
 
 export default function UnmatchedSmsInbox() {
   const { data: logs = [] } = useQuery({
@@ -17,9 +18,16 @@ export default function UnmatchedSmsInbox() {
     initialData: [],
   });
 
+  const { data: outboundLogs = [] } = useQuery({
+    queryKey: ['manual-match-outbound-sms'],
+    queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', recipient_role: 'client' }, '-created_date', 300),
+    initialData: [],
+  });
+
   const orderedLogs = [...logs].sort((a, b) => new Date(b.triggered_at || b.created_date) - new Date(a.triggered_at || a.created_date));
-  const resolvedCount = orderedLogs.filter((log) => !!log.metadata?.manual_match_copy_log_id).length;
-  const openCount = orderedLogs.length - resolvedCount;
+  const matchedCount = orderedLogs.filter((log) => getResolutionState(log) === 'matched').length;
+  const reviewedNoMatchCount = orderedLogs.filter((log) => getResolutionState(log) === 'reviewed_no_match').length;
+  const openCount = orderedLogs.filter((log) => getResolutionState(log) === 'open').length;
 
   return (
     <div className="space-y-6">
@@ -29,9 +37,10 @@ export default function UnmatchedSmsInbox() {
           <h2 className="text-3xl font-bold text-white mt-1">Unmatched SMS Inbox</h2>
           <p className="text-gray-400 mt-2 max-w-3xl">Review inbound customer SMS replies that were not confidently attached to a lead, then manually link them without losing the original audit record.</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 xl:min-w-[280px]">
+        <div className="grid grid-cols-3 gap-3 xl:min-w-[420px]">
           <Card className="bg-[#12121a] border-white/5"><CardContent className="p-4"><p className="text-xs uppercase tracking-[0.16em] text-gray-500">Open</p><p className="text-2xl font-semibold text-white mt-2">{openCount}</p></CardContent></Card>
-          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-4"><p className="text-xs uppercase tracking-[0.16em] text-gray-500">Manually matched</p><p className="text-2xl font-semibold text-white mt-2">{resolvedCount}</p></CardContent></Card>
+          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-4"><p className="text-xs uppercase tracking-[0.16em] text-gray-500">Manually matched</p><p className="text-2xl font-semibold text-white mt-2">{matchedCount}</p></CardContent></Card>
+          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-4"><p className="text-xs uppercase tracking-[0.16em] text-gray-500">Reviewed no match</p><p className="text-2xl font-semibold text-white mt-2">{reviewedNoMatchCount}</p></CardContent></Card>
         </div>
       </div>
 
@@ -41,7 +50,7 @@ export default function UnmatchedSmsInbox() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {orderedLogs.map((log) => <UnmatchedSmsCard key={log.id} log={log} leads={leads} />)}
+          {orderedLogs.map((log) => <UnmatchedSmsCard key={log.id} log={log} leads={leads} outboundLogs={outboundLogs} />)}
         </div>
       )}
     </div>
