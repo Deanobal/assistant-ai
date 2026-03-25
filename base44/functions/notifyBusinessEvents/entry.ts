@@ -566,18 +566,6 @@ Deno.serve(async (req) => {
         admin_alert: adminResponse && typeof adminResponse === 'object' && 'data' in adminResponse ? adminResponse.data : adminResponse,
       };
 
-      if (def.event_type === 'strategy_call_requested') {
-        resultEntry.customer_request_sms = await sendCustomerEventSms(base44, 'strategy_call_requested', data, actorEmail);
-      }
-
-      if (def.event_type === 'booking_request_failed') {
-        resultEntry.customer_fallback_sms = await sendCustomerEventSms(base44, 'booking_request_failed', data, actorEmail, def.message);
-      }
-
-      if (def.event_type === 'booking_confirmed') {
-        resultEntry.customer_confirmation_sms = await sendCustomerEventSms(base44, 'booking_confirmed', data, actorEmail);
-      }
-
       results.push(resultEntry);
     }
 
