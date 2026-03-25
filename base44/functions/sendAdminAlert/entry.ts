@@ -17,6 +17,7 @@ const SUPPORTED_EVENT_TYPES = new Set([
   'note_added',
   'support_conversation_created',
   'support_conversation_reply',
+  'customer_sms_reply_received',
 ]);
 
 function getErrorMessage(error) {

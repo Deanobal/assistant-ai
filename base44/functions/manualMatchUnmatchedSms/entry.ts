@@ -22,6 +22,39 @@ async function getLead(base44, id) {
   return leads[0] || null;
 }
 
+function hasHighIntentTag(tag) {
+  return ['yes', 'call_me', 'preferred_time', 'tomorrow', 'urgent_interest'].includes(String(tag || ''));
+}
+
+function isHighIntentReply(tags) {
+  return Array.isArray(tags) && tags.some((tag) => hasHighIntentTag(tag));
+}
+
+function buildHighIntentNextAction(tags) {
+  if (tags.includes('call_me') && tags.includes('preferred_time')) {
+    return 'Call lead back at the requested time from inbound SMS';
+  }
+
+  if (tags.includes('call_me')) {
+    return 'Call lead back from high-intent SMS reply';
+  }
+
+  if (tags.includes('preferred_time') || tags.includes('tomorrow')) {
+    return 'Follow up on requested booking time from inbound SMS';
+  }
+
+  if (tags.includes('urgent_interest')) {
+    return 'Prioritise lead for fast booking follow-up';
+  }
+
+  return 'Follow up on high-intent SMS reply';
+}
+
+function buildLeadNote(existingNotes, timestamp, body, tags) {
+  const noteLine = `[High-intent inbound SMS ${timestamp}] ${body}${tags.length ? ` | tags: ${tags.join(', ')}` : ''}`;
+  return existingNotes ? `${existingNotes}\n${noteLine}` : noteLine;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -159,6 +192,20 @@ Deno.serve(async (req) => {
         manual_match_copy_log_id: matchedLog.id,
       },
     });
+
+    const replyTags = Array.isArray(unmatchedLog.metadata?.reply_intent_tags)
+      ? unmatchedLog.metadata.reply_intent_tags.filter(hasHighIntentTag)
+      : [];
+
+    if (isHighIntentReply(replyTags)) {
+      const activityAt = unmatchedLog.triggered_at || matchedAt;
+      await base44.asServiceRole.entities.Lead.update(lead.id, {
+        ...lead,
+        last_activity_at: activityAt,
+        notes: buildLeadNote(lead.notes || '', activityAt, unmatchedLog.message, replyTags),
+        next_action: buildHighIntentNextAction(replyTags),
+      });
+    }
 
     return Response.json({
       success: true,

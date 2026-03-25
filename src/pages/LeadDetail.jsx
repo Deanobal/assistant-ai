@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LeadSmsTrail from '@/components/admin/leads/LeadSmsTrail';
+import LeadRecommendedNextActionPanel from '@/components/admin/leads/LeadRecommendedNextActionPanel';
 
 const stages = ['New Lead', 'Contacted', 'Strategy Call Booked', 'Proposal Sent', 'Follow-Up', 'Won', 'Lost', 'Onboarding'];
 
@@ -149,6 +150,8 @@ export default function LeadDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <LeadRecommendedNextActionPanel leadId={leadId} nextAction={draft.next_action} />
 
       <LeadSmsTrail leadId={leadId} mobileNumber={lead.mobile_number} fullName={lead.full_name || lead.business_name} />
     </div>

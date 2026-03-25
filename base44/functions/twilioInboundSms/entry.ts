@@ -107,11 +107,11 @@ function detectReplyTags(messageBody) {
   const normalized = body.toUpperCase();
   const tags = [];
 
-  if (/^YES\b|\bYES\b/.test(normalized)) {
+  if (/\bYES\b/.test(normalized)) {
     tags.push('yes');
   }
 
-  if (/CALL\s+ME/.test(normalized)) {
+  if (/\b(?:CALL\s+ME|PHONE\s+ME|RING\s+ME|GIVE\s+ME\s+A\s+CALL)\b/.test(normalized)) {
     tags.push('call_me');
   }
 
@@ -119,19 +119,48 @@ function detectReplyTags(messageBody) {
     tags.push('tomorrow');
   }
 
-  if (/\b(?:MON|TUE|WED|THU|FRI|SAT|SUN|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\b/.test(normalized)) {
-    tags.push('day_reference');
+  if (/\b\d{1,2}(?::\d{2})?\s?(?:AM|PM)\b/.test(normalized) || /\b(?:THIS\s+AFTERNOON|AFTERNOON|MORNING|EVENING|TONIGHT)\b/.test(normalized)) {
+    tags.push('preferred_time');
   }
 
-  if (/\b\d{1,2}(?::\d{2})?\s?(?:AM|PM)\b/.test(normalized) || /\b(?:MORNING|AFTERNOON|EVENING)\b/.test(normalized)) {
-    tags.push('preferred_time');
+  if (/\b(?:URGENT|ASAP|RIGHT\s+AWAY|READY\s+TO\s+(?:BOOK|TALK|SPEAK)|BOOK\s+ME\s+IN|LET'?S\s+BOOK|CAN\s+WE\s+BOOK|KEEN\s+TO\s+BOOK|READY\s+TO\s+GO)\b/.test(normalized)) {
+    tags.push('urgent_interest');
   }
 
   return [...new Set(tags)];
 }
 
+function hasHighIntentTag(tag) {
+  return ['yes', 'call_me', 'preferred_time', 'tomorrow', 'urgent_interest'].includes(String(tag || ''));
+}
+
+function isHighIntentReply(tags) {
+  return Array.isArray(tags) && tags.some((tag) => hasHighIntentTag(tag));
+}
+
+function buildHighIntentNextAction(tags) {
+  if (tags.includes('call_me') && tags.includes('preferred_time')) {
+    return 'Call lead back at the requested time from inbound SMS';
+  }
+
+  if (tags.includes('call_me')) {
+    return 'Call lead back from high-intent SMS reply';
+  }
+
+  if (tags.includes('preferred_time') || tags.includes('tomorrow')) {
+    return 'Follow up on requested booking time from inbound SMS';
+  }
+
+  if (tags.includes('urgent_interest')) {
+    return 'Prioritise lead for fast booking follow-up';
+  }
+
+  return 'Follow up on high-intent SMS reply';
+}
+
 function buildLeadNote(existingNotes, timestamp, body, tags) {
-  const noteLine = `[Inbound SMS ${timestamp}] ${body}${tags.length ? ` | tags: ${tags.join(', ')}` : ''}`;
+  const notePrefix = isHighIntentReply(tags) ? 'High-intent inbound SMS' : 'Inbound SMS';
+  const noteLine = `[${notePrefix} ${timestamp}] ${body}${tags.length ? ` | tags: ${tags.join(', ')}` : ''}`;
   return existingNotes ? `${existingNotes}\n${noteLine}` : noteLine;
 }
 
@@ -208,6 +237,74 @@ async function findLeadMatch(base44, fromNumber) {
   };
 }
 
+function getTagSignature(tags) {
+  return [...new Set((tags || []).filter(hasHighIntentTag))].sort().join('|') || 'none';
+}
+
+function normalizeMessageSignature(messageBody) {
+  return String(messageBody || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^a-z0-9 :]/g, '').slice(0, 96);
+}
+
+async function hasRecentHighIntentAlert(base44, leadId, messageBody, tags, receivedAt) {
+  const recentAlerts = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: leadId,
+    event_type: 'customer_sms_reply_received',
+    channel: 'in_app',
+    recipient_role: 'admin',
+  }, '-created_date', 20);
+  const tagSignature = getTagSignature(tags);
+  const messageSignature = normalizeMessageSignature(messageBody);
+  const windowStart = new Date(receivedAt).getTime() - (1000 * 60 * 60 * 2);
+
+  return recentAlerts.some((log) => {
+    const alertTime = new Date(log.triggered_at || log.created_date).getTime();
+    return alertTime >= windowStart
+      && log.metadata?.alert_category === 'high_intent_inbound_sms'
+      && (
+        log.metadata?.high_intent_tag_signature === tagSignature
+        || log.metadata?.high_intent_message_signature === messageSignature
+      );
+  });
+}
+
+async function sendHighIntentAdminAlert(base44, lead, messageBody, tags, receivedAt) {
+  if (await hasRecentHighIntentAlert(base44, lead.id, messageBody, tags, receivedAt)) {
+    return { status: 'skipped_recent_duplicate' };
+  }
+
+  const timeBucket = Math.floor(new Date(receivedAt).getTime() / (1000 * 60 * 60 * 2));
+  const tagSignature = getTagSignature(tags);
+  const messageSignature = normalizeMessageSignature(messageBody);
+  const leadName = lead.business_name || lead.full_name || 'Lead';
+  const alertResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+    eventType: 'customer_sms_reply_received',
+    entityName: 'Lead',
+    entityId: lead.id,
+    clientAccountId: lead.client_account_id || null,
+    title: 'High-intent SMS reply needs follow-up',
+    message: `${leadName} sent a high-intent SMS reply: "${messageBody}"`,
+    metadata: {
+      full_name: lead.full_name || null,
+      business_name: lead.business_name || null,
+      email: lead.email || null,
+      mobile_number: lead.mobile_number || null,
+      enquiry_type: lead.enquiry_type || null,
+      admin_link: `/LeadDetail?id=${lead.id}`,
+      alert_category: 'high_intent_inbound_sms',
+      high_intent_tags: tags.filter(hasHighIntentTag),
+      high_intent_tag_signature: tagSignature,
+      high_intent_message_signature: messageSignature,
+      inbound_message_at: receivedAt,
+    },
+    uniqueKey: `high_intent_sms:${lead.id}:${tagSignature}:${timeBucket}`,
+    priority: tags.includes('urgent_interest') ? 'high' : 'normal',
+    smsMessage: `High-intent SMS from ${leadName}: ${messageBody}`,
+  });
+  const alertData = alertResponse?.data || alertResponse || {};
+
+  return { status: alertData.duplicate ? 'duplicate_skipped' : 'sent' };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -251,59 +348,29 @@ Deno.serve(async (req) => {
     const replyTags = detectReplyTags(messageBody);
     const match = await findLeadMatch(base44, fromNumber);
     const matchedLead = match.lead;
-    const highValue = replyTags.length > 0;
+    const highIntent = isHighIntentReply(replyTags);
     const logEventType = matchedLead ? 'customer_sms_reply_received' : 'customer_sms_reply_unmatched';
     const entityId = matchedLead ? matchedLead.id : `unmatched:${messageSid}`;
     const title = matchedLead ? 'Customer SMS reply received' : 'Unmatched customer SMS reply';
 
     const record = await base44.asServiceRole.entities.NotificationLog.create({
-      event_type: logEventType,
-      entity_name: 'Lead',
-      entity_id: entityId,
-      client_account_id: matchedLead?.client_account_id || null,
-      sender_role: 'client',
-      recipient_role: 'admin',
-      match_status: matchedLead ? 'matched' : match.matchStatus,
-      recipient_email: toNumber,
-      channel: 'sms',
-      delivery_status: 'stored',
-      provider_name: 'Twilio',
-      provider_message: JSON.stringify({ from: fromNumber, to: toNumber, body: messageBody }),
-      provider_message_id: messageSid,
-      provider_status: 'received',
-      provider_error_code: null,
-      provider_error_message: null,
-      title,
-      message: messageBody,
-      triggered_at: receivedAt,
-      delivered_at: null,
-      failed_at: null,
-      actor_email: null,
-      metadata: {
-        sender_role: 'client',
-        recipient_role: 'admin',
-        sender_number: fromNumber,
-        receiver_number: toNumber,
-        inbound_message_sid: messageSid,
-        received_at: receivedAt,
-        reply_intent_tags: replyTags,
-        requires_admin_attention: highValue,
-        match_method: match.matchMethod,
-        matched_lead_id: matchedLead?.id || null,
-        matched_outbound_log_id: match.outboundLog?.id || null,
-        matched_outbound_sms_kind: match.outboundLog?.metadata?.sms_kind || null,
-        raw_payload: payload,
-      },
-    });
+...
+    let recommendedNextAction = null;
+    let adminAlertStatus = null;
 
     if (matchedLead) {
-      const nextAction = highValue ? 'Review high-intent inbound SMS reply' : (matchedLead.next_action || 'Review inbound SMS reply');
+      recommendedNextAction = highIntent ? buildHighIntentNextAction(replyTags) : (matchedLead.next_action || 'Review inbound SMS reply');
       await base44.asServiceRole.entities.Lead.update(matchedLead.id, {
         ...matchedLead,
         last_activity_at: receivedAt,
         notes: buildLeadNote(matchedLead.notes || '', receivedAt, messageBody, replyTags),
-        next_action: nextAction,
+        next_action: recommendedNextAction,
       });
+
+      if (highIntent) {
+        const adminAlert = await sendHighIntentAdminAlert(base44, matchedLead, messageBody, replyTags, receivedAt);
+        adminAlertStatus = adminAlert.status;
+      }
     }
 
     return Response.json({
@@ -315,7 +382,9 @@ Deno.serve(async (req) => {
       match_status: matchedLead ? 'matched' : match.matchStatus,
       match_method: match.matchMethod,
       reply_intent_tags: replyTags,
-      requires_admin_attention: highValue,
+      requires_admin_attention: highIntent,
+      recommended_next_action: recommendedNextAction,
+      admin_alert_status: adminAlertStatus,
     });
   } catch (error) {
     return Response.json({ error: getErrorMessage(error) }, { status: 500 });
