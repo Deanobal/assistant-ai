@@ -20,6 +20,17 @@ function summarizeLogs(logs) {
   }));
 }
 
+function buildCounts(logs) {
+  const counts = {};
+
+  for (const log of logs) {
+    const key = `${log.event_type}:${log.channel}:${log.delivery_status}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+
+  return counts;
+}
+
 async function waitForLogCount(base44, entityId, minimumCount) {
   for (let index = 0; index < 8; index += 1) {
     const logs = await base44.asServiceRole.entities.NotificationLog.filter({ entity_id: entityId }, '-created_date', 50);
@@ -62,6 +73,7 @@ Deno.serve(async (req) => {
       booking_source: 'automation_audit',
     });
 
+    await sleep(3000);
     const createLogs = await waitForLogCount(base44, lead.id, 3);
 
     const confirmedAt = new Date(Date.now() + 60000);
@@ -84,6 +96,10 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       lead_id: lead.id,
+      create_stage_log_count: createLogs.length,
+      final_log_count: finalLogs.length,
+      create_stage_counts: buildCounts(createLogs),
+      final_counts: buildCounts(finalLogs),
       create_stage_logs: summarizeLogs(createLogs),
       final_logs: summarizeLogs(finalLogs),
     });
