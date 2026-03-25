@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 function buildAuditPhone(stamp) {
-  const suffix = String(stamp).slice(-6);
-  return `+614${suffix}`;
+  const suffix = String(stamp).slice(-8);
+  return `+61${suffix}`;
 }
 
 Deno.serve(async (req) => {

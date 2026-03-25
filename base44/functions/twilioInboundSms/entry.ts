@@ -105,6 +105,10 @@ function buildLeadNote(existingNotes, timestamp, body, tags) {
 }
 
 async function findLeadById(base44, leadId) {
+  if (!/^[a-f\d]{24}$/i.test(String(leadId || ''))) {
+    return null;
+  }
+
   const leads = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
   return leads[0] || null;
 }
