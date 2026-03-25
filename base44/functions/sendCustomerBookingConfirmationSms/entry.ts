@@ -51,22 +51,30 @@ function mapTwilioDeliveryStatus(status) {
   const normalized = String(status || '').trim().toLowerCase();
 
   if (!normalized) {
-    return 'sent';
+    return 'provider_accepted';
   }
 
-  if (['queued', 'accepted', 'scheduled', 'sending'].includes(normalized)) {
+  if (['queued', 'scheduled', 'sending'].includes(normalized)) {
     return 'queued';
   }
 
-  if (['sent', 'delivered', 'received', 'read'].includes(normalized)) {
-    return 'sent';
+  if (['accepted', 'sent'].includes(normalized)) {
+    return 'provider_accepted';
+  }
+
+  if (['delivered', 'received', 'read'].includes(normalized)) {
+    return 'delivered';
   }
 
   if (['failed', 'undelivered', 'canceled'].includes(normalized)) {
     return 'failed';
   }
 
-  return 'sent';
+  return 'provider_accepted';
+}
+
+function isProviderAcceptanceStatus(status) {
+  return ['queued', 'provider_accepted', 'delivered'].includes(String(status || '').trim());
 }
 
 function buildMessage(confirmedDate, confirmedTime, bookingProvider, bookingReference) {
@@ -155,8 +163,8 @@ async function sendTwilioSms(message, to) {
   }
 
   return {
-    status: 'sent',
-    details: parsed?.status || 'Twilio SMS sent.',
+    status: mapTwilioDeliveryStatus(parsed?.status),
+    details: parsed?.status || 'Twilio SMS accepted by Twilio.',
     providerMessageId: getProviderMessageId(parsed),
     providerResponse: parsed || resultText || null,
     providerStatus: parsed?.status || null,
@@ -194,6 +202,11 @@ Deno.serve(async (req) => {
         success: true,
         duplicate: true,
         status: 'duplicate_skipped',
+        delivery_status: 'duplicate_skipped',
+        sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: destination || null,
       });
     }
@@ -231,31 +244,42 @@ Deno.serve(async (req) => {
         ...record,
         delivery_status: 'not_configured',
         provider_message: buildProviderMessage(uniqueKey, 'No mobile number available for booking confirmation SMS.'),
+        metadata: {
+          ...metadata,
+          sms_attempted: false,
+          sms_sent: false,
+          sms_delivery_status: 'not_configured',
+          sms_sent_definition: 'provider acceptance only',
+          sms_error: 'No mobile number available for booking confirmation SMS.',
+        },
       });
 
       return Response.json({
         success: true,
         duplicate: false,
         status: 'not_configured',
+        delivery_status: 'not_configured',
+        sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: null,
       });
     }
 
     try {
       const smsResult = await sendTwilioSms(message, destination);
-      const deliveryStatus = smsResult.status === 'sent'
-        ? mapTwilioDeliveryStatus(smsResult.providerStatus)
-        : smsResult.status === 'not_configured'
-          ? 'not_configured'
-          : 'failed';
+      const deliveryStatus = smsResult.status;
+      const providerAccepted = isProviderAcceptanceStatus(deliveryStatus);
 
       await base44.asServiceRole.entities.NotificationLog.update(record.id, {
         ...record,
         delivery_status: deliveryStatus,
         provider_message: buildProviderMessage(uniqueKey, {
           status: smsResult.status,
+          delivery_status: deliveryStatus,
           provider_status: smsResult.providerStatus,
-          error: smsResult.status === 'sent' ? null : smsResult.details,
+          error: smsResult.status === 'failed' ? smsResult.details : null,
           provider_message_id: smsResult.providerMessageId,
           provider_response: smsResult.providerResponse,
           from_number_used: smsResult.fromNumberUsed,
@@ -263,8 +287,10 @@ Deno.serve(async (req) => {
         metadata: {
           ...metadata,
           sms_attempted: true,
-          sms_sent: smsResult.status === 'sent',
-          sms_error: smsResult.status === 'sent' ? null : smsResult.details,
+          sms_sent: providerAccepted,
+          sms_delivery_status: deliveryStatus,
+          sms_sent_definition: 'provider acceptance only',
+          sms_error: smsResult.status === 'failed' ? smsResult.details : null,
           sms_provider_message_id: smsResult.providerMessageId,
           sms_provider_response: smsResult.providerResponse,
           sms_from_number_used: smsResult.fromNumberUsed,
@@ -276,6 +302,10 @@ Deno.serve(async (req) => {
         duplicate: false,
         status: smsResult.status,
         delivery_status: deliveryStatus,
+        sent: providerAccepted,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: providerAccepted,
+        delivered: deliveryStatus === 'delivered',
         recipient: destination,
         provider_message_id: smsResult.providerMessageId,
       });
@@ -287,12 +317,15 @@ Deno.serve(async (req) => {
         delivery_status: 'failed',
         provider_message: buildProviderMessage(uniqueKey, {
           status: 'failed',
+          delivery_status: 'failed',
           error: errorMessage,
         }),
         metadata: {
           ...metadata,
           sms_attempted: true,
           sms_sent: false,
+          sms_delivery_status: 'failed',
+          sms_sent_definition: 'provider acceptance only',
           sms_error: errorMessage,
         },
       });
@@ -301,6 +334,11 @@ Deno.serve(async (req) => {
         success: true,
         duplicate: false,
         status: 'failed',
+        delivery_status: 'failed',
+        sent: false,
+        sent_definition: 'provider acceptance only',
+        provider_accepted: false,
+        delivered: false,
         recipient: destination,
         error: errorMessage,
       });

@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
 
     for (const def of eventDefs) {
       const metadata = buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
-      const adminResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+      const adminResponse = await base44.functions.invoke('sendAdminAlert', {
         eventType: def.event_type,
         entityName,
         entityId: data.id,
@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
       };
 
       if (def.event_type === 'booking_confirmed') {
-        const customerResponse = await base44.asServiceRole.functions.invoke('sendCustomerBookingConfirmationSms', {
+        const customerResponse = await base44.functions.invoke('sendCustomerBookingConfirmationSms', {
           leadId: data.id,
           clientAccountId: data.client_account_id || null,
           fullName: data.full_name || data.business_name || '',
