@@ -4,12 +4,68 @@ const allowedAiModes = ['ai_active', 'human_required', 'escalated', 'closed'];
 const allowedCategories = ['sales', 'onboarding', 'support', 'urgent', 'general'];
 const allowedUrgencyLevels = ['low', 'normal', 'high', 'urgent'];
 
+const explicitHumanKeywords = [
+  'human',
+  'real person',
+  'someone from your team',
+  'speak to someone',
+  'talk to someone',
+  'team member'
+];
+
+const pricingKeywords = ['pricing', 'price', 'cost', 'quote'];
+const readyToBookKeywords = ['ready to book', 'ready to start', 'book now', 'get started now', 'sign me up', 'start now'];
+const callMeKeywords = ['call me', 'call me back', 'give me a call', 'ring me'];
+const urgentHelpKeywords = ['urgent help', 'need urgent help', 'help asap', 'asap', 'urgent', 'right now'];
+const aiFailureKeywords = [
+  'that did not help',
+  'that didnt help',
+  'not helpful',
+  'still need help',
+  'you did not answer',
+  'you didnt answer',
+  'that does not answer',
+  'that doesnt answer',
+  'can i speak to someone instead',
+  'this is going nowhere'
+];
+
 function includesAny(text, keywords) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
 function normalizeText(value) {
   return String(value || '').toLowerCase();
+}
+
+function countAssistantReplies(priorMessages = []) {
+  return Array.isArray(priorMessages)
+    ? priorMessages.filter((item) => item?.sender_type === 'system').length
+    : 0;
+}
+
+function hasAiFailedAfterMultipleReplies(text, priorMessages = []) {
+  return countAssistantReplies(priorMessages) >= 2 && includesAny(text, aiFailureKeywords);
+}
+
+function isConversationClearlyComplete(text) {
+  return includesAny(text, ['thanks', 'thank you', 'all good', 'got it', 'perfect']);
+}
+
+function sanitizeAdminSummary(value, latestMessage, visitorName) {
+  const raw = String(value || '').replace(/\s+/g, ' ').trim();
+  const cleaned = raw
+    .replace(/\b(category|urgency|general|sales|support|onboarding)\s*:\s*/gi, '')
+    .replace(/\bwho the visitor is\b/gi, '')
+    .replace(/\bwhat they need\b/gi, '')
+    .trim();
+
+  if (cleaned) {
+    return cleaned;
+  }
+
+  const summarySource = String(latestMessage || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  return `${visitorName || 'Visitor'} needs help with ${summarySource || 'their enquiry'} and is waiting for a reply.`;
 }
 
 function detectKeywordCategory(text) {
@@ -95,121 +151,48 @@ function detectOnboardingNeed(text) {
   return 'general_onboarding';
 }
 
-function buildForcedRouting(text) {
-  const urgentKeywords = [
-    'urgent',
-    'my system is broken',
-    'something is broken',
-    'broken',
-    'down',
-    'outage',
-    'critical',
-    'system down',
-    'service down',
-    'offline',
-    'system broken',
-    'payment problem',
-    'payment issue',
-    'payment failed',
-    'billing issue',
-    'charged twice',
-    'blocked access',
-    'locked out',
-    'cant access',
-    'cannot access',
-    'site is down'
-  ];
-
-  const humanKeywords = [
-    'human',
-    'real person',
-    'someone from your team',
-    'speak to someone',
-    'talk to someone',
-    'call me',
-    'team member'
-  ];
-
-  const pricingKeywords = [
-    'custom pricing',
-    'enterprise pricing',
-    'custom enterprise pricing',
-    'discount',
-    'quote',
-    'proposal',
-    'bespoke pricing'
-  ];
-
-  const accountSpecificKeywords = [
-    'my account',
-    'account issue',
-    'account-specific',
-    'my subscription',
-    'my invoice',
-    'invoice issue',
-    'login issue',
-    'login problem'
-  ];
-
-  const frustrationKeywords = [
-    'frustrated',
-    'annoyed',
-    'this is ridiculous',
-    'not helpful',
-    'still not working',
-    'again',
-    'upset'
-  ];
-
+function buildForcedRouting(text, priorMessages = []) {
   const keywordCategory = detectKeywordCategory(text);
+  const hasHighIntent = includesAny(text, [...pricingKeywords, ...readyToBookKeywords, ...callMeKeywords]);
+  const hasUrgentHelp = includesAny(text, urgentHelpKeywords);
 
-  if (includesAny(text, urgentKeywords)) {
-    return {
-      classification_source: 'deterministic_urgent',
-      ai_mode: 'escalated',
-      enquiry_category: 'urgent',
-      urgency_level: 'urgent',
-      ai_handover_reason: 'Urgent operational or billing issue detected.',
-    };
-  }
-
-  if (includesAny(text, humanKeywords)) {
+  if (includesAny(text, explicitHumanKeywords)) {
     return {
       classification_source: 'deterministic_human_request',
       ai_mode: 'human_required',
       enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
-      urgency_level: 'normal',
+      urgency_level: 'high',
       ai_handover_reason: 'Visitor explicitly requested a human response.',
     };
   }
 
-  if (includesAny(text, accountSpecificKeywords)) {
+  if (hasUrgentHelp) {
     return {
-      classification_source: 'deterministic_account_issue',
-      ai_mode: 'human_required',
-      enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
-      urgency_level: 'high',
-      ai_handover_reason: 'Account-specific issue requires human review.',
+      classification_source: 'deterministic_urgent_help',
+      ai_mode: 'escalated',
+      enquiry_category: 'urgent',
+      urgency_level: 'urgent',
+      ai_handover_reason: 'Visitor needs urgent help and should be handled by a human immediately.',
     };
   }
 
-  if (includesAny(text, pricingKeywords)) {
+  if (hasHighIntent) {
     return {
-      classification_source: 'deterministic_complex_pricing',
+      classification_source: 'deterministic_high_intent',
       ai_mode: 'human_required',
       enquiry_category: 'sales',
-      urgency_level: 'normal',
-      ai_handover_reason: 'Complex or enterprise pricing enquiry requires human follow-up.',
+      urgency_level: 'high',
+      ai_handover_reason: 'Visitor shows clear buying intent and needs a fast human follow-up.',
     };
   }
 
-  if (includesAny(text, frustrationKeywords)) {
+  if (hasAiFailedAfterMultipleReplies(text, priorMessages)) {
     return {
-      classification_source: 'deterministic_frustration',
+      classification_source: 'deterministic_ai_failed',
       ai_mode: 'human_required',
       enquiry_category: keywordCategory === 'general' ? 'support' : keywordCategory,
       urgency_level: 'high',
-      ai_handover_reason: 'Repeated user frustration detected.',
+      ai_handover_reason: 'AI has already replied multiple times and the visitor still needs human help.',
     };
   }
 
@@ -329,7 +312,7 @@ Deno.serve(async (req) => {
       : '';
 
     const combinedText = normalizeText([subject, latestMessage, transcript].filter(Boolean).join('\n'));
-    const forcedRouting = buildForcedRouting(combinedText);
+    const forcedRouting = buildForcedRouting(combinedText, priorMessages);
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are AssistantAI Assistant for AssistantAI, a premium AI receptionist and enquiry automation business.
@@ -346,9 +329,9 @@ Rules:
 - Keep responses concise, clear, premium, and commercially intelligent
 - Never invent features, integrations, testimonials, case studies, pricing, performance claims, or guarantees
 - Do not give legal, financial, technical, uptime, or implementation guarantees
-- If pricing is complex, custom, enterprise-level, or unclear, route to a human instead of quoting numbers
-- If the issue is account-specific, billing-related, urgent, or confidence is low, route to a human
-- If the visitor seems frustrated repeatedly, route to a human
+- Only escalate when the visitor explicitly asks for a human, shows clear high intent (pricing, ready to book, call me, urgent help), or the AI has already failed after multiple replies
+- Do not escalate general questions, early-stage chats, low-intent chats, or broad information requests
+- For pricing questions, keep the answer brief and useful, then hand over only when the visitor clearly wants to move now
 - For sales leads, identify the most likely use case, briefly explain the most relevant AssistantAI outcome, and suggest only the best next step
 - Ask for business type, main problem, urgency, and likely fit when they are missing
 - For direct-start sales intent, suggest Get Started Now when Starter or Growth seems to fit
@@ -389,9 +372,9 @@ Plan guidance:
 - Enterprise = $3,000+/month + $7,500+ setup, best for advanced workflows, multiple teams, or complex integration requirements
 
 AI mode rules:
-- ai_active = AI can continue the conversation safely
-- human_required = human review needed, requested, account-specific, low-confidence, repeated frustration, or pricing is too complex
-- escalated = urgent operational or payment issue
+- ai_active = default for general questions, early-stage chats, low-intent chats, onboarding guidance, and normal qualification
+- human_required = only when the visitor explicitly asks for a human, asks about pricing, says they are ready to book/start, asks to be called, or the AI has already failed after multiple replies
+- escalated = only for urgent help that needs immediate human follow-up
 - closed = only if the conversation is clearly complete
 
 Urgency rules:
@@ -416,12 +399,9 @@ Return a JSON object with:
 - ai_handover_reason
 - response
 
-The ai_summary must be a short admin-ready summary covering:
-- who the visitor is
-- likely category
-- urgency
-- what they need
-- what the AI already asked or answered
+The ai_summary must be one plain-English line for an admin alert.
+It must say what the visitor wants, what the AI already said or asked, and what should happen next.
+Do not use vague labels like "general" or write category-style text such as "Category: sales".
 
 The response should be concise, honest, action-oriented, and suitable for a premium brand.`,
       response_json_schema: {
@@ -440,14 +420,15 @@ The response should be concise, honest, action-oriented, and suitable for a prem
       }
     });
 
-    const ai_mode = ensureAllowed(forcedRouting?.ai_mode || result?.ai_mode, allowedAiModes, 'ai_active');
+    const forcedAiMode = forcedRouting?.ai_mode || (result?.ai_mode === 'closed' && isConversationClearlyComplete(combinedText) ? 'closed' : 'ai_active');
+    const ai_mode = ensureAllowed(forcedAiMode, allowedAiModes, 'ai_active');
     const enquiry_category = ensureAllowed(forcedRouting?.enquiry_category || result?.enquiry_category, allowedCategories, 'general');
-    const urgency_level = ensureAllowed(forcedRouting?.urgency_level || result?.urgency_level, allowedUrgencyLevels, 'normal');
+    const urgency_level = ensureAllowed(forcedRouting?.urgency_level || result?.urgency_level, allowedUrgencyLevels, ai_mode === 'escalated' ? 'urgent' : ai_mode === 'human_required' ? 'high' : 'normal');
     const ai_handover_reason = forcedRouting?.ai_handover_reason || result?.ai_handover_reason || null;
     const likely_use_case = result?.likely_use_case || (enquiry_category === 'sales' ? detectSalesUseCase(combinedText) : 'n/a');
     const likely_plan_fit = result?.likely_plan_fit || (enquiry_category === 'sales' ? inferSalesPlanFit(combinedText, likely_use_case) : 'n/a');
-    const ai_summary = result?.ai_summary || `Visitor: ${visitorName || 'Unknown'}. Category: ${enquiry_category}. Urgency: ${urgency_level}. Likely use case: ${likely_use_case}. Likely plan fit: ${likely_plan_fit}.`;
     const response = result?.response || buildFallbackResponse({ visitorName, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason, rawText: combinedText });
+    const ai_summary = sanitizeAdminSummary(result?.ai_summary, latestMessage, visitorName);
 
     return Response.json({
       ai_mode,

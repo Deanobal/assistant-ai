@@ -133,7 +133,7 @@ function buildFunctionUrl(requestUrl, functionName) {
 function buildAlertPresentation(title, message, metadata, priority) {
   const leadName = metadata?.full_name || metadata?.business_name || 'New contact';
   const businessName = metadata?.business_name || '';
-  const channelLabel = metadata?.channel_label || (metadata?.conversation_id ? 'Live Chat' : metadata?.mobile_number ? 'SMS' : 'Lead');
+  const channelLabel = metadata?.channel_label || (metadata?.conversation_id ? 'Chat' : metadata?.mobile_number ? 'SMS' : 'Lead');
   const waitLabel = metadata?.wait_label || 'Just now';
   const summary = String(metadata?.intent_summary || metadata?.message_preview || message || title || '').trim();
   const adminUrl = buildAdminUrl(metadata?.admin_link);
@@ -168,14 +168,7 @@ function buildEmailBody(title, message, metadata, normalizedEventType, priority)
       `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
       alert.summary || message,
       `Waiting: ${alert.waitLabel}`,
-      alert.businessName ? `Business: ${alert.businessName}` : null,
-      enquiryType ? `Intent: ${enquiryType}` : null,
-      alert.leadPhone ? `Call now: ${alert.leadPhone}` : null,
-      metadata.email ? `Email: ${metadata.email}` : null,
-      confirmedMeeting ? `Confirmed: ${confirmedMeeting}` : null,
-      !confirmedMeeting && preferredMeeting ? `Preferred: ${preferredMeeting}` : null,
-      alert.adminUrl ? `${alert.ctaLabel}: ${alert.adminUrl}` : null,
-      `Event: ${normalizedEventType}`,
+      alert.adminUrl ? `Link:\n${alert.adminUrl}` : null,
     ].filter(Boolean).join('\n'),
     html: [
       '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;padding:12px 0;">',
@@ -183,15 +176,9 @@ function buildEmailBody(title, message, metadata, normalizedEventType, priority)
       `<div style="font-size:15px;color:#334155;margin-bottom:8px;">${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}</div>`,
       '<div style="border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;">',
       `<div style="font-size:15px;font-weight:600;margin-bottom:8px;">${alert.summary || message}</div>`,
-      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`,
-      alert.businessName ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Business:</strong> ${alert.businessName}</div>` : '',
-      enquiryType ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Intent:</strong> ${enquiryType}</div>` : '',
-      metadata.email ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Email:</strong> <a href="mailto:${metadata.email}" style="color:#2563eb;text-decoration:none;">${metadata.email}</a></div>` : '',
-      alert.leadPhone ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Call:</strong> <a href="${alert.phoneHref}" style="color:#2563eb;text-decoration:none;font-weight:700;">${alert.leadPhone}</a></div>` : '',
-      confirmedMeeting ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Confirmed:</strong> ${confirmedMeeting}</div>` : '',
-      !confirmedMeeting && preferredMeeting ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Preferred:</strong> ${preferredMeeting}</div>` : '',
+      `<div style="font-size:14px;color:#475569;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`,
       '</div>',
-      alert.adminUrl ? `<div style="margin-top:14px;"><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">${alert.ctaLabel}</a></div>` : '',
+      alert.adminUrl ? `<div style="margin-top:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">Link</div><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">Open Conversation</a></div>` : '',
       '</div>',
     ].join(''),
   };
@@ -204,7 +191,7 @@ function buildSmsAlertMessage(title, message, metadata, priority) {
     `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
     alert.summary || message,
     `Waiting: ${alert.waitLabel}`,
-    alert.adminUrl ? `${alert.ctaLabel}: ${alert.adminUrl}` : null,
+    alert.adminUrl ? `Link:\n${alert.adminUrl}` : null,
   ].filter(Boolean).join('\n').slice(0, 480);
 }
 

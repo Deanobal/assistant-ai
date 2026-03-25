@@ -28,10 +28,15 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
   useEffect(() => {
     if (!item || item.kind !== 'conversation') return;
-    const timeout = window.setTimeout(() => {
-      replyInputRef.current?.focus({ preventScroll: true });
-    }, 80);
-    return () => window.clearTimeout(timeout);
+
+    const focusReply = () => replyInputRef.current?.focus({ preventScroll: true });
+    const firstTimeout = window.setTimeout(focusReply, 60);
+    const secondTimeout = window.setTimeout(focusReply, 180);
+
+    return () => {
+      window.clearTimeout(firstTimeout);
+      window.clearTimeout(secondTimeout);
+    };
   }, [item?.id]);
 
   if (!item) {
@@ -43,6 +48,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
   }
 
   const phoneHref = item.phone ? `tel:${item.phone.replace(/\s+/g, '')}` : null;
+  const lastVisibleMessage = [...messages].filter((entry) => !entry.is_internal_note).slice(-1)[0] || null;
 
   if (item.kind !== 'conversation' || !conversation) {
     return (
@@ -116,9 +122,16 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               <p className="mt-1 text-sm text-slate-500">{item.intentSummary}</p>
             </div>
 
-            <div className={`rounded-3xl border px-4 py-3 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
-              <p className="text-xs uppercase tracking-[0.18em] opacity-70">Waiting</p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums">{item.waitShort}</p>
+            <div className="flex items-start gap-3">
+              {phoneHref && (
+                <Button asChild type="button" variant="outline" className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
+                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> Call</a>
+                </Button>
+              )}
+              <div className={`rounded-3xl border px-4 py-3 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
+                <p className="text-xs uppercase tracking-[0.18em] opacity-70">Waiting</p>
+                <p className="mt-1 text-3xl font-semibold tabular-nums">{item.waitShort}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -144,6 +157,14 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
             <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
             {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
           </div>
+
+          {lastVisibleMessage && (
+            <div className="mt-5 rounded-3xl border border-cyan-500/15 bg-cyan-500/5 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">Last message</p>
+              <p className="mt-2 text-sm font-medium text-white">{lastVisibleMessage.sender_name || item.name}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-100">{lastVisibleMessage.message_body}</p>
+            </div>
+          )}
 
           <div className="mt-5 space-y-4">
             {messages.map((message) => (
@@ -174,6 +195,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
             <Textarea
               ref={replyInputRef}
+              autoFocus
               value={messageBody}
               onChange={(event) => setMessageBody(event.target.value)}
               placeholder={isInternalNote ? 'Add internal note' : 'Reply to the conversation'}

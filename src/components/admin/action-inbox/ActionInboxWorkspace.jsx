@@ -161,14 +161,25 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   }, [config.views, activeView]);
 
   useEffect(() => {
-    if (!filteredItems.length) {
+    if (!allItems.length) {
       setSelectedKey(null);
       return;
     }
-    if (!selectedItem || !filteredItems.some((item) => item.id === selectedItem.id)) {
-      setSelectedKey(filteredItems[0].id);
+
+    const deepLinkedKey = getSelectedKeyFromUrl();
+    if (deepLinkedKey && allItems.some((item) => item.id === deepLinkedKey)) {
+      setSelectedKey(deepLinkedKey);
+      if (isMobile) setShowMobileDetail(true);
+      return;
     }
-  }, [filteredItems, selectedItem]);
+
+    if (selectedKey && allItems.some((item) => item.id === selectedKey)) {
+      return;
+    }
+
+    const nextItem = filteredItems[0] || allItems[0] || null;
+    setSelectedKey(nextItem?.id || null);
+  }, [allItems, filteredItems, selectedKey, isMobile]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

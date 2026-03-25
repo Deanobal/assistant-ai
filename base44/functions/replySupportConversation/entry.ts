@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
         entityName: 'SupportConversation',
         entityId: conversation.id,
         clientAccountId: conversation.linked_client_account_id || null,
-        title: handoverMode === 'escalated' || ['urgent', 'high'].includes(handoverUrgency) ? 'High-intent chat needs reply' : 'Chat needs reply',
+        title: handoverMode === 'escalated' || ['urgent', 'high'].includes(handoverUrgency) || (aiResult?.enquiry_category || conversation.enquiry_category) === 'sales' ? 'High-intent chat needs reply' : 'Chat needs human reply',
         message: handoverSummary,
         actorEmail: email,
         uniqueKey: `chat_handover_reply:${conversation.id}:${handoverMode}:${now}`,
@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
         smsMessage: handoverSummary,
         metadata: {
           conversation_id: conversation.id,
-          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
+          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}&focusReply=1`,
           full_name: name || conversation.visitor_name || 'Visitor',
           business_name: '',
           email,

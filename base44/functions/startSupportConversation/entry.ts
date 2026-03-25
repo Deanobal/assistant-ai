@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
         entityName: 'SupportConversation',
         entityId: conversation.id,
         clientAccountId: conversation.linked_client_account_id || null,
-        title: aiResult.ai_mode === 'escalated' ? 'High-intent chat needs reply' : 'Chat needs reply',
+        title: aiResult.ai_mode === 'escalated' || aiResult.enquiry_category === 'sales' ? 'High-intent chat needs reply' : 'Chat needs human reply',
         message: aiResult.ai_summary || preview,
         actorEmail: email,
         uniqueKey: `chat_handover_create:${conversation.id}:${aiResult.ai_mode}:${now}`,
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
         smsMessage: aiResult.ai_summary || preview,
         metadata: {
           conversation_id: conversation.id,
-          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
+          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}&focusReply=1`,
           full_name: name,
           business_name: matchedLead?.business_name || '',
           email,

@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         smsMessage: summary,
         metadata: {
           conversation_id: conversation.id,
-          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
+          admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}&focusReply=1`,
           full_name: conversation.visitor_name || 'Contact',
           business_name: linkedLead?.business_name || '',
           email: conversation.visitor_email || linkedLead?.email || null,
