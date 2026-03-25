@@ -164,26 +164,27 @@ function buildEmailBody(title, message, metadata, normalizedEventType, priority)
 
   return {
     text: [
-      `${alert.priorityLabel} — ${title}`,
-      `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}${alert.businessName ? ` · ${alert.businessName}` : ''}`,
+      title,
+      `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
       alert.summary || message,
-      `Wait time: ${alert.waitLabel}`,
+      `Waiting: ${alert.waitLabel}`,
+      alert.businessName ? `Business: ${alert.businessName}` : null,
       enquiryType ? `Intent: ${enquiryType}` : null,
       alert.leadPhone ? `Call now: ${alert.leadPhone}` : null,
       metadata.email ? `Email: ${metadata.email}` : null,
       confirmedMeeting ? `Confirmed: ${confirmedMeeting}` : null,
       !confirmedMeeting && preferredMeeting ? `Preferred: ${preferredMeeting}` : null,
-      alert.adminUrl ? `Open: ${alert.adminUrl}` : null,
+      alert.adminUrl ? `${alert.ctaLabel}: ${alert.adminUrl}` : null,
       `Event: ${normalizedEventType}`,
     ].filter(Boolean).join('\n'),
     html: [
       '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;padding:12px 0;">',
-      `<div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${priority === 'high' || priority === 'urgent' ? '#b91c1c' : '#475569'};margin-bottom:8px;">${alert.priorityLabel}</div>`,
       `<div style="font-size:22px;font-weight:700;margin-bottom:10px;">${title}</div>`,
-      `<div style="font-size:15px;color:#334155;margin-bottom:14px;">${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}${alert.businessName ? ` · ${alert.businessName}` : ''}</div>`,
+      `<div style="font-size:15px;color:#334155;margin-bottom:8px;">${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}</div>`,
       '<div style="border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;">',
       `<div style="font-size:15px;font-weight:600;margin-bottom:8px;">${alert.summary || message}</div>`,
-      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Wait time:</strong> ${alert.waitLabel}</div>`,
+      `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`,
+      alert.businessName ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Business:</strong> ${alert.businessName}</div>` : '',
       enquiryType ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Intent:</strong> ${enquiryType}</div>` : '',
       metadata.email ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Email:</strong> <a href="mailto:${metadata.email}" style="color:#2563eb;text-decoration:none;">${metadata.email}</a></div>` : '',
       alert.leadPhone ? `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Call:</strong> <a href="${alert.phoneHref}" style="color:#2563eb;text-decoration:none;font-weight:700;">${alert.leadPhone}</a></div>` : '',
@@ -202,8 +203,8 @@ function buildSmsAlertMessage(title, message, metadata, priority) {
     title,
     `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`,
     alert.summary || message,
-    `Wait ${alert.waitLabel}`,
-    alert.adminUrl ? `Open ${alert.adminUrl}` : null,
+    `Waiting: ${alert.waitLabel}`,
+    alert.adminUrl ? `${alert.ctaLabel}: ${alert.adminUrl}` : null,
   ].filter(Boolean).join('\n').slice(0, 480);
 }
 

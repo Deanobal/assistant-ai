@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,7 @@ const navItems = [
 
 export default function AdminLayout() {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -80,7 +81,23 @@ export default function AdminLayout() {
     enabled: !isLoading && isAdmin,
   });
 
-  const unreadSupportCount = unreadConversations.length;
+  useEffect(() => {
+    if (isLoading || !isAdmin) return undefined;
+    const refreshCounts = () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-support-unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-unmatched-sms-count'] });
+    };
+
+    const unsubscribeConversation = base44.entities.SupportConversation.subscribe(refreshCounts);
+    const unsubscribeNotification = base44.entities.NotificationLog.subscribe(refreshCounts);
+
+    return () => {
+      unsubscribeConversation?.();
+      unsubscribeNotification?.();
+    };
+  }, [isLoading, isAdmin, queryClient]);
+
+  const unreadSupportCount = unreadConversations.filter((conversation) => !['resolved', 'closed'].includes(conversation.status)).length;
   const actionCount = unreadSupportCount + unmatchedSms.length;
   const activeNavItem = navItems.find((item) => item.match.some((path) => location.pathname.startsWith(path))) || navItems[0];
 

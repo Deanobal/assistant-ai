@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       entityName: 'SupportConversation',
       entityId: conversation.id,
       clientAccountId: user.client_account_id,
-      title: 'Client portal message needs reply',
+      title: ['urgent', 'high'].includes(conversation.urgency_level) ? 'High-intent chat needs reply' : 'Client portal message needs reply',
       message: aiResult.ai_summary || message.slice(0, 180),
       actorEmail: user.email,
       uniqueKey: `client_portal_create:${conversation.id}:${now}`,

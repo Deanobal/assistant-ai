@@ -124,18 +124,22 @@ Deno.serve(async (req) => {
       },
     });
 
-    if (aiResult && ['human_required', 'escalated'].includes(aiResult.ai_mode)) {
+    const handoverMode = aiResult?.ai_mode || conversation.ai_mode;
+    const handoverUrgency = aiResult?.urgency_level || conversation.urgency_level;
+    const handoverSummary = aiResult?.ai_summary || conversation.ai_summary || message.slice(0, 180);
+
+    if (['human_required', 'escalated'].includes(handoverMode)) {
       await base44.asServiceRole.functions.invoke('sendAdminAlert', {
         eventType: 'support_conversation_reply',
         entityName: 'SupportConversation',
         entityId: conversation.id,
         clientAccountId: conversation.linked_client_account_id || null,
-        title: aiResult.ai_mode === 'escalated' ? 'High-intent chat needs reply' : 'Chat reply needs reply',
-        message: aiResult.ai_summary || message.slice(0, 180),
+        title: handoverMode === 'escalated' || ['urgent', 'high'].includes(handoverUrgency) ? 'High-intent chat needs reply' : 'Chat needs reply',
+        message: handoverSummary,
         actorEmail: email,
-        uniqueKey: `chat_handover_reply:${conversation.id}:${aiResult.ai_mode}:${now}`,
-        priority: ['urgent', 'high'].includes(aiResult.urgency_level) ? 'high' : 'normal',
-        smsMessage: aiResult.ai_summary || message.slice(0, 180),
+        uniqueKey: `chat_handover_reply:${conversation.id}:${handoverMode}:${now}`,
+        priority: ['urgent', 'high'].includes(handoverUrgency) ? 'high' : 'normal',
+        smsMessage: handoverSummary,
         metadata: {
           conversation_id: conversation.id,
           admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
@@ -143,17 +147,17 @@ Deno.serve(async (req) => {
           business_name: '',
           email,
           mobile_number: conversation.visitor_phone || '',
-          enquiry_category: aiResult.enquiry_category,
-          urgency_level: aiResult.urgency_level,
+          enquiry_category: aiResult?.enquiry_category || conversation.enquiry_category,
+          urgency_level: handoverUrgency,
           message_preview: message.slice(0, 180),
-          intent_summary: aiResult.ai_summary || message.slice(0, 180),
+          intent_summary: handoverSummary,
           wait_label: 'Just now',
-          channel_label: 'Live Chat',
+          channel_label: 'Chat',
           cta_label: 'Reply Now',
           source_page: sourcePage || conversation.source_page || '/',
-          ai_mode: aiResult.ai_mode,
-          ai_handover_reason: aiResult.ai_handover_reason || null,
-          ai_summary: aiResult.ai_summary,
+          ai_mode: handoverMode,
+          ai_handover_reason: aiResult?.ai_handover_reason || conversation.ai_handover_reason || null,
+          ai_summary: handoverSummary,
         },
       });
     }
