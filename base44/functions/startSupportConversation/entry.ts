@@ -340,110 +340,161 @@ async function sendTwilioSms(message, to) {
 async function evaluatePublicConversation(base44, payload) {
   const { visitorName, visitorEmail, visitorPhone, subject, latestMessage, sourcePage, priorMessages = [] } = payload;
   const transcript = Array.isArray(priorMessages)
-    ? priorMessages.slice(-6).map((item) => `${item.sender_type || 'unknown'}: ${item.message_body || ''}`).join('\n')
+    ? priorMessages.slice(-8).map((item) => `${item.sender_type || 'unknown'}: ${item.message_body || ''}`).join('\n')
     : '';
   const combinedText = normalizeText([subject, latestMessage, transcript].filter(Boolean).join('\n'));
-  const forcedRouting = buildForcedRouting(combinedText, priorMessages);
+  const assistantReplies = countAssistantReplies(priorMessages);
+
+  const siteKnowledge = `
+AssistantAI site and product knowledge:
+- Services page (/Services): AI Voice Agents, AI Receptionists, AI Chatbots, CRM Automation, Appointment Booking Automation, SMS & Email Follow-Up, Workflow Automation.
+- Pricing page (/Pricing): Starter is $497/month + $1,500 setup. Growth is $1,500/month + $3,000 setup. Enterprise starts at $3,000+/month + $7,500+ setup.
+- Integrations page (/Integrations): common CRM options include GoHighLevel, HubSpot, Salesforce, Pipedrive, Zoho. Calendar options include Google Calendar and Outlook Calendar. SMS options include Twilio and GoHighLevel SMS.
+- Strategy calls use /BookStrategyCall. Direct starts use /GetStartedNow?plan=starter or /GetStartedNow?plan=growth.
+- Client portal is private via /ClientLogin then /ClientPortal, with Overview, Call Recordings, Analytics, Billing, Integrations, and Support.
+- Billing help should point to the portal billing area or escalate if it is account-sensitive.
+- The website chat should answer straightforward questions, collect support context, and only escalate when required.
+`;
+
+  const explicitHumanRequest = includesAny(combinedText, ['human', 'real person', 'someone from your team', 'speak to someone', 'talk to someone', 'please escalate', 'need an agent']);
+  const criticalOutage = includesAny(combinedText, ['site is down', 'website is down', 'system is down', 'critical outage', 'outage', 'urgent bug', 'cannot take bookings', 'nothing is working']) || (includesAny(combinedText, ['urgent', 'asap', 'immediately', 'critical']) && includesAny(combinedText, ['bug', 'broken', 'error', 'not working', 'crash']));
+  const billingSecurityIssue = includesAny(combinedText, ['billing issue', 'billing problem', 'invoice issue', 'payment failed', 'refund', 'charged twice', 'account issue', 'security issue', 'locked out', 'cannot access', 'cant access', 'login issue']);
+  const manualIntegrationHelp = includesAny(combinedText, ['help connect', 'connect my', 'set up integration', 'setup integration', 'integration setup', 'calendar connection', 'crm connection', 'twilio setup']);
+  const pricingDecision = includesAny(combinedText, ['quote', 'proposal', 'ready to start', 'ready to book', 'call me', 'call me back', 'sign me up', 'start now']);
+  const issueCategory = includesAny(combinedText, ['pricing', 'price', 'cost', 'plan']) ? 'pricing'
+    : includesAny(combinedText, ['strategy call', 'book a call', 'book a demo']) ? 'strategy_call'
+    : includesAny(combinedText, ['integration', 'calendar', 'crm', 'twilio', 'hubspot', 'salesforce', 'outlook']) ? 'integration_setup'
+    : includesAny(combinedText, ['billing', 'invoice', 'payment', 'card', 'charge']) ? 'billing'
+    : includesAny(combinedText, ['login', 'locked out', 'password', 'account']) ? 'account_access'
+    : includesAny(combinedText, ['portal', 'dashboard', 'analytics', 'call recordings', 'support tab']) ? 'client_portal'
+    : includesAny(combinedText, ['error', 'broken', 'bug', 'blank page', 'crash', 'not working']) ? 'bug_or_feature_issue'
+    : includesAny(combinedText, ['onboarding', 'intake', 'setup', 'go live']) ? 'onboarding'
+    : includesAny(combinedText, ['services', 'what do you do', 'voice agent', 'chatbot', 'ai receptionist']) ? 'services'
+    : includesAny(combinedText, ['tech help', 'technical help', 'help']) ? 'general_support'
+    : 'general_enquiry';
+  const defaultCategory = includesAny(combinedText, ['pricing', 'price', 'cost', 'quote', 'plan', 'get started', 'strategy call', 'demo']) ? 'sales'
+    : includesAny(combinedText, ['onboarding', 'intake', 'go live', 'setup', 'implementation']) ? 'onboarding'
+    : criticalOutage ? 'urgent'
+    : billingSecurityIssue || manualIntegrationHelp || includesAny(combinedText, ['bug', 'broken', 'error', 'not working', 'portal', 'login', 'support', 'tech help', 'integration']) ? 'support'
+    : 'general';
+  const isVagueSupport = includesAny(combinedText, ['i need help', 'need help', 'tech help', 'technical help', 'something is wrong', 'having issues', 'problem'])
+    && !includesAny(combinedText, ['portal', 'billing', 'integration', 'calendar', 'crm', 'chat', 'widget', 'pricing', 'error', 'code', 'screen', 'page', 'login', 'invoice', 'onboarding'])
+    && combinedText.length < 100;
+
+  const forcedRouting = explicitHumanRequest
+    ? { ai_mode: 'human_required', enquiry_category: defaultCategory === 'general' ? 'support' : defaultCategory, urgency_level: 'high', ai_handover_reason: 'User explicitly asked for a human.', confidence_level: 'high' }
+    : criticalOutage
+      ? { ai_mode: 'escalated', enquiry_category: 'urgent', urgency_level: 'urgent', ai_handover_reason: 'This looks business-critical or outage-related.', confidence_level: 'high' }
+      : billingSecurityIssue
+        ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'Billing, account, or security issues need human review.', confidence_level: 'high' }
+        : manualIntegrationHelp
+          ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'This integration setup request likely needs manual help from the team.', confidence_level: 'high' }
+          : pricingDecision
+            ? { ai_mode: 'human_required', enquiry_category: 'sales', urgency_level: 'high', ai_handover_reason: 'The user is ready to move forward and should get a human follow-up.', confidence_level: 'high' }
+            : assistantReplies >= 3 && (isVagueSupport || defaultCategory === 'support')
+              ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'The assistant has already asked enough clarifying questions and confidence is still low.', confidence_level: 'low' }
+              : isVagueSupport
+                ? { ai_mode: 'ai_active', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: null, confidence_level: assistantReplies >= 2 ? 'low' : 'medium' }
+                : null;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-    prompt: `You are AssistantAI Assistant for AssistantAI, a premium AI receptionist and enquiry automation business.
+    prompt: `You are AssistantAI Assistant, the first-line AI operator for AssistantAI.
 
-Your job in support chat:
-- respond instantly but honestly
-- qualify the enquiry
-- guide the visitor to the best next step
-- escalate to a human when needed
+Your role:
+- act like a capable front-line operator, not a deflection bot
+- acknowledge the issue clearly
+- answer straightforward product and site questions directly
+- ask only the next most useful clarifying question or questions when support context is missing
+- try one useful answer when possible before escalating
+- only escalate when the rules below require it
 
-Rules:
-- Never pretend to be human
-- Always refer to yourself as "AssistantAI Assistant" or "AI Assistant"
-- Keep responses concise, clear, premium, and commercially intelligent
-- Never invent features, integrations, testimonials, case studies, pricing, performance claims, or guarantees
-- Do not give legal, financial, technical, uptime, or implementation guarantees
-- Only escalate when the visitor explicitly asks for a human, shows clear high intent (pricing, quote, ready to book, call me, wants to proceed now, urgent help), the AI has already failed after multiple replies, the visitor sounds unhappy, or the issue clearly needs human intervention
-- Do not escalate general questions, early-stage chats, low-intent chats, simple FAQs, or broad browsing questions
-- Before handing over, gather or confirm the most useful qualification details you can from the conversation: name, phone/email if possible, short intent summary, category, and urgency
-- For pricing questions, keep the answer brief and useful, then hand over only when the visitor clearly wants to move now
-- For sales leads, identify the most likely use case, briefly explain the most relevant AssistantAI outcome, and suggest only the best next step
-- Ask for business type, main problem, urgency, and likely fit when they are missing
-- For direct-start sales intent, suggest Get Started Now when Starter or Growth seems to fit
-- For complex or custom intent, suggest Book Free Strategy Call
-- For onboarding questions, guide toward the right onboarding next step such as intake, setup guidance, tool connection, or team follow-up
-- For operational issues, route to support or escalate
-- Ask one clarifying question when useful
-- When handing over, do not say you cannot help; say you are passing this to the team so they can help properly
+Escalation rules:
+- escalate only for urgent or business-critical issues, billing/account/security issues, likely bugs or outages, manual integration setup help, explicit human requests, or genuinely low confidence after clarifying
+- do not escalate vague support requests immediately
+- there have already been ${assistantReplies} assistant replies in this thread, and the total clarifying-question budget is 3 before escalation for low-confidence support cases
 
-Classification rules:
-- sales = new system interest, pricing interest, bookings automation, lead capture, demos, fit checks
-- onboarding = setup, implementation, integrations, intake, go-live, onboarding help, signed-up questions, intake form questions, business detail changes, and tool connection questions
-- support = standard support questions that are not urgent
-- urgent = broken system, outage, blocked payment issue, urgent operational problem
-- general = everything else
+Support context to collect when relevant:
+- name
+- email
+- phone if relevant
+- business name if relevant
+- issue category
+- urgency
+- affected page or feature
+- screenshot or error text if available
 
-Sales handling:
-- missed calls or lead capture = explain AI call answering, detail capture, and automated follow-up
-- booking automation = explain calendar flow, lead capture, and follow-up automation
-- pricing = explain Starter, Growth, Enterprise briefly and accurately
-- direct-start intent = guide to Get Started Now when Starter or Growth is the likely fit
-- complex or custom intent = guide to Book Free Strategy Call
+Knowledge you can rely on:
+${siteKnowledge}
 
-Plan guidance:
-- Starter = $497/month + $1,500 setup, best for businesses starting with AI call handling and lead capture
-- Growth = $1,500/month + $3,000 setup, best for voice AI, booking automation, CRM sync, and follow-up
-- Enterprise = $3,000+/month + $7,500+ setup, best for advanced workflows, multiple teams, or complex integration requirements
+Answering rules:
+- if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, client portal, support flow, or chat widget behavior, answer directly from the knowledge above
+- where useful, include the correct route such as /Pricing, /Services, /Integrations, /Platform, /BookStrategyCall, /ClientLogin, /ClientPortal, or /GetStartedNow?plan=starter
+- keep replies concise, useful, and commercially credible
+- ask at most 2 short questions in a single reply
+- never invent unavailable features or guarantees
 
-Context:
-- Visitor name: ${visitorName || 'Unknown'}
-- Visitor email: ${visitorEmail || 'Not provided'}
-- Visitor phone: ${visitorPhone || 'Not provided'}
-- Subject: ${subject || 'Not provided'}
-- Source page: ${sourcePage || '/'}
-- Latest message: ${latestMessage}
-- Prior visible messages:\n${transcript || 'None'}
-- Forced routing: ${forcedRouting ? JSON.stringify(forcedRouting) : 'none'}
+Conversation context:
+- visitor name: ${visitorName || 'Unknown'}
+- visitor email: ${visitorEmail || 'Not provided'}
+- visitor phone: ${visitorPhone || 'Not provided'}
+- subject: ${subject || 'Not provided'}
+- source page: ${sourcePage || '/'}
+- latest message: ${latestMessage}
+- prior visible messages:\n${transcript || 'None'}
+- forced routing guidance: ${forcedRouting ? JSON.stringify(forcedRouting) : 'none'}
 
-Return a JSON object with:
+Return JSON with:
 - ai_mode
 - enquiry_category
+- issue_category
 - urgency_level
+- confidence_level
 - ai_summary
 - ai_handover_reason
-- likely_use_case
-- likely_plan_fit
+- steps_taken
+- recommended_next_action
 - response
 
-The ai_summary must be one plain-English line for an admin alert.
-It must say what the visitor wants, what the AI already said or asked, and what should happen next.
-Do not use vague labels like "general" or write category-style text such as "Category: sales".
-
-The response should be concise, honest, action-oriented, and suitable for a premium brand.`,
+The ai_summary must be concise but structured enough for handover, covering issue category, urgency, user details known, problem summary, steps already taken, and next action.`,
     response_json_schema: {
       type: 'object',
       properties: {
         ai_mode: { type: 'string' },
         enquiry_category: { type: 'string' },
+        issue_category: { type: 'string' },
         urgency_level: { type: 'string' },
+        confidence_level: { type: 'string' },
         ai_summary: { type: 'string' },
         ai_handover_reason: { anyOf: [{ type: 'string' }, { type: 'null' }] },
-        likely_use_case: { type: 'string' },
-        likely_plan_fit: { type: 'string' },
+        steps_taken: { type: 'string' },
+        recommended_next_action: { type: 'string' },
         response: { type: 'string' }
       },
-      required: ['ai_mode', 'enquiry_category', 'urgency_level', 'ai_summary', 'response']
+      required: ['ai_mode', 'enquiry_category', 'issue_category', 'urgency_level', 'confidence_level', 'ai_summary', 'steps_taken', 'recommended_next_action', 'response']
     }
   });
 
-  const forcedAiMode = forcedRouting?.ai_mode || (result?.ai_mode === 'closed' && isConversationClearlyComplete(combinedText) ? 'closed' : 'ai_active');
-  const ai_mode = ensureAllowed(forcedAiMode, allowedAiModes, 'ai_active');
-  const enquiry_category = ensureAllowed(forcedRouting?.enquiry_category || result?.enquiry_category, allowedCategories, 'general');
-  const urgency_level = ensureAllowed(forcedRouting?.urgency_level || result?.urgency_level, allowedUrgencyLevels, ai_mode === 'escalated' ? 'urgent' : ai_mode === 'human_required' ? 'high' : 'normal');
+  const ai_mode = ensureAllowed(forcedRouting?.ai_mode || result?.ai_mode, allowedAiModes, 'ai_active');
+  const enquiry_category = ensureAllowed(forcedRouting?.enquiry_category || defaultCategory || result?.enquiry_category, allowedCategories, 'general');
+  const urgency_level = ensureAllowed(forcedRouting?.urgency_level || result?.urgency_level, allowedUrgencyLevels, ai_mode === 'escalated' ? 'urgent' : 'normal');
   const ai_handover_reason = forcedRouting?.ai_handover_reason || result?.ai_handover_reason || null;
-  const likely_use_case = result?.likely_use_case || (enquiry_category === 'sales' ? detectSalesUseCase(combinedText) : 'n/a');
-  const likely_plan_fit = result?.likely_plan_fit || (enquiry_category === 'sales' ? inferSalesPlanFit(combinedText, likely_use_case) : 'n/a');
   const response = result?.response || buildFallbackResponse({ visitorName, visitorEmail, visitorPhone, aiMode: ai_mode, enquiryCategory: enquiry_category, handoverReason: ai_handover_reason, rawText: combinedText });
   const ai_summary = sanitizeAdminSummary(result?.ai_summary, latestMessage, visitorName);
+  const steps_taken = result?.steps_taken || (assistantReplies > 0 ? `Assistant already asked ${assistantReplies} clarifying question${assistantReplies === 1 ? '' : 's'}.` : 'Assistant reviewed the enquiry and provided a first-line response.');
+  const recommended_next_action = result?.recommended_next_action || (ai_mode === 'ai_active' ? 'Continue clarifying or follow the linked page.' : 'Human follow-up required.');
 
-  return { ai_mode, enquiry_category, urgency_level, ai_summary, ai_handover_reason, likely_use_case, likely_plan_fit, response };
+  return {
+    ai_mode,
+    enquiry_category,
+    issue_category: result?.issue_category || issueCategory,
+    urgency_level,
+    confidence_level: result?.confidence_level || forcedRouting?.confidence_level || 'medium',
+    ai_summary,
+    ai_handover_reason,
+    steps_taken,
+    recommended_next_action,
+    response,
+  };
 }
 
 async function createPublicAlert(base44, payload) {
@@ -631,6 +682,10 @@ Deno.serve(async (req) => {
         ai_mode: aiResult.ai_mode,
         enquiry_category: aiResult.enquiry_category,
         urgency_level: aiResult.urgency_level,
+        issue_category: aiResult.issue_category || null,
+        confidence_level: aiResult.confidence_level || null,
+        steps_taken: aiResult.steps_taken || null,
+        recommended_next_action: aiResult.recommended_next_action || null,
       },
     });
 
@@ -656,12 +711,15 @@ Deno.serve(async (req) => {
           mobile_number: mobile || '',
           enquiry_category: aiResult.enquiry_category,
           urgency_level: aiResult.urgency_level,
+          issue_category: aiResult.issue_category || null,
+          confidence_level: aiResult.confidence_level || null,
           message_preview: preview,
           intent_summary: aiResult.ai_summary || preview,
+          steps_taken: aiResult.steps_taken || null,
           wait_label: 'Just now',
           channel_label: 'Chat',
           cta_label: 'Reply Now',
-          recommended_action: mobile ? 'Call lead' : 'Reply now',
+          recommended_action: aiResult.recommended_next_action || (mobile ? 'Call lead' : 'Reply now'),
           source_page: sourcePage || '/',
           ai_mode: aiResult.ai_mode,
           ai_handover_reason: aiResult.ai_handover_reason || null,
