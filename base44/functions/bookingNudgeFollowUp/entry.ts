@@ -301,11 +301,10 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const escalationResponse = await base44.asServiceRole.functions.invoke(
-        'sendAdminAlert',
+      const escalationData = await invokeSendAdminAlert(
+        req,
         buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, recentReminder),
       );
-      const escalationData = escalationResponse?.data || escalationResponse || {};
 
       if (escalationData?.duplicate) {
         results.push({
