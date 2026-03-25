@@ -14,19 +14,213 @@ const likelyBugKeywords = ['bug', 'broken', 'error', 'not working', 'fails', 'fa
 const pricingDecisionKeywords = ['quote', 'proposal', 'ready to start', 'ready to book', 'call me', 'call me back', 'sign me up', 'start now'];
 const completionKeywords = ['thanks that helps', 'all good now', 'got it thanks', 'perfect thanks', 'solved'];
 
-const siteKnowledge = `
-AssistantAI site and product knowledge:
-- Services page (/Services): AI Voice Agents, AI Receptionists, AI Chatbots, CRM Automation, Appointment Booking Automation, SMS & Email Follow-Up, Workflow Automation.
-- Pricing page (/Pricing): Starter is $497/month + $1,500 setup for AI call handling and lead capture. Growth is $1,500/month + $3,000 setup for voice AI, booking automation, CRM sync, and follow-up. Enterprise is $3,000+/month + $7,500+ setup for advanced workflows, multiple teams, or complex integrations.
-- Pricing guidance: plain pricing questions should be answered directly. Use /BookStrategyCall for advisory help. Use /GetStartedNow?plan=starter or /GetStartedNow?plan=growth when the user is ready to move now on those plans.
-- Integrations page (/Integrations): common CRM options include GoHighLevel, HubSpot, Salesforce, Pipedrive, Zoho. Calendar options include Google Calendar and Outlook Calendar. SMS options include Twilio, GoHighLevel SMS, and other compatible SMS tools.
-- Strategy call page (/BookStrategyCall): users can request or book a free strategy call. This is the correct route for discovery, scoping, or custom integration discussions.
-- Client portal (/ClientLogin then /ClientPortal): private login for clients. Portal areas include Overview, Call Recordings, Analytics, Billing, Integrations, and Support.
-- Billing in portal: billing records, plan details, renewal timing, payment method status, billing history, and Stripe-ready billing architecture can appear there.
-- Support flow: website chat handles sales/support triage and stores a thread. Client portal support keeps secure support history in one thread.
-- Chat widget behavior: the AI assistant should answer straightforward questions, ask short follow-up questions when context is missing, keep replies concise, and only hand over urgent, account, security, billing, outage, low-confidence, or explicitly human-requested issues.
-- Platform preview (/Platform): public sample preview of client experience across calls, analytics, billing, integrations, and support.
-`;
+const featureStatusLabels = ['fully live', 'partially implemented', 'UI present but not connected', 'planned / future'];
+
+const supportKnowledge = [
+  {
+    category: 'services',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'The public site clearly presents AI voice, receptionist, chatbot, CRM automation, booking automation, follow-up, and workflow services.',
+      'Users can learn about services and move to pricing, strategy call, or direct start routes.'
+    ],
+    limitations: [
+      'Do not imply every advertised service is already deployed end to end for every client.',
+      'Some service outcomes depend on onboarding, setup, integrations, and client-specific implementation.'
+    ],
+    troubleshooting_steps: [
+      'Clarify which service the user means.',
+      'Clarify whether they want information, setup help, or production support.'
+    ],
+    approved_links: ['/Services', '/Pricing', '/BookStrategyCall'],
+    escalation_owner: 'sales',
+    escalation_threshold: 'Escalate when the user wants custom scoping, a quote, or a callback.'
+  },
+  {
+    category: 'pricing',
+    feature_status: 'fully live',
+    supported_use_case: [
+      'Starter, Growth, and Enterprise pricing and routes can be explained directly.',
+      'Users can compare on /Pricing or move to /GetStartedNow or /BookStrategyCall depending on fit.'
+    ],
+    limitations: [
+      'Do not promise custom scope, callback timing, or implementation details from pricing alone.'
+    ],
+    troubleshooting_steps: [
+      'Answer the plan question directly.',
+      'Point the user to /Pricing or /BookStrategyCall when comparison or scoping is needed.'
+    ],
+    approved_links: ['/Pricing', '/BookStrategyCall', '/GetStartedNow?plan=starter', '/GetStartedNow?plan=growth'],
+    escalation_owner: 'sales',
+    escalation_threshold: 'Escalate when the user is ready to buy, asks for a quote, or requests a callback.'
+  },
+  {
+    category: 'integrations',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Google Calendar is live for strategy-call availability checks and calendar event creation.',
+      'The portal can store and show integration connection states for clients.'
+    ],
+    limitations: [
+      'Do not imply an app is connected just because an integration card exists.',
+      'Do not imply HubSpot, GoHighLevel, Outlook, Twilio, Stripe, or Zapier are live for a given client unless connection state is explicitly confirmed.',
+      'Treat supported, configurable, connected, and fully live as different states.'
+    ],
+    troubleshooting_steps: [
+      'Clarify whether the user is asking about capability, active connection state, or manual setup help.',
+      'If connection state is unknown, say it is supported or surfaced in the product but not confirmed connected.'
+    ],
+    approved_links: ['/Integrations', '/BookStrategyCall', '/ClientPortal'],
+    escalation_owner: 'implementation/support',
+    escalation_threshold: 'Escalate when the user needs manual setup, sync investigation, or asks whether a specific account is already connected.'
+  },
+  {
+    category: 'onboarding',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Onboarding records, intake flows, and tracked onboarding stages exist in the app.',
+      'The team can guide users through intake, setup, integrations, testing, and go-live.'
+    ],
+    limitations: [
+      'Do not imply onboarding completes automatically after payment.',
+      'Do not imply every onboarding step is fully self-serve.'
+    ],
+    troubleshooting_steps: [
+      'Clarify which stage the user is at.',
+      'Clarify whether they need intake, setup, integrations, testing, or go-live help.'
+    ],
+    approved_links: ['/GetStartedNow', '/BookStrategyCall', '/ClientLogin'],
+    escalation_owner: 'onboarding',
+    escalation_threshold: 'Escalate when a paid customer needs manual onboarding action or cannot progress to the next stage.'
+  },
+  {
+    category: 'booking',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Strategy calls can use real Google Calendar availability and create real calendar events when slot verification and event creation succeed.',
+      'The booking page can fall back to request mode when live availability is unavailable.'
+    ],
+    limitations: [
+      'Do not imply a booking is confirmed unless a real slot is verified and the calendar event is created.',
+      'Do not imply all booking automation across the product is fully live just because the strategy-call flow exists.'
+    ],
+    troubleshooting_steps: [
+      'If the user asks whether they can book right now, distinguish between request mode and confirmed live slot booking.',
+      'If there is no confirmed slot or event, describe it as request or pending, not confirmed.'
+    ],
+    approved_links: ['/BookStrategyCall'],
+    escalation_owner: 'sales/onboarding',
+    escalation_threshold: 'Escalate when a user cannot complete a live booking or needs manual scheduling help.'
+  },
+  {
+    category: 'client_portal',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Client login, portal access, and secure support conversations are live.',
+      'Portal areas for overview, analytics, billing, integrations, and support are present.'
+    ],
+    limitations: [
+      'Do not imply every portal section is fully self-serve or fully live end to end.',
+      'Some portal sections can show structure, saved state, empty state, or partial workflows.'
+    ],
+    troubleshooting_steps: [
+      'Clarify which portal area is affected.',
+      'Distinguish between a visible portal section and a fully live self-service workflow.'
+    ],
+    approved_links: ['/ClientLogin', '/ClientPortal'],
+    escalation_owner: 'support',
+    escalation_threshold: 'Escalate when the user cannot access the portal or needs account-specific portal action.'
+  },
+  {
+    category: 'billing',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Billing records, plan details, payment method status, invoice references, and Stripe-related architecture exist in the app.',
+      'The portal can show billing structure and stored billing data.'
+    ],
+    limitations: [
+      'Do not imply billing is fully active end to end just because billing UI exists.',
+      'Do not imply payment collection, webhook handling, invoices, or payment methods are live for a specific client unless that state is explicitly confirmed.'
+    ],
+    troubleshooting_steps: [
+      'Clarify whether the user means billing visibility, payment status, invoice history, or fully active Stripe workflows.',
+      'If state is not confirmed for that client, say the billing surface exists but full live status is not confirmed.'
+    ],
+    approved_links: ['/Pricing', '/ClientPortal'],
+    escalation_owner: 'billing/ops',
+    escalation_threshold: 'Escalate when the issue is payment, invoice, charge, refund, or account-specific billing review.'
+  },
+  {
+    category: 'notifications',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'In-app notification logs exist.',
+      'Selected admin alert flows can send email and SMS using configured providers.'
+    ],
+    limitations: [
+      'Do not imply every notification goes to phone in real time.',
+      'Do not imply all user-facing notification paths are fully live across the whole app.'
+    ],
+    troubleshooting_steps: [
+      'Clarify which event, audience, and channel the user means.',
+      'If the path is unknown or broad, answer conservatively and describe the current implemented scope only.'
+    ],
+    approved_links: ['/ClientPortal'],
+    escalation_owner: 'support/ops',
+    escalation_threshold: 'Escalate when the user needs event-by-event delivery investigation or real-time notification guarantees.'
+  },
+  {
+    category: 'analytics',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Analytics can use live Lead and CallRecord data when those records exist.',
+      'The app also has empty states and sample-style analytics views when live data is missing.'
+    ],
+    limitations: [
+      'Do not imply analytics are real if the underlying data may be empty, seeded, or sample/demo only.',
+      'Do not imply every client currently has live populated analytics.'
+    ],
+    troubleshooting_steps: [
+      'Clarify whether the user is asking about live entity-backed analytics or demo/sample presentation.',
+      'If underlying data is not confirmed, say the analytics surface exists but live data is not confirmed.'
+    ],
+    approved_links: ['/Platform', '/ClientPortal'],
+    escalation_owner: 'support/data',
+    escalation_threshold: 'Escalate when the user reports data mismatch, missing records, or expects live analytics that are not showing.'
+  },
+  {
+    category: 'support_workflows',
+    feature_status: 'partially implemented',
+    supported_use_case: [
+      'Website chat and client portal support threads are live and can capture messages, AI responses, and admin handoff.',
+      'Urgent, billing, account, outage, and explicit human requests can be escalated.'
+    ],
+    limitations: [
+      'Do not imply the AI can inspect private systems or confirm unknown account state.',
+      'Do not imply every support path is fully automated or resolved without human review.'
+    ],
+    troubleshooting_steps: [
+      'Clarify the issue, urgency, affected page, and any error text.',
+      'Escalate when policy requires human review or confidence stays low.'
+    ],
+    approved_links: ['/Contact', '/ClientPortal', '/ClientLogin'],
+    escalation_owner: 'support',
+    escalation_threshold: 'Escalate for urgent issues, account-specific issues, billing/security issues, manual setup help, or explicit human requests.'
+  }
+];
+
+function buildSupportKnowledgeText() {
+  return supportKnowledge.map((entry) => [
+    `Category: ${entry.category}`,
+    `Feature status: ${entry.feature_status}`,
+    `Supported use case: ${entry.supported_use_case.join(' ')}`,
+    `Limitations: ${entry.limitations.join(' ')}`,
+    `Troubleshooting steps: ${entry.troubleshooting_steps.join(' ')}`,
+    `Approved links: ${entry.approved_links.join(', ')}`,
+    `Escalation owner: ${entry.escalation_owner}`,
+    `Escalation threshold: ${entry.escalation_threshold}`,
+  ].join('\n')).join('\n\n');
+}
 
 function includesAny(text, keywords) {
   return keywords.some((keyword) => text.includes(keyword));
@@ -192,6 +386,140 @@ function buildFallbackResponse({ visitorName, aiMode, enquiryCategory, issueCate
   return `${greeting} I can help with that. Tell me the affected page or feature and any error text you can see.`;
 }
 
+function buildDirectCapabilityResponse(text, visitorName, visitorEmail) {
+  const normalized = normalizeText(text);
+  const greeting = visitorName ? `Hi ${visitorName}, ` : 'Hi, ';
+  const base = {
+    ai_mode: 'ai_active',
+    urgency_level: 'normal',
+    confidence_level: 'high',
+    ai_handover_reason: null,
+    steps_taken: 'Answered a direct capability-status question using the structured support knowledge.',
+  };
+
+  if (normalized.includes('stripe')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'billing',
+      ai_summary: `Direct capability-status answer for Stripe/billing provided to ${visitorName || visitorEmail || 'visitor'}. Explained that billing is partially implemented and not confirmed fully live end to end for every client.`,
+      recommended_next_action: 'Use /Pricing for plan context or /ClientPortal for stored billing visibility.',
+      response: `${greeting}Status: partially implemented. Stripe-related billing structure exists in the app, but I cannot honestly describe end-to-end Stripe billing as fully live for every client from this app state alone. The safe claim is that billing visibility and Stripe-related architecture exist, while full live billing status depends on the specific client setup and confirmed payment state.`,
+      links: ['/Pricing', '/ClientPortal'],
+    };
+  }
+
+  if (normalized.includes('strategy call') && normalized.includes('book')) {
+    return {
+      ...base,
+      enquiry_category: 'sales',
+      issue_category: 'strategy_call',
+      ai_summary: `Direct capability-status answer for strategy-call booking provided to ${visitorName || visitorEmail || 'visitor'}. Explained that booking is partially implemented and only confirmed when a real slot is verified and a calendar event is created.`,
+      recommended_next_action: 'Use /BookStrategyCall to see whether a real live slot is available.',
+      response: `${greeting}Status: partially implemented. The strategy-call flow can use real Google Calendar availability and create a real calendar event, but I should not imply an instant confirmed booking from this message alone. A booking is only confirmed when a real slot is verified and the calendar event is successfully created on /BookStrategyCall.`,
+      links: ['/BookStrategyCall'],
+    };
+  }
+
+  if (normalized.includes('hubspot')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'integration_setup',
+      ai_summary: `Direct capability-status answer for HubSpot integration provided to ${visitorName || visitorEmail || 'visitor'}. Explained that HubSpot is supported in the product surface but not confirmed connected for the user's account.`,
+      recommended_next_action: 'Use /Integrations for support context or ask for setup help if a human should verify account state.',
+      response: `${greeting}Status: partially implemented. HubSpot is shown as supported in the product surface, but that does not mean your account is already connected. The honest answer is supported, not confirmed connected, unless a saved live connection state is explicitly verified for your account.`,
+      links: ['/Integrations', '/BookStrategyCall'],
+    };
+  }
+
+  if (normalized.includes('client portal') && normalized.includes('billing')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'billing',
+      ai_summary: `Direct capability-status answer for client portal billing provided to ${visitorName || visitorEmail || 'visitor'}. Explained that the portal billing surface is partially implemented and not confirmed end to end for every client.`,
+      recommended_next_action: 'Use /ClientPortal for stored billing visibility or escalate billing-specific issues to a human.',
+      response: `${greeting}Status: partially implemented. The client portal can show billing structure and stored billing data, but I cannot honestly say it handles billing end to end for every client today. The safe claim is that billing UI and billing records can exist there, while full live payment handling depends on confirmed client billing setup.`,
+      links: ['/ClientPortal', '/Pricing'],
+    };
+  }
+
+  if (normalized.includes('notification') && normalized.includes('phone')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'notifications',
+      ai_summary: `Direct capability-status answer for phone notifications provided to ${visitorName || visitorEmail || 'visitor'}. Explained that notifications are partially implemented and real-time phone delivery should not be assumed across all flows.`,
+      recommended_next_action: 'Clarify the exact event and audience if the user needs a channel-specific answer.',
+      response: `${greeting}Status: partially implemented. Some admin alert flows can send SMS, but I should not imply that all notifications go to phone in real time. The safe answer is that phone delivery exists for selected implemented alert paths, not as a blanket real-time guarantee across the whole app.`,
+      links: ['/ClientPortal'],
+    };
+  }
+
+  if (normalized.includes('analytics')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'analytics',
+      ai_summary: `Direct capability-status answer for analytics provided to ${visitorName || visitorEmail || 'visitor'}. Explained that analytics are partially implemented and can be live when backed by data, but may also be empty or sample-style.`,
+      recommended_next_action: 'Use /Platform or /ClientPortal for the analytics surface, but verify whether live records exist before calling it real analytics.',
+      response: `${greeting}Status: partially implemented. Analytics can be real when the app has live Lead and CallRecord data behind them, but I should not imply they are always real. In this app, analytics can also appear as empty or sample-style views when live data is missing, so the honest answer is: the analytics surface exists, but real data is not guaranteed in every case.`,
+      links: ['/Platform', '/ClientPortal'],
+    };
+  }
+
+  if (normalized.includes('google calendar')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'integration_setup',
+      ai_summary: `Direct capability-status answer for Google Calendar provided to ${visitorName || visitorEmail || 'visitor'}. Explained that Google Calendar is live for the strategy-call flow, but current use depends on the live slot and booking path.`,
+      recommended_next_action: 'Use /BookStrategyCall to test the live availability flow.',
+      response: `${greeting}Status: partially implemented overall, with one live part. Google Calendar is live for strategy-call availability checks and calendar event creation, so that specific flow can be used today. What I should not imply is that every Google Calendar-related workflow is fully live everywhere in the app, or that a booking is confirmed until the live slot and event are actually created.`,
+      links: ['/BookStrategyCall', '/Integrations'],
+    };
+  }
+
+  if (normalized.includes('onboarding') && normalized.includes('payment')) {
+    return {
+      ...base,
+      enquiry_category: 'onboarding',
+      issue_category: 'onboarding',
+      ai_summary: `Direct capability-status answer for onboarding after payment provided to ${visitorName || visitorEmail || 'visitor'}. Explained that onboarding is partially implemented and not fully automatic after payment.`,
+      recommended_next_action: 'Use /GetStartedNow or /BookStrategyCall if the user needs onboarding guidance.',
+      response: `${greeting}Status: partially implemented. Onboarding tracking and stages exist, but I should not imply onboarding happens automatically after payment. The safe answer is that payment can move the process forward, but onboarding still involves guided steps, setup work, and human-led implementation.`,
+      links: ['/GetStartedNow', '/BookStrategyCall', '/ClientLogin'],
+    };
+  }
+
+  if (normalized.includes('manage integrations directly')) {
+    return {
+      ...base,
+      enquiry_category: 'support',
+      issue_category: 'client_portal',
+      ai_summary: `Direct capability-status answer for client-managed integrations provided to ${visitorName || visitorEmail || 'visitor'}. Explained that client integration management is partially implemented and not something that should be described as fully self-serve right now.`,
+      recommended_next_action: 'Use /Integrations for capability context and escalate manual setup needs to the team.',
+      response: `${greeting}Status: partially implemented. Clients can see integration surfaces and stored statuses, but I cannot honestly describe direct end-to-end self-service integration management as fully live right now. The safe answer is visibility exists, while full client-managed integration control is not confirmed as a complete live workflow.`,
+      links: ['/Integrations', '/ClientPortal'],
+    };
+  }
+
+  if (normalized.includes('production-ready') || normalized.includes('production ready')) {
+    return {
+      ...base,
+      enquiry_category: 'general',
+      issue_category: 'production_readiness',
+      ai_summary: `Direct capability-status answer for overall production readiness provided to ${visitorName || visitorEmail || 'visitor'}. Explained that the app has mixed readiness: some live flows, many partial flows, and no honest basis to call every feature fully production-ready.`,
+      recommended_next_action: 'Discuss the specific feature or workflow the user cares about most.',
+      response: `${greeting}Honest answer: no, I would not describe the whole app as fully production-ready across every feature. Status is mixed: some flows are fully live, many are partially implemented, and some surfaces are present without proving full end-to-end production readiness. The safe way to assess readiness here is feature by feature, not as one blanket yes.`,
+      links: ['/Services', '/Platform', '/Integrations', '/ClientPortal'],
+    };
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -208,6 +536,11 @@ Deno.serve(async (req) => {
     const combinedText = normalizeText([subject, latestMessage, transcript].filter(Boolean).join('\n'));
     const assistantReplies = countAssistantReplies(priorMessages);
     const forcedRouting = buildForcedRouting(combinedText, priorMessages);
+    const directCapabilityResponse = buildDirectCapabilityResponse(combinedText, visitorName, visitorEmail);
+
+    if (directCapabilityResponse && !forcedRouting) {
+      return Response.json(directCapabilityResponse);
+    }
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are AssistantAI Assistant, the first-line AI operator for AssistantAI.
@@ -237,10 +570,22 @@ Support context to collect when relevant:
 - screenshot or error text if available
 
 Knowledge you can rely on:
-${siteKnowledge}
+Supported feature status labels: ${featureStatusLabels.join(', ')}
+
+${buildSupportKnowledgeText()}
 
 Answering rules:
-- if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, client portal, support flow, or chat widget behavior, answer directly from the knowledge above
+- if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, booking, client portal, notifications, analytics, support flow, or chat widget behavior, answer directly from the structured knowledge above
+- when discussing integrations, billing, booking, client portal, notifications, or analytics, explicitly use the exact feature status label from the structured knowledge when it helps avoid ambiguity
+- feature status labels mean: fully live = working end to end in current app flows; partially implemented = some real parts exist but not full end-to-end coverage; UI present but not connected = visible in product or UI without confirmed live backend connection for this case; planned / future = intended later, not live today
+- do not imply a feature is live if it is only shown in UI
+- do not imply a booking is confirmed unless a real slot is verified and a real booking event is created
+- do not imply billing is fully active just because billing UI, Stripe fields, or Stripe-related architecture exist
+- do not imply integrations are connected just because an integration card exists; if connection state is unknown, say supported but not confirmed connected
+- do not imply analytics are real if the state may be sample, seeded, mock, or empty
+- do not imply phone notifications happen in real time unless the user is asking about the specific implemented admin alert flows
+- do not imply the whole product is already production-ready across every feature; answer conservatively and separate live, partial, UI-only, and future states
+- separate supported, visible in UI, configured, connected, confirmed, and fully live as different states
 - where useful, include the correct route such as /Pricing, /Services, /Integrations, /Platform, /BookStrategyCall, /ClientLogin, /ClientPortal, or /GetStartedNow?plan=starter
 - keep replies concise, useful, and commercially credible
 - ask at most 2 short questions in a single reply

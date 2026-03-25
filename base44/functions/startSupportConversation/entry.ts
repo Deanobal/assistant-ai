@@ -216,6 +216,94 @@ function normalizePhone(value) {
   return String(value || '').trim().replace(/\s+/g, '');
 }
 
+const featureStatusLabels = ['fully live', 'partially implemented', 'UI present but not connected', 'planned / future'];
+
+const supportKnowledge = [
+  {
+    category: 'integrations',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Google Calendar is live for strategy-call availability and booking.', 'Integration cards can show stored connection state.'],
+    limitations: ['Do not imply an app is connected just because a card exists.', 'If connection state is unknown, say supported but not confirmed connected.'],
+    troubleshooting_steps: ['Clarify whether the user means supported, connected, or needing setup help.'],
+    approved_links: ['/Integrations', '/BookStrategyCall', '/ClientPortal'],
+    escalation_owner: 'implementation/support',
+    escalation_threshold: 'Manual setup, failed sync, or account-specific connection checks.'
+  },
+  {
+    category: 'billing',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Billing structure, billing records, and Stripe-related architecture exist in the app.'],
+    limitations: ['Do not imply end-to-end billing is fully live just because billing UI exists.', 'Do not imply payment flow is fully active for a client unless confirmed.'],
+    troubleshooting_steps: ['Clarify whether the user means billing UI, payment status, invoice history, or fully active live billing.'],
+    approved_links: ['/Pricing', '/ClientPortal'],
+    escalation_owner: 'billing/ops',
+    escalation_threshold: 'Payment, refund, invoice, charge, or account-specific billing issue.'
+  },
+  {
+    category: 'booking',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Strategy calls can use real Google Calendar slots and create real events when booking succeeds.'],
+    limitations: ['Do not imply a booking is confirmed unless a real slot is verified and the calendar event is created.', 'If live availability is unavailable, treat it as request mode or pending.'],
+    troubleshooting_steps: ['Differentiate between live slot booking and a booking request.'],
+    approved_links: ['/BookStrategyCall'],
+    escalation_owner: 'sales/onboarding',
+    escalation_threshold: 'User cannot complete a booking or needs manual scheduling help.'
+  },
+  {
+    category: 'client_portal',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Client login and support threads are live.', 'Portal sections for billing, analytics, integrations, and support are present.'],
+    limitations: ['Do not imply every portal section is fully self-serve or fully live end to end.'],
+    troubleshooting_steps: ['Clarify which portal area is affected and whether the issue is access, visibility, or a missing live workflow.'],
+    approved_links: ['/ClientLogin', '/ClientPortal'],
+    escalation_owner: 'support',
+    escalation_threshold: 'Portal access issue or account-specific portal help is needed.'
+  },
+  {
+    category: 'notifications',
+    feature_status: 'partially implemented',
+    supported_use_case: ['In-app notification logs exist.', 'Selected admin alerts can send email and SMS.'],
+    limitations: ['Do not imply every notification goes to phone in real time.', 'Do not imply all user-facing notifications are fully live.'],
+    troubleshooting_steps: ['Clarify which event, audience, and channel the user means.'],
+    approved_links: ['/ClientPortal'],
+    escalation_owner: 'support/ops',
+    escalation_threshold: 'Delivery investigation or request for guaranteed real-time phone alerts.'
+  },
+  {
+    category: 'analytics',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Analytics can use live Lead and CallRecord data when records exist.'],
+    limitations: ['Do not imply analytics are real if the data may be empty, sample, seeded, or mock.'],
+    troubleshooting_steps: ['Clarify whether the user means live entity-backed analytics or a demo/sample surface.'],
+    approved_links: ['/Platform', '/ClientPortal'],
+    escalation_owner: 'support/data',
+    escalation_threshold: 'Missing data, mismatched data, or live analytics expectations are not met.'
+  },
+  {
+    category: 'support_workflows',
+    feature_status: 'partially implemented',
+    supported_use_case: ['Website chat can answer, clarify, and escalate to admins when needed.'],
+    limitations: ['Do not imply the AI can inspect private systems or confirm unknown account state.'],
+    troubleshooting_steps: ['Clarify the issue, urgency, affected page, and any error text.'],
+    approved_links: ['/Contact', '/ClientPortal'],
+    escalation_owner: 'support',
+    escalation_threshold: 'Urgent issue, billing/account issue, explicit human request, or low confidence.'
+  }
+];
+
+function buildSupportKnowledgeText() {
+  return supportKnowledge.map((entry) => [
+    `Category: ${entry.category}`,
+    `Feature status: ${entry.feature_status}`,
+    `Supported use case: ${entry.supported_use_case.join(' ')}`,
+    `Limitations: ${entry.limitations.join(' ')}`,
+    `Troubleshooting steps: ${entry.troubleshooting_steps.join(' ')}`,
+    `Approved links: ${entry.approved_links.join(', ')}`,
+    `Escalation owner: ${entry.escalation_owner}`,
+    `Escalation threshold: ${entry.escalation_threshold}`,
+  ].join('\n')).join('\n\n');
+}
+
 function readSecretValue(name) {
   const raw = String(Deno.env.get(name) || '').trim();
   const prefix = `${name}=`;
@@ -345,16 +433,6 @@ async function evaluatePublicConversation(base44, payload) {
   const combinedText = normalizeText([subject, latestMessage, transcript].filter(Boolean).join('\n'));
   const assistantReplies = countAssistantReplies(priorMessages);
 
-  const siteKnowledge = `
-AssistantAI site and product knowledge:
-- Services page (/Services): AI Voice Agents, AI Receptionists, AI Chatbots, CRM Automation, Appointment Booking Automation, SMS & Email Follow-Up, Workflow Automation.
-- Pricing page (/Pricing): Starter is $497/month + $1,500 setup. Growth is $1,500/month + $3,000 setup. Enterprise starts at $3,000+/month + $7,500+ setup.
-- Integrations page (/Integrations): common CRM options include GoHighLevel, HubSpot, Salesforce, Pipedrive, Zoho. Calendar options include Google Calendar and Outlook Calendar. SMS options include Twilio and GoHighLevel SMS.
-- Strategy calls use /BookStrategyCall. Direct starts use /GetStartedNow?plan=starter or /GetStartedNow?plan=growth.
-- Client portal is private via /ClientLogin then /ClientPortal, with Overview, Call Recordings, Analytics, Billing, Integrations, and Support.
-- Billing help should point to the portal billing area or escalate if it is account-sensitive.
-- The website chat should answer straightforward questions, collect support context, and only escalate when required.
-`;
 
   const explicitHumanRequest = includesAny(combinedText, ['human', 'real person', 'someone from your team', 'speak to someone', 'talk to someone', 'please escalate', 'need an agent']);
   const criticalOutage = includesAny(combinedText, ['site is down', 'website is down', 'system is down', 'critical outage', 'outage', 'urgent bug', 'cannot take bookings', 'nothing is working']) || (includesAny(combinedText, ['urgent', 'asap', 'immediately', 'critical']) && includesAny(combinedText, ['bug', 'broken', 'error', 'not working', 'crash']));
@@ -424,10 +502,22 @@ Support context to collect when relevant:
 - screenshot or error text if available
 
 Knowledge you can rely on:
-${siteKnowledge}
+Supported feature status labels: ${featureStatusLabels.join(', ')}
+
+${buildSupportKnowledgeText()}
 
 Answering rules:
-- if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, client portal, support flow, or chat widget behavior, answer directly from the knowledge above
+- if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, booking, client portal, notifications, analytics, support flow, or chat widget behavior, answer directly from the structured knowledge above
+- when discussing integrations, billing, booking, client portal, notifications, or analytics, explicitly use the exact feature status label when it helps avoid ambiguity
+- fully live = working end to end in current app flows; partially implemented = some real parts exist but not full end-to-end coverage; UI present but not connected = visible in product or UI without confirmed live backend connection for this case; planned / future = intended later, not live today
+- do not imply a feature is live if it is only shown in UI
+- do not imply a booking is confirmed unless a real slot is verified and a real booking event is created
+- do not imply billing is fully active just because billing UI or Stripe-related architecture exists
+- do not imply integrations are connected just because an integration card exists; if state is unknown, say supported but not confirmed connected
+- do not imply analytics are real if the data may be sample, seeded, mock, or empty
+- do not imply phone notifications are real-time for every flow
+- do not imply the whole product is already production-ready across every feature
+- separate supported, visible in UI, configured, connected, confirmed, and fully live as different states
 - where useful, include the correct route such as /Pricing, /Services, /Integrations, /Platform, /BookStrategyCall, /ClientLogin, /ClientPortal, or /GetStartedNow?plan=starter
 - keep replies concise, useful, and commercially credible
 - ask at most 2 short questions in a single reply
