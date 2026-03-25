@@ -7,6 +7,7 @@ import ManagerStats from '@/components/admin/client-manager/ManagerStats';
 import ClientCard from '@/components/admin/client-manager/ClientCard';
 import CreateClientCard from '@/components/admin/client-manager/CreateClientCard';
 import WonLeadConversionCard from '@/components/admin/client-manager/WonLeadConversionCard';
+import AnalyticsSection from '@/components/dashboard/AnalyticsSection';
 import { calculateManagerStats } from '@/components/admin/client-manager/mockClients';
 
 export default function ClientManager() {
@@ -187,6 +188,8 @@ export default function ClientManager() {
       </div>
 
       <ManagerStats stats={calculateManagerStats(visibleClients)} />
+
+      <AnalyticsSection />
 
       <CreateClientCard onCreate={(form) => createClientMutation.mutate(form)} isSaving={createClientMutation.isPending} />
 
