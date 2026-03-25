@@ -149,6 +149,8 @@ export default function LeadDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <LeadSmsTrail leadId={leadId} />
     </div>
   );
 }
