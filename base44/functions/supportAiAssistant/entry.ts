@@ -10,7 +10,9 @@ const explicitHumanKeywords = [
   'someone from your team',
   'speak to someone',
   'talk to someone',
-  'team member'
+  'team member',
+  'jump in',
+  'someone jump in'
 ];
 
 const pricingKeywords = ['pricing', 'price', 'cost', 'quote'];
@@ -20,6 +22,10 @@ const urgentHelpKeywords = ['urgent help', 'need urgent help', 'help asap', 'asa
 const aiFailureKeywords = [
   'that did not help',
   'that didnt help',
+  'did not help',
+  'didnt help',
+  'still did not help',
+  'still didnt help',
   'not helpful',
   'still need help',
   'you did not answer',
