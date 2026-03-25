@@ -95,7 +95,7 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button type="button" className="h-11 rounded-xl bg-white text-slate-900 hover:bg-slate-200">
+              <Button type="button" onClick={() => replyInputRef.current?.focus()} className="h-11 rounded-xl bg-white text-slate-900 hover:bg-slate-200">
                 <Reply className="mr-2 h-4 w-4" /> Reply
               </Button>
               {phoneHref && (
