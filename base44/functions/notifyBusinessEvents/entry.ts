@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
       };
 
       if (def.event_type === 'strategy_call_requested') {
-        const customerResponse = await base44.functions.invoke('sendCustomerStrategyCallSms', {
+        const customerResponse = await base44.asServiceRole.functions.invoke('sendCustomerStrategyCallSms', {
           eventType: 'strategy_call_requested',
           leadId: data.id,
           clientAccountId: data.client_account_id || null,
@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
       }
 
       if (def.event_type === 'booking_request_failed') {
-        const customerResponse = await base44.functions.invoke('sendCustomerStrategyCallSms', {
+        const customerResponse = await base44.asServiceRole.functions.invoke('sendCustomerStrategyCallSms', {
           eventType: 'booking_request_failed',
           leadId: data.id,
           clientAccountId: data.client_account_id || null,
