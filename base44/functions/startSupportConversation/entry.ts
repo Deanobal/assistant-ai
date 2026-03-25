@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
           message_preview: preview,
           intent_summary: aiResult.ai_summary || preview,
           wait_label: 'Just now',
-          channel_label: 'Live Chat',
+          channel_label: 'Chat',
           cta_label: 'Reply Now',
           source_page: sourcePage || '/',
           ai_mode: aiResult.ai_mode,
