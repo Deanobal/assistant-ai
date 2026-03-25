@@ -145,146 +145,16 @@ Deno.serve(async (req) => {
     let aiMessage = null;
 
     if (conversation.ai_mode === 'ai_active') {
-      const transcript = priorMessages.slice(-8).map((item) => `${item.sender_type || 'unknown'}: ${item.message_body || ''}`).join('\n');
-      const combinedText = [conversation.subject, message, transcript].filter(Boolean).join('\n').toLowerCase();
-      const assistantReplies = priorMessages.filter((item) => item?.sender_type === 'system').length;
-      const includesAny = (keywords) => keywords.some((keyword) => combinedText.includes(keyword));
-      const explicitHumanRequest = includesAny(['human', 'real person', 'someone from your team', 'speak to someone', 'talk to someone', 'please escalate', 'need an agent']);
-      const criticalOutage = includesAny(['site is down', 'website is down', 'system is down', 'critical outage', 'outage', 'urgent bug', 'cannot take bookings', 'nothing is working']) || (includesAny(['urgent', 'asap', 'immediately', 'critical']) && includesAny(['bug', 'broken', 'error', 'not working', 'crash']));
-      const billingSecurityIssue = includesAny(['billing issue', 'billing problem', 'invoice issue', 'payment failed', 'refund', 'charged twice', 'account issue', 'security issue', 'locked out', 'cannot access', 'cant access', 'login issue']);
-      const manualIntegrationHelp = includesAny(['help connect', 'connect my', 'set up integration', 'setup integration', 'integration setup', 'calendar connection', 'crm connection', 'twilio setup']);
-      const pricingDecision = includesAny(['quote', 'proposal', 'ready to start', 'ready to book', 'call me', 'call me back', 'sign me up', 'start now']);
-      const defaultCategory = includesAny(['pricing', 'price', 'cost', 'quote', 'plan', 'get started', 'strategy call', 'demo']) ? 'sales'
-        : includesAny(['onboarding', 'intake', 'go live', 'setup', 'implementation']) ? 'onboarding'
-        : criticalOutage ? 'urgent'
-        : billingSecurityIssue || manualIntegrationHelp || includesAny(['bug', 'broken', 'error', 'not working', 'portal', 'login', 'support', 'tech help', 'integration']) ? 'support'
-        : 'general';
-      const issueCategory = includesAny(['pricing', 'price', 'cost', 'plan']) ? 'pricing'
-        : includesAny(['strategy call', 'book a call', 'book a demo']) ? 'strategy_call'
-        : includesAny(['integration', 'calendar', 'crm', 'twilio', 'hubspot', 'salesforce', 'outlook']) ? 'integration_setup'
-        : includesAny(['billing', 'invoice', 'payment', 'card', 'charge']) ? 'billing'
-        : includesAny(['login', 'locked out', 'password', 'account']) ? 'account_access'
-        : includesAny(['portal', 'dashboard', 'analytics', 'call recordings', 'support tab', 'chat widget']) ? 'client_portal'
-        : includesAny(['error', 'broken', 'bug', 'blank page', 'crash', 'not working']) ? 'bug_or_feature_issue'
-        : includesAny(['onboarding', 'intake', 'setup', 'go live']) ? 'onboarding'
-        : includesAny(['services', 'what do you do', 'voice agent', 'chatbot', 'ai receptionist']) ? 'services'
-        : includesAny(['tech help', 'technical help', 'help']) ? 'general_support'
-        : 'general_enquiry';
-      const isVagueSupport = includesAny(['i need help', 'need help', 'tech help', 'technical help', 'something is wrong', 'having issues', 'problem'])
-        && !includesAny(['portal', 'billing', 'integration', 'calendar', 'crm', 'chat', 'widget', 'pricing', 'error', 'code', 'screen', 'page', 'login', 'invoice', 'onboarding'])
-        && combinedText.length < 100;
-      const forcedRouting = explicitHumanRequest
-        ? { ai_mode: 'human_required', enquiry_category: defaultCategory === 'general' ? 'support' : defaultCategory, urgency_level: 'high', ai_handover_reason: 'User explicitly asked for a human.', confidence_level: 'high' }
-        : criticalOutage
-          ? { ai_mode: 'escalated', enquiry_category: 'urgent', urgency_level: 'urgent', ai_handover_reason: 'This looks business-critical or outage-related.', confidence_level: 'high' }
-          : billingSecurityIssue
-            ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'Billing, account, or security issues need human review.', confidence_level: 'high' }
-            : manualIntegrationHelp
-              ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'This integration setup request likely needs manual help from the team.', confidence_level: 'high' }
-              : pricingDecision
-                ? { ai_mode: 'human_required', enquiry_category: 'sales', urgency_level: 'high', ai_handover_reason: 'The user is ready to move forward and should get a human follow-up.', confidence_level: 'high' }
-                : assistantReplies >= 3 && (isVagueSupport || defaultCategory === 'support')
-                  ? { ai_mode: 'human_required', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: 'The assistant has already asked enough clarifying questions and confidence is still low.', confidence_level: 'low' }
-                  : isVagueSupport
-                    ? { ai_mode: 'ai_active', enquiry_category: 'support', urgency_level: 'normal', ai_handover_reason: null, confidence_level: assistantReplies >= 2 ? 'low' : 'medium' }
-                    : null;
-
-      const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: `You are AssistantAI Assistant, the first-line AI operator for AssistantAI.
-
-Your role:
-- act like a capable front-line operator, not a deflection bot
-- acknowledge the issue clearly
-- answer straightforward product and site questions directly
-- ask only the next most useful clarifying question or questions when support context is missing
-- try one useful answer when possible before escalating
-- only escalate when the rules below require it
-
-Escalation rules:
-- escalate only for urgent or business-critical issues, billing/account/security issues, likely bugs or outages, manual integration setup help, explicit human requests, or genuinely low confidence after clarifying
-- do not escalate vague support requests immediately
-- there have already been ${assistantReplies} assistant replies in this thread, and the total clarifying-question budget is 3 before escalation for low-confidence support cases
-
-Knowledge:
-Supported feature status labels: ${featureStatusLabels.join(', ')}
-
-${buildSupportKnowledgeText()}
-
-Hard response rules:
-- use the exact feature status label when needed to prevent overclaiming
-- do not imply a feature is live if it is only shown in UI
-- do not imply a booking is confirmed unless a real slot is verified and a real booking event is created
-- do not imply billing is fully active just because billing UI or Stripe-related architecture exists
-- do not imply integrations are connected just because an integration card exists; if state is unknown, say supported but not confirmed connected
-- do not imply analytics are real if the data may be sample, seeded, mock, or empty
-- do not imply phone notifications are real-time for every flow
-- do not imply the whole product is already production-ready across every feature
-- separate supported, visible in UI, configured, connected, confirmed, and fully live as different states
-
-Conversation context:
-- visitor name: ${name || conversation.visitor_name || 'Visitor'}
-- visitor email: ${email}
-- visitor phone: ${conversation.visitor_phone || 'Not provided'}
-- subject: ${conversation.subject}
-- source page: ${sourcePage || conversation.source_page || '/'}
-- latest message: ${message}
-- prior visible messages:\n${transcript || 'None'}
-- forced routing guidance: ${forcedRouting ? JSON.stringify(forcedRouting) : 'none'}
-
-Return JSON with:
-- ai_mode
-- enquiry_category
-- issue_category
-- urgency_level
-- confidence_level
-- ai_summary
-- ai_handover_reason
-- steps_taken
-- recommended_next_action
-- response`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            ai_mode: { type: 'string' },
-            enquiry_category: { type: 'string' },
-            issue_category: { type: 'string' },
-            urgency_level: { type: 'string' },
-            confidence_level: { type: 'string' },
-            ai_summary: { type: 'string' },
-            ai_handover_reason: { anyOf: [{ type: 'string' }, { type: 'null' }] },
-            steps_taken: { type: 'string' },
-            recommended_next_action: { type: 'string' },
-            response: { type: 'string' }
-          },
-          required: ['ai_mode', 'enquiry_category', 'issue_category', 'urgency_level', 'confidence_level', 'ai_summary', 'steps_taken', 'recommended_next_action', 'response']
-        }
+      const aiResponse = await base44.asServiceRole.functions.invoke('publicSupportAssistant', {
+        visitorName: name || conversation.visitor_name || 'Visitor',
+        visitorEmail: email,
+        visitorPhone: conversation.visitor_phone || '',
+        subject: conversation.subject,
+        latestMessage: message,
+        sourcePage: sourcePage || conversation.source_page || '/',
+        priorMessages,
       });
-
-      const normalizedAiMode = ['ai_active', 'human_required', 'escalated', 'closed'].includes(result?.ai_mode)
-        ? result.ai_mode
-        : forcedRouting?.ai_mode || 'ai_active';
-      const normalizedCategory = ['sales', 'onboarding', 'support', 'urgent', 'general'].includes(result?.enquiry_category)
-        ? result.enquiry_category
-        : forcedRouting?.enquiry_category || defaultCategory || 'general';
-      const normalizedUrgency = ['low', 'normal', 'high', 'urgent'].includes(String(result?.urgency_level || '').toLowerCase())
-        ? String(result.urgency_level).toLowerCase()
-        : forcedRouting?.urgency_level || 'normal';
-      const normalizedConfidence = ['low', 'medium', 'high'].includes(String(result?.confidence_level || '').toLowerCase())
-        ? String(result.confidence_level).toLowerCase()
-        : forcedRouting?.confidence_level || 'medium';
-
-      aiResult = {
-        ai_mode: normalizedAiMode,
-        enquiry_category: normalizedCategory,
-        issue_category: result?.issue_category || issueCategory,
-        urgency_level: normalizedUrgency,
-        confidence_level: normalizedConfidence,
-        ai_summary: result?.ai_summary || `Issue category: ${result?.issue_category || issueCategory}. Urgency: ${normalizedUrgency}. Visitor: ${name || conversation.visitor_name || 'Visitor'}. Problem: ${message}. Steps taken: ${result?.steps_taken || 'Assistant reviewed the enquiry and replied.'}. Next action: ${result?.recommended_next_action || 'Continue clarifying or follow the linked page.'}`,
-        ai_handover_reason: forcedRouting?.ai_handover_reason || result?.ai_handover_reason || null,
-        steps_taken: result?.steps_taken || (assistantReplies > 0 ? `Assistant already asked ${assistantReplies} clarifying question${assistantReplies === 1 ? '' : 's'}.` : 'Assistant reviewed the enquiry and provided a first-line response.'),
-        recommended_next_action: result?.recommended_next_action || (normalizedAiMode === 'ai_active' ? 'Continue clarifying or follow the linked page.' : 'Human follow-up required.'),
-        response: result?.response,
-      };
+      aiResult = aiResponse?.data || aiResponse;
 
       if (aiResult?.response) {
         aiMessage = await base44.asServiceRole.entities.SupportMessage.create({
