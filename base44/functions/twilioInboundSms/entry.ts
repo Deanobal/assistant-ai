@@ -337,27 +337,19 @@ async function sendHighIntentAdminAlert(base44, lead, messageBody, tags, receive
     return { status: 'skipped_recent_duplicate' };
   }
 
-  const timeBucket = Math.floor(new Date(receivedAt).getTime() / (1000 * 60 * 60 * 2));
   const tagSignature = getTagSignature(tags);
   const messageSignature = normalizeMessageSignature(messageBody);
-  const leadName = lead.business_name || lead.full_name || 'Lead';
-  const configuredAdminEmail = String(Deno.env.get('ADMIN_NOTIFICATION_EMAIL') || '').trim().toLowerCase() || null;
-
-  await base44.asServiceRole.entities.NotificationLog.create({
-    event_type: 'customer_sms_reply_received',
-    entity_name: 'Lead',
-    entity_id: lead.id,
-    client_account_id: lead.client_account_id || null,
-    recipient_role: 'admin',
-    recipient_email: configuredAdminEmail,
-    channel: 'in_app',
-    delivery_status: 'stored',
-    provider_name: 'AssistantAI Alerts',
-    provider_message: `high_intent_sms:${lead.id}:${tagSignature}:${timeBucket}`,
-    title: 'High-intent SMS reply needs follow-up',
-    message: `${leadName} sent a high-intent SMS reply: "${messageBody}"`,
-    triggered_at: receivedAt,
-    actor_email: null,
+  const alertResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+    eventType: 'customer_sms_reply_received',
+    entityName: 'Lead',
+    entityId: lead.id,
+    clientAccountId: lead.client_account_id || null,
+    title: 'High-intent SMS needs reply',
+    message: messageBody,
+    actorEmail: null,
+    uniqueKey: `high_intent_sms:${lead.id}:${tagSignature}:${Math.floor(new Date(receivedAt).getTime() / (1000 * 60 * 60 * 2))}`,
+    priority: 'high',
+    smsMessage: messageBody,
     metadata: {
       full_name: lead.full_name || null,
       business_name: lead.business_name || null,
@@ -370,10 +362,15 @@ async function sendHighIntentAdminAlert(base44, lead, messageBody, tags, receive
       high_intent_tag_signature: tagSignature,
       high_intent_message_signature: messageSignature,
       inbound_message_at: receivedAt,
+      intent_summary: buildHighIntentNextAction(tags),
+      wait_label: 'Just now',
+      channel_label: 'SMS',
+      cta_label: 'Open Lead',
+      message_preview: messageBody,
     },
   });
 
-  return { status: 'sent' };
+  return alertResponse?.data || alertResponse || { status: 'sent' };
 }
 
 Deno.serve(async (req) => {

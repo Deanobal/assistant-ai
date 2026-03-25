@@ -98,6 +98,35 @@ Deno.serve(async (req) => {
       },
     });
 
+    await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+      eventType: 'support_conversation_created',
+      entityName: 'SupportConversation',
+      entityId: conversation.id,
+      clientAccountId: user.client_account_id,
+      title: 'Client portal message needs reply',
+      message: aiResult.ai_summary || message.slice(0, 180),
+      actorEmail: user.email,
+      uniqueKey: `client_portal_create:${conversation.id}:${now}`,
+      priority: ['urgent', 'high'].includes(conversation.urgency_level) ? 'high' : 'normal',
+      smsMessage: aiResult.ai_summary || message.slice(0, 180),
+      metadata: {
+        conversation_id: conversation.id,
+        admin_link: `/ActionInbox?view=needs_reply_now&conversationId=${conversation.id}`,
+        full_name: user.full_name || client?.contact_name || user.email,
+        business_name: client?.business_name || '',
+        email: user.email,
+        mobile_number: client?.phone || '',
+        enquiry_category: conversation.enquiry_category,
+        urgency_level: conversation.urgency_level,
+        message_preview: message.slice(0, 180),
+        intent_summary: aiResult.ai_summary || message.slice(0, 180),
+        wait_label: 'Just now',
+        channel_label: 'Client Portal',
+        cta_label: 'Reply Now',
+        source_page: sourcePage || '/ClientPortal',
+      },
+    });
+
     return Response.json({ conversation, messages: [firstMessage] });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
