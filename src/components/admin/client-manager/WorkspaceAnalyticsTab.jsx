@@ -1,6 +1,7 @@
 import React from 'react';
 import { LineChart, Line, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import LiveVisitorWorld from '@/components/dashboard/analytics/LiveVisitorWorld';
 
 export default function WorkspaceAnalyticsTab({ client }) {
   const analytics = client.analytics || { trend: [], categories: [] };
@@ -8,17 +9,22 @@ export default function WorkspaceAnalyticsTab({ client }) {
 
   if (!hasAnalytics) {
     return (
-      <Card className="bg-[#12121a] border-white/5">
-        <CardContent className="p-10 text-center space-y-3">
-          <h3 className="text-xl font-semibold text-white">No Client Analytics Yet</h3>
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Analytics will appear here once live call activity, enquiries, and client records start accumulating in the system.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <LiveVisitorWorld />
+        <Card className="bg-[#12121a] border-white/5">
+          <CardContent className="p-10 text-center space-y-3">
+            <h3 className="text-xl font-semibold text-white">No Client Analytics Yet</h3>
+            <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Analytics will appear here once live call activity, enquiries, and client records start accumulating in the system.</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      <LiveVisitorWorld />
+
       <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           ['Lead Conversion', `${analytics.lead_conversion || 0}%`],
