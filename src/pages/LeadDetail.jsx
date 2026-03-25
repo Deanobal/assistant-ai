@@ -150,7 +150,7 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      <LeadSmsTrail leadId={leadId} />
+      <LeadSmsTrail leadId={leadId} mobileNumber={lead.mobile_number} fullName={lead.full_name || lead.business_name} />
     </div>
   );
 }

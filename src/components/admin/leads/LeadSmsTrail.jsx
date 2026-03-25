@@ -4,16 +4,17 @@ import { ArrowDownLeft, ArrowUpRight, MessageSquare } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import LeadSmsReplyBox from '@/components/admin/leads/LeadSmsReplyBox';
 
 function getDirection(log) {
-  if (log.event_type === 'customer_sms_reply_received') {
+  if (log.sender_role === 'client' || log.event_type === 'customer_sms_reply_received' || log.event_type === 'customer_sms_reply_unmatched') {
     return 'inbound';
   }
 
   return 'outbound';
 }
 
-export default function LeadSmsTrail({ leadId }) {
+export default function LeadSmsTrail({ leadId, mobileNumber, fullName }) {
   const { data: logs = [] } = useQuery({
     queryKey: ['lead-sms-trail', leadId],
     queryFn: () => base44.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 50),
@@ -27,8 +28,10 @@ export default function LeadSmsTrail({ leadId }) {
       <CardContent className="p-6 space-y-4">
         <div>
           <h3 className="text-white font-semibold text-lg">SMS Trail</h3>
-          <p className="text-sm text-gray-400 mt-1">Inbound replies and outbound strategy call SMS for this lead.</p>
+          <p className="text-sm text-gray-400 mt-1">Inbound customer replies and outbound admin/customer SMS for this lead.</p>
         </div>
+
+        <LeadSmsReplyBox leadId={leadId} mobileNumber={mobileNumber} fullName={fullName} />
 
         {orderedLogs.length === 0 ? (
           <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-5 text-sm text-gray-400">
