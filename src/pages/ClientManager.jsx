@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
@@ -179,15 +180,28 @@ export default function ClientManager() {
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Manager</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Internal agency workspace</Badge>
+            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Admin</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">System controls and client records</Badge>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Manage Every Client Account</h2>
-          <p className="text-gray-400 max-w-3xl">Review client health, open full workspaces, manage services, billing, notes, onboarding, and linked records from one internal system.</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Admin Workspace</h2>
+          <p className="text-gray-400 max-w-3xl">Keep client records, team access, and system readiness grouped here so reply work stays separate in the Action Inbox.</p>
         </div>
       </div>
 
       <ManagerStats stats={calculateManagerStats(visibleClients)} />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link to="/TeamAccess" className="rounded-3xl border border-white/5 bg-[#12121a] p-5 transition-colors hover:bg-white/[0.03]">
+          <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Admin Only</p>
+          <h3 className="mt-2 text-xl font-semibold text-white">Team Access</h3>
+          <p className="mt-2 text-sm text-gray-400">Invite team members and control who can access the internal workspace.</p>
+        </Link>
+        <Link to="/SystemReadiness" className="rounded-3xl border border-white/5 bg-[#12121a] p-5 transition-colors hover:bg-white/[0.03]">
+          <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Admin Only</p>
+          <h3 className="mt-2 text-xl font-semibold text-white">System Readiness</h3>
+          <p className="mt-2 text-sm text-gray-400">Review what is truly live, what is partial, and what still needs provider wiring.</p>
+        </Link>
+      </div>
 
       <AnalyticsSection />
 

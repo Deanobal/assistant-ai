@@ -5,16 +5,44 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BriefcaseBusiness, LogOut, UsersRound, ShieldCheck, Rocket, BarChart3, CircleDashed, Inbox, MessageSquare } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck } from 'lucide-react';
 
 const navItems = [
-  { label: 'Lead Dashboard', path: '/LeadDashboard', icon: BarChart3 },
-  { label: 'Client Manager', path: '/ClientManager', icon: UsersRound },
-  { label: 'Onboarding', path: '/Onboarding', icon: Rocket },
-  { label: 'Support Inbox', path: '/SupportInbox', icon: Inbox },
-  { label: 'Unmatched SMS', path: '/UnmatchedSmsInbox', icon: MessageSquare },
-  { label: 'Team Access', path: '/TeamAccess', icon: ShieldCheck },
-  { label: 'System Readiness', path: '/SystemReadiness', icon: CircleDashed },
+  {
+    label: 'Action Inbox',
+    path: '/ActionInbox',
+    icon: Inbox,
+    subtitle: 'Live response queue',
+    match: ['/ActionInbox', '/UnmatchedSmsInbox'],
+  },
+  {
+    label: 'Leads',
+    path: '/LeadDashboard',
+    icon: BarChart3,
+    subtitle: 'Pipeline and follow-up',
+    match: ['/LeadDashboard', '/LeadDetail'],
+  },
+  {
+    label: 'Onboarding',
+    path: '/Onboarding',
+    icon: Rocket,
+    subtitle: 'Rollout progress',
+    match: ['/Onboarding', '/OnboardingIntake'],
+  },
+  {
+    label: 'Support',
+    path: '/SupportInbox',
+    icon: MessageSquare,
+    subtitle: 'All support threads',
+    match: ['/SupportInbox'],
+  },
+  {
+    label: 'Admin',
+    path: '/ClientManager',
+    icon: ShieldCheck,
+    subtitle: 'System controls',
+    match: ['/ClientManager', '/ClientWorkspace', '/TeamAccess', '/SystemReadiness'],
+  },
 ];
 
 export default function AdminLayout() {
@@ -45,26 +73,35 @@ export default function AdminLayout() {
     enabled: !isLoading && isAdmin,
   });
 
+  const { data: unmatchedSms = [] } = useQuery({
+    queryKey: ['admin-unmatched-sms-count'],
+    queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
+    initialData: [],
+    enabled: !isLoading && isAdmin,
+  });
+
   const unreadSupportCount = unreadConversations.length;
+  const actionCount = unreadSupportCount + unmatchedSms.length;
+  const activeNavItem = navItems.find((item) => item.match.some((path) => location.pathname.startsWith(path))) || navItems[0];
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#07070d] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-[#07070d]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-400" />
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#07070d] flex items-center justify-center px-6">
-        <Card className="bg-[#12121a] border-white/5 max-w-md w-full">
-          <CardContent className="p-8 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-              <BriefcaseBusiness className="w-7 h-7 text-cyan-400" />
+      <div className="flex min-h-screen items-center justify-center bg-[#07070d] px-6">
+        <Card className="w-full max-w-md border-white/5 bg-[#12121a]">
+          <CardContent className="space-y-4 p-8 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+              <BriefcaseBusiness className="h-7 w-7 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white mb-2">Admin Access Only</h1>
+              <h1 className="mb-2 text-2xl font-bold text-white">Admin Access Only</h1>
               <p className="text-gray-400">This internal workspace is reserved for the AssistantAI team.</p>
             </div>
             <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
@@ -79,57 +116,82 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#07070d] text-white">
       <div className="flex min-h-screen">
-        <aside className="hidden lg:flex w-72 border-r border-white/5 bg-[#0c0c12] flex-col p-6">
-          <Link to="/ClientManager" className="flex items-center gap-3 mb-10">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-              <BriefcaseBusiness className="w-5 h-5 text-white" />
+        <aside className="hidden w-72 flex-col border-r border-white/5 bg-[#0c0c12] p-6 lg:flex">
+          <Link to="/ActionInbox" className="mb-10 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500">
+              <BriefcaseBusiness className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-lg">AssistantAI</p>
-              <p className="text-sm text-gray-500">Internal Admin</p>
+              <p className="text-lg font-semibold">AssistantAI</p>
+              <p className="text-sm text-slate-500">Internal Operations</p>
             </div>
           </Link>
 
-          <div className="space-y-2 flex-1">
+          <div className="flex-1 space-y-2">
             {navItems.map((item) => {
-              const showUnreadCount = item.path === '/SupportInbox' && unreadSupportCount > 0;
+              const isActive = item.match.some((path) => location.pathname.startsWith(path));
+              const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-colors ${location.pathname === item.path ? 'border-cyan-500/30 bg-cyan-500/10 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/[0.03]'}`}
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-500/30 bg-cyan-500/10 text-white' : 'border-transparent text-slate-400 hover:bg-white/[0.03] hover:text-white'}`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{item.label}</p>
+                      <p className="truncate text-xs text-slate-500">{item.subtitle}</p>
+                    </div>
                   </div>
-                  {showUnreadCount && (
-                    <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-500/20 shrink-0">{unreadSupportCount}</Badge>
-                  )}
+                  {count > 0 && <Badge className="shrink-0 border-cyan-500/20 bg-cyan-500/10 text-cyan-200">{count}</Badge>}
                 </Link>
               );
             })}
           </div>
 
           <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="border-white/10 text-white hover:bg-white/5">
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="mr-2 h-4 w-4" />
             Log Out
           </Button>
         </aside>
 
-        <div className="flex-1 min-w-0">
-          <header className="border-b border-white/5 bg-[#0c0c12]/80 backdrop-blur-xl px-6 py-5 flex items-center justify-between gap-4 sticky top-0 z-20">
-            <div>
-              <p className="text-sm text-gray-500">AssistantAI Internal Workspace</p>
-              <h1 className="text-xl font-semibold">Client Manager</h1>
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0c0c12]/90 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-500">AssistantAI Internal Workspace</p>
+                <h1 className="text-xl font-semibold text-white">{activeNavItem.label}</h1>
+              </div>
+              <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{activeNavItem.subtitle}</Badge>
             </div>
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Agency Admin</Badge>
           </header>
-          <main className="p-6 lg:p-8">
+
+          <main className="px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:pb-8">
             <Outlet />
           </main>
         </div>
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0c0c12]/95 px-2 py-2 backdrop-blur-xl lg:hidden">
+        <div className="grid grid-cols-5 gap-2">
+          {navItems.map((item) => {
+            const isActive = item.match.some((path) => location.pathname.startsWith(path));
+            const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative flex min-h-[56px] flex-col items-center justify-center rounded-2xl px-2 text-center text-xs ${isActive ? 'bg-cyan-500/10 text-cyan-200' : 'text-slate-400'}`}
+              >
+                <item.icon className="mb-1 h-4 w-4" />
+                <span>{item.label}</span>
+                {count > 0 && <span className="absolute right-2 top-1 rounded-full bg-cyan-400 px-1.5 text-[10px] font-semibold text-slate-950">{count}</span>}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
