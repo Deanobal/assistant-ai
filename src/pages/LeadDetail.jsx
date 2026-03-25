@@ -151,7 +151,7 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      <LeadRecommendedNextActionPanel leadId={leadId} nextAction={draft.next_action} />
+      <LeadRecommendedNextActionPanel leadId={leadId} lead={draft} nextAction={draft.next_action} />
 
       <LeadSmsTrail leadId={leadId} mobileNumber={lead.mobile_number} fullName={lead.full_name || lead.business_name} />
     </div>

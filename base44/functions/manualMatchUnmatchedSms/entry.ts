@@ -50,9 +50,71 @@ function buildHighIntentNextAction(tags) {
   return 'Follow up on high-intent SMS reply';
 }
 
+function isBookingConfirmed(lead) {
+  return !!lead && (
+    lead.status === 'Strategy Call Booked'
+    || lead.booking_status === 'confirmed'
+    || !!lead.booking_reference
+    || (!!lead.confirmed_meeting_date && !!lead.confirmed_meeting_time)
+  );
+}
+
+function isBookingRelatedLead(lead, unmatchedLog) {
+  return !!lead && (
+    !!lead.booking_intent
+    || lead.enquiry_type === 'strategy_call'
+    || ['customer_strategy_call_request', 'customer_strategy_call_fallback'].includes(
+      unmatchedLog?.metadata?.matched_outbound_sms_kind || unmatchedLog?.metadata?.sms_kind || ''
+    )
+  );
+}
+
+function buildBookingNudgeNextAction(tags) {
+  if (tags.includes('call_me') && tags.includes('preferred_time')) {
+    return 'Booking nudge: call this lead at their requested time and confirm the strategy call slot.';
+  }
+
+  if (tags.includes('call_me')) {
+    return 'Booking nudge: call this lead and try to confirm the strategy call slot.';
+  }
+
+  if (tags.includes('preferred_time') || tags.includes('tomorrow')) {
+    return 'Booking nudge: follow up on the requested time and confirm the strategy call slot.';
+  }
+
+  if (tags.includes('urgent_interest')) {
+    return 'Booking nudge: prioritise fast follow-up and try to confirm the strategy call slot.';
+  }
+
+  return 'Booking nudge: follow up quickly and confirm whether the lead wants a strategy call slot.';
+}
+
+function buildBookingNudgeNote(existingNotes, timestamp, body, tags) {
+  const noteLine = `[Booking nudge ${timestamp}] Latest customer intent: "${body}"${tags.length ? ` | tags: ${tags.join(', ')}` : ''} | Booking is not confirmed yet — internal follow-up prompt only.`;
+  return existingNotes ? `${existingNotes}\n${noteLine}` : noteLine;
+}
+
 function buildLeadNote(existingNotes, timestamp, body, tags) {
   const noteLine = `[High-intent inbound SMS ${timestamp}] ${body}${tags.length ? ` | tags: ${tags.join(', ')}` : ''}`;
   return existingNotes ? `${existingNotes}\n${noteLine}` : noteLine;
+}
+
+async function hasRecentBookingConfirmedState(base44, leadId, receivedAt) {
+  const recentBookingLogs = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: leadId,
+    event_type: 'booking_confirmed',
+  }, '-created_date', 10);
+  const windowStart = new Date(receivedAt).getTime() - (1000 * 60 * 60 * 48);
+
+  return recentBookingLogs.some((log) => new Date(log.triggered_at || log.created_date).getTime() >= windowStart);
+}
+
+async function isBookingNudgeEligible(base44, lead, unmatchedLog, receivedAt) {
+  if (!lead || !isBookingRelatedLead(lead, unmatchedLog) || isBookingConfirmed(lead)) {
+    return false;
+  }
+
+  return !(await hasRecentBookingConfirmedState(base44, lead.id, receivedAt));
 }
 
 Deno.serve(async (req) => {
@@ -197,13 +259,25 @@ Deno.serve(async (req) => {
       ? unmatchedLog.metadata.reply_intent_tags.filter(hasHighIntentTag)
       : [];
 
+    let bookingNudgeStatus = null;
+    let bookingNudgeDueAt = null;
+
     if (isHighIntentReply(replyTags)) {
       const activityAt = unmatchedLog.triggered_at || matchedAt;
+      const bookingNudgeActive = await isBookingNudgeEligible(base44, lead, unmatchedLog, activityAt);
+      const nextAction = bookingNudgeActive ? buildBookingNudgeNextAction(replyTags) : buildHighIntentNextAction(replyTags);
+      bookingNudgeStatus = bookingNudgeActive ? 'follow_up_needed' : null;
+      bookingNudgeDueAt = bookingNudgeActive
+        ? new Date(new Date(activityAt).getTime() + (30 * 60 * 1000)).toISOString()
+        : null;
+
       await base44.asServiceRole.entities.Lead.update(lead.id, {
         ...lead,
         last_activity_at: activityAt,
-        notes: buildLeadNote(lead.notes || '', activityAt, unmatchedLog.message, replyTags),
-        next_action: buildHighIntentNextAction(replyTags),
+        notes: bookingNudgeActive
+          ? buildBookingNudgeNote(lead.notes || '', activityAt, unmatchedLog.message, replyTags)
+          : buildLeadNote(lead.notes || '', activityAt, unmatchedLog.message, replyTags),
+        next_action: nextAction,
       });
     }
 
@@ -214,6 +288,8 @@ Deno.serve(async (req) => {
       matched_log_id: matchedLog.id,
       lead_id: lead.id,
       lead_name: lead.business_name || lead.full_name || 'Lead',
+      booking_nudge_status: bookingNudgeStatus,
+      booking_nudge_due_at: bookingNudgeDueAt,
     });
   } catch (error) {
     return Response.json({ error: getErrorMessage(error) }, { status: 500 });
