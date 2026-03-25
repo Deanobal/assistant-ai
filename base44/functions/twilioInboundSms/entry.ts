@@ -276,13 +276,23 @@ async function sendHighIntentAdminAlert(base44, lead, messageBody, tags, receive
   const tagSignature = getTagSignature(tags);
   const messageSignature = normalizeMessageSignature(messageBody);
   const leadName = lead.business_name || lead.full_name || 'Lead';
-  const alertResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
-    eventType: 'customer_sms_reply_received',
-    entityName: 'Lead',
-    entityId: lead.id,
-    clientAccountId: lead.client_account_id || null,
+  const configuredAdminEmail = String(Deno.env.get('ADMIN_NOTIFICATION_EMAIL') || '').trim().toLowerCase() || null;
+
+  await base44.asServiceRole.entities.NotificationLog.create({
+    event_type: 'customer_sms_reply_received',
+    entity_name: 'Lead',
+    entity_id: lead.id,
+    client_account_id: lead.client_account_id || null,
+    recipient_role: 'admin',
+    recipient_email: configuredAdminEmail,
+    channel: 'in_app',
+    delivery_status: 'stored',
+    provider_name: 'AssistantAI Alerts',
+    provider_message: `high_intent_sms:${lead.id}:${tagSignature}:${timeBucket}`,
     title: 'High-intent SMS reply needs follow-up',
     message: `${leadName} sent a high-intent SMS reply: "${messageBody}"`,
+    triggered_at: receivedAt,
+    actor_email: null,
     metadata: {
       full_name: lead.full_name || null,
       business_name: lead.business_name || null,
@@ -296,13 +306,9 @@ async function sendHighIntentAdminAlert(base44, lead, messageBody, tags, receive
       high_intent_message_signature: messageSignature,
       inbound_message_at: receivedAt,
     },
-    uniqueKey: `high_intent_sms:${lead.id}:${tagSignature}:${timeBucket}`,
-    priority: tags.includes('urgent_interest') ? 'high' : 'normal',
-    smsMessage: `High-intent SMS from ${leadName}: ${messageBody}`,
   });
-  const alertData = alertResponse?.data || alertResponse || {};
 
-  return { status: alertData.duplicate ? 'duplicate_skipped' : 'sent' };
+  return { status: 'sent' };
 }
 
 Deno.serve(async (req) => {
