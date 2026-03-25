@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 function getErrorMessage(error) {
   if (error && typeof error === 'object' && 'message' in error) {
