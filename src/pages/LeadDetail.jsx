@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import LeadSmsTrail from '@/components/admin/leads/LeadSmsTrail';
 
 const stages = ['New Lead', 'Contacted', 'Strategy Call Booked', 'Proposal Sent', 'Follow-Up', 'Won', 'Lost', 'Onboarding'];
 
