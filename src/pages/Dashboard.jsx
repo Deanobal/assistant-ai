@@ -37,7 +37,7 @@ export default function Dashboard() {
   }
 
   if (isAuthenticated && isAdmin) {
-    return <Navigate to="/ClientManager" replace />;
+    return <Navigate to="/ActionInbox" replace />;
   }
 
   if (isAuthenticated && !isAdmin) {
@@ -73,7 +73,7 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold text-white mb-2">Admin Team Login</h1>
               <p className="text-gray-400 leading-relaxed">Sign in with your admin account to access the internal AssistantAI Client Manager.</p>
             </div>
-            <Button onClick={() => base44.auth.redirectToLogin('/ClientManager')} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
+            <Button onClick={() => base44.auth.redirectToLogin('/ActionInbox')} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
               Continue to Login
             </Button>
           </CardContent>

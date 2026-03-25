@@ -31,6 +31,7 @@ import OnboardingIntake from './pages/OnboardingIntake';
 import TeamAccess from './pages/TeamAccess';
 import SystemReadiness from './pages/SystemReadiness';
 import SupportInbox from './pages/SupportInbox';
+import ActionInbox from './pages/ActionInbox';
 import UnmatchedSmsInbox from './pages/UnmatchedSmsInbox';
 import AdminLayout from './components/admin/AdminLayout';
 
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/Dashboard" element={<Dashboard />} />
       <Route element={<AdminLayout />}>
+        <Route path="/ActionInbox" element={<ActionInbox />} />
         <Route path="/LeadDashboard" element={<LeadDashboard />} />
         <Route path="/LeadDetail" element={<LeadDetail />} />
         <Route path="/ClientManager" element={<ClientManager />} />
