@@ -107,22 +107,6 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
   };
 }
 
-function buildCustomerStrategyRequestSmsKey(data) {
-  return `customer_strategy_call_requested:${data.id}:${sanitizeKeyPart(getRequestTimestamp(data))}`;
-}
-
-function buildCustomerBookingFallbackSmsKey(data, errorValue) {
-  return `customer_booking_request_failed:${data.id}:${sanitizeKeyPart(getRequestTimestamp(data))}:${sanitizeKeyPart(errorValue || 'no-error')}`;
-}
-
-function buildCustomerBookingSmsKey(data) {
-  if (data?.booking_reference) {
-    return `customer_booking_confirmed:${data.id}:${sanitizeKeyPart(data.booking_reference)}`;
-  }
-
-  return `customer_booking_confirmed:${data.id}:${sanitizeKeyPart(data?.confirmed_meeting_date || 'unknown-date')}:${sanitizeKeyPart(data?.confirmed_meeting_time || 'unknown-time')}`;
-}
-
 function buildSmsMessage(def, data) {
   const leadName = data.full_name || data.business_name || 'Lead';
   const enquiryType = data.enquiry_type || 'general';
