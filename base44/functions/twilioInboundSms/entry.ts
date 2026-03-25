@@ -354,7 +354,45 @@ Deno.serve(async (req) => {
     const title = matchedLead ? 'Customer SMS reply received' : 'Unmatched customer SMS reply';
 
     const record = await base44.asServiceRole.entities.NotificationLog.create({
-...
+      event_type: logEventType,
+      entity_name: 'Lead',
+      entity_id: entityId,
+      client_account_id: matchedLead?.client_account_id || null,
+      sender_role: 'client',
+      recipient_role: 'admin',
+      match_status: matchedLead ? 'matched' : match.matchStatus,
+      recipient_email: toNumber,
+      channel: 'sms',
+      delivery_status: 'stored',
+      provider_name: 'Twilio',
+      provider_message: JSON.stringify({ from: fromNumber, to: toNumber, body: messageBody }),
+      provider_message_id: messageSid,
+      provider_status: 'received',
+      provider_error_code: null,
+      provider_error_message: null,
+      title,
+      message: messageBody,
+      triggered_at: receivedAt,
+      delivered_at: null,
+      failed_at: null,
+      actor_email: null,
+      metadata: {
+        sender_role: 'client',
+        recipient_role: 'admin',
+        sender_number: fromNumber,
+        receiver_number: toNumber,
+        inbound_message_sid: messageSid,
+        received_at: receivedAt,
+        reply_intent_tags: replyTags,
+        requires_admin_attention: highIntent,
+        match_method: match.matchMethod,
+        matched_lead_id: matchedLead?.id || null,
+        matched_outbound_log_id: match.outboundLog?.id || null,
+        matched_outbound_sms_kind: match.outboundLog?.metadata?.sms_kind || null,
+        raw_payload: payload,
+      },
+    });
+
     let recommendedNextAction = null;
     let adminAlertStatus = null;
 
