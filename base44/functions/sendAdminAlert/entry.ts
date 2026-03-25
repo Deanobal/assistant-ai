@@ -18,6 +18,7 @@ const SUPPORTED_EVENT_TYPES = new Set([
   'support_conversation_created',
   'support_conversation_reply',
   'customer_sms_reply_received',
+  'booking_nudge_escalated',
 ]);
 
 function getErrorMessage(error) {

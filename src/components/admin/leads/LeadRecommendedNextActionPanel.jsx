@@ -36,7 +36,7 @@ export default function LeadRecommendedNextActionPanel({ leadId, lead, nextActio
     queryFn: async () => {
       const [smsLogs, alertLogs] = await Promise.all([
         base44.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 20),
-        base44.entities.NotificationLog.filter({ entity_id: leadId, channel: 'in_app', recipient_role: 'admin' }, '-created_date', 20),
+        base44.entities.NotificationLog.filter({ entity_id: leadId }, '-created_date', 40),
       ]);
 
       return { smsLogs, alertLogs };
@@ -62,11 +62,16 @@ export default function LeadRecommendedNextActionPanel({ leadId, lead, nextActio
   const latestReminder = [...data.alertLogs]
     .filter((log) => log.metadata?.alert_category === 'booking_nudge_reminder' && log.metadata?.inbound_sms_log_id === latestLog.id)
     .sort((a, b) => new Date(b.triggered_at || b.created_date) - new Date(a.triggered_at || a.created_date))[0] || null;
-  const overdue = Date.now() >= dueAt.getTime();
-  const stateLabel = latestReminder ? 'Reminder sent' : overdue ? 'Follow-up overdue' : 'Follow-up needed';
-  const stateClass = latestReminder
+  const latestEscalation = [...data.alertLogs]
+    .filter((log) => log.metadata?.alert_category === 'booking_nudge_escalation' && log.metadata?.inbound_sms_log_id === latestLog.id)
+    .sort((a, b) => new Date(b.triggered_at || b.created_date) - new Date(a.triggered_at || a.created_date))[0] || null;
+
+  const stateKey = latestEscalation ? 'escalated' : latestReminder ? 'reminder_sent' : 'follow_up_needed';
+  const stateClass = stateKey === 'escalated'
     ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
-    : 'bg-amber-500/10 text-amber-300 border-amber-500/20';
+    : stateKey === 'reminder_sent'
+      ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+      : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20';
 
   return (
     <Card className="bg-[#12121a] border-rose-500/20 shadow-[0_0_0_1px_rgba(244,63,94,0.08)]">
@@ -76,11 +81,12 @@ export default function LeadRecommendedNextActionPanel({ leadId, lead, nextActio
             <Bell className="w-3 h-3 mr-1" />
             Booking nudge
           </Badge>
-          <Badge className={stateClass}>{stateLabel}</Badge>
+          <Badge className={stateClass}>{stateKey}</Badge>
           <Badge className="bg-white/5 text-gray-300 border-white/10">
             <Sparkles className="w-3 h-3 mr-1" />
             Internal prompt only
           </Badge>
+          <Badge className="bg-white/5 text-gray-300 border-white/10">Not a confirmed booking</Badge>
           {tags.map((tag) => (
             <Badge key={tag} className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
           ))}
@@ -111,7 +117,7 @@ export default function LeadRecommendedNextActionPanel({ leadId, lead, nextActio
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
-              <span>{latestReminder ? `Reminder raised: ${new Date(latestReminder.triggered_at || latestReminder.created_date).toLocaleString()}` : `Reminder due: ${dueAt.toLocaleString()}`}</span>
+              <span>{latestEscalation ? `Latest escalation: ${new Date(latestEscalation.triggered_at || latestEscalation.created_date).toLocaleString()}` : latestReminder ? `Reminder raised: ${new Date(latestReminder.triggered_at || latestReminder.created_date).toLocaleString()}` : `Reminder due: ${dueAt.toLocaleString()}`}</span>
             </div>
           </div>
         </div>

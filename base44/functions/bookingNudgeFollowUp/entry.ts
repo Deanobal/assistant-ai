@@ -5,6 +5,7 @@ const BOOKING_RELATED_SMS_KINDS = new Set(['customer_strategy_call_request', 'cu
 const DEFAULT_WINDOW_MINUTES = 30;
 const DEFAULT_LOOKBACK_LIMIT = 80;
 const REMINDER_DEDUPE_HOURS = 6;
+const ESCALATION_DEDUPE_HOURS = 12;
 
 function getErrorMessage(error) {
   if (error && typeof error === 'object' && 'message' in error) {
@@ -59,6 +60,14 @@ function buildBookingNudgeNextAction(tags) {
   return 'Booking nudge: follow up quickly and confirm whether the lead wants a strategy call slot.';
 }
 
+function buildNudgeCycleKey(leadId, inboundLogId) {
+  return `booking_nudge:${leadId}:${inboundLogId}`;
+}
+
+function buildEscalationBucket(nowIso) {
+  return Math.floor(new Date(nowIso).getTime() / (1000 * 60 * 60 * ESCALATION_DEDUPE_HOURS));
+}
+
 async function getLead(base44, leadId) {
   const leads = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
   return leads[0] || null;
@@ -74,7 +83,7 @@ async function hasRecentBookingConfirmedState(base44, leadId, receivedAt) {
   return recentBookingLogs.some((log) => new Date(log.triggered_at || log.created_date).getTime() >= windowStart);
 }
 
-async function hasRecentReminder(base44, leadId, inboundLogId, nowIso) {
+async function getRecentReminder(base44, leadId, inboundLogId, nowIso) {
   const reminders = await base44.asServiceRole.entities.NotificationLog.filter({
     entity_id: leadId,
     event_type: 'customer_sms_reply_received',
@@ -83,10 +92,26 @@ async function hasRecentReminder(base44, leadId, inboundLogId, nowIso) {
   }, '-created_date', 20);
   const windowStart = new Date(nowIso).getTime() - (1000 * 60 * 60 * REMINDER_DEDUPE_HOURS);
 
-  return reminders.some((log) => {
+  return reminders.find((log) => {
     const reminderTime = new Date(log.triggered_at || log.created_date).getTime();
     return reminderTime >= windowStart
       && log.metadata?.alert_category === 'booking_nudge_reminder'
+      && log.metadata?.inbound_sms_log_id === inboundLogId;
+  }) || null;
+}
+
+async function hasRecentEscalation(base44, leadId, inboundLogId, nowIso) {
+  const escalations = await base44.asServiceRole.entities.NotificationLog.filter({
+    entity_id: leadId,
+    event_type: 'booking_nudge_escalated',
+    recipient_role: 'admin',
+  }, '-created_date', 40);
+  const windowStart = new Date(nowIso).getTime() - (1000 * 60 * 60 * ESCALATION_DEDUPE_HOURS);
+
+  return escalations.some((log) => {
+    const escalationTime = new Date(log.triggered_at || log.created_date).getTime();
+    return escalationTime >= windowStart
+      && log.metadata?.alert_category === 'booking_nudge_escalation'
       && log.metadata?.inbound_sms_log_id === inboundLogId;
   });
 }
@@ -100,6 +125,46 @@ function isWorkedByAdmin(lead, expectedTask, receivedAt) {
   }
 
   return currentTask && currentTask !== expectedTask && new Date(updatedAt).getTime() > new Date(receivedAt).getTime();
+}
+
+function buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, latestReminder) {
+  const leadName = lead.business_name || lead.full_name || 'Lead';
+  const cycleKey = buildNudgeCycleKey(lead.id, log.id);
+  const escalationBucket = buildEscalationBucket(nowIso);
+
+  return {
+    eventType: 'booking_nudge_escalated',
+    entityName: 'Lead',
+    entityId: lead.id,
+    clientAccountId: lead.client_account_id || null,
+    title: 'Overdue booking-nudge follow-up',
+    message: `${leadName} is an overdue high-intent lead with no confirmed booking. Internal follow-up prompt only — this is not a confirmed booking.`,
+    actorEmail: null,
+    uniqueKey: `${cycleKey}:escalation:${escalationBucket}`,
+    priority: 'high',
+    smsMessage: `${leadName} is an overdue high-intent lead. No confirmed booking. Internal follow-up prompt only.`,
+    metadata: {
+      alert_category: 'booking_nudge_escalation',
+      admin_link: `/LeadDetail?id=${lead.id}`,
+      inbound_sms_log_id: log.id,
+      inbound_message_at: log.triggered_at || log.created_date,
+      booking_nudge_due_at: dueAt.toISOString(),
+      escalation_bucket: escalationBucket,
+      escalation_repeat_after_hours: ESCALATION_DEDUPE_HOURS,
+      high_intent_tags: tags,
+      latest_customer_message: log.message,
+      expected_next_action: expectedTask,
+      latest_reminder_at: latestReminder?.triggered_at || latestReminder?.created_date || null,
+      internal_prompt_only: true,
+      overdue_high_intent_lead: true,
+      not_confirmed_booking: true,
+      full_name: lead.full_name || null,
+      business_name: lead.business_name || null,
+      email: lead.email || null,
+      mobile_number: lead.mobile_number || null,
+      enquiry_type: lead.enquiry_type || null,
+    },
+  };
 }
 
 Deno.serve(async (req) => {
@@ -161,45 +226,77 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (await hasRecentReminder(base44, lead.id, log.id, nowIso)) {
-        results.push({ lead_id: lead.id, status: 'skipped_recent_duplicate', due_at: dueAt.toISOString() });
+      const recentReminder = await getRecentReminder(base44, lead.id, log.id, nowIso);
+      if (!recentReminder) {
+        const leadName = lead.business_name || lead.full_name || 'Lead';
+        await base44.asServiceRole.entities.NotificationLog.create({
+          event_type: 'customer_sms_reply_received',
+          entity_name: 'Lead',
+          entity_id: lead.id,
+          client_account_id: lead.client_account_id || null,
+          recipient_role: 'admin',
+          recipient_email: String(Deno.env.get('ADMIN_NOTIFICATION_EMAIL') || '').trim().toLowerCase() || null,
+          channel: 'in_app',
+          delivery_status: 'stored',
+          provider_name: 'AssistantAI Alerts',
+          provider_message: `${buildNudgeCycleKey(lead.id, log.id)}:reminder:${Math.floor(new Date(nowIso).getTime() / (1000 * 60 * 60 * REMINDER_DEDUPE_HOURS))}`,
+          title: 'Booking follow-up reminder needed',
+          message: `${leadName} sent a high-intent SMS but no booking is confirmed yet. Internal follow-up prompt only.`,
+          triggered_at: nowIso,
+          actor_email: null,
+          metadata: {
+            alert_category: 'booking_nudge_reminder',
+            admin_link: `/LeadDetail?id=${lead.id}`,
+            inbound_sms_log_id: log.id,
+            inbound_message_at: log.triggered_at || log.created_date,
+            booking_nudge_due_at: dueAt.toISOString(),
+            high_intent_tags: tags,
+            latest_customer_message: log.message,
+            expected_next_action: expectedTask,
+            internal_prompt_only: true,
+            not_confirmed_booking: true,
+          },
+        });
+
+        results.push({
+          lead_id: lead.id,
+          status: 'reminder_created',
+          due_at: dueAt.toISOString(),
+          expected_next_action: expectedTask,
+        });
         continue;
       }
 
-      const leadName = lead.business_name || lead.full_name || 'Lead';
-      await base44.asServiceRole.entities.NotificationLog.create({
-        event_type: 'customer_sms_reply_received',
-        entity_name: 'Lead',
-        entity_id: lead.id,
-        client_account_id: lead.client_account_id || null,
-        recipient_role: 'admin',
-        recipient_email: String(Deno.env.get('ADMIN_NOTIFICATION_EMAIL') || '').trim().toLowerCase() || null,
-        channel: 'in_app',
-        delivery_status: 'stored',
-        provider_name: 'AssistantAI Alerts',
-        provider_message: `booking_nudge_reminder:${lead.id}:${log.id}`,
-        title: 'Booking follow-up reminder needed',
-        message: `${leadName} sent a high-intent SMS but no booking is confirmed yet. Internal follow-up prompt only.`,
-        triggered_at: nowIso,
-        actor_email: null,
-        metadata: {
-          alert_category: 'booking_nudge_reminder',
-          admin_link: `/LeadDetail?id=${lead.id}`,
-          inbound_sms_log_id: log.id,
-          inbound_message_at: log.triggered_at || log.created_date,
-          booking_nudge_due_at: dueAt.toISOString(),
-          high_intent_tags: tags,
-          latest_customer_message: log.message,
-          expected_next_action: expectedTask,
-          internal_prompt_only: true,
-        },
-      });
+      if (await hasRecentEscalation(base44, lead.id, log.id, nowIso)) {
+        results.push({
+          lead_id: lead.id,
+          status: 'skipped_recent_escalation',
+          due_at: dueAt.toISOString(),
+        });
+        continue;
+      }
+
+      const escalationResponse = await base44.asServiceRole.functions.invoke(
+        'sendAdminAlert',
+        buildEscalationPayload(lead, log, tags, dueAt, nowIso, expectedTask, recentReminder),
+      );
+      const escalationData = escalationResponse?.data || escalationResponse || {};
+
+      if (escalationData?.duplicate) {
+        results.push({
+          lead_id: lead.id,
+          status: 'skipped_recent_escalation',
+          due_at: dueAt.toISOString(),
+        });
+        continue;
+      }
 
       results.push({
         lead_id: lead.id,
-        status: 'reminder_created',
+        status: 'escalated',
         due_at: dueAt.toISOString(),
-        expected_next_action: expectedTask,
+        escalation_time: nowIso,
+        channels: escalationData?.results || null,
       });
     }
 
@@ -209,7 +306,9 @@ Deno.serve(async (req) => {
       window_minutes: windowMinutes,
       reviewed: results.length,
       reminders_created: results.filter((item) => item.status === 'reminder_created').length,
-      duplicate_skips: results.filter((item) => item.status === 'skipped_recent_duplicate').length,
+      escalations_created: results.filter((item) => item.status === 'escalated').length,
+      reminder_duplicate_skips: results.filter((item) => item.status === 'skipped_recent_duplicate').length,
+      escalation_duplicate_skips: results.filter((item) => item.status === 'skipped_recent_escalation').length,
       confirmed_skips: results.filter((item) => item.status === 'skipped_booking_confirmed').length,
       results,
     });
