@@ -136,6 +136,7 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
         <div className="sticky bottom-0 border-t border-white/5 bg-[#0f172a] px-4 py-4 sm:px-5">
           <div className="space-y-3">
             <Textarea
+              ref={replyInputRef}
               value={messageBody}
               onChange={(event) => setMessageBody(event.target.value)}
               placeholder={isInternalNote ? 'Add internal note' : 'Reply to the conversation'}
