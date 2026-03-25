@@ -45,6 +45,24 @@ async function waitForLogCount(base44, entityId, minimumCount) {
   return base44.asServiceRole.entities.NotificationLog.filter({ entity_id: entityId }, '-created_date', 50);
 }
 
+async function waitForAuditCompletion(base44, entityId) {
+  for (let index = 0; index < 20; index += 1) {
+    const logs = await base44.asServiceRole.entities.NotificationLog.filter({ entity_id: entityId }, '-created_date', 50);
+    const hasNewLead = logs.some((log) => log.event_type === 'new_lead_created' && log.channel === 'sms');
+    const hasStrategyRequest = logs.some((log) => log.event_type === 'strategy_call_requested');
+    const hasBookingConfirmed = logs.some((log) => log.event_type === 'booking_confirmed' && log.recipient_role === 'admin');
+    const hasCustomerBookingSms = logs.some((log) => log.event_type === 'booking_confirmed' && log.recipient_role === 'client' && log.channel === 'sms');
+
+    if (hasNewLead && hasStrategyRequest && hasBookingConfirmed && hasCustomerBookingSms) {
+      return logs;
+    }
+
+    await sleep(1500);
+  }
+
+  return base44.asServiceRole.entities.NotificationLog.filter({ entity_id: entityId }, '-created_date', 50);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -91,7 +109,7 @@ Deno.serve(async (req) => {
       confirmed_meeting_time: confirmedTime,
     });
 
-    const finalLogs = await waitForLogCount(base44, lead.id, createLogs.length + 4);
+    const finalLogs = await waitForAuditCompletion(base44, lead.id);
 
     return Response.json({
       success: true,
