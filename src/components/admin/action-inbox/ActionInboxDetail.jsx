@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, CheckCircle2, Phone, Reply, UserRound } from 'lucide-react';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { channelStyles, priorityStyles } from './actionInboxUtils';
+import { attentionStyles, channelStyles, intentLevelStyles, slaStyles } from './actionInboxUtils';
 
 const senderStyles = {
   visitor: 'border border-white/10 bg-slate-900 text-slate-100',
@@ -15,10 +15,24 @@ const senderStyles = {
   system: 'border border-cyan-500/20 bg-cyan-500/10 text-cyan-50',
 };
 
-export default function ActionInboxDetail({ item, conversation, messages, isSaving, onReply, onResolve, onBack, showBack }) {
+const QUICK_REPLIES = [
+  'Got it — give me 2 mins',
+  'Can you share more details?',
+  'I’ll call you now',
+];
+
+export default function ActionInboxDetail({ item, conversation, linkedLead, currentAdmin, messages, isSaving, onReply, onResolve, onAssignToMe, onSnooze, onBack, showBack }) {
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
   const replyInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!item || item.kind !== 'conversation') return;
+    const timeout = window.setTimeout(() => {
+      replyInputRef.current?.focus({ preventScroll: true });
+    }, 80);
+    return () => window.clearTimeout(timeout);
+  }, [item?.id]);
 
   if (!item) {
     return (
@@ -45,17 +59,22 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xl font-semibold text-white">{item.name}</h3>
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                <Badge className={priorityStyles[item.priority] || priorityStyles.normal}>{item.priority}</Badge>
+                <Badge className={attentionStyles[item.attentionState] || attentionStyles.normal}>
+                  {item.attentionState === 'overdue' ? 'Overdue' : item.attentionState === 'high_intent' ? 'High Intent' : item.attentionState === 'needs_reply' ? 'Needs Reply' : 'Normal'}
+                </Badge>
               </div>
               <p className="mt-2 text-sm text-slate-400">{item.business}</p>
             </div>
-            <div className="text-sm text-slate-400">{item.waitLabel}</div>
+            <div className={`rounded-2xl border px-4 py-3 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
+              <p className="text-xs uppercase tracking-[0.18em] opacity-70">Waiting</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{item.waitShort}</p>
+            </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#111827] p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Action Summary</p>
             <p className="mt-3 text-base leading-7 text-slate-100">{item.intentSummary}</p>
-            <p className="mt-4 text-sm leading-6 text-slate-400">{item.preview}</p>
+            <p className="mt-4 text-sm leading-6 text-slate-400">Recommended next action: {item.recommendedNextAction}</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -88,35 +107,45 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xl font-semibold text-white">{item.name}</h3>
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
-                <Badge className={priorityStyles[item.priority] || priorityStyles.normal}>{item.priority}</Badge>
+                <Badge className={attentionStyles[item.attentionState] || attentionStyles.normal}>
+                  {item.attentionState === 'overdue' ? 'Overdue' : item.attentionState === 'high_intent' ? 'High Intent' : item.attentionState === 'needs_reply' ? 'Needs Reply' : 'Normal'}
+                </Badge>
+                <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
               </div>
               <p className="mt-2 break-words text-sm text-slate-400">{item.email}{item.phone ? ` · ${item.phone}` : ''}</p>
               <p className="mt-1 text-sm text-slate-500">{item.intentSummary}</p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={() => replyInputRef.current?.focus()} className="h-11 rounded-xl bg-white text-slate-900 hover:bg-slate-200">
-                <Reply className="mr-2 h-4 w-4" /> Reply
-              </Button>
-              {phoneHref && (
-                <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-white/10 bg-transparent text-white hover:bg-white/5">
-                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" />Call</a>
-                </Button>
-              )}
-              {item.secondaryUrl && (
-                <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-white/10 bg-transparent text-white hover:bg-white/5">
-                  <Link to={item.secondaryUrl}><UserRound className="mr-2 h-4 w-4" />Open Lead</Link>
-                </Button>
-              )}
-              <Button type="button" onClick={onResolve} disabled={isSaving || conversation.status === 'resolved'} className="h-11 rounded-xl bg-emerald-500 text-white hover:bg-emerald-400 disabled:opacity-50">
-                <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Resolved
-              </Button>
+            <div className={`rounded-3xl border px-4 py-3 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
+              <p className="text-xs uppercase tracking-[0.18em] opacity-70">Waiting</p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums">{item.waitShort}</p>
             </div>
           </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Booking</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.bookingStatus}</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Last activity</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.lastActivity}</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Intent level</p>
+              <p className="mt-2 text-sm font-medium text-white">{item.intentLevel}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-3xl border border-white/5 bg-[#111827] p-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recommended Next Action</p>
+            <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
+            {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
+          </div>
+
+          <div className="mt-5 space-y-4">
             {messages.map((message) => (
               <div key={message.id} className={`rounded-3xl px-4 py-3 ${senderStyles[message.sender_type] || senderStyles.visitor}`}>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs opacity-80">
@@ -135,6 +164,14 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
 
         <div className="sticky bottom-0 border-t border-white/5 bg-[#0f172a] px-4 py-4 sm:px-5">
           <div className="space-y-3">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {QUICK_REPLIES.map((reply) => (
+                <Button key={reply} type="button" variant="outline" onClick={() => { setMessageBody(reply); replyInputRef.current?.focus(); }} className="h-10 rounded-2xl border-white/10 bg-[#111827] whitespace-nowrap text-white hover:bg-slate-800">
+                  {reply}
+                </Button>
+              ))}
+            </div>
+
             <Textarea
               ref={replyInputRef}
               value={messageBody}
@@ -142,12 +179,42 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
               placeholder={isInternalNote ? 'Add internal note' : 'Reply to the conversation'}
               className="min-h-[110px] rounded-2xl border-white/10 bg-[#111827] text-white placeholder:text-slate-500"
             />
-            <label className="flex items-center gap-2 text-sm text-slate-300">
-              <input type="checkbox" checked={isInternalNote} onChange={(event) => setIsInternalNote(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-transparent" />
-              Save as internal note
-            </label>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+              <Button type="button" onClick={() => replyInputRef.current?.focus()} className="h-11 rounded-2xl bg-white text-slate-900 hover:bg-slate-200">
+                <Reply className="mr-2 h-4 w-4" /> Reply
+              </Button>
+              {phoneHref ? (
+                <Button asChild type="button" variant="outline" className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
+                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> Call</a>
+                </Button>
+              ) : <div />}
+              <Button type="button" variant="outline" onClick={onAssignToMe} className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
+                Assign
+              </Button>
+              {item.secondaryUrl ? (
+                <Button asChild type="button" variant="outline" className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
+                  <Link to={item.secondaryUrl}><UserRound className="mr-2 h-4 w-4" /> Open Lead</Link>
+                </Button>
+              ) : <div />}
+              <Button type="button" onClick={onResolve} disabled={isSaving || conversation.status === 'resolved'} className="h-11 rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400 disabled:opacity-50">
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Resolved
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[5, 15, 60].map((minutes) => (
+                <Button key={minutes} type="button" variant="outline" onClick={() => onSnooze(minutes)} className="h-10 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
+                  {minutes === 60 ? '1 hour' : `${minutes} min`}
+                </Button>
+              ))}
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-500">Sticky mobile reply box for fast responses from phone.</p>
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input type="checkbox" checked={isInternalNote} onChange={(event) => setIsInternalNote(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-transparent" />
+                Save as internal note
+              </label>
               <Button
                 type="button"
                 disabled={isSaving || !messageBody.trim()}
@@ -157,9 +224,10 @@ export default function ActionInboxDetail({ item, conversation, messages, isSavi
                   reset: () => {
                     setMessageBody('');
                     setIsInternalNote(false);
+                    replyInputRef.current?.focus();
                   },
                 })}
-                className="h-11 rounded-xl bg-white text-slate-900 hover:bg-slate-200 disabled:opacity-50"
+                className="h-11 rounded-2xl bg-white text-slate-900 hover:bg-slate-200 disabled:opacity-50"
               >
                 {isInternalNote ? 'Save Note' : 'Send Reply'}
               </Button>
