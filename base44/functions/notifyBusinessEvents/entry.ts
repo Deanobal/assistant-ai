@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
       }
 
       if (def.event_type === 'booking_confirmed') {
-        const customerResponse = await base44.functions.invoke('sendCustomerBookingConfirmationSms', {
+        const customerResponse = await base44.asServiceRole.functions.invoke('sendCustomerBookingConfirmationSms', {
           leadId: data.id,
           clientAccountId: data.client_account_id || null,
           fullName: data.full_name || data.business_name || '',
