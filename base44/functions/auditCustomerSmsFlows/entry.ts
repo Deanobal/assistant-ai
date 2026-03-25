@@ -69,6 +69,11 @@ function summarizeLog(log) {
   };
 }
 
+async function listAllLogs(base44, leadId) {
+  const logs = await base44.asServiceRole.entities.NotificationLog.filter({ entity_id: leadId }, '-created_date', 50);
+  return logs.map(summarizeLog);
+}
+
 async function waitForCustomerSms(base44, leadId, eventType, smsKind) {
   for (let index = 0; index < 20; index += 1) {
     const logs = await base44.asServiceRole.entities.NotificationLog.filter({
@@ -163,6 +168,7 @@ Deno.serve(async (req) => {
         fallback: summarizeLog(fallbackLog),
         confirmed: summarizeLog(confirmedLog),
       },
+      all_logs: await listAllLogs(base44, lead.id),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
