@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
-import { canUseNotifications, requestAlertsPermission, showLocalNotification } from '@/lib/pwa';
+import { enableOneSignalPush, initOneSignal } from '@/lib/onesignal';
 import ActionInboxList from './ActionInboxList';
 import ActionInboxDetail from './ActionInboxDetail';
 import ActionInboxContextPanel from './ActionInboxContextPanel';
 import ActionInboxMobileControls from './ActionInboxMobileControls';
-import { buildConversationNotificationPayload } from './actionInboxNotifications';
 import {
   ACTION_VIEWS,
   SALES_HEAT_VIEWS,
@@ -66,10 +65,9 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1280 : false);
   const [showMobileDetail, setShowMobileDetail] = useState(!!getSelectedKeyFromUrl());
   const [installPromptEvent, setInstallPromptEvent] = useState(null);
-  const [notificationPermission, setNotificationPermission] = useState(typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : 'unsupported');
+  const [notificationPermission, setNotificationPermission] = useState(typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : 'default');
+  const [notificationSupported, setNotificationSupported] = useState(typeof window !== 'undefined' ? 'serviceWorker' in navigator : false);
   const [isStandalone, setIsStandalone] = useState(typeof window !== 'undefined' ? window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true : false);
-  const notificationKeysRef = useRef(new Set());
-  const notificationSupported = canUseNotifications();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1280);
@@ -132,18 +130,25 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   }, [selectedKey, queryClient]);
 
   useEffect(() => {
-    if (!notificationSupported || notificationPermission !== 'granted' || !currentAdmin) return undefined;
-    return base44.entities.SupportConversation.subscribe((event) => {
-      if (!['create', 'update'].includes(event.type) || !event.data) return;
-      if (document.visibilityState === 'visible' && selectedKey === `conversation:${event.data.id}`) return;
-      const payload = buildConversationNotificationPayload(event.data);
-      if (!payload) return;
-      const dedupeKey = `${event.data.id}:${event.data.updated_at || event.data.updated_date || event.data.last_message_at || event.type}`;
-      if (notificationKeysRef.current.has(dedupeKey)) return;
-      notificationKeysRef.current.add(dedupeKey);
-      showLocalNotification(payload);
-    });
-  }, [currentAdmin, notificationPermission, notificationSupported, selectedKey]);
+    let isActive = true;
+
+    if (!currentAdmin?.id) return undefined;
+
+    initOneSignal(currentAdmin)
+      .then((status) => {
+        if (!isActive) return;
+        setNotificationSupported(status.supported);
+        setNotificationPermission(status.subscribed ? 'granted' : status.permission);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setNotificationSupported(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentAdmin?.id]);
 
   const adminsById = useMemo(() => Object.fromEntries(admins.map((admin) => [admin.id, admin])), [admins]);
   const leadsById = useMemo(() => Object.fromEntries(leads.map((lead) => [lead.id, lead])), [leads]);
@@ -351,16 +356,10 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   };
 
   const handleEnableNotifications = async () => {
-    const permission = await requestAlertsPermission();
-    setNotificationPermission(permission);
-    if (permission === 'granted') {
-      showLocalNotification({
-        title: 'Action Inbox alerts on',
-        body: 'High-value and urgent chats will open straight into reply mode.',
-        tag: 'action-inbox-alerts-enabled',
-        url: '/ActionInbox?view=high_intent',
-      });
-    }
+    if (!currentAdmin?.id) return;
+    const status = await enableOneSignalPush(currentAdmin);
+    setNotificationSupported(status.supported);
+    setNotificationPermission(status.subscribed ? 'granted' : status.permission);
   };
 
   const listTitle = mode === 'support' ? 'Support Threads' : 'Action Queue';
