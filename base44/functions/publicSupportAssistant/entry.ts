@@ -12,6 +12,8 @@ const billingSecurityKeywords = ['billing issue', 'billing problem', 'invoice is
 const manualIntegrationKeywords = ['help connect', 'connect my', 'set up integration', 'setup integration', 'integration setup', 'calendar connection', 'crm connection', 'twilio setup'];
 const likelyBugKeywords = ['bug', 'broken', 'error', 'not working', 'fails', 'failed', 'crash', 'blank page', 'stuck', 'issue'];
 const pricingDecisionKeywords = ['quote', 'proposal', 'ready to start', 'ready to book', 'call me', 'call me back', 'sign me up', 'start now'];
+const closingTriggerKeywords = ['i want it', "let's do it", 'lets do it', 'book my call', 'can you book my call', 'call me', 'get me a call', 'ready to start'];
+const explicitPricingKeywords = ['pricing', 'price', 'cost', 'quote', 'plan', 'plans', 'monthly', 'setup fee'];
 const priceObjectionKeywords = ['too expensive', 'expensive', 'cost too much', 'out of budget', 'over budget', 'pricey'];
 const browsingKeywords = ['just looking', 'just browsing', 'looking around', 'checking things out'];
 const sendInfoKeywords = ['send me info', 'send info', 'send me some info', 'email me info', 'send me information', 'send details'];
@@ -295,7 +297,7 @@ function detectSalesIntentLevel(text, enquiryCategory = 'general', issueCategory
   if (includesAny(text, ['integration', 'integrations', 'hubspot', 'salesforce', 'zapier', 'crm', 'calendar', 'google calendar'])) score += 2;
   if (includesAny(text, ['how does this work', 'how it works', 'how does it work', 'how would this work', 'fastest way to get this working', 'get this working'])) score += 2;
   if (includesAny(text, ['urgent', 'asap', 'right now', 'immediately', 'live fast'])) score += 2;
-  if (includesAny(text, ['ready to start', 'ready to book', 'sign me up', 'start now', 'get started', 'call me', 'call me back', 'give me a call', 'book a call', 'book a strategy call', 'book a demo'])) score += 4;
+  if (hasClosingTrigger(text) || includesAny(text, ['ready to start', 'ready to book', 'sign me up', 'start now', 'get started', 'call me', 'call me back', 'give me a call', 'book a call', 'book a strategy call', 'book a demo'])) score += 4;
   if (includesAny(text, competitorComparisonKeywords)) score += 2;
   if (includesAny(text, browsingKeywords)) score -= 2;
   if (includesAny(text, [...notReadyKeywords, ...thinkItOverKeywords])) score -= 1;
@@ -331,6 +333,89 @@ function buildQualificationPrompt(needed = []) {
   if (needsName) return 'What name should I use?';
   if (needsEmail) return 'What email should we use?';
   return '';
+}
+
+function hasClosingTrigger(text) {
+  return /\bi want it\b|\blet'?s do it\b|\bbook\b|\bbook my call\b|\bcan you book my call\b|\bcall me\b|\bget me a call\b|\bready to start\b/.test(String(text || ''));
+}
+
+function extractPhoneNumber(value) {
+  const matches = String(value || '').match(/(?:\+?\d[\d\s()\-]{7,}\d)/g) || [];
+  for (const match of matches) {
+    const normalized = match.replace(/[^\d+]/g, '');
+    const digitsOnly = normalized.replace(/\D/g, '');
+    if (digitsOnly.length >= 8 && digitsOnly.length <= 15) return normalized;
+  }
+  return null;
+}
+
+function getCapturedPhone(context) {
+  if (String(context.visitorPhone || '').trim()) return String(context.visitorPhone || '').trim();
+  const fromLatest = extractPhoneNumber(context.latestMessage);
+  if (fromLatest) return fromLatest;
+  const priorMessages = Array.isArray(context.priorMessages) ? [...context.priorMessages].reverse() : [];
+  for (const item of priorMessages) {
+    const found = extractPhoneNumber(item?.message_body || '');
+    if (found) return found;
+  }
+  return null;
+}
+
+function detectPreferredContactTime(value) {
+  const text = String(value || '').toLowerCase();
+  if (/\b(call now|right now|asap|immediately|now please)\b/.test(text)) return 'immediate';
+  const match = text.match(/\b(today|tomorrow|this morning|this afternoon|tonight|morning|afternoon|evening|at\s+\d{1,2}(?::\d{2})?\s?(?:am|pm)?|after\s+\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{1,2}(?::\d{2})?\s?(?:am|pm))\b/);
+  return match ? match[0] : null;
+}
+
+function wasPricingShown(priorMessages = []) {
+  return Array.isArray(priorMessages) && priorMessages.some((item) => item?.sender_type === 'system' && /\$497\/month|\$1,500\/month|\$3,000\/month|\/pricing/i.test(String(item?.message_body || '')));
+}
+
+function buildClosingModeResult(context) {
+  const latestText = normalizeText(context.latestMessage);
+  const combinedText = normalizeText(context.combinedText);
+  if (!hasClosingTrigger(combinedText)) return null;
+
+  const greeting = context.visitorName ? `Hi ${context.visitorName},` : 'Hi,';
+  const capturedPhone = getCapturedPhone(context);
+  const preferredContactTime = detectPreferredContactTime(context.latestMessage) || detectPreferredContactTime(context.combinedText);
+  const businessType = detectBusinessType(combinedText);
+  const missingFields = [];
+  if (!capturedPhone) missingFields.push('phone');
+  if (!preferredContactTime) missingFields.push('preferred time');
+
+  let response = `${greeting} great — let’s move this forward now. `;
+  if (!capturedPhone) {
+    response += 'Send the best phone number for the callback and tell me whether you want a call now or your preferred time today. I’m marking this as urgent so the team can act fast.';
+  } else if (!preferredContactTime) {
+    response += `I’ve got ${capturedPhone}. Do you want a call now, or what time suits you best today? I’m escalating this now so the team can move quickly.`;
+  } else if (preferredContactTime === 'immediate') {
+    response += `I’ve got ${capturedPhone} and I’m escalating this now for an immediate callback. If there’s a better number, send it here and we’ll use that instead.`;
+  } else {
+    response += `I’ve got ${capturedPhone} and ${preferredContactTime} as your preferred time. I’m escalating this now for a callback at that time, and the team will pick it up from here.`;
+  }
+
+  return {
+    ai_mode: 'human_required',
+    enquiry_category: 'sales',
+    issue_category: 'strategy_call',
+    urgency_level: 'urgent',
+    confidence_level: 'high',
+    ai_summary: `Closing mode triggered. High-value lead ready to move forward. Phone: ${capturedPhone || 'missing'}. Preferred time: ${preferredContactTime || 'missing'}. Business type: ${businessType || 'not yet confirmed'}. Latest message: ${String(context.latestMessage || '').replace(/\s+/g, ' ').trim()}`,
+    ai_handover_reason: 'Visitor showed clear buying intent and should be moved straight into execution.',
+    steps_taken: !capturedPhone ? 'Switched from selling to execution and requested callback number plus timing preference.' : !preferredContactTime ? 'Switched from selling to execution and requested callback timing.' : 'Switched from selling to execution and confirmed callback handoff details.',
+    recommended_next_action: !capturedPhone ? 'Collect phone number and callback timing immediately, then call the lead.' : !preferredContactTime ? `Use ${capturedPhone} and confirm whether the lead wants an immediate call or a specific time today.` : `Call ${capturedPhone} ${preferredContactTime === 'immediate' ? 'immediately' : `at ${preferredContactTime}`}.`,
+    response,
+    links: [],
+    sales_intent_level: 'high',
+    high_value_lead: true,
+    captured_business_type: businessType,
+    qualification_needed: missingFields,
+    closing_mode: true,
+    captured_phone: capturedPhone,
+    preferred_contact_time: preferredContactTime,
+  };
 }
 
 function shouldPushStrategyCall(text, issueCategory, urgencyLevel, salesIntentLevel) {
@@ -383,6 +468,7 @@ function buildSalesNextStepLine({ salesIntentLevel, shouldPushCall, objectionTyp
 
 function enhanceSalesOperatorResult(result, context) {
   const normalized = normalizeText([context.subject, context.latestMessage, ...(context.priorMessages || []).map((item) => item?.message_body || '')].filter(Boolean).join(' '));
+  const latestText = normalizeText(context.latestMessage);
   const salesIntentLevel = detectSalesIntentLevel(normalized, result.enquiry_category, result.issue_category);
   const businessType = detectBusinessType(normalized);
   const objectionType = detectObjectionType(normalized);
@@ -394,15 +480,18 @@ function enhanceSalesOperatorResult(result, context) {
     salesIntentLevel,
   });
   const highValueLead = salesIntentLevel === 'high'
-    || includesAny(normalized, ['pricing', 'price', 'cost', 'quote', 'integration', 'integrations', 'call me', 'call me back', 'give me a call', 'ready to start', 'sign me up']);
+    || includesAny(normalized, ['pricing', 'price', 'cost', 'quote', 'integration', 'integrations', 'call me', 'call me back', 'give me a call', 'ready to start', 'sign me up'])
+    || hasClosingTrigger(normalized);
   const shouldQualify = ['medium', 'high'].includes(salesIntentLevel);
   const shouldPushCall = shouldPushStrategyCall(normalized, result.issue_category, result.urgency_level, salesIntentLevel);
-  const pricingOverride = includesAny(normalized, ['pricing', 'price', 'cost', 'setup fee', 'monthly cost'])
+  const pricingOverride = includesAny(latestText, explicitPricingKeywords)
     ? `${context.visitorName ? `Hi ${context.visitorName}, ` : 'Hi, '}Starter is $497/month + $1,500 setup, Growth is $1,500/month + $3,000 setup, and Enterprise starts from $3,000/month + $7,500 setup. Starter usually fits lead capture and call handling, while Growth is stronger for booking automation, CRM sync, and follow-up.`
     : '';
   const objectionLine = buildObjectionHandlingLine(objectionType);
   const outcomeLine = (result.enquiry_category === 'sales' || ['pricing', 'integration_setup', 'strategy_call', 'services'].includes(result.issue_category)) ? buildOutcomeLine(result.issue_category) : '';
-  const strategyCallLine = buildSalesNextStepLine({ salesIntentLevel, shouldPushCall, objectionType });
+  const strategyCallLine = pricingOverride && wasPricingShown(context.priorMessages) && !includesAny(latestText, explicitPricingKeywords)
+    ? ''
+    : buildSalesNextStepLine({ salesIntentLevel, shouldPushCall, objectionType });
   const qualificationPrompt = shouldQualify ? buildQualificationPrompt(qualificationNeeded) : '';
   const response = [pricingOverride || result.response, objectionLine, outcomeLine, strategyCallLine, qualificationPrompt].filter(Boolean).join(' ');
   const recommendedNextAction = highValueLead
@@ -501,12 +590,12 @@ function buildForcedRouting(text, priorMessages = []) {
     };
   }
 
-  if (includesAny(text, pricingDecisionKeywords)) {
+  if (hasClosingTrigger(text) || includesAny(text, pricingDecisionKeywords)) {
     return {
       ai_mode: 'human_required',
       enquiry_category: 'sales',
-      issue_category: detectIssueCategory(text),
-      urgency_level: 'high',
+      issue_category: 'strategy_call',
+      urgency_level: hasClosingTrigger(text) ? 'urgent' : 'high',
       confidence_level: 'high',
       ai_handover_reason: 'The user is ready to move forward and should get a human follow-up.',
     };
@@ -737,6 +826,18 @@ Deno.serve(async (req) => {
     const combinedText = normalizeText([subject, latestMessage, transcript].filter(Boolean).join('\n'));
     const assistantReplies = countAssistantReplies(priorMessages);
     const forcedRouting = buildForcedRouting(combinedText, priorMessages);
+    const closingModeResult = buildClosingModeResult({
+      visitorName,
+      visitorEmail,
+      visitorPhone,
+      subject,
+      latestMessage,
+      priorMessages,
+      combinedText,
+    });
+    if (closingModeResult) {
+      return Response.json(closingModeResult);
+    }
     const directCapabilityResponse = buildDirectCapabilityResponse(combinedText, visitorName, visitorEmail, forcedRouting);
     const hardEscalation = includesAny(combinedText, explicitHumanKeywords)
       || includesAny(combinedText, criticalOutageKeywords)
