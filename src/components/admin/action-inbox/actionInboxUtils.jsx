@@ -149,6 +149,8 @@ function scoreIntent(text, conversation, lead, extraScore = 0) {
   let score = extraScore;
 
   if (/(yes|call me|phone me|pricing|price|quote|cost|ready|keen|book|booking|schedule|available|demo|trial|proposal)/.test(normalized)) score += 3;
+  if (/(integration|integrations|hubspot|salesforce|zapier|crm|calendar|automation|follow-up|follow up|revenue|how does this work|how it works)/.test(normalized)) score += 2;
+  if (/(high-value lead:\s*yes|sales intent:\s*high)/.test(normalized)) score += 3;
   if (/(help|issue|problem|support|question)/.test(normalized)) score += 1;
   if (conversation?.enquiry_category === 'sales' || conversation?.enquiry_category === 'urgent') score += 2;
   if (conversation?.ai_mode === 'escalated') score += 2;

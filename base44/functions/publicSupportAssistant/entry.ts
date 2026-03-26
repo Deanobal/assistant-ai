@@ -267,6 +267,119 @@ function isVagueSupport(text) {
   return includesAny(text, vagueOpeners) && !hasUsefulDetail;
 }
 
+function detectBusinessType(text) {
+  if (includesAny(text, ['trade', 'trades', 'plumber', 'plumbing', 'electrician', 'electrical', 'builder', 'hvac', 'locksmith'])) return 'trades';
+  if (includesAny(text, ['real estate', 'property manager', 'agency', 'realtor'])) return 'real_estate';
+  if (includesAny(text, ['dental', 'dentist'])) return 'dental_clinic';
+  if (includesAny(text, ['medical', 'clinic', 'gp', 'doctor'])) return 'medical_clinic';
+  if (includesAny(text, ['law', 'lawyer', 'legal', 'solicitor'])) return 'law_firm';
+  if (includesAny(text, ['mechanic', 'auto', 'automotive', 'car service'])) return 'automotive';
+  if (includesAny(text, ['restaurant', 'cafe', 'hospitality', 'venue', 'hotel'])) return 'hospitality';
+  if (includesAny(text, ['accounting', 'consulting', 'agency', 'professional services'])) return 'professional_services';
+  return null;
+}
+
+function detectSalesIntentLevel(text, enquiryCategory = 'general', issueCategory = 'general') {
+  let score = 0;
+  if (enquiryCategory === 'sales') score += 2;
+  if (['pricing', 'strategy_call', 'integration_setup', 'services'].includes(issueCategory)) score += 1;
+  if (includesAny(text, ['pricing', 'price', 'cost', 'quote', 'plan'])) score += 3;
+  if (includesAny(text, ['integration', 'integrations', 'hubspot', 'salesforce', 'zapier', 'crm', 'calendar', 'google calendar'])) score += 2;
+  if (includesAny(text, ['how does this work', 'how it works', 'how does it work', 'how would this work'])) score += 2;
+  if (includesAny(text, ['urgent', 'asap', 'right now', 'immediately'])) score += 2;
+  if (includesAny(text, ['ready to start', 'ready to book', 'sign me up', 'start now', 'get started', 'call me', 'call me back', 'give me a call', 'book a call', 'book a strategy call', 'book a demo'])) score += 4;
+  if (score >= 6) return 'high';
+  if (score >= 3) return 'medium';
+  return 'low';
+}
+
+function getQualificationNeeded({ visitorName, visitorEmail, visitorPhone, businessType, salesIntentLevel }) {
+  if (!['medium', 'high'].includes(salesIntentLevel)) return [];
+  const needed = [];
+  if (!String(visitorName || '').trim()) needed.push('name');
+  if (!String(visitorEmail || '').trim()) needed.push('email');
+  if (!String(visitorPhone || '').trim()) needed.push('phone');
+  if (!businessType) needed.push('business type');
+  return needed;
+}
+
+function buildQualificationPrompt(needed = []) {
+  if (!needed.length) return '';
+  const needsName = needed.includes('name');
+  const needsEmail = needed.includes('email');
+  const needsPhone = needed.includes('phone');
+  const needsBusinessType = needed.includes('business type');
+
+  if ((needsName || needsEmail) && (needsPhone || needsBusinessType)) {
+    return 'Before I line up the best next step, what name and email should we use, and what type of business are you plus the best phone number to reach you on?';
+  }
+  if (needsName && needsEmail) return 'Before I line up the best next step, what name and email should we use?';
+  if (needsPhone && needsBusinessType) return 'To point you the right way, what type of business are you and what’s the best phone number to reach you on?';
+  if (needsBusinessType) return 'What type of business are you in?';
+  if (needsPhone) return 'What’s the best phone number to reach you on?';
+  if (needsName) return 'What name should I use?';
+  if (needsEmail) return 'What email should we use?';
+  return '';
+}
+
+function shouldPushStrategyCall(text, issueCategory, urgencyLevel, salesIntentLevel) {
+  return salesIntentLevel === 'high'
+    || ['pricing', 'integration_setup', 'strategy_call'].includes(issueCategory)
+    || includesAny(text, ['how does this work', 'how it works', 'how does it work', 'integration', 'integrations', 'pricing', 'price', 'cost'])
+    || ['high', 'urgent'].includes(urgencyLevel);
+}
+
+function buildOutcomeLine(issueCategory) {
+  if (issueCategory === 'pricing') return 'The goal here is usually simple: capture more leads, automate follow-up, and turn more enquiries into booked revenue.';
+  if (issueCategory === 'integration_setup') return 'The right setup usually means fewer missed handoffs, faster follow-up, and cleaner revenue capture.';
+  if (issueCategory === 'strategy_call') return 'A short strategy call is usually the fastest way to map the workflow and show where the revenue lift comes from.';
+  return 'The right setup usually means more captured enquiries, less admin, and more revenue from the same lead flow.';
+}
+
+function enhanceSalesOperatorResult(result, context) {
+  const normalized = normalizeText([context.subject, context.latestMessage, ...(context.priorMessages || []).map((item) => item?.message_body || '')].filter(Boolean).join(' '));
+  const salesIntentLevel = detectSalesIntentLevel(normalized, result.enquiry_category, result.issue_category);
+  const businessType = detectBusinessType(normalized);
+  const qualificationNeeded = getQualificationNeeded({
+    visitorName: context.visitorName,
+    visitorEmail: context.visitorEmail,
+    visitorPhone: context.visitorPhone,
+    businessType,
+    salesIntentLevel,
+  });
+  const highValueLead = salesIntentLevel === 'high'
+    || includesAny(normalized, ['pricing', 'price', 'cost', 'quote', 'integration', 'integrations', 'call me', 'call me back', 'give me a call', 'ready to start', 'sign me up']);
+  const shouldQualify = ['medium', 'high'].includes(salesIntentLevel);
+  const shouldPushCall = shouldPushStrategyCall(normalized, result.issue_category, result.urgency_level, salesIntentLevel);
+  const pricingOverride = includesAny(normalized, ['pricing', 'price', 'cost', 'setup fee', 'monthly cost'])
+    ? `${context.visitorName ? `Hi ${context.visitorName}, ` : 'Hi, '}Starter is $497/month + $1,500 setup, Growth is $1,500/month + $3,000 setup, and Enterprise starts from $3,000/month + $7,500 setup. Starter usually fits lead capture and call handling, while Growth is stronger for booking automation, CRM sync, and follow-up.`
+    : '';
+  const outcomeLine = (result.enquiry_category === 'sales' || ['pricing', 'integration_setup', 'strategy_call', 'services'].includes(result.issue_category)) ? buildOutcomeLine(result.issue_category) : '';
+  const strategyCallLine = shouldPushCall
+    ? (salesIntentLevel === 'high'
+        ? 'The fastest next step is to book a strategy call on /BookStrategyCall so we can scope the right setup and move quickly.'
+        : 'If you want, the fastest way to map this properly is a strategy call on /BookStrategyCall.')
+    : '';
+  const qualificationPrompt = shouldQualify ? buildQualificationPrompt(qualificationNeeded) : '';
+  const response = [pricingOverride || result.response, outcomeLine, strategyCallLine, qualificationPrompt].filter(Boolean).join(' ');
+  const recommendedNextAction = highValueLead
+    ? (shouldPushCall ? 'Prioritise this lead, push to /BookStrategyCall, and collect any missing contact details.' : 'Prioritise this lead and collect any missing contact details.')
+    : result.recommended_next_action;
+  const qualificationSummary = qualificationNeeded.length ? `Still need: ${qualificationNeeded.join(', ')}.` : 'Qualification complete for current stage.';
+  const aiSummary = [`Sales intent: ${salesIntentLevel.toUpperCase()}.`, `High-value lead: ${highValueLead ? 'yes' : 'no'}.`, businessType ? `Business type: ${businessType}.` : 'Business type: not yet confirmed.', qualificationSummary, result.ai_summary].join(' ').replace(/\s+/g, ' ').trim();
+
+  return {
+    ...result,
+    response,
+    recommended_next_action: recommendedNextAction,
+    ai_summary: aiSummary,
+    sales_intent_level: salesIntentLevel,
+    high_value_lead: highValueLead,
+    captured_business_type: businessType,
+    qualification_needed: qualificationNeeded,
+  };
+}
+
 function buildForcedRouting(text, priorMessages = []) {
   const assistantReplies = countAssistantReplies(priorMessages);
   const enquiryCategory = detectEnquiryCategory(text);
@@ -581,19 +694,30 @@ Deno.serve(async (req) => {
       || (includesAny(combinedText, manualIntegrationKeywords) && includesAny(combinedText, ['help', 'setup', 'connect']));
 
     if (directCapabilityResponse && !hardEscalation) {
-      return Response.json(directCapabilityResponse);
+      return Response.json(enhanceSalesOperatorResult(directCapabilityResponse, {
+        visitorName,
+        visitorEmail,
+        visitorPhone,
+        subject,
+        latestMessage,
+        priorMessages,
+      }));
     }
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are AssistantAI Assistant, the public website first-line operator for AssistantAI.
 
 Your role:
-- act like a capable front-line operator, not a deflection bot
+- act like a capable front-line operator and revenue-minded sales operator, not a deflection bot
 - acknowledge the issue clearly
 - answer straightforward product and site questions directly
 - ask only the next most useful clarifying question or questions when support context is missing
 - try one useful answer when possible before escalating
 - only escalate when the rules below require it
+- when sales intent is medium or high, naturally collect the missing pieces needed to qualify the lead: name, email, phone, and business type
+- do not ask for details already known in the conversation context
+- when pricing, integrations, urgency, or "how does this work" comes up, move the conversation toward the next step instead of staying passive
+- where the fit is strong, sound confident about the business outcome: more captured leads, less admin, faster follow-up, more booked revenue
 
 Escalation rules:
 - escalate only for urgent or business-critical issues, billing/account/security issues, likely bugs or outages, manual integration setup help, explicit human requests, or genuinely low confidence after clarifying
@@ -619,6 +743,10 @@ ${buildSupportKnowledgeText()}
 Answering rules:
 - if the user asks about services, pricing, integrations, strategy calls, onboarding, billing, booking, client portal, notifications, analytics, support flow, or chat widget behavior, answer directly from the structured knowledge above
 - when discussing integrations, billing, booking, client portal, notifications, or analytics, explicitly use the exact feature status label from the structured knowledge when it helps avoid ambiguity
+- when the enquiry is sales-led, do not just answer safely and stop; advance the conversation toward a strategy call or next action when appropriate
+- naturally collect missing qualification details for medium/high-intent sales leads, but do it conversationally rather than as a form
+- if pricing is discussed, integrations are discussed, urgency is expressed, or the user asks how it works, bias toward recommending /BookStrategyCall at the right moment
+- keep the tone commercially confident where the implementation is strong, while still preserving the honesty rules below
 - feature status labels mean: fully live = working end to end in current app flows; partially implemented = some real parts exist but not full end-to-end coverage; UI present but not connected = visible in product or UI without confirmed live backend connection for this case; planned / future = intended later, not live today
 - do not imply a feature is live if it is only shown in UI
 - do not imply a booking is confirmed unless a real slot is verified and a real booking event is created
@@ -690,7 +818,7 @@ The response should sound like a confident front-line operator.`,
     const recommended_next_action = result?.recommended_next_action || (ai_mode === 'ai_active' ? 'Continue clarifying or follow the linked page.' : 'Human follow-up required.');
     const ai_summary = String(result?.ai_summary || `Issue category: ${issue_category}. Urgency: ${urgency_level}. Visitor: ${visitorName || visitorEmail || 'unknown'}. Problem: ${latestMessage}. Steps taken: ${steps_taken}. Next action: ${recommended_next_action}.`).replace(/\s+/g, ' ').trim();
 
-    return Response.json({
+    return Response.json(enhanceSalesOperatorResult({
       ai_mode,
       enquiry_category,
       issue_category,
@@ -702,7 +830,14 @@ The response should sound like a confident front-line operator.`,
       recommended_next_action,
       response,
       links: Array.isArray(result?.links) ? result.links : [],
-    });
+    }, {
+      visitorName,
+      visitorEmail,
+      visitorPhone,
+      subject,
+      latestMessage,
+      priorMessages,
+    }));
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

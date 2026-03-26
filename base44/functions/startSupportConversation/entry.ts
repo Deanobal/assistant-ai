@@ -33,6 +33,13 @@ function mapPriorityFromUrgency(urgencyLevel) {
   return 'normal';
 }
 
+function mapConversationPriority(aiResult) {
+  const basePriority = mapPriorityFromUrgency(aiResult?.urgency_level);
+  if (basePriority === 'urgent') return 'urgent';
+  if (aiResult?.high_value_lead || aiResult?.sales_intent_level === 'high') return 'high';
+  return basePriority;
+}
+
 function mapStatusFromAiMode(aiMode) {
   if (aiMode === 'closed') return 'closed';
   if (aiMode === 'ai_active') return 'waiting_on_customer';
@@ -558,7 +565,7 @@ Deno.serve(async (req) => {
       unread_for_client: false,
       last_message_at: now,
       last_message_preview: preview,
-      priority: mapPriorityFromUrgency(aiResult.urgency_level),
+      priority: mapConversationPriority(aiResult),
       ai_mode: aiResult.ai_mode,
       enquiry_category: aiResult.enquiry_category,
       urgency_level: aiResult.urgency_level,
@@ -619,6 +626,10 @@ Deno.serve(async (req) => {
         confidence_level: aiResult.confidence_level || null,
         steps_taken: aiResult.steps_taken || null,
         recommended_next_action: aiResult.recommended_next_action || null,
+        sales_intent_level: aiResult.sales_intent_level || null,
+        high_value_lead: aiResult.high_value_lead || false,
+        captured_business_type: aiResult.captured_business_type || null,
+        qualification_needed: aiResult.qualification_needed || [],
       },
     });
 
@@ -629,11 +640,11 @@ Deno.serve(async (req) => {
         entityName: 'SupportConversation',
         entityId: conversation.id,
         clientAccountId: conversation.linked_client_account_id || null,
-        title: aiResult.ai_mode === 'escalated' || aiResult.enquiry_category === 'sales' ? 'High-intent chat needs reply' : 'Chat needs human reply',
+        title: aiResult.high_value_lead ? 'High-value lead needs reply' : (aiResult.ai_mode === 'escalated' || aiResult.enquiry_category === 'sales' ? 'High-intent chat needs reply' : 'Chat needs human reply'),
         message: aiResult.ai_summary || preview,
         actorEmail: email,
         uniqueKey: `chat_handover_create:${conversation.id}:${aiResult.ai_mode}:${now}`,
-        priority: ['urgent', 'high'].includes(aiResult.urgency_level) ? 'high' : 'normal',
+        priority: aiResult.high_value_lead || ['urgent', 'high'].includes(aiResult.urgency_level) ? 'high' : 'normal',
         smsMessage: aiResult.ai_summary || preview,
         metadata: {
           conversation_id: conversation.id,
@@ -657,6 +668,10 @@ Deno.serve(async (req) => {
           ai_mode: aiResult.ai_mode,
           ai_handover_reason: aiResult.ai_handover_reason || null,
           ai_summary: aiResult.ai_summary,
+          sales_intent_level: aiResult.sales_intent_level || null,
+          high_value_lead: aiResult.high_value_lead || false,
+          captured_business_type: aiResult.captured_business_type || null,
+          qualification_needed: aiResult.qualification_needed || [],
         },
       });
     }
