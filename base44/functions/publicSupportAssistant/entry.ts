@@ -12,6 +12,12 @@ const billingSecurityKeywords = ['billing issue', 'billing problem', 'invoice is
 const manualIntegrationKeywords = ['help connect', 'connect my', 'set up integration', 'setup integration', 'integration setup', 'calendar connection', 'crm connection', 'twilio setup'];
 const likelyBugKeywords = ['bug', 'broken', 'error', 'not working', 'fails', 'failed', 'crash', 'blank page', 'stuck', 'issue'];
 const pricingDecisionKeywords = ['quote', 'proposal', 'ready to start', 'ready to book', 'call me', 'call me back', 'sign me up', 'start now'];
+const priceObjectionKeywords = ['too expensive', 'expensive', 'cost too much', 'out of budget', 'over budget', 'pricey'];
+const browsingKeywords = ['just looking', 'just browsing', 'looking around', 'checking things out'];
+const sendInfoKeywords = ['send me info', 'send info', 'send me some info', 'email me info', 'send me information', 'send details'];
+const notReadyKeywords = ['not ready', 'not ready yet', 'maybe later', 'later on', 'down the track'];
+const thinkItOverKeywords = ['i will think about it', "i'll think about it", 'need to think about it', 'let me think about it', 'think it over'];
+const competitorComparisonKeywords = ['compare', 'comparison', 'vs ', 'versus', 'other provider', 'another provider', 'competitor'];
 const completionKeywords = ['thanks that helps', 'all good now', 'got it thanks', 'perfect thanks', 'solved'];
 const featureStatusLabels = ['fully live', 'partially implemented', 'UI present but not connected', 'planned / future'];
 
@@ -240,7 +246,7 @@ function ensureAllowed(value, allowedValues, fallback) {
 }
 
 function detectEnquiryCategory(text) {
-  if (includesAny(text, ['pricing', 'price', 'cost', 'quote', 'plan', 'get started', 'strategy call', 'demo'])) return 'sales';
+  if (includesAny(text, ['pricing', 'price', 'cost', 'quote', 'plan', 'get started', 'strategy call', 'demo', 'how does this work', 'how it works', 'how would this work', 'fastest way to get this working', 'get this working', 'live fast', 'compare', 'versus', 'competitor'])) return 'sales';
   if (includesAny(text, ['onboarding', 'intake', 'go live', 'setup', 'implementation'])) return 'onboarding';
   if (includesAny(text, criticalOutageKeywords) || (includesAny(text, urgentKeywords) && includesAny(text, likelyBugKeywords))) return 'urgent';
   if (includesAny(text, billingSecurityKeywords) || includesAny(text, likelyBugKeywords) || includesAny(text, ['portal', 'login', 'support', 'tech help', 'technical help', 'integration', 'calendar', 'crm', 'twilio'])) return 'support';
@@ -250,12 +256,14 @@ function detectEnquiryCategory(text) {
 function detectIssueCategory(text) {
   if (includesAny(text, ['pricing', 'price', 'cost', 'plan', 'quote'])) return 'pricing';
   if (includesAny(text, ['strategy call', 'book a call', 'book a demo'])) return 'strategy_call';
+  if (includesAny(text, ['how does this work', 'how it works', 'how would this work', 'fastest way to get this working', 'get this working', 'live fast'])) return 'services';
   if (includesAny(text, ['integration', 'calendar', 'crm', 'twilio', 'hubspot', 'salesforce', 'outlook', 'google calendar', 'zapier', 'gohighlevel', 'go high level'])) return 'integration_setup';
   if (includesAny(text, ['billing', 'invoice', 'payment', 'card', 'charge', 'stripe', 'subscription'])) return 'billing';
   if (includesAny(text, ['login', 'locked out', 'password', 'account'])) return 'account_access';
   if (includesAny(text, ['portal', 'dashboard', 'analytics', 'call recordings', 'support tab'])) return 'client_portal';
   if (includesAny(text, ['error', 'broken', 'bug', 'blank page', 'crash', 'not working'])) return 'bug_or_feature_issue';
   if (includesAny(text, ['onboarding', 'intake', 'setup', 'go live'])) return 'onboarding';
+  if (includesAny(text, competitorComparisonKeywords)) return 'services';
   if (includesAny(text, ['services', 'what do you do', 'voice agent', 'chatbot', 'ai receptionist'])) return 'services';
   if (includesAny(text, ['tech help', 'technical help', 'help'])) return 'general_support';
   return 'general_enquiry';
@@ -285,9 +293,12 @@ function detectSalesIntentLevel(text, enquiryCategory = 'general', issueCategory
   if (['pricing', 'strategy_call', 'integration_setup', 'services'].includes(issueCategory)) score += 1;
   if (includesAny(text, ['pricing', 'price', 'cost', 'quote', 'plan'])) score += 3;
   if (includesAny(text, ['integration', 'integrations', 'hubspot', 'salesforce', 'zapier', 'crm', 'calendar', 'google calendar'])) score += 2;
-  if (includesAny(text, ['how does this work', 'how it works', 'how does it work', 'how would this work'])) score += 2;
-  if (includesAny(text, ['urgent', 'asap', 'right now', 'immediately'])) score += 2;
+  if (includesAny(text, ['how does this work', 'how it works', 'how does it work', 'how would this work', 'fastest way to get this working', 'get this working'])) score += 2;
+  if (includesAny(text, ['urgent', 'asap', 'right now', 'immediately', 'live fast'])) score += 2;
   if (includesAny(text, ['ready to start', 'ready to book', 'sign me up', 'start now', 'get started', 'call me', 'call me back', 'give me a call', 'book a call', 'book a strategy call', 'book a demo'])) score += 4;
+  if (includesAny(text, competitorComparisonKeywords)) score += 2;
+  if (includesAny(text, browsingKeywords)) score -= 2;
+  if (includesAny(text, [...notReadyKeywords, ...thinkItOverKeywords])) score -= 1;
   if (score >= 6) return 'high';
   if (score >= 3) return 'medium';
   return 'low';
@@ -324,8 +335,9 @@ function buildQualificationPrompt(needed = []) {
 
 function shouldPushStrategyCall(text, issueCategory, urgencyLevel, salesIntentLevel) {
   return salesIntentLevel === 'high'
-    || ['pricing', 'integration_setup', 'strategy_call'].includes(issueCategory)
-    || includesAny(text, ['how does this work', 'how it works', 'how does it work', 'integration', 'integrations', 'pricing', 'price', 'cost'])
+    || ['pricing', 'integration_setup', 'strategy_call', 'services'].includes(issueCategory)
+    || includesAny(text, ['how does this work', 'how it works', 'how does it work', 'integration', 'integrations', 'pricing', 'price', 'cost', 'fastest way to get this working', 'get this working', 'live fast'])
+    || includesAny(text, competitorComparisonKeywords)
     || ['high', 'urgent'].includes(urgencyLevel);
 }
 
@@ -336,10 +348,44 @@ function buildOutcomeLine(issueCategory) {
   return 'The right setup usually means more captured enquiries, less admin, and more revenue from the same lead flow.';
 }
 
+function detectObjectionType(text) {
+  if (includesAny(text, priceObjectionKeywords)) return 'price';
+  if (includesAny(text, browsingKeywords)) return 'just_looking';
+  if (includesAny(text, sendInfoKeywords)) return 'send_info';
+  if (includesAny(text, notReadyKeywords)) return 'not_ready';
+  if (includesAny(text, thinkItOverKeywords)) return 'think_about_it';
+  if (includesAny(text, competitorComparisonKeywords)) return 'competitor_compare';
+  return null;
+}
+
+function buildObjectionHandlingLine(objectionType) {
+  if (objectionType === 'price') return 'I get that. The point is not adding software cost for the sake of it — it is stopping missed enquiries, tightening follow-up, and making the setup pay for itself.';
+  if (objectionType === 'just_looking') return 'That makes sense. I’ll keep it simple and useful so you can judge the fit quickly.';
+  if (objectionType === 'send_info') return 'Absolutely. I can point you to the right info, but the useful part is matching the setup to your workflow instead of leaving you with generic material.';
+  if (objectionType === 'not_ready') return 'No problem. Timing matters, and the useful move here is to leave with a clear plan instead of vague options.';
+  if (objectionType === 'think_about_it') return 'Fair enough. The important thing is comparing a clear workflow and likely return, not just another tool list.';
+  if (objectionType === 'competitor_compare') return 'That is a fair question. The real comparison is how quickly the setup captures more enquiries, reduces admin, and improves follow-up for your workflow.';
+  return '';
+}
+
+function buildSalesNextStepLine({ salesIntentLevel, shouldPushCall, objectionType }) {
+  if (salesIntentLevel === 'high' && shouldPushCall) {
+    return 'Best next step is to book the strategy call on /BookStrategyCall. That is the fastest way to get this working, and we can set this up quickly once we scope the workflow.';
+  }
+  if (salesIntentLevel === 'medium' && shouldPushCall) {
+    return 'Best next step is a strategy call on /BookStrategyCall. It is the fastest way to get clear on fit and the right setup.';
+  }
+  if (['just_looking', 'send_info', 'not_ready', 'think_about_it'].includes(objectionType)) {
+    return 'If you are not booking yet, tell me your business type and the main workflow you want to improve, and I’ll point you to the right path.';
+  }
+  return '';
+}
+
 function enhanceSalesOperatorResult(result, context) {
   const normalized = normalizeText([context.subject, context.latestMessage, ...(context.priorMessages || []).map((item) => item?.message_body || '')].filter(Boolean).join(' '));
   const salesIntentLevel = detectSalesIntentLevel(normalized, result.enquiry_category, result.issue_category);
   const businessType = detectBusinessType(normalized);
+  const objectionType = detectObjectionType(normalized);
   const qualificationNeeded = getQualificationNeeded({
     visitorName: context.visitorName,
     visitorEmail: context.visitorEmail,
@@ -354,19 +400,23 @@ function enhanceSalesOperatorResult(result, context) {
   const pricingOverride = includesAny(normalized, ['pricing', 'price', 'cost', 'setup fee', 'monthly cost'])
     ? `${context.visitorName ? `Hi ${context.visitorName}, ` : 'Hi, '}Starter is $497/month + $1,500 setup, Growth is $1,500/month + $3,000 setup, and Enterprise starts from $3,000/month + $7,500 setup. Starter usually fits lead capture and call handling, while Growth is stronger for booking automation, CRM sync, and follow-up.`
     : '';
+  const objectionLine = buildObjectionHandlingLine(objectionType);
   const outcomeLine = (result.enquiry_category === 'sales' || ['pricing', 'integration_setup', 'strategy_call', 'services'].includes(result.issue_category)) ? buildOutcomeLine(result.issue_category) : '';
-  const strategyCallLine = shouldPushCall
-    ? (salesIntentLevel === 'high'
-        ? 'The fastest next step is to book a strategy call on /BookStrategyCall so we can scope the right setup and move quickly.'
-        : 'If you want, the fastest way to map this properly is a strategy call on /BookStrategyCall.')
-    : '';
+  const strategyCallLine = buildSalesNextStepLine({ salesIntentLevel, shouldPushCall, objectionType });
   const qualificationPrompt = shouldQualify ? buildQualificationPrompt(qualificationNeeded) : '';
-  const response = [pricingOverride || result.response, outcomeLine, strategyCallLine, qualificationPrompt].filter(Boolean).join(' ');
+  const response = [pricingOverride || result.response, objectionLine, outcomeLine, strategyCallLine, qualificationPrompt].filter(Boolean).join(' ');
   const recommendedNextAction = highValueLead
     ? (shouldPushCall ? 'Prioritise this lead, push to /BookStrategyCall, and collect any missing contact details.' : 'Prioritise this lead and collect any missing contact details.')
     : result.recommended_next_action;
   const qualificationSummary = qualificationNeeded.length ? `Still need: ${qualificationNeeded.join(', ')}.` : 'Qualification complete for current stage.';
-  const aiSummary = [`Sales intent: ${salesIntentLevel.toUpperCase()}.`, `High-value lead: ${highValueLead ? 'yes' : 'no'}.`, businessType ? `Business type: ${businessType}.` : 'Business type: not yet confirmed.', qualificationSummary, result.ai_summary].join(' ').replace(/\s+/g, ' ').trim();
+  const aiSummary = [
+    `Sales intent: ${salesIntentLevel.toUpperCase()}.`,
+    `High-value lead: ${highValueLead ? 'yes' : 'no'}.`,
+    businessType ? `Business type: ${businessType}.` : 'Business type: not yet confirmed.',
+    objectionType ? `Objection: ${objectionType}.` : 'Objection: none.',
+    qualificationSummary,
+    result.ai_summary,
+  ].join(' ').replace(/\s+/g, ' ').trim();
 
   return {
     ...result,
@@ -717,6 +767,9 @@ Your role:
 - when sales intent is medium or high, naturally collect the missing pieces needed to qualify the lead: name, email, phone, and business type
 - do not ask for details already known in the conversation context
 - when pricing, integrations, urgency, or "how does this work" comes up, move the conversation toward the next step instead of staying passive
+- for high-intent users, use controlled closing pressure: avoid soft phrasing like "if you want" and use confident, outcome-driven wording
+- handle common objections directly: too expensive, just looking, send me info, not ready yet, I’ll think about it, and competitor comparison
+- use natural urgency without fake scarcity: fastest way to get this working, best next step, and we can set this up quickly
 - where the fit is strong, sound confident about the business outcome: more captured leads, less admin, faster follow-up, more booked revenue
 
 Escalation rules:
@@ -746,6 +799,9 @@ Answering rules:
 - when the enquiry is sales-led, do not just answer safely and stop; advance the conversation toward a strategy call or next action when appropriate
 - naturally collect missing qualification details for medium/high-intent sales leads, but do it conversationally rather than as a form
 - if pricing is discussed, integrations are discussed, urgency is expressed, or the user asks how it works, bias toward recommending /BookStrategyCall at the right moment
+- for high-intent users, do not hide behind passive phrasing; the best next step should be stated clearly and confidently
+- when objections show up, acknowledge them, reinforce value, and guide back to either the strategy call or the next qualification step
+- keep low-intent users low pressure while still giving them a clear next step
 - keep the tone commercially confident where the implementation is strong, while still preserving the honesty rules below
 - feature status labels mean: fully live = working end to end in current app flows; partially implemented = some real parts exist but not full end-to-end coverage; UI present but not connected = visible in product or UI without confirmed live backend connection for this case; planned / future = intended later, not live today
 - do not imply a feature is live if it is only shown in UI
