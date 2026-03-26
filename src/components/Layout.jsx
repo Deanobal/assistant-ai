@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ChatWidget from './chat/ChatWidget';
+import CrispChat from './chat/CrispChat';
 
 const navLinks = [
 { label: 'Home', path: '/' },
@@ -159,7 +159,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <ChatWidget />
+      <CrispChat />
     </div>);
 
 }
