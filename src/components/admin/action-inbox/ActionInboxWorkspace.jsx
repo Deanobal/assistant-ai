@@ -1,10 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
+import { canUseNotifications, requestAlertsPermission, showLocalNotification } from '@/lib/pwa';
 import ActionInboxList from './ActionInboxList';
 import ActionInboxDetail from './ActionInboxDetail';
 import ActionInboxContextPanel from './ActionInboxContextPanel';
+import ActionInboxMobileControls from './ActionInboxMobileControls';
+import { buildConversationNotificationPayload } from './actionInboxNotifications';
 import {
   ACTION_VIEWS,
   SALES_HEAT_VIEWS,
@@ -55,17 +58,43 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const queryClient = useQueryClient();
   const config = getWorkspaceConfig(mode);
   const initialView = new URLSearchParams(window.location.search).get('view');
-  const [activeView, setActiveView] = useState(() => config.views.some((view) => view.key === initialView) ? initialView : config.views[0].key);
+  const defaultMobileView = typeof window !== 'undefined' && window.innerWidth < 1280 && config.views.some((view) => view.key === 'high_intent') ? 'high_intent' : config.views[0].key;
+  const [activeView, setActiveView] = useState(() => config.views.some((view) => view.key === initialView) ? initialView : defaultMobileView);
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [heatFilter, setHeatFilter] = useState('all');
   const [selectedKey, setSelectedKey] = useState(() => getSelectedKeyFromUrl());
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1280 : false);
   const [showMobileDetail, setShowMobileDetail] = useState(!!getSelectedKeyFromUrl());
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [notificationPermission, setNotificationPermission] = useState(typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : 'unsupported');
+  const [isStandalone, setIsStandalone] = useState(typeof window !== 'undefined' ? window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true : false);
+  const notificationKeysRef = useRef(new Set());
+  const notificationSupported = canUseNotifications();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1280);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event);
+    };
+    const displayModeQuery = window.matchMedia('(display-mode: standalone)');
+    const syncStandaloneState = () => setIsStandalone(displayModeQuery.matches || window.navigator.standalone === true);
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    if (displayModeQuery.addEventListener) displayModeQuery.addEventListener('change', syncStandaloneState);
+    if (displayModeQuery.addListener) displayModeQuery.addListener(syncStandaloneState);
+    syncStandaloneState();
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (displayModeQuery.removeEventListener) displayModeQuery.removeEventListener('change', syncStandaloneState);
+      if (displayModeQuery.removeListener) displayModeQuery.removeListener(syncStandaloneState);
+    };
   }, []);
 
   const { data: currentAdmin = null } = useQuery({ queryKey: ['action-inbox-me'], queryFn: () => base44.auth.me(), initialData: null });
@@ -101,6 +130,20 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
       }
     });
   }, [selectedKey, queryClient]);
+
+  useEffect(() => {
+    if (!notificationSupported || notificationPermission !== 'granted' || !currentAdmin) return undefined;
+    return base44.entities.SupportConversation.subscribe((event) => {
+      if (!['create', 'update'].includes(event.type) || !event.data) return;
+      if (document.visibilityState === 'visible' && selectedKey === `conversation:${event.data.id}`) return;
+      const payload = buildConversationNotificationPayload(event.data);
+      if (!payload) return;
+      const dedupeKey = `${event.data.id}:${event.data.updated_at || event.data.updated_date || event.data.last_message_at || event.type}`;
+      if (notificationKeysRef.current.has(dedupeKey)) return;
+      notificationKeysRef.current.add(dedupeKey);
+      showLocalNotification(payload);
+    });
+  }, [currentAdmin, notificationPermission, notificationSupported, selectedKey]);
 
   const adminsById = useMemo(() => Object.fromEntries(admins.map((admin) => [admin.id, admin])), [admins]);
   const leadsById = useMemo(() => Object.fromEntries(leads.map((lead) => [lead.id, lead])), [leads]);
@@ -149,6 +192,19 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     () => itemsByView.filter((item) => matchesSalesHeat(item, heatFilter)).filter((item) => matchesOwnership(item, ownerFilter)),
     [itemsByView, heatFilter, ownerFilter]
   );
+
+  useEffect(() => {
+    filteredItems
+      .filter((item) => item.kind === 'conversation')
+      .slice(0, isMobile ? 6 : 3)
+      .forEach((item) => {
+        queryClient.prefetchQuery({
+          queryKey: ['action-inbox-messages', item.entityId],
+          queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: item.entityId }, 'created_at', 200),
+          staleTime: 15000,
+        });
+      });
+  }, [filteredItems, isMobile, queryClient]);
 
   const selectedItem = filteredItems.find((item) => item.id === selectedKey) || allItems.find((item) => item.id === selectedKey) || null;
   const selectedConversation = selectedItem?.kind === 'conversation' ? conversations.find((conversation) => conversation.id === selectedItem.entityId) || null : null;
@@ -222,9 +278,10 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
 
   const { data: messages = [] } = useQuery({
     queryKey: ['action-inbox-messages', selectedConversation?.id],
-    queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: selectedConversation.id }, 'created_at', 500),
+    queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: selectedConversation.id }, 'created_at', 200),
     initialData: [],
     enabled: !!selectedConversation,
+    staleTime: 15000,
   });
 
   const replyMutation = useMutation({
@@ -263,7 +320,10 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
 
   const handleSelect = (item) => {
     setSelectedKey(item.id);
-    if (isMobile) setShowMobileDetail(true);
+    if (isMobile) {
+      setShowMobileDetail(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const updateSelectedConversation = (data) => selectedConversation && updateConversationMutation.mutate({ id: selectedConversation.id, data });
@@ -283,6 +343,26 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     });
   };
 
+  const handleInstall = async () => {
+    if (!installPromptEvent) return;
+    await installPromptEvent.prompt();
+    await installPromptEvent.userChoice;
+    setInstallPromptEvent(null);
+  };
+
+  const handleEnableNotifications = async () => {
+    const permission = await requestAlertsPermission();
+    setNotificationPermission(permission);
+    if (permission === 'granted') {
+      showLocalNotification({
+        title: 'Action Inbox alerts on',
+        body: 'High-value and urgent chats will open straight into reply mode.',
+        tag: 'action-inbox-alerts-enabled',
+        url: '/ActionInbox?view=high_intent',
+      });
+    }
+  };
+
   const listTitle = mode === 'support' ? 'Support Threads' : 'Action Queue';
 
   return (
@@ -295,10 +375,18 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
           </div>
           <h2 className="text-3xl font-bold text-white">{config.title}</h2>
           <p className="mt-2 max-w-3xl text-slate-400">{config.description}</p>
+          <ActionInboxMobileControls
+            canInstall={!!installPromptEvent}
+            isStandalone={isStandalone}
+            onInstall={handleInstall}
+            notificationsSupported={notificationSupported}
+            notificationPermission={notificationPermission}
+            onEnableNotifications={handleEnableNotifications}
+          />
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         {config.views.map((view) => (
           <button
             key={view.key}
@@ -396,7 +484,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
           />
         )}
 
-        {(!isMobile || showMobileDetail) && (
+        {!isMobile && (
           <ActionInboxContextPanel
             item={selectedItem}
             conversation={selectedConversation}

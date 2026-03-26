@@ -58,6 +58,17 @@ export const triageStyles = {
 
 const attentionOrder = { overdue: 0, high_intent: 1, needs_reply: 2, normal: 3 };
 const heatOrder = { hot: 0, warm: 1, cold: 2 };
+const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+
+export function hasHighValueLeadSignal(text = '') {
+  return /high-value lead:\s*yes/i.test(String(text || ''));
+}
+
+export function extractSalesIntentLabel(text = '') {
+  const match = /sales intent:\s*([a-z_ ]+)/i.exec(String(text || ''));
+  if (!match) return 'HIGH';
+  return match[1].trim().replace(/\s+/g, ' ').toUpperCase();
+}
 
 function cleanText(value, fallback = '') {
   const text = String(value || '').trim();
@@ -221,7 +232,7 @@ function getTriageState(status, needsReply, intentLevel) {
   return 'waiting_on_admin';
 }
 
-function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, category = 'general', urgency = 'normal', aiSummary = '', logId = null, isSnoozed = false, snoozeLabel = null }) {
+function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, category = 'general', urgency = 'normal', aiSummary = '', logId = null, isSnoozed = false, snoozeLabel = null, highValueLead = false }) {
   const overdue = needsReply && getSlaState(waitMinutes) === 'overdue';
   const triageState = getTriageState(status, needsReply, intentLevel);
   return {
@@ -266,6 +277,7 @@ function buildBaseAction({ id, kind, entityId, name, business, channel, intentSu
     recommendedNextAction,
     isSnoozed,
     snoozeLabel,
+    highValueLead,
   };
 }
 
@@ -276,11 +288,13 @@ export function buildConversationAction(conversation, leadsById, adminsById, cur
   const isSnoozed = isConversationSnoozed(conversation);
   const needsReplyBase = conversation.unread_for_admin || ['new', 'open', 'waiting_on_admin'].includes(conversation.status);
   const needsReply = needsReplyBase && !isSnoozed;
-  const intentLevel = scoreIntent(
+  const highValueLead = hasHighValueLeadSignal(conversation.ai_summary);
+  const scoredIntentLevel = scoreIntent(
     [conversation.ai_summary, conversation.subject, conversation.last_message_preview, linkedLead?.message, linkedLead?.next_action].filter(Boolean).join(' '),
     conversation,
     linkedLead,
   );
+  const intentLevel = highValueLead ? 'HIGH INTENT' : scoredIntentLevel;
 
   return buildBaseAction({
     id: `conversation:${conversation.id}`,
@@ -314,6 +328,7 @@ export function buildConversationAction(conversation, leadsById, adminsById, cur
     aiSummary: cleanText(conversation.ai_summary, ''),
     isSnoozed,
     snoozeLabel: buildSnoozeLabel(conversation),
+    highValueLead,
   });
 }
 
@@ -423,6 +438,9 @@ export function matchesOwnership(item, ownerKey) {
 export function sortActionItems(a, b) {
   const attentionDiff = (attentionOrder[a.attentionState] ?? 9) - (attentionOrder[b.attentionState] ?? 9);
   if (attentionDiff !== 0) return attentionDiff;
+  if (a.highValueLead !== b.highValueLead) return a.highValueLead ? -1 : 1;
+  const priorityDiff = (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9);
+  if (priorityDiff !== 0) return priorityDiff;
   if (a.unassigned !== b.unassigned) return a.unassigned ? -1 : 1;
   const heatDiff = (heatOrder[a.salesHeat] ?? 9) - (heatOrder[b.salesHeat] ?? 9);
   if (heatDiff !== 0) return heatDiff;

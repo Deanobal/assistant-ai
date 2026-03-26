@@ -174,7 +174,7 @@ export default function AdminLayout() {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0c0c12]/90 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0c0c12]/90 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-slate-500">AssistantAI Internal Workspace</p>
@@ -184,13 +184,13 @@ export default function AdminLayout() {
             </div>
           </header>
 
-          <main className="px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:pb-8">
+          <main className="px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pb-8">
             <Outlet />
           </main>
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0c0c12]/95 px-2 py-2 backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0c0c12]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-5 gap-2">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));

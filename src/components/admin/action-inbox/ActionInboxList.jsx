@@ -14,7 +14,7 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
           <h3 className="text-base font-semibold text-white">{title}</h3>
           <p className="mt-1 text-sm text-slate-400">Reply speed first. Wait time is the loudest signal.</p>
         </div>
-        <div className="max-h-[72vh] space-y-3 overflow-y-auto p-3">
+        <div className="max-h-[calc(100vh-15rem)] space-y-3 overflow-y-auto overscroll-contain p-3 sm:max-h-[72vh]">
           {items.map((item) => (
             <button
               key={item.id}

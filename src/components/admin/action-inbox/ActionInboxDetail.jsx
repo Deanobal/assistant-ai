@@ -16,9 +16,11 @@ const senderStyles = {
 };
 
 const QUICK_REPLIES = [
-  'Got it — give me 2 mins',
-  'Can you share more details?',
-  'I’ll call you now',
+  { label: 'On it now', text: 'On it now — I’m checking this for you.' },
+  { label: '2 mins', text: 'Got it — give me 2 mins and I’ll reply properly.' },
+  { label: 'Call now', text: 'I can call you now if that’s faster.' },
+  { label: 'More detail', text: 'Can you send one more detail so I can sort this fast?' },
+  { label: 'Booking link', text: 'I’m sending the next step now — keep this chat open for me.' },
 ];
 
 export default function ActionInboxDetail({ item, conversation, linkedLead, currentAdmin, messages, isSaving, onReply, onResolve, onAssignToMe, onSnooze, onBack, showBack }) {
@@ -60,6 +62,22 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
   const phoneHref = item.phone ? `tel:${item.phone.replace(/\s+/g, '')}` : null;
   const lastVisibleMessage = [...messages].filter((entry) => !entry.is_internal_note).slice(-1)[0] || null;
+
+  const sendReplyText = (text) => {
+    if (!text.trim() || isSaving) return;
+    onReply({
+      messageBody: text,
+      isInternalNote: false,
+      reset: () => {
+        setMessageBody('');
+        setIsInternalNote(false);
+        replyInputRef.current?.focus();
+        if (messageListRef.current) {
+          messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+        }
+      },
+    });
+  };
 
   if (item.kind !== 'conversation' || !conversation) {
     return (
@@ -144,45 +162,49 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
           </div>
         </div>
 
-        <div ref={messageListRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Booking</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.bookingStatus}</p>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Last activity</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.lastActivity}</p>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Intent level</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.intentLevel}</p>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Category</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.category.replace(/_/g, ' ')}</p>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Urgency</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.urgency.replace(/_/g, ' ')}</p>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Owner</p>
-              <p className="mt-2 text-sm font-medium text-white">{item.owner}</p>
-            </div>
-          </div>
+        <div ref={messageListRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
+          {!showBack && (
+            <>
+              <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Booking</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.bookingStatus}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Last activity</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.lastActivity}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Intent level</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.intentLevel}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Category</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.category.replace(/_/g, ' ')}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Urgency</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.urgency.replace(/_/g, ' ')}</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-[#111827] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Owner</p>
+                  <p className="mt-2 text-sm font-medium text-white">{item.owner}</p>
+                </div>
+              </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Current AI Summary</p>
-              <p className="mt-3 text-base leading-7 text-slate-100">{item.aiSummary || item.intentSummary}</p>
-            </div>
-            <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recommended Next Action</p>
-              <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
-              {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
-            </div>
-          </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Current AI Summary</p>
+                  <p className="mt-3 text-base leading-7 text-slate-100">{item.aiSummary || item.intentSummary}</p>
+                </div>
+                <div className="rounded-3xl border border-white/5 bg-[#111827] p-5">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recommended Next Action</p>
+                  <p className="mt-3 text-base leading-7 text-slate-100">{linkedLead?.next_action || item.recommendedNextAction}</p>
+                  {item.snoozeLabel && <p className="mt-3 text-sm text-amber-200">{item.snoozeLabel}</p>}
+                </div>
+              </div>
+            </>
+          )}
 
           {lastVisibleMessage && (
             <div className="mt-5 rounded-3xl border border-cyan-500/15 bg-cyan-500/5 p-4">
@@ -213,8 +235,15 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
           <div className="space-y-3">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {QUICK_REPLIES.map((reply) => (
-                <Button key={reply} type="button" variant="outline" onClick={() => { setMessageBody(reply); replyInputRef.current?.focus(); }} className="h-10 rounded-2xl border-white/10 bg-[#111827] whitespace-nowrap text-white hover:bg-slate-800">
-                  {reply}
+                <Button
+                  key={reply.label}
+                  type="button"
+                  variant="outline"
+                  disabled={isSaving || isInternalNote}
+                  onClick={() => sendReplyText(reply.text)}
+                  className="h-10 rounded-2xl border-white/10 bg-[#111827] whitespace-nowrap text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {reply.label}
                 </Button>
               ))}
             </div>
@@ -224,7 +253,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               autoFocus
               value={messageBody}
               onChange={(event) => setMessageBody(event.target.value)}
-              placeholder={isInternalNote ? 'Add internal note' : 'Reply to the conversation'}
+              placeholder={isInternalNote ? 'Add internal note' : 'Reply instantly…'}
               className="min-h-[110px] rounded-2xl border-white/10 bg-[#111827] text-white placeholder:text-slate-500"
             />
 
