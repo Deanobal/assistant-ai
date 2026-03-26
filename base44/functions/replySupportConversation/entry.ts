@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 function mapPriorityFromUrgency(urgencyLevel) {
   if (urgencyLevel === 'urgent') return 'urgent';
@@ -190,11 +190,19 @@ Deno.serve(async (req) => {
       visitor_phone: aiResult?.captured_phone || conversation.visitor_phone,
       priority: mapConversationPriority(aiResult, conversation.priority),
       ai_mode: aiResult ? aiResult.ai_mode : conversation.ai_mode,
+      ai_stage: aiResult ? aiResult.ai_stage || 'knowledge_answer' : 'waiting_on_customer',
+      primary_intent: aiResult ? aiResult.primary_intent || null : conversation.primary_intent,
+      detected_intents: aiResult ? aiResult.detected_intents || [] : conversation.detected_intents,
+      pricing_shown: aiResult ? aiResult.pricing_shown || false : conversation.pricing_shown,
+      high_value_lead: aiResult ? aiResult.high_value_lead || false : conversation.high_value_lead,
       enquiry_category: aiResult ? aiResult.enquiry_category : conversation.enquiry_category,
       urgency_level: aiResult ? aiResult.urgency_level : conversation.urgency_level,
       ai_summary: aiResult ? aiResult.ai_summary : conversation.ai_summary,
       ai_last_response_at: aiMessage ? now : conversation.ai_last_response_at,
       ai_handover_reason: aiResult ? aiResult.ai_handover_reason || null : conversation.ai_handover_reason,
+      preferred_contact_time: aiResult ? aiResult.preferred_contact_time || null : conversation.preferred_contact_time,
+      captured_business_type: aiResult ? aiResult.captured_business_type || null : conversation.captured_business_type,
+      qualification_needed: aiResult ? aiResult.qualification_needed || [] : conversation.qualification_needed,
     });
 
     await base44.asServiceRole.entities.NotificationLog.create({
@@ -217,15 +225,21 @@ Deno.serve(async (req) => {
         source_page: sourcePage || conversation.source_page || '/',
         linked_lead_id: conversation.linked_lead_id || null,
         ai_mode: aiResult?.ai_mode || conversation.ai_mode || null,
+        ai_stage: aiResult?.ai_stage || (conversation.ai_mode === 'ai_active' ? conversation.ai_stage || 'knowledge_answer' : 'waiting_on_customer'),
+        primary_intent: aiResult?.primary_intent || conversation.primary_intent || null,
+        detected_intents: aiResult?.detected_intents || conversation.detected_intents || [],
         enquiry_category: aiResult?.enquiry_category || conversation.enquiry_category || null,
         urgency_level: aiResult?.urgency_level || conversation.urgency_level || null,
         issue_category: aiResult?.issue_category || null,
         confidence_level: aiResult?.confidence_level || null,
+        feature_status: aiResult?.feature_status || null,
         steps_taken: aiResult?.steps_taken || null,
         recommended_next_action: aiResult?.recommended_next_action || null,
         sales_intent_level: aiResult?.sales_intent_level || null,
+        pricing_shown: aiResult?.pricing_shown || conversation.pricing_shown || false,
         high_value_lead: aiResult?.high_value_lead || false,
         captured_business_type: aiResult?.captured_business_type || null,
+        preferred_contact_time: aiResult?.preferred_contact_time || conversation.preferred_contact_time || null,
         qualification_needed: aiResult?.qualification_needed || [],
       },
     });
@@ -266,9 +280,14 @@ Deno.serve(async (req) => {
           recommended_action: aiResult?.recommended_next_action || (conversation.visitor_phone ? 'Call lead' : 'Reply now'),
           source_page: sourcePage || conversation.source_page || '/',
           ai_mode: handoverMode,
+          ai_stage: aiResult?.ai_stage || conversation.ai_stage || 'handoff_waiting',
+          primary_intent: aiResult?.primary_intent || conversation.primary_intent || null,
+          detected_intents: aiResult?.detected_intents || conversation.detected_intents || [],
           ai_handover_reason: aiResult?.ai_handover_reason || conversation.ai_handover_reason || null,
           ai_summary: handoverSummary,
+          feature_status: aiResult?.feature_status || null,
           sales_intent_level: aiResult?.sales_intent_level || null,
+          pricing_shown: aiResult?.pricing_shown || conversation.pricing_shown || false,
           high_value_lead: aiResult?.high_value_lead || false,
           captured_business_type: aiResult?.captured_business_type || null,
           qualification_needed: aiResult?.qualification_needed || [],
