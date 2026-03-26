@@ -17,6 +17,15 @@ const systemIntro = {
   message_body: 'You’re chatting with AssistantAI Assistant. I can help qualify your enquiry, answer straightforward questions, and route anything urgent or complex to our human team.',
 };
 
+function mergeThreadMessages(currentMessages, newMessages) {
+  const next = [...currentMessages];
+  newMessages.forEach((message) => {
+    if (!message?.id || next.some((existing) => existing.id === message.id)) return;
+    next.push(message);
+  });
+  return next;
+}
+
 export default function ChatWidget() {
   const location = useLocation();
   const previewTestMode = isPreviewTestMode();
@@ -108,21 +117,36 @@ export default function ChatWidget() {
   };
 
   const handleReply = async () => {
+    if (!replyBody.trim() || !conversation) return;
+
+    const messageToSend = replyBody.trim();
+    const optimisticMessage = {
+      id: `pending-${Date.now()}`,
+      sender_type: 'visitor',
+      sender_name: form.name || conversation.visitor_name || 'Visitor',
+      sender_email: form.email || conversation.visitor_email || '',
+      message_body: messageToSend,
+    };
+
     setIsSubmitting(true);
     setThreadError('');
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setReplyBody('');
+
     try {
       const response = await base44.functions.invoke('replySupportConversation', {
         conversationId: conversation.id,
-        email: form.email,
-        name: form.name,
-        message: replyBody,
+        email: form.email || conversation.visitor_email,
+        name: form.name || conversation.visitor_name,
+        message: messageToSend,
         sourcePage: location.pathname,
         runtimeDataEnv,
       });
-      setMessages((prev) => response.data.aiMessage ? [...prev, response.data.message, response.data.aiMessage] : [...prev, response.data.message]);
+      setMessages((prev) => mergeThreadMessages(prev.filter((message) => message.id !== optimisticMessage.id), [response.data.message, response.data.aiMessage].filter(Boolean)));
       setConversation((prev) => response.data.conversation || prev);
-      setReplyBody('');
     } catch (error) {
+      setMessages((prev) => prev.filter((message) => message.id !== optimisticMessage.id));
+      setReplyBody(messageToSend);
       setThreadError(error?.response?.data?.error || error.message || 'Unable to send your reply right now.');
     } finally {
       setIsSubmitting(false);
@@ -190,13 +214,14 @@ export default function ChatWidget() {
               ) : (
                 <>
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-gray-400">
-                    Conversation status: {conversation.status}. Our team reviews messages and will get back to you shortly.
+                    Conversation status: {conversation.status}. You can keep replying here while the conversation continues.
                   </div>
                   <SupportChatComposer
                     value={replyBody}
                     onChange={setReplyBody}
                     onSend={handleReply}
                     isLoading={isSubmitting || previewTestMode}
+                    canReply={conversation.status !== 'closed'}
                   />
                 </>
               )}

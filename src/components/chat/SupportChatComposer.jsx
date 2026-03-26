@@ -2,7 +2,7 @@ import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
-export default function SupportChatComposer({ value, onChange, onSend, isLoading }) {
+export default function SupportChatComposer({ value, onChange, onSend, isLoading, canReply = true }) {
   return (
     <div className="space-y-3">
       <Textarea
@@ -13,7 +13,7 @@ export default function SupportChatComposer({ value, onChange, onSend, isLoading
       />
       <Button
         onClick={onSend}
-        disabled={isLoading || !value.trim()}
+        disabled={isLoading || !value.trim() || !canReply}
         className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
       >
         {isLoading ? 'Sending…' : 'Send reply'}

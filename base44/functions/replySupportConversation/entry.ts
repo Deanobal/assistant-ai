@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
     const nextConversation = await base44.asServiceRole.entities.SupportConversation.update(conversation.id, {
       ...conversation,
       updated_at: now,
-      status: aiResult ? mapStatusFromAiMode(aiResult.ai_mode) : 'waiting_on_admin',
+      status: aiResult ? mapStatusFromAiMode(aiResult.ai_mode) : 'waiting_on_customer',
       source_page: sourcePage || conversation.source_page,
       unread_for_admin: true,
       unread_for_client: false,
