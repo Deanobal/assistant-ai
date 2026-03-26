@@ -59,6 +59,12 @@ export const triageStyles = {
 const attentionOrder = { overdue: 0, high_intent: 1, needs_reply: 2, normal: 3 };
 const heatOrder = { hot: 0, warm: 1, cold: 2 };
 const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+const qualityOrder = { high_value: 0, urgent: 1, medium: 2, low: 3 };
+const pricingKeywords = /(pricing|price|quote|cost|proposal)/i;
+const readyKeywords = /(ready to start|ready|start now|sign me up|book now|call me|call me back|give me a call)/i;
+const urgentKeywords = /(urgent|asap|immediately|right now|critical)/i;
+const integrationsKeywords = /(integration|integrations|hubspot|salesforce|zapier|crm|calendar)/i;
+const howItWorksKeywords = /(how does this work|how it works|how-it-works|workflow)/i;
 
 export function hasHighValueLeadSignal(text = '') {
   return /high-value lead:\s*yes/i.test(String(text || ''));
@@ -155,23 +161,44 @@ function getBookingStatus(lead) {
   return 'Not booked';
 }
 
-function scoreIntent(text, conversation, lead, extraScore = 0) {
-  const normalized = String(text || '').toLowerCase();
+export function detectLeadIntentTag(text = '') {
+  const value = String(text || '');
+  if (pricingKeywords.test(value)) return 'pricing';
+  if (readyKeywords.test(value)) return 'ready_to_start';
+  if (integrationsKeywords.test(value)) return 'integrations';
+  if (howItWorksKeywords.test(value)) return 'how_it_works';
+  return 'general';
+}
+
+export function formatLeadIntentLabel(intentTag = 'general') {
+  return intentTag.replace(/_/g, ' ');
+}
+
+export function buildLeadScoringProfile(text, conversation = null, lead = null, extraScore = 0) {
+  const value = String(text || '');
   let score = extraScore;
 
-  if (/(yes|call me|phone me|pricing|price|quote|cost|ready|keen|book|booking|schedule|available|demo|trial|proposal)/.test(normalized)) score += 3;
-  if (/(integration|integrations|hubspot|salesforce|zapier|crm|calendar|automation|follow-up|follow up|revenue|how does this work|how it works)/.test(normalized)) score += 2;
-  if (/(high-value lead:\s*yes|sales intent:\s*high)/.test(normalized)) score += 3;
-  if (/(help|issue|problem|support|question)/.test(normalized)) score += 1;
-  if (conversation?.enquiry_category === 'sales' || conversation?.enquiry_category === 'urgent') score += 2;
-  if (conversation?.ai_mode === 'escalated') score += 2;
-  if (['urgent', 'high'].includes(conversation?.urgency_level) || ['urgent', 'high'].includes(conversation?.priority)) score += 2;
-  if (lead?.booking_intent || ['requested', 'confirmed'].includes(lead?.booking_status)) score += 2;
-  if (conversation?.updated_at && conversation?.created_at && conversation.updated_at !== conversation.created_at) score += 1;
+  if (pricingKeywords.test(value) || readyKeywords.test(value) || urgentKeywords.test(value)) score += 3;
+  if (integrationsKeywords.test(value) || howItWorksKeywords.test(value)) score += 2;
+  if (score === extraScore) score += 1;
+  if (conversation?.enquiry_category === 'sales') score += 1;
+  if (conversation?.ai_mode === 'escalated' || conversation?.urgency_level === 'urgent' || conversation?.priority === 'urgent') score += 1;
+  if (lead?.booking_intent || ['requested', 'confirmed'].includes(lead?.booking_status)) score += 1;
 
-  if (score >= 5) return 'HIGH INTENT';
-  if (score >= 2) return 'MEDIUM';
-  return 'LOW';
+  const intentTag = detectLeadIntentTag(value);
+  const hasCapturedContact = !!cleanText(lead?.mobile_number || conversation?.visitor_phone, '') || !!cleanText(lead?.email || conversation?.visitor_email, '');
+  const highValueLead = hasHighValueLeadSignal(value) || score >= 4 || hasCapturedContact;
+  const leadQuality = highValueLead ? 'high_value' : (conversation?.urgency_level === 'urgent' || conversation?.priority === 'urgent' ? 'urgent' : score >= 3 ? 'medium' : 'low');
+  const intentLevel = highValueLead || score >= 4 ? 'HIGH INTENT' : score >= 2 ? 'MEDIUM' : 'LOW';
+
+  return {
+    score,
+    intentTag,
+    intentLabel: formatLeadIntentLabel(intentTag),
+    highValueLead,
+    leadQuality,
+    intentLevel,
+  };
 }
 
 function getSalesHeat(intentLevel, needsReply) {
@@ -232,7 +259,7 @@ function getTriageState(status, needsReply, intentLevel) {
   return 'waiting_on_admin';
 }
 
-function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, category = 'general', urgency = 'normal', aiSummary = '', logId = null, isSnoozed = false, snoozeLabel = null, highValueLead = false }) {
+function buildBaseAction({ id, kind, entityId, name, business, channel, intentSummary, preview, priority, owner, ownerId = null, assignedState, waitMinutes, needsReply, linkedLeadId = null, phone = '', email = '', sourcePage = '', status = 'open', primaryLabel, secondaryUrl = null, actionUrl, bookingStatus, lastActivity, intentLevel, recommendedNextAction, category = 'general', urgency = 'normal', aiSummary = '', logId = null, isSnoozed = false, snoozeLabel = null, highValueLead = false, leadScore = 1, leadQuality = 'low', intentTag = 'general' }) {
   const overdue = needsReply && getSlaState(waitMinutes) === 'overdue';
   const triageState = getTriageState(status, needsReply, intentLevel);
   return {
@@ -278,6 +305,9 @@ function buildBaseAction({ id, kind, entityId, name, business, channel, intentSu
     isSnoozed,
     snoozeLabel,
     highValueLead,
+    leadScore,
+    leadQuality,
+    intentTag,
   };
 }
 
@@ -288,13 +318,12 @@ export function buildConversationAction(conversation, leadsById, adminsById, cur
   const isSnoozed = isConversationSnoozed(conversation);
   const needsReplyBase = conversation.unread_for_admin || ['new', 'open', 'waiting_on_admin'].includes(conversation.status);
   const needsReply = needsReplyBase && !isSnoozed;
-  const highValueLead = hasHighValueLeadSignal(conversation.ai_summary);
-  const scoredIntentLevel = scoreIntent(
+  const leadProfile = buildLeadScoringProfile(
     [conversation.ai_summary, conversation.subject, conversation.last_message_preview, linkedLead?.message, linkedLead?.next_action].filter(Boolean).join(' '),
     conversation,
     linkedLead,
   );
-  const intentLevel = highValueLead ? 'HIGH INTENT' : scoredIntentLevel;
+  const { highValueLead, intentLevel, leadScore, leadQuality, intentTag } = leadProfile;
 
   return buildBaseAction({
     id: `conversation:${conversation.id}`,
@@ -329,6 +358,9 @@ export function buildConversationAction(conversation, leadsById, adminsById, cur
     isSnoozed,
     snoozeLabel: buildSnoozeLabel(conversation),
     highValueLead,
+    leadScore,
+    leadQuality,
+    intentTag,
   });
 }
 
@@ -336,17 +368,20 @@ export function buildLeadAlertAction(log, leadsById, currentAdmin) {
   const linkedLead = leadsById[log.entity_id] || null;
   const waitMinutes = getWaitMinutes(log.triggered_at || log.created_date);
   const channel = log.metadata?.channel_label || (log.event_type === 'customer_sms_reply_received' ? 'SMS' : 'Lead');
-  const intentLevel = scoreIntent(
+  const leadProfile = buildLeadScoringProfile(
     [log.title, log.message, log.metadata?.intent_summary, log.metadata?.message_preview, linkedLead?.message, linkedLead?.next_action].filter(Boolean).join(' '),
     {
       enquiry_category: log.metadata?.enquiry_category || linkedLead?.enquiry_type,
       urgency_level: log.metadata?.urgency_level || 'high',
       priority: log.metadata?.priority || 'high',
       ai_mode: log.metadata?.alert_category === 'high_intent_inbound_sms' ? 'escalated' : 'human_required',
+      visitor_phone: log.metadata?.mobile_number,
+      visitor_email: log.metadata?.email,
     },
     linkedLead,
     log.metadata?.requires_admin_attention ? 2 : 0,
   );
+  const { intentLevel, highValueLead, leadScore, leadQuality, intentTag } = leadProfile;
 
   return buildBaseAction({
     id: `lead-alert:${log.id}`,
@@ -375,13 +410,18 @@ export function buildLeadAlertAction(log, leadsById, currentAdmin) {
     lastActivity: formatActivity(log.triggered_at || log.created_date),
     intentLevel,
     recommendedNextAction: getRecommendedNextAction(linkedLead, intentLevel, !!(log.metadata?.mobile_number || linkedLead?.mobile_number)),
+    highValueLead,
+    leadScore,
+    leadQuality,
+    intentTag,
   });
 }
 
 export function buildUnmatchedSmsAction(log) {
   const waitMinutes = getWaitMinutes(log.triggered_at || log.created_date);
   const senderNumber = cleanText(log.metadata?.sender_number, 'Unknown number');
-  const intentLevel = log.metadata?.requires_admin_attention ? 'HIGH INTENT' : 'MEDIUM';
+  const leadProfile = buildLeadScoringProfile(log.message || log.title, { urgency_level: log.metadata?.requires_admin_attention ? 'urgent' : 'normal', visitor_phone: senderNumber }, null, log.metadata?.requires_admin_attention ? 2 : 0);
+  const { intentLevel, highValueLead, leadScore, leadQuality, intentTag } = leadProfile;
 
   return buildBaseAction({
     id: `unmatched-sms:${log.id}`,
@@ -409,6 +449,10 @@ export function buildUnmatchedSmsAction(log) {
     lastActivity: formatActivity(log.triggered_at || log.created_date),
     intentLevel,
     recommendedNextAction: 'Match SMS to lead',
+    highValueLead,
+    leadScore,
+    leadQuality,
+    intentTag,
   });
 }
 
@@ -436,11 +480,12 @@ export function matchesOwnership(item, ownerKey) {
 }
 
 export function sortActionItems(a, b) {
-  const attentionDiff = (attentionOrder[a.attentionState] ?? 9) - (attentionOrder[b.attentionState] ?? 9);
-  if (attentionDiff !== 0) return attentionDiff;
-  if (a.highValueLead !== b.highValueLead) return a.highValueLead ? -1 : 1;
+  const qualityDiff = (qualityOrder[a.leadQuality] ?? 9) - (qualityOrder[b.leadQuality] ?? 9);
+  if (qualityDiff !== 0) return qualityDiff;
   const priorityDiff = (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9);
   if (priorityDiff !== 0) return priorityDiff;
+  const attentionDiff = (attentionOrder[a.attentionState] ?? 9) - (attentionOrder[b.attentionState] ?? 9);
+  if (attentionDiff !== 0) return attentionDiff;
   if (a.unassigned !== b.unassigned) return a.unassigned ? -1 : 1;
   const heatDiff = (heatOrder[a.salesHeat] ?? 9) - (heatOrder[b.salesHeat] ?? 9);
   if (heatDiff !== 0) return heatDiff;

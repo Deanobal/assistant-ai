@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { channelStyles, getTriageLabel, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
 
+const leadQualityStyles = {
+  high_value: 'border-violet-500/30 bg-violet-500/10 text-violet-200',
+  urgent: 'border-red-500/30 bg-red-500/10 text-red-200',
+  medium: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+  low: 'border-slate-700 bg-slate-800 text-slate-200',
+};
+
 export default function ActionInboxList({ title, items, selectedId, onSelect, onQuickAssign, onQuickSnooze }) {
   return (
     <Card className="border-white/5 bg-[#0f172a] shadow-none">
@@ -30,6 +37,8 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
                     <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
                     <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
                     <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
+                    <Badge className={leadQualityStyles[item.leadQuality] || leadQualityStyles.low}>{item.leadQuality.replace(/_/g, ' ')}</Badge>
+                    <Badge className="border-white/10 bg-white/5 text-slate-200">Score {item.leadScore}</Badge>
                   </div>
                 </div>
                 <div className={`min-w-[84px] rounded-2xl border px-3 py-2 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
@@ -51,7 +60,7 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
                 {item.snoozeLabel && <span className="truncate text-amber-200">{item.snoozeLabel}</span>}
               </div>
 
-              <div className="mt-4 grid grid-cols-[1fr_repeat(4,minmax(0,auto))] gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button type="button" onClick={(event) => { event.stopPropagation(); onSelect(item); }} className="h-12 rounded-2xl bg-white text-slate-900 hover:bg-slate-200">
                   <MessageSquareReply className="mr-1 h-4 w-4" />
                   Reply Now
@@ -59,27 +68,28 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
                 {item.phone ? (
                   <Button asChild type="button" variant="outline" className="h-12 rounded-2xl border-white/10 bg-transparent px-3 text-white hover:bg-white/5">
                     <a href={`tel:${item.phone.replace(/\s+/g, '')}`} onClick={(event) => event.stopPropagation()}>
-                      <Phone className="h-4 w-4" />
+                      <Phone className="mr-1 h-4 w-4" />
+                      {item.highValueLead || item.intentLevel === 'HIGH INTENT' ? 'Call now' : 'Call'}
                     </a>
                   </Button>
-                ) : <div />}
+                ) : null}
                 {item.secondaryUrl ? (
                   <Button asChild type="button" variant="outline" className="h-12 rounded-2xl border-white/10 bg-transparent px-3 text-white hover:bg-white/5">
                     <Link to={item.secondaryUrl} onClick={(event) => event.stopPropagation()}>
                       <ArrowUpRight className="h-4 w-4" />
                     </Link>
                   </Button>
-                ) : <div />}
+                ) : null}
                 {item.kind === 'conversation' ? (
                   <Button type="button" variant="outline" onClick={(event) => { event.stopPropagation(); onQuickAssign(item); }} className="h-12 rounded-2xl border-white/10 bg-transparent px-3 text-white hover:bg-white/5">
                     <UserPlus className="h-4 w-4" />
                   </Button>
-                ) : <div />}
+                ) : null}
                 {item.kind === 'conversation' ? (
                   <Button type="button" variant="outline" onClick={(event) => { event.stopPropagation(); onQuickSnooze(item, 15); }} className="h-12 rounded-2xl border-white/10 bg-transparent px-3 text-white hover:bg-white/5">
                     <Bell className="h-4 w-4" />
                   </Button>
-                ) : <div />}
+                ) : null}
               </div>
             </button>
           ))}

@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, CheckCircle2, Phone, Reply, UserRound } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Phone, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { channelStyles, getTriageLabel, intentLevelStyles, slaStyles, triageStyles } from './actionInboxUtils';
+import { QUICK_REPLY_CATEGORIES } from './quickReplyPresets';
 
 const senderStyles = {
   visitor: 'border border-white/10 bg-slate-900 text-slate-100',
@@ -15,17 +16,17 @@ const senderStyles = {
   system: 'border border-cyan-500/20 bg-cyan-500/10 text-cyan-50',
 };
 
-const QUICK_REPLIES = [
-  { label: 'On it now', text: 'On it now — I’m checking this for you.' },
-  { label: '2 mins', text: 'Got it — give me 2 mins and I’ll reply properly.' },
-  { label: 'Call now', text: 'I can call you now if that’s faster.' },
-  { label: 'More detail', text: 'Can you send one more detail so I can sort this fast?' },
-  { label: 'Booking link', text: 'I’m sending the next step now — keep this chat open for me.' },
-];
+const leadQualityStyles = {
+  high_value: 'border-violet-500/30 bg-violet-500/10 text-violet-200',
+  urgent: 'border-red-500/30 bg-red-500/10 text-red-200',
+  medium: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+  low: 'border-slate-700 bg-slate-800 text-slate-200',
+};
 
 export default function ActionInboxDetail({ item, conversation, linkedLead, currentAdmin, messages, isSaving, onReply, onResolve, onAssignToMe, onSnooze, onBack, showBack }) {
   const [messageBody, setMessageBody] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
+  const [activeQuickReplyCategory, setActiveQuickReplyCategory] = useState('speed');
   const replyInputRef = useRef(null);
   const messageListRef = useRef(null);
 
@@ -62,6 +63,8 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
   const phoneHref = item.phone ? `tel:${item.phone.replace(/\s+/g, '')}` : null;
   const lastVisibleMessage = [...messages].filter((entry) => !entry.is_internal_note).slice(-1)[0] || null;
+  const showCallNow = !!phoneHref && (item.highValueLead || item.intentLevel === 'HIGH INTENT');
+  const visibleQuickReplies = QUICK_REPLY_CATEGORIES.find((category) => category.key === activeQuickReplyCategory)?.replies || QUICK_REPLY_CATEGORIES[0].replies;
 
   const sendReplyText = (text) => {
     if (!text.trim() || isSaving) return;
@@ -116,7 +119,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
             </Button>
             {phoneHref && (
               <Button asChild variant="outline" className="h-11 rounded-xl border-white/10 bg-transparent text-white hover:bg-white/5">
-                <a href={phoneHref}><Phone className="mr-2 h-4 w-4" />Call</a>
+                <a href={phoneHref}><Phone className="mr-2 h-4 w-4" />{showCallNow ? 'Call now' : 'Call'}</a>
               </Button>
             )}
           </div>
@@ -142,6 +145,8 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
                 <Badge className={channelStyles[item.channel] || channelStyles.Support}>{item.channel}</Badge>
                 <Badge className={triageStyles[item.triageState] || triageStyles.waiting_on_admin}>{getTriageLabel(item.triageState)}</Badge>
                 <Badge className={intentLevelStyles[item.intentLevel] || intentLevelStyles.LOW}>{item.intentLevel}</Badge>
+                <Badge className={leadQualityStyles[item.leadQuality] || leadQualityStyles.low}>{item.leadQuality.replace(/_/g, ' ')}</Badge>
+                <Badge className="border-white/10 bg-white/5 text-slate-200">Score {item.leadScore}</Badge>
               </div>
               <p className="mt-2 break-words text-sm text-slate-300">{item.business}</p>
               <p className="mt-1 break-words text-sm text-slate-400">{item.email}{item.phone ? ` · ${item.phone}` : ''}</p>
@@ -151,7 +156,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
             <div className="flex items-start gap-3">
               {phoneHref && (
                 <Button asChild type="button" variant="outline" className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
-                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> Call</a>
+                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> {showCallNow ? 'Call now' : 'Call'}</a>
                 </Button>
               )}
               <div className={`rounded-3xl border px-4 py-3 text-center ${slaStyles[item.slaState] || slaStyles.normal}`}>
@@ -233,20 +238,33 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
         <div className="sticky bottom-0 border-t border-white/5 bg-[#0f172a] px-4 py-4 sm:px-5">
           <div className="space-y-3">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {QUICK_REPLIES.map((reply) => (
-                <Button
-                  key={reply.label}
-                  type="button"
-                  variant="outline"
-                  disabled={isSaving || isInternalNote}
-                  onClick={() => sendReplyText(reply.text)}
-                  className="h-10 rounded-2xl border-white/10 bg-[#111827] whitespace-nowrap text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {reply.label}
-                </Button>
-              ))}
-            </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+           {QUICK_REPLY_CATEGORIES.map((category) => (
+             <Button
+               key={category.key}
+               type="button"
+               variant="outline"
+               onClick={() => setActiveQuickReplyCategory(category.key)}
+               className={`h-10 rounded-2xl whitespace-nowrap ${activeQuickReplyCategory === category.key ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200' : 'border-white/10 bg-[#111827] text-white hover:bg-slate-800'}`}
+             >
+               {category.label}
+             </Button>
+           ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+           {visibleQuickReplies.slice(0, 5).map((reply) => (
+             <Button
+               key={reply}
+               type="button"
+               variant="outline"
+               disabled={isSaving || isInternalNote}
+               onClick={() => sendReplyText(reply)}
+               className="h-10 rounded-2xl border-white/10 bg-[#111827] whitespace-nowrap text-white hover:bg-slate-800 disabled:opacity-50"
+             >
+               {reply}
+             </Button>
+           ))}
+          </div>
 
             <Textarea
               ref={replyInputRef}
@@ -257,13 +275,10 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
               className="min-h-[110px] rounded-2xl border-white/10 bg-[#111827] text-white placeholder:text-slate-500"
             />
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-              <Button type="button" onClick={() => replyInputRef.current?.focus()} className="h-11 rounded-2xl bg-white text-slate-900 hover:bg-slate-200">
-                <Reply className="mr-2 h-4 w-4" /> Reply
-              </Button>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {phoneHref ? (
                 <Button asChild type="button" variant="outline" className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
-                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> Call</a>
+                  <a href={phoneHref}><Phone className="mr-2 h-4 w-4" /> {showCallNow ? 'Call now' : 'Call'}</a>
                 </Button>
               ) : <div />}
               <Button type="button" variant="outline" onClick={onAssignToMe} className="h-11 rounded-2xl border-white/10 bg-transparent text-white hover:bg-white/5">
