@@ -1,7 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import CrispChat from './chat/CrispChat';
 
 const navLinks = [
@@ -67,13 +66,8 @@ function Navbar() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {mobileOpen &&
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
+      {mobileOpen &&
+        <div className="md:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
 
             <div className="px-6 py-4 space-y-3">
               {mobileNavLinks.map((link) =>
@@ -89,9 +83,8 @@ function Navbar() {
                 </Link>
             )}
             </div>
-          </motion.div>
+          </div>
         }
-      </AnimatePresence>
     </nav>);
 
 }

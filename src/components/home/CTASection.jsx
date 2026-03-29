@@ -1,6 +1,5 @@
-import React from 'react';
+import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 export default function CTASection() {
@@ -9,11 +8,7 @@ export default function CTASection() {
       <div className="absolute inset-0 bg-radial-glow" />
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px]" />
       <div className="relative max-w-4xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        <div>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-balance">
             Ready to capture more leads without hiring more staff?
           </h2>
@@ -35,7 +30,7 @@ export default function CTASection() {
               Speak to Our Team
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

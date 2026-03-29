@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import * as React from 'react';
 import { PhoneMissed, Clock3, Users, ArrowRightCircle } from 'lucide-react';
 
 const problems = [
@@ -26,24 +25,14 @@ export default function ProblemSection() {
     <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-8 lg:gap-12 items-start">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <p className="text-cyan-400 mb-3 text-lg font-medium">WHAT PROBLEM WE SOLVE</p>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-balance">
               Most businesses are not losing leads because demand is weak. They are losing them because no one responds fast enough.
             </h2>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.08 }}
-            className="rounded-[28px] border border-white/5 bg-[#12121a] p-6 md:p-7"
-          >
+          <div className="rounded-[28px] border border-white/5 bg-[#12121a] p-6 md:p-7">
             <div className="grid sm:grid-cols-2 gap-4">
               {problems.map((item) => (
                 <div key={item.text} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
@@ -57,7 +46,7 @@ export default function ProblemSection() {
             <p className="mt-6 text-gray-400 leading-relaxed">
               AssistantAI fixes that with a done-for-you AI receptionist and automation system built for Australian businesses.
             </p>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

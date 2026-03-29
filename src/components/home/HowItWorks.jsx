@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import * as React from 'react';
 import { PhoneCall, Lightbulb, Link as LinkIcon, Rocket } from 'lucide-react';
 
 const steps = [
@@ -13,27 +12,18 @@ export default function HowItWorks() {
   return (
     <section className="relative py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">PROCESS</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">How It Works</h2>
           <p className="mt-4 text-gray-400 max-w-xl mx-auto">
             From strategy call to live AI — we handle everything so you can focus on running your business.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((step, index) => (
-            <motion.div
+            <div
               key={step.step}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
               className="relative p-6 rounded-2xl border border-white/5 bg-[#12121a]"
             >
               <span className="text-5xl font-bold text-white/[0.03] absolute top-4 right-4">{step.step}</span>
@@ -42,7 +32,7 @@ export default function HowItWorks() {
               </div>
               <h3 className="text-white font-semibold mb-2">{step.title}</h3>
               <p className="text-gray-500 text-base leading-relaxed">{step.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

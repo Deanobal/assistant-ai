@@ -1,6 +1,5 @@
-import React from 'react';
+import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Wrench, HeartPulse, Building2, Briefcase, ArrowRight } from 'lucide-react';
 
 const industries = [
@@ -15,24 +14,15 @@ export default function UseCasesPreview() {
     <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">INDUSTRIES / USE CASES</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built for the Businesses Where Speed Matters</h2>
-        </motion.div>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {industries.map((item, index) => (
-            <motion.div
+            <div
               key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.08 }}
               className="p-6 rounded-2xl border border-white/5 bg-[#12121a]"
             >
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
@@ -40,7 +30,7 @@ export default function UseCasesPreview() {
               </div>
               <h3 className="text-white font-semibold mb-2">{item.title}</h3>
               <p className="text-gray-400 leading-relaxed">{item.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
 

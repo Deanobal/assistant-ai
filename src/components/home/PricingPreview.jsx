@@ -1,6 +1,5 @@
-import React from 'react';
+import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 const plans = [
   {
@@ -31,27 +30,18 @@ export default function PricingPreview() {
     <section className="relative py-16 md:py-20 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING SNAPSHOT</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple Pricing for a Productised Service</h2>
           <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
             All plans include setup, support, optimisation, and ongoing management.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           {plans.map((plan, index) => (
-            <motion.div
+            <div
               key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
               className={`relative p-8 rounded-2xl border ${
                 plan.featured
                   ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border'
@@ -86,7 +76,7 @@ export default function PricingPreview() {
               >
                 Book Free Strategy Call
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

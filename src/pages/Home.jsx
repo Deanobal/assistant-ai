@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
 import ProblemSection from '../components/home/ProblemSection';
