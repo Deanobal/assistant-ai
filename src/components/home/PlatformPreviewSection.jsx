@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ArrowRight, PhoneCall, Users, CalendarCheck2, Send, PlugZap } from 'lucide-react';
 
 const previewItems = [
@@ -15,18 +14,13 @@ export default function PlatformPreviewSection() {
   return (
     <section className="relative py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">PLATFORM PREVIEW</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">See the Operating Layer Behind the Calls</h2>
           <p className="mt-4 text-gray-400 max-w-3xl mx-auto">
             AssistantAI gives you a cleaner view of calls handled, leads captured, appointments booked, follow-up status, and integrations connected.
           </p>
-        </motion.div>
+        </div>
 
         <div className="rounded-[32px] border border-white/5 bg-[#12121a] p-6 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
           <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">

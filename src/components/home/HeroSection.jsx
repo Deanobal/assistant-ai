@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ArrowRight, Play } from 'lucide-react';
 
 export default function HeroSection({ heroImage }) {
@@ -18,12 +17,7 @@ export default function HeroSection({ heroImage }) {
 
       <div className="relative max-w-7xl mx-auto px-6 py-10 md:px-8 md:py-12 lg:min-h-[calc(100vh-4rem)] lg:flex lg:items-center">
         <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.82fr)] gap-10 lg:gap-14 items-center w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl"
-          >
+          <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               <span className="text-cyan-400 text-sm md:text-base font-medium">Premium AI automation for Australian service businesses</span>
@@ -54,14 +48,9 @@ export default function HeroSection({ heroImage }) {
                 Watch Demo
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="flex justify-center lg:justify-end"
-          >
+          <div className="flex justify-center lg:justify-end">
             <div className="relative w-full max-w-[440px] lg:max-w-[470px]">
               <div className="absolute inset-0 scale-105 rounded-[32px] bg-cyan-500/8 blur-2xl" />
               <div className="relative rounded-[28px] border border-white/10 bg-[#11111a]/80 p-3 shadow-[0_24px_80px_rgba(8,145,178,0.12)] backdrop-blur-xl">
@@ -78,7 +67,7 @@ export default function HeroSection({ heroImage }) {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
