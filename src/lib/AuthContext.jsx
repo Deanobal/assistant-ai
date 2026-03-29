@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
-import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -30,9 +29,20 @@ export const AuthProvider = ({ children }) => {
       };
       
       try {
-        const { data: publicSettings } = await axios.get(`/api/apps/public/prod/public-settings/by-id/${appParams.appId}`, {
+        const response = await fetch(`/api/apps/public/prod/public-settings/by-id/${appParams.appId}`, {
           headers,
         });
+
+        const publicSettings = await response.json();
+
+        if (!response.ok) {
+          throw {
+            status: response.status,
+            data: publicSettings,
+            message: publicSettings?.message || 'Failed to load app',
+          };
+        }
+
         setAppPublicSettings(publicSettings);
         
         // If we got the app public settings successfully, check if user is authenticated

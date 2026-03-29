@@ -1,8 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-
-Deno.serve(async (req) => {
+Deno.serve(async () => {
   try {
-    createClientFromRequest(req);
     const websiteId = String(Deno.env.get('CRISP_WEBSITE_ID') || '').trim();
 
     if (!websiteId) {
