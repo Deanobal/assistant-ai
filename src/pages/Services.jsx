@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Mic, Headphones, MessageSquare, Database, CalendarCheck, Send, GitBranch, ArrowRight } from 'lucide-react';
 
 const services = [
@@ -54,10 +53,7 @@ export default function Services() {
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-20">
+          <div className="text-center mb-20">
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">SERVICES</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -66,16 +62,12 @@ export default function Services() {
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
               AssistantAI.com.au helps Australian service businesses reduce admin, automate follow-up, improve response time, and scale without hiring more staff.
             </p>
-          </motion.div>
+          </div>
 
           <div className="space-y-8">
             {services.map((s, i) =>
-            <motion.div
+            <div
               key={s.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
               className="grid md:grid-cols-2 gap-10 p-8 md:p-12 rounded-2xl border border-white/5 bg-[#12121a] card-hover">
 
                 <div>
@@ -98,15 +90,11 @@ export default function Services() {
                   )}
                   </ul>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-20 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
+          <div className="mt-20 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
 
             <h3 className="text-2xl font-bold text-white mb-3">Not Sure Which Setup Fits Best?</h3>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
@@ -119,7 +107,7 @@ export default function Services() {
               Book Free Strategy Call
               <ArrowRight className="w-4 h-4" />
             </Link>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>);
