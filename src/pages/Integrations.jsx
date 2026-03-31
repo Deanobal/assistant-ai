@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, CalendarDays, Database, MessageSquare, Workflow } from 'lucide-react';
@@ -23,7 +24,13 @@ const syncSteps = [
 
 export default function Integrations() {
   return (
-    <div>
+    <>
+      <SEO
+        title="Integrations | CRM, Calendar & SMS Automation | AssistantAI"
+        description="See how AssistantAI connects with CRM, calendar, and SMS tools to keep lead capture, appointment booking, and follow-up workflows aligned."
+        canonicalPath="/Integrations"
+      />
+      <div>
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -173,6 +180,7 @@ export default function Integrations() {
           </motion.div>
         </div>
       </section>
-    </div>);
+      </div>
+    </>);
 
 }

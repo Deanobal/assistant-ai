@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { Mic, Headphones, MessageSquare, Database, CalendarCheck, Send, GitBranch, ArrowRight } from 'lucide-react';
 
@@ -49,7 +50,13 @@ const services = [
 
 export default function Services() {
   return (
-    <div>
+    <>
+      <SEO
+        title="Services | AI Voice Agents, Receptionists & Automation | AssistantAI"
+        description="Explore AssistantAI services including AI voice agents, AI receptionists, chatbots, CRM automation, booking automation, follow-up, and workflow integrations."
+        canonicalPath="/Services"
+      />
+      <div>
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -110,6 +117,7 @@ export default function Services() {
           </div>
         </div>
       </section>
-    </div>);
+      </div>
+    </>);
 
 }

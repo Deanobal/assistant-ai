@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle } from 'lucide-react';
@@ -92,7 +93,13 @@ const faqs = [
 
 export default function Pricing() {
   return (
-    <div>
+    <>
+      <SEO
+        title="Pricing | Done-for-You AI Automation Plans | AssistantAI"
+        description="Review AssistantAI pricing for done-for-you AI call handling, lead capture, booking automation, support, optimisation, and ongoing management."
+        canonicalPath="/Pricing"
+      />
+      <div>
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -218,6 +225,7 @@ export default function Pricing() {
           </motion.div>
         </div>
       </section>
-    </div>);
+      </div>
+    </>);
 
 }

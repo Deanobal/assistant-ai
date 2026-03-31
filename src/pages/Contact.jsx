@@ -1,11 +1,18 @@
-import React from 'react';
+import * as React from 'react';
+import SEO from '../components/SEO';
 import { motion } from 'framer-motion';
 import LeadForm from '../components/LeadForm';
 import BookingSupportPanel from '../components/contact/BookingSupportPanel';
 
 export default function Contact() {
   return (
-    <div>
+    <>
+      <SEO
+        title="Contact | Talk to the AssistantAI Team"
+        description="Contact AssistantAI to discuss call handling, lead capture, booking automation, and follow-up workflows for your business."
+        canonicalPath="/Contact"
+      />
+      <div>
       <section className="relative py-24 md:py-28 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -52,6 +59,7 @@ export default function Contact() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

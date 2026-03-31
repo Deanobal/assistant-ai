@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Target, Eye, Zap, Shield, CheckCircle2 } from 'lucide-react';
@@ -21,7 +22,13 @@ const reasons = [
 
 export default function About() {
   return (
-    <div>
+    <>
+      <SEO
+        title="About | Practical AI Automation for Service Businesses | AssistantAI"
+        description="Learn about AssistantAI, our approach to practical AI automation, and how we help service businesses improve call handling, lead capture, and workflow efficiency."
+        canonicalPath="/About"
+      />
+      <div>
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -143,6 +150,7 @@ export default function About() {
           </motion.div>
         </div>
       </section>
-    </div>);
+      </div>
+    </>);
 
 }
