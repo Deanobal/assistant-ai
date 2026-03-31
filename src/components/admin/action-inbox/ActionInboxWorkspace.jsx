@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
@@ -55,45 +55,64 @@ function getSelectedKeyFromUrl() {
 
 export default function ActionInboxWorkspace({ mode = 'action' }) {
   const queryClient = useQueryClient();
+  const messageListCacheRef = React.useRef({});
   const config = getWorkspaceConfig(mode);
-  const initialView = new URLSearchParams(window.location.search).get('view');
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const initialView = searchParams.get('view');
+  const requestedFocusReply = searchParams.get('focusReply') === '1';
   const defaultMobileView = typeof window !== 'undefined' && window.innerWidth < 1280 && config.views.some((view) => view.key === 'high_intent') ? 'high_intent' : config.views[0].key;
-  const [activeView, setActiveView] = useState(() => config.views.some((view) => view.key === initialView) ? initialView : defaultMobileView);
-  const [ownerFilter, setOwnerFilter] = useState('all');
-  const [heatFilter, setHeatFilter] = useState('all');
-  const [selectedKey, setSelectedKey] = useState(() => getSelectedKeyFromUrl());
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1280 : false);
-  const [showMobileDetail, setShowMobileDetail] = useState(!!getSelectedKeyFromUrl());
-  const [installPromptEvent, setInstallPromptEvent] = useState(null);
-  const [notificationPermission, setNotificationPermission] = useState(typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : 'default');
-  const [notificationSupported, setNotificationSupported] = useState(typeof window !== 'undefined' ? 'serviceWorker' in navigator : false);
-  const [isStandalone, setIsStandalone] = useState(typeof window !== 'undefined' ? window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true : false);
+  const [activeView, setActiveView] = React.useState(() => config.views.some((view) => view.key === initialView) ? initialView : defaultMobileView);
+  const [ownerFilter, setOwnerFilter] = React.useState('all');
+  const [heatFilter, setHeatFilter] = React.useState('all');
+  const [selectedKey, setSelectedKey] = React.useState(() => getSelectedKeyFromUrl());
+  const [selectionError, setSelectionError] = React.useState(null);
+  const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' ? window.innerWidth < 1280 : false);
+  const [showMobileDetail, setShowMobileDetail] = React.useState(!!getSelectedKeyFromUrl());
+  const [installPromptEvent, setInstallPromptEvent] = React.useState(null);
+  const [notificationPermission, setNotificationPermission] = React.useState(typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : 'default');
+  const [notificationSupported, setNotificationSupported] = React.useState(typeof window !== 'undefined' ? 'serviceWorker' in navigator : false);
+  const [isStandalone, setIsStandalone] = React.useState(typeof window !== 'undefined' ? window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true : false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1280);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
       setInstallPromptEvent(event);
     };
     const displayModeQuery = window.matchMedia('(display-mode: standalone)');
     const syncStandaloneState = () => setIsStandalone(displayModeQuery.matches || window.navigator.standalone === true);
+    const handlePopState = () => {
+      const nextKey = getSelectedKeyFromUrl();
+      const nextParams = new URLSearchParams(window.location.search);
+      const nextView = nextParams.get('view');
+      setSelectedKey(nextKey);
+      setSelectionError(null);
+      if (nextView && config.views.some((view) => view.key === nextView)) {
+        setActiveView(nextView);
+      }
+      if (window.innerWidth < 1280 && nextKey) {
+        setShowMobileDetail(true);
+      }
+    };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('popstate', handlePopState);
     if (displayModeQuery.addEventListener) displayModeQuery.addEventListener('change', syncStandaloneState);
     if (displayModeQuery.addListener) displayModeQuery.addListener(syncStandaloneState);
     syncStandaloneState();
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('popstate', handlePopState);
       if (displayModeQuery.removeEventListener) displayModeQuery.removeEventListener('change', syncStandaloneState);
       if (displayModeQuery.removeListener) displayModeQuery.removeListener(syncStandaloneState);
     };
-  }, []);
+  }, [config.views]);
 
   const { data: currentAdmin = null } = useQuery({ queryKey: ['action-inbox-me'], queryFn: () => base44.auth.me(), initialData: null });
   const { data: conversations = [] } = useQuery({ queryKey: ['action-inbox-conversations'], queryFn: () => base44.entities.SupportConversation.list('-updated_at', 200), initialData: [] });
@@ -101,7 +120,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const { data: leads = [] } = useQuery({ queryKey: ['action-inbox-leads'], queryFn: () => base44.entities.Lead.list('-updated_date', 200), initialData: [] });
   const { data: notifications = [] } = useQuery({ queryKey: ['action-inbox-notifications'], queryFn: () => base44.entities.NotificationLog.filter({ recipient_role: 'admin' }, '-created_date', 300), initialData: [], enabled: config.includeLeadAlerts });
 
-  useEffect(() => {
+  React.useEffect(() => {
     const refreshQueue = () => {
       queryClient.invalidateQueries({ queryKey: ['action-inbox-conversations'] });
       queryClient.invalidateQueries({ queryKey: ['action-inbox-leads'] });
@@ -119,7 +138,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     };
   }, [config.includeLeadAlerts, queryClient]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!selectedKey?.startsWith('conversation:')) return undefined;
     const selectedConversationId = selectedKey.replace('conversation:', '');
     return base44.entities.SupportMessage.subscribe((event) => {
@@ -129,7 +148,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     });
   }, [selectedKey, queryClient]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     let isActive = true;
 
     if (!currentAdmin?.id) return undefined;
@@ -150,15 +169,15 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     };
   }, [currentAdmin?.id]);
 
-  const adminsById = useMemo(() => Object.fromEntries(admins.map((admin) => [admin.id, admin])), [admins]);
-  const leadsById = useMemo(() => Object.fromEntries(leads.map((lead) => [lead.id, lead])), [leads]);
+  const adminsById = React.useMemo(() => Object.fromEntries(admins.map((admin) => [admin.id, admin])), [admins]);
+  const leadsById = React.useMemo(() => Object.fromEntries(leads.map((lead) => [lead.id, lead])), [leads]);
 
-  const conversationItems = useMemo(
+  const conversationItems = React.useMemo(
     () => conversations.map((conversation) => buildConversationAction(conversation, leadsById, adminsById, currentAdmin)),
     [conversations, leadsById, adminsById, currentAdmin]
   );
 
-  const leadAlertItems = useMemo(() => {
+  const leadAlertItems = React.useMemo(() => {
     if (!config.includeLeadAlerts) return [];
     return notifications
       .filter((log) => log.channel === 'in_app' && log.entity_name === 'Lead' && ['customer_sms_reply_received', 'strategy_call_requested', 'booking_request_failed'].includes(log.event_type))
@@ -166,39 +185,39 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
       .map((log) => buildLeadAlertAction(log, leadsById, currentAdmin));
   }, [notifications, leadsById, currentAdmin, config.includeLeadAlerts]);
 
-  const unmatchedSmsItems = useMemo(() => {
+  const unmatchedSmsItems = React.useMemo(() => {
     if (!config.includeLeadAlerts) return [];
     return notifications
       .filter((log) => log.channel === 'sms' && log.event_type === 'customer_sms_reply_unmatched')
       .map(buildUnmatchedSmsAction);
   }, [notifications, config.includeLeadAlerts]);
 
-  const allItems = useMemo(
+  const allItems = React.useMemo(
     () => [...conversationItems, ...leadAlertItems, ...unmatchedSmsItems].sort(sortActionItems),
     [conversationItems, leadAlertItems, unmatchedSmsItems]
   );
 
-  const counts = useMemo(
+  const counts = React.useMemo(
     () => Object.fromEntries(config.views.map((view) => [view.key, allItems.filter((item) => matchesActionView(item, view.key)).length])),
     [config.views, allItems]
   );
 
-  const itemsByView = useMemo(() => allItems.filter((item) => matchesActionView(item, activeView)), [allItems, activeView]);
-  const heatCounts = useMemo(
+  const itemsByView = React.useMemo(() => allItems.filter((item) => matchesActionView(item, activeView)), [allItems, activeView]);
+  const heatCounts = React.useMemo(
     () => Object.fromEntries(SALES_HEAT_VIEWS.map((view) => [view.key, view.key === 'all' ? itemsByView.length : itemsByView.filter((item) => matchesSalesHeat(item, view.key)).length])),
     [itemsByView]
   );
-  const ownerCounts = useMemo(
+  const ownerCounts = React.useMemo(
     () => Object.fromEntries(OWNERSHIP_VIEWS.map((view) => [view.key, view.key === 'all' ? itemsByView.length : itemsByView.filter((item) => matchesOwnership(item, view.key)).length])),
     [itemsByView]
   );
 
-  const filteredItems = useMemo(
+  const filteredItems = React.useMemo(
     () => itemsByView.filter((item) => matchesSalesHeat(item, heatFilter)).filter((item) => matchesOwnership(item, ownerFilter)),
     [itemsByView, heatFilter, ownerFilter]
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     filteredItems
       .filter((item) => item.kind === 'conversation')
       .slice(0, isMobile ? 6 : 3)
@@ -215,41 +234,62 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const selectedConversation = selectedItem?.kind === 'conversation' ? conversations.find((conversation) => conversation.id === selectedItem.entityId) || null : null;
   const selectedLead = selectedItem?.linkedLeadId ? leads.find((lead) => lead.id === selectedItem.linkedLeadId) || null : null;
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!config.views.some((view) => view.key === activeView)) {
       setActiveView(config.views[0].key);
     }
   }, [config.views, activeView]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!allItems.length) {
       setSelectedKey(null);
+      if (requestedFocusReply) {
+        setSelectionError('No conversations are available right now.');
+      }
       return;
     }
 
     const deepLinkedKey = getSelectedKeyFromUrl();
-    if (deepLinkedKey && allItems.some((item) => item.id === deepLinkedKey)) {
-      setSelectedKey(deepLinkedKey);
-      if (isMobile) setShowMobileDetail(true);
-      return;
+    if (deepLinkedKey) {
+      const deepLinkedItem = allItems.find((item) => item.id === deepLinkedKey);
+      if (deepLinkedItem) {
+        if (selectedKey !== deepLinkedKey) {
+          setSelectedKey(deepLinkedKey);
+        }
+        setSelectionError(null);
+        if (isMobile) setShowMobileDetail(true);
+        return;
+      }
+
+      if (requestedFocusReply) {
+        setSelectionError('That conversation could not be loaded. It may have been removed or moved out of this queue.');
+      }
     }
 
     if (selectedKey && allItems.some((item) => item.id === selectedKey)) {
+      setSelectionError(null);
       return;
     }
 
     const nextItem = filteredItems[0] || allItems[0] || null;
     setSelectedKey(nextItem?.id || null);
-  }, [allItems, filteredItems, selectedKey, isMobile]);
+    if (!nextItem && requestedFocusReply) {
+      setSelectionError('That conversation could not be loaded.');
+    }
+  }, [allItems, filteredItems, selectedKey, isMobile, requestedFocusReply]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set('view', activeView);
     params.delete('conversationId');
     params.delete('leadId');
     params.delete('logId');
+    params.delete('focusReply');
 
-    if (selectedItem?.kind === 'conversation') params.set('conversationId', selectedItem.entityId);
+    if (selectedItem?.kind === 'conversation') {
+      params.set('conversationId', selectedItem.entityId);
+      params.set('focusReply', '1');
+    }
     if (selectedItem?.kind === 'unmatched_sms') params.set('logId', selectedItem.logId);
 
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
@@ -269,7 +309,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     onSuccess: refreshAll,
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!selectedConversation?.unread_for_admin) return;
     updateConversationMutation.mutate({
       id: selectedConversation.id,
@@ -325,6 +365,10 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
 
   const handleSelect = (item) => {
     setSelectedKey(item.id);
+    setSelectionError(null);
+    if (item.kind === 'conversation') {
+      messageListCacheRef.current[item.entityId] = true;
+    }
     if (isMobile) {
       setShowMobileDetail(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -429,7 +473,13 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)_320px]">
+      {selectionError && (
+        <div className="rounded-3xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          {selectionError}
+        </div>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)_340px]">
         {(!isMobile || !showMobileDetail) && (
           <ActionInboxList
             title={listTitle}

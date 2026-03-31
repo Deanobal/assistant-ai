@@ -10,7 +10,7 @@ import { channelStyles, getTriageLabel, intentLevelStyles, priorityStyles, triag
 export default function ActionInboxContextPanel({ item, conversation, admins, leads, onAssignAdmin, onPriorityChange, onSnooze }) {
   if (!item) {
     return (
-      <Card className="border-white/5 bg-[#0f172a] shadow-none">
+      <Card className="border-white/10 bg-[#0d1422] shadow-none ring-1 ring-white/5">
         <CardContent className="p-5 text-sm text-slate-400">Context appears here after you open an item.</CardContent>
       </Card>
     );
@@ -21,7 +21,7 @@ export default function ActionInboxContextPanel({ item, conversation, admins, le
 
   return (
     <div className="space-y-4 xl:sticky xl:top-24">
-      <Card className="border-white/5 bg-[#0f172a] shadow-none">
+      <Card className="border-white/10 bg-[#0d1422] shadow-none ring-1 ring-white/5">
         <CardContent className="space-y-4 p-5">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Lead Context</p>
@@ -97,7 +97,7 @@ export default function ActionInboxContextPanel({ item, conversation, admins, le
         </CardContent>
       </Card>
 
-      <Card className="border-white/5 bg-[#0f172a] shadow-none">
+      <Card className="border-white/10 bg-[#0d1422] shadow-none ring-1 ring-white/5">
         <CardContent className="space-y-4 p-5">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Fast Actions</p>

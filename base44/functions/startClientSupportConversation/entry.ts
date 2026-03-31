@@ -158,6 +158,7 @@ Deno.serve(async (req) => {
           channel_label: 'Client Portal',
           cta_label: 'Reply Now',
           source_page: sourcePage || '/ClientPortal',
+          assigned_admin_id: null,
         },
       });
     }

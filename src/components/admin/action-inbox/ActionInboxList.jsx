@@ -15,7 +15,7 @@ const leadQualityStyles = {
 
 export default function ActionInboxList({ title, items, selectedId, onSelect, onQuickAssign, onQuickSnooze }) {
   return (
-    <Card className="border-white/5 bg-[#0f172a] shadow-none">
+    <Card className="border-white/10 bg-[#101827] shadow-none ring-1 ring-white/5">
       <CardContent className="p-0">
         <div className="border-b border-white/5 px-4 py-4">
           <h3 className="text-base font-semibold text-white">{title}</h3>
@@ -27,7 +27,7 @@ export default function ActionInboxList({ title, items, selectedId, onSelect, on
               key={item.id}
               type="button"
               onClick={() => onSelect(item)}
-              className={`w-full rounded-3xl border p-4 text-left transition-colors ${selectedId === item.id ? 'border-cyan-500/30 bg-cyan-500/10' : 'border-white/5 bg-[#111827] hover:bg-slate-800/80'}`}
+              className={`w-full rounded-3xl border p-4 text-left transition-colors ${selectedId === item.id ? 'border-cyan-400/50 bg-cyan-500/12 ring-1 ring-cyan-300/15' : item.overdue ? 'border-red-500/25 bg-[#171821] hover:bg-[#1b1d28]' : item.highIntent ? 'border-violet-500/20 bg-[#151726] hover:bg-[#191c2c]' : item.unassigned ? 'border-amber-500/20 bg-[#17161f] hover:bg-[#1c1b25]' : 'border-white/8 bg-[#111827] hover:bg-slate-800/80'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">

@@ -679,6 +679,7 @@ Deno.serve(async (req) => {
           cta_label: 'Reply Now',
           recommended_action: aiResult.recommended_next_action || (mobile ? 'Call lead' : 'Reply now'),
           source_page: sourcePage || '/',
+          assigned_admin_id: null,
           ai_mode: aiResult.ai_mode,
           ai_stage: aiResult.ai_stage || 'knowledge_answer',
           primary_intent: aiResult.primary_intent || null,

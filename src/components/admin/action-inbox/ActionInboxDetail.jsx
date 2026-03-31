@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, CheckCircle2, Phone, UserRound } from 'lucide-react';
@@ -24,14 +24,18 @@ const leadQualityStyles = {
 };
 
 export default function ActionInboxDetail({ item, conversation, linkedLead, currentAdmin, messages, isSaving, onReply, onResolve, onAssignToMe, onSnooze, onBack, showBack }) {
-  const [messageBody, setMessageBody] = useState('');
-  const [isInternalNote, setIsInternalNote] = useState(false);
-  const [activeQuickReplyCategory, setActiveQuickReplyCategory] = useState('speed');
-  const replyInputRef = useRef(null);
-  const messageListRef = useRef(null);
+  const [messageBody, setMessageBody] = React.useState('');
+  const [isInternalNote, setIsInternalNote] = React.useState(false);
+  const [activeQuickReplyCategory, setActiveQuickReplyCategory] = React.useState('speed');
+  const replyInputRef = React.useRef(null);
+  const messageListRef = React.useRef(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!item || item.kind !== 'conversation') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldFocusReply = urlParams.get('focusReply') === '1';
+    if (!shouldFocusReply) return;
 
     const focusReply = () => replyInputRef.current?.focus({ preventScroll: true });
     const firstTimeout = window.setTimeout(focusReply, 60);
@@ -43,7 +47,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
     };
   }, [item?.id]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const timeout = window.setTimeout(() => {
       if (messageListRef.current) {
         messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
@@ -55,7 +59,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
   if (!item) {
     return (
-      <Card className="border-white/5 bg-[#0f172a] shadow-none">
+      <Card className="border-white/10 bg-[#162033] shadow-none ring-1 ring-white/5">
         <CardContent className="p-8 text-slate-400">Pick an item from the inbox to open the reply workspace.</CardContent>
       </Card>
     );
@@ -84,7 +88,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
 
   if (item.kind !== 'conversation' || !conversation) {
     return (
-      <Card className="border-white/5 bg-[#0f172a] shadow-none">
+      <Card className="border-white/10 bg-[#162033] shadow-none ring-1 ring-white/5">
         <CardContent className="space-y-6 p-5 sm:p-6">
           {showBack && (
             <Button type="button" variant="ghost" onClick={onBack} className="h-11 rounded-xl px-0 text-slate-300 hover:bg-transparent hover:text-white">
@@ -129,7 +133,7 @@ export default function ActionInboxDetail({ item, conversation, linkedLead, curr
   }
 
   return (
-    <Card className="border-white/5 bg-[#0f172a] shadow-none">
+    <Card className="border-white/10 bg-[#162033] shadow-none ring-1 ring-white/5">
       <CardContent className="flex h-full flex-col p-0">
         <div className="border-b border-white/5 px-5 py-4">
           {showBack && (

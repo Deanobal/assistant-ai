@@ -131,9 +131,9 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07070d] text-white">
+    <div className="min-h-screen bg-[#06070b] text-white">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 flex-col border-r border-white/5 bg-[#0c0c12] p-6 lg:flex">
+        <aside className="hidden w-72 flex-col border-r border-white/10 bg-[#0b0f18] p-6 lg:flex">
           <Link to="/ActionInbox" className="mb-10 flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500">
               <BriefcaseBusiness className="h-5 w-5 text-white" />
@@ -152,7 +152,7 @@ export default function AdminLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-500/30 bg-cyan-500/10 text-white' : 'border-transparent text-slate-400 hover:bg-white/[0.03] hover:text-white'}`}
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-400/40 bg-cyan-500/12 text-white ring-1 ring-cyan-300/10' : item.label === 'Admin' ? 'border-transparent text-slate-500 hover:bg-white/[0.02] hover:text-slate-200' : 'border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-white'}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <item.icon className="h-4 w-4 shrink-0" />
@@ -174,7 +174,7 @@ export default function AdminLayout() {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0c0c12]/90 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b0f18]/92 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-slate-500">AssistantAI Internal Workspace</p>
@@ -190,7 +190,7 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0c0c12]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f18]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-5 gap-2">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));

@@ -279,6 +279,7 @@ Deno.serve(async (req) => {
           cta_label: 'Reply Now',
           recommended_action: aiResult?.recommended_next_action || (conversation.visitor_phone ? 'Call lead' : 'Reply now'),
           source_page: sourcePage || conversation.source_page || '/',
+          assigned_admin_id: conversation.assigned_admin_id || null,
           ai_mode: handoverMode,
           ai_stage: aiResult?.ai_stage || conversation.ai_stage || 'handoff_waiting',
           primary_intent: aiResult?.primary_intent || conversation.primary_intent || null,
