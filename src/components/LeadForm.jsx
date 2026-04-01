@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import BookingEmbedCard from '@/components/contact/BookingEmbedCard';
 import { submitLeadCapture } from '@/lib/leadCapture';
+import { trackLeadSuccess } from '@/lib/leadTracking';
 
 const industries = [
   { value: 'trades', label: 'Trades' },
@@ -91,10 +92,18 @@ export default function LeadForm({
         bookingSource,
         enquiryTypeOverride,
       });
+      let result = null;
       if (onSubmitted) {
-        const result = await onSubmitted({ lead, form });
+        result = await onSubmitted({ lead, form });
         setSubmitResult(result || null);
       }
+      trackLeadSuccess({
+        lead,
+        form,
+        formType: bookingIntent ? 'strategy_call_form' : 'contact_form',
+        strategyCallRequested: bookingIntent,
+        strategyCallBooked: result?.booking_status === 'confirmed' || !!result?.confirmed_start,
+      });
       setSubmitted(true);
     } catch (error) {
       console.error('Lead submission failed', error);
