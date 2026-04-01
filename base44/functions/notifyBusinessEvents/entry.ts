@@ -441,6 +441,20 @@ async function sendCustomerEventSms(base44, eventType, data, actorEmail, errorMe
   };
 }
 
+async function invokeSendAdminAlertWithRetry(serviceBase44, payload) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await serviceBase44.functions.invoke('sendAdminAlert', payload);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
+}
+
 function buildEventPayload(entityName, eventType, data, oldData) {
   if (!isLeadEntity(entityName) || !data?.id) {
     return [];
@@ -525,6 +539,7 @@ function buildEventPayload(entityName, eventType, data, oldData) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const serviceBase44 = base44.asServiceRole;
     const payload = await req.json();
     const entityName = payload?.event?.entity_name;
     const eventType = payload?.event?.type;
@@ -547,7 +562,7 @@ Deno.serve(async (req) => {
 
     for (const def of eventDefs) {
       const metadata = buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
-      const adminResponse = await base44.functions.invoke('sendAdminAlert', {
+      const adminResponse = await invokeSendAdminAlertWithRetry(serviceBase44, {
         eventType: def.event_type,
         entityName,
         entityId: data.id,
@@ -561,9 +576,10 @@ Deno.serve(async (req) => {
         smsMessage: buildSmsMessage(def, data),
       });
 
+      const normalizedAdminResponse = adminResponse && typeof adminResponse === 'object' && 'data' in adminResponse ? adminResponse.data : adminResponse;
       const resultEntry = {
         event_type: def.logical_event_type || def.event_type,
-        admin_alert: adminResponse && typeof adminResponse === 'object' && 'data' in adminResponse ? adminResponse.data : adminResponse,
+        admin_alert: normalizedAdminResponse,
       };
 
       results.push(resultEntry);

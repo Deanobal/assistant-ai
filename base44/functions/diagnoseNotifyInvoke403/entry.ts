@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    const response = await base44.functions.invoke('sendAdminAlert', {
+    const response = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
       eventType: 'new_lead_created',
       entityName: 'Lead',
       entityId: payload?.entityId || 'diagnose-notify-invoke-403',
