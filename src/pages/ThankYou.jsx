@@ -5,7 +5,6 @@ import { CheckCircle2, ArrowRight, ShieldCheck, Clock3, BriefcaseBusiness } from
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { trackLeadSuccess } from '@/lib/leadTracking';
 import { STRATEGY_CALL_BOOKING_MODE, STRATEGY_CALL_BOOKING_URL } from '@/lib/booking';
 
 function getQueryValue(key) {
@@ -18,27 +17,20 @@ export default function ThankYou() {
   const leadId = getQueryValue('lead') || '';
   const leadEmail = getQueryValue('email') || '';
   const leadPhone = getQueryValue('phone') || '';
-  const isStrategyCall = formType === 'strategy_call_form';
   const hasBookingLink = STRATEGY_CALL_BOOKING_MODE !== 'request' && !!STRATEGY_CALL_BOOKING_URL;
 
   useEffect(() => {
-    trackLeadSuccess({
-      lead: {
-        id: leadId,
-        enquiry_type: isStrategyCall ? 'strategy_call' : 'lead_capture',
-        source_page: document.referrer || '',
-        booking_intent: isStrategyCall,
-        booking_status: '',
-      },
-      form: {
-        email: leadEmail,
-        mobile_number: leadPhone,
-      },
-      formType,
-      strategyCallRequested: isStrategyCall,
-      strategyCallBooked: false,
-    });
-  }, [formType, isStrategyCall, leadId, leadEmail, leadPhone]);
+    if (typeof window === 'undefined' || window.__assistantAiThankYouTracked) return;
+    window.__assistantAiThankYouTracked = true;
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'generate_lead', {
+        form_type: formType,
+        lead_id: leadId,
+        has_email: !!leadEmail,
+        has_phone: !!leadPhone,
+      });
+    }
+  }, [formType, leadId, leadEmail, leadPhone]);
 
   return (
     <>
