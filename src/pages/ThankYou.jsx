@@ -80,18 +80,38 @@ export default function ThankYou() {
                 <h2 className="text-xl font-semibold text-white">Next Best Step</h2>
                 {hasBookingLink ? (
                   <>
-                    <p className="text-gray-400 max-w-2xl mx-auto">If you want to move faster, you can book your call now using the live calendar link below.</p>
-                    <div className="flex justify-center">
+                    <p className="text-gray-400 max-w-2xl mx-auto">If you want to move faster, you can lock in a time right now using the booking link below.</p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
                       <a href={STRATEGY_CALL_BOOKING_URL} target="_blank" rel="noreferrer">
-                        <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 py-6">
-                          Book your call now
+                        <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 py-6 shadow-lg shadow-cyan-500/20">
+                          Book Your Strategy Call Now
                           <ArrowRight className="h-4 w-4" />
                         </Button>
                       </a>
+                      <Link to="/AIDemo">
+                        <Button variant="outline" className="rounded-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]">
+                          Watch Demo
+                        </Button>
+                      </Link>
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-300 max-w-2xl mx-auto">Want to speed things up? We can call you today.</p>
+                  <>
+                    <p className="text-gray-300 max-w-2xl mx-auto">Want to speed things up? Send us a priority follow-up request and our team can move on it straight away.</p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <Link to="/Contact">
+                        <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 py-6 shadow-lg shadow-cyan-500/20">
+                          Request Immediate Call
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to="/AIDemo">
+                        <Button variant="outline" className="rounded-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]">
+                          Watch Demo
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
