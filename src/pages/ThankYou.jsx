@@ -48,6 +48,7 @@ export default function ThankYou() {
             </div>
             <p className="text-cyan-400 mb-3 text-base font-medium">REQUEST RECEIVED</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">Thanks — we’ve received your request</h1>
+            <p className="mt-4 text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">You’ve taken the first step to fixing missed calls and lost leads.</p>
             <p className="mt-4 text-cyan-100 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">Most businesses we speak to are losing leads right now — let’s fix that fast.</p>
             <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">We’ll reach out shortly — or you can lock in a time now.</p>
           </motion.div>
@@ -84,7 +85,10 @@ export default function ThankYou() {
                   </Link>
                 </div>
 
-                <p className="text-sm text-cyan-100/80">Most enquiries are reviewed within hours — earlier calls get priority.</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-cyan-100/90">If you're ready, we can map this out with you today.</p>
+                  <p className="text-sm text-cyan-100/80">Most strategy calls are booked within hours of enquiry.</p>
+                </div>
 
                 <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-6 text-left max-w-3xl mx-auto">
                   <p className="text-white font-medium mb-4">Used by Australian service businesses to:</p>
