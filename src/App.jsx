@@ -21,6 +21,7 @@ import Platform from './pages/Platform';
 import AIDemo from './pages/AIDemo';
 import ClientLogin from './pages/ClientLogin';
 import ClientPortal from './pages/ClientPortal';
+import ThankYou from './pages/ThankYou';
 import Dashboard from './pages/Dashboard';
 import ClientManager from './pages/ClientManager';
 import ClientWorkspace from './pages/ClientWorkspace';
@@ -77,6 +78,7 @@ const AuthenticatedApp = () => {
         <Route path="/AIDemo" element={<AIDemo />} />
         <Route path="/ClientLogin" element={<ClientLogin />} />
         <Route path="/ClientPortal" element={<ClientPortal />} />
+        <Route path="/thank-you" element={<ThankYou />} />
       </Route>
       <Route path="/Dashboard" element={<Dashboard />} />
       <Route element={<AdminLayout />}>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
@@ -73,6 +74,7 @@ export default function LeadForm({
     preferred_meeting_date: '',
     preferred_meeting_time: '',
   });
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -97,13 +99,16 @@ export default function LeadForm({
         result = await onSubmitted({ lead, form });
         setSubmitResult(result || null);
       }
+      const formType = bookingIntent ? 'strategy_call_form' : 'contact_form';
+      const strategyCallBooked = result?.booking_status === 'confirmed' || !!result?.confirmed_start;
       trackLeadSuccess({
         lead,
         form,
-        formType: bookingIntent ? 'strategy_call_form' : 'contact_form',
+        formType,
         strategyCallRequested: bookingIntent,
-        strategyCallBooked: result?.booking_status === 'confirmed' || !!result?.confirmed_start,
+        strategyCallBooked,
       });
+      navigate(`/thank-you?form=${encodeURIComponent(formType)}&lead=${encodeURIComponent(lead?.id || '')}&email=${encodeURIComponent(form?.email || '')}&phone=${encodeURIComponent(form?.mobile_number || '')}`);
       setSubmitted(true);
     } catch (error) {
       console.error('Lead submission failed', error);
