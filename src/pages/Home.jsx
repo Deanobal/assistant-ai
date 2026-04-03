@@ -20,19 +20,31 @@ const structuredData = [
     name: 'AssistantAI',
     url: 'https://assistantai.com.au/',
     logo: 'https://assistantai.com.au/icons/admin-inbox-icon.svg',
-    description: 'AssistantAI helps Australian service businesses answer calls, capture leads, automate bookings, and streamline follow-up workflows.',
+    description: 'AssistantAI provides AI assistant and AI receptionist solutions for Australian service businesses.',
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: 'AssistantAI',
-    brand: {
-      '@type': 'Brand',
+    '@type': 'Service',
+    name: 'AssistantAI AI Assistant and AI Receptionist',
+    provider: {
+      '@type': 'Organization',
       name: 'AssistantAI',
+      url: 'https://assistantai.com.au/',
     },
-    category: 'AI call handling and business automation',
-    description: 'A done-for-you AI automation service for call answering, lead capture, booking automation, CRM sync, and follow-up workflows.',
+    serviceType: 'AI assistant and AI receptionist for call handling, lead capture, booking automation, and follow-up',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Australia',
+    },
     url: 'https://assistantai.com.au/',
+    description: 'AssistantAI helps Australian service businesses use an AI assistant and AI receptionist to answer calls, capture leads, book appointments, and automate follow-up.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'AssistantAI',
+    url: 'https://assistantai.com.au/',
+    description: 'AI assistant and AI receptionist solutions for Australian service businesses.',
   },
 ];
 
@@ -40,8 +52,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="AssistantAI | AI Call Handling & Lead Capture for Australian Businesses"
-        description="AssistantAI helps Australian service businesses answer calls instantly, capture more leads, automate bookings, and streamline follow-up workflows."
+        title="AI Assistant & AI Receptionist for Australian Businesses | AssistantAI"
+        description="AssistantAI provides an AI assistant and AI receptionist for Australian service businesses to answer calls, capture leads, book appointments, and automate follow-up."
         canonicalPath="/"
         structuredData={structuredData}
       />

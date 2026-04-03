@@ -20,16 +20,15 @@ export default function HeroSection({ heroImage }) {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              <span className="text-cyan-400 text-sm md:text-base font-medium">Premium AI automation for Australian service businesses</span>
+              <span className="text-cyan-400 text-sm md:text-base font-medium">AI assistant and AI receptionist solutions for Australian service businesses</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[4.25rem] font-bold leading-[0.98] tracking-tight mb-5 text-balance">
-              Never Miss a Call.<br />
-              Never Lose Another High-Value Lead.
+              AI Assistant and AI Receptionist for Businesses That Cannot Afford to Miss Calls.
             </h1>
 
             <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl text-pretty">
-              AssistantAI helps Australian businesses answer calls instantly, capture leads, book jobs, and automate follow-up.
+              AssistantAI gives Australian service businesses an AI assistant and AI receptionist that answers calls instantly, captures leads, books jobs, and automates follow-up without adding admin overhead.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
