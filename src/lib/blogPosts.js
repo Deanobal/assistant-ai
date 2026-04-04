@@ -128,5 +128,70 @@ export const blogPosts = [
       'They can integrate with your CRM or marketing tools to send personalised messages, schedule callbacks and nurture prospects until they’re ready to buy. According to Sayl Solutions’ ROI examples, AI voice agents can eliminate missed calls entirely and increase monthly revenue by AU$5,250 for a dental practice.',
       'Automating lead capture and follow‑up ensures that every prospect receives attention, improving conversion rates and boosting your bottom line.'
     ]
+  },
+  {
+    slug: 'ai-for-trades-businesses',
+    title: 'AI for Trades Businesses: Focus on Jobs, Not Phones',
+    metaDescription: 'Contractors miss 74% of calls, each worth up to AU$3,500; AI receptionists handle calls so tradespeople can focus on work.',
+    excerpt: 'AI receptionists help plumbers, electricians, and other trades stay focused on jobs while every call is answered.',
+    category: 'Trades',
+    date: 'April 4, 2026',
+    body: [
+      'Tradespeople often juggle tools and phones simultaneously. It\'s no surprise that 74% of contractors\' calls go unanswered. With each missed call costing up to AU$3,500, ignoring the phone means losing significant revenue.',
+      'An AI receptionist answers calls on behalf of plumbers, electricians and other trades, collects job details and books appointments while workers stay focused on their tasks. It can handle after‑hours inquiries, collect photos or descriptions of the job and provide immediate quotes or next‑steps instructions.',
+      'By keeping your calendar full and reducing administrative overhead, AI helps trades businesses grow without hiring additional staff.'
+    ]
+  },
+  {
+    slug: 'ai-for-cleaning-companies',
+    title: 'AI for Cleaning Companies: More Bookings, Less Admin',
+    metaDescription: 'AI receptionists for cleaning businesses answer calls, provide quotes, and schedule appointments to boost bookings.',
+    excerpt: 'Cleaning businesses can use AI to answer enquiries faster, quote jobs, and keep schedules full with less admin.',
+    category: 'Cleaning',
+    date: 'April 4, 2026',
+    body: [
+      'Cleaning and home‑services businesses rely on consistent bookings and efficient scheduling. When owners are out in the field or working on jobs, they can miss calls and messages.',
+      'AI receptionists ensure every inquiry is answered professionally, gather the information needed to provide a quote and schedule cleaning appointments instantly. They can also send reminders to clients, reschedule when necessary and collect feedback after a job is completed.',
+      'With integration into your CRM or booking system, the AI eliminates manual data entry and prevents double‑bookings. By automating your front‑of‑house operations you can take on more clients without increasing administrative workload.'
+    ]
+  },
+  {
+    slug: 'ai-for-property-maintenance',
+    title: 'AI for Property Maintenance & Field Services',
+    metaDescription: 'AI receptionists triage maintenance requests, dispatch technicians and keep tenants informed.',
+    excerpt: 'AI helps property maintenance and field-service teams triage requests, dispatch faster, and keep everyone updated.',
+    category: 'Field Services',
+    date: 'April 4, 2026',
+    body: [
+      'Property managers and field‑service providers juggle multiple properties and urgent maintenance issues. AI receptionists triage incoming requests, prioritising emergencies and dispatching the right technician.',
+      'They can sync with your work‑order system to create tickets, schedule repairs and update tenants automatically. For maintenance providers, AI receptionists handle overflow calls, gather details about the problem (e.g., location, urgency, photos) and ensure that nothing falls through the cracks.',
+      'By automating call handling and dispatch, AI keeps your operations responsive and efficient.'
+    ]
+  },
+  {
+    slug: 'ai-privacy-risks',
+    title: 'Protecting Your Data: AI Privacy Risks and How to Avoid Them',
+    metaDescription: 'Growing AI use increases data privacy risks—78% of organizations use AI; 20% have breaches; choose enterprise tools and policies to stay safe.',
+    excerpt: 'As AI adoption grows, businesses need stronger policies and safer tools to reduce privacy and security risks.',
+    category: 'AI Privacy',
+    date: 'April 4, 2026',
+    body: [
+      'AI tools boost productivity but come with data‑privacy considerations. A 2026 privacy guide notes that 78% of organizations used AI in 2025, up from 55% in 2023. More than 27% of ChatGPT consumer messages in June 2025 were work‑related, meaning employees often paste business data into AI tools.',
+      'Sensitive information—customer details, financial projections, HR data—may be stored and used to train AI models. Research shows that 34.8% of ChatGPT inputs contained sensitive data, up from 11% in 2023. Shadow AI (employees using unapproved tools) contributed to data breaches at 20% of organisations, and security researchers found over 225,000 stolen ChatGPT credentials for sale on dark‑web markets.',
+      'To stay safe, use enterprise AI tools that don’t train on your data, implement strict data‑handling policies and educate staff about the risks of sharing sensitive information with consumer AI.'
+    ]
+  },
+  {
+    slug: 'choosing-the-right-ai-assistant',
+    title: 'Choosing the Right AI Assistant for Your Business',
+    metaDescription: 'Evaluate features, industry fit, privacy and scalability when selecting an AI assistant.',
+    excerpt: 'The right AI assistant should match your workflows, protect your data, and scale as your business grows.',
+    category: 'AI Strategy',
+    date: 'April 4, 2026',
+    body: [
+      'Selecting an AI assistant isn’t just about price; it’s about fit. Look for solutions that offer 24/7 availability, seamless CRM integration, appointment scheduling, follow‑up automation and a professional voice.',
+      'Ensure that the AI supports your industry—does it handle trade‑specific jargon, property‑maintenance workflows or cleaning‑service requests? Verify the provider’s data‑privacy practices; enterprise AI versions offer data encryption and do not use your data to train models.',
+      'Also consider scalability: can the system handle spikes in call volume without extra fees? By evaluating features, integrations and privacy, you can choose an AI assistant that improves customer experience and grows with your business.'
+    ]
   }
 ];
