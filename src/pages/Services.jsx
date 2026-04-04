@@ -6,45 +6,45 @@ import { Mic, Headphones, MessageSquare, Database, CalendarCheck, Send, GitBranc
 const services = [
 {
   icon: Mic,
-  title: 'AI Voice Agents',
-  desc: 'AI voice agents designed to answer calls naturally, capture intent, and move the conversation toward the right next step.',
-  outcomes: ['Answer inbound calls consistently', 'Qualify leads in real time', 'Transfer urgent calls to staff', 'Support after-hours workflows']
+  title: 'Instant Call Answering',
+  desc: 'An AI assistant and AI receptionist built to answer calls instantly, capture intent, and move each enquiry toward the right next step.',
+  outcomes: ['Answer inbound calls consistently', 'Cut response times by 80%', 'Transfer urgent calls to staff', 'Support after-hours workflows']
 },
 {
   icon: Headphones,
-  title: 'AI Receptionists',
-  desc: 'A premium front-end call experience that greets callers professionally, routes enquiries, and keeps your team focused.',
-  outcomes: ['Professional first impression', 'Route calls to the right person', 'Capture caller details automatically', 'Reduce admin pressure on staff']
-},
-{
-  icon: MessageSquare,
-  title: 'AI Chatbots',
-  desc: 'Website chat experiences that answer questions, capture leads, and help prospects take action faster.',
-  outcomes: ['24/7 website engagement', 'Instant lead capture', 'Pre-qualify enquiries', 'Guide visitors to book or enquire']
-},
-{
-  icon: Database,
-  title: 'CRM Automation',
-  desc: 'Every interaction can be pushed into the right system so your team has cleaner records and less manual admin.',
-  outcomes: ['Sync contacts and notes', 'Update lead records automatically', 'Track call outcomes', 'Reduce manual data entry']
+  title: 'Lead Capture',
+  desc: 'Capture caller details, qualify opportunities, and create a more reliable front-end experience for Australian service businesses.',
+  outcomes: ['Capture high-value leads automatically', 'Improve first response consistency', 'Reduce admin pressure on staff', 'Create a professional first impression']
 },
 {
   icon: CalendarCheck,
-  title: 'Appointment Booking Automation',
-  desc: 'Let AI check availability, book appointments, and keep your calendar workflow moving without back-and-forth admin.',
-  outcomes: ['Sync with your calendar', 'Book and confirm appointments', 'Handle reschedules and cancellations', 'Support reminders and confirmations']
+  title: 'Job Booking',
+  desc: 'Let your AI automation system handle appointment and job booking workflows without back-and-forth admin.',
+  outcomes: ['Book jobs and appointments faster', 'Sync with your calendar', 'Handle reschedules and cancellations', 'Support confirmations and reminders']
 },
 {
   icon: Send,
-  title: 'SMS & Email Follow-Up',
-  desc: 'Automated follow-up that keeps new enquiries warm and makes sure every customer gets a timely next step.',
+  title: 'Follow-Up Automation',
+  desc: 'Automated SMS and email follow-up keeps new enquiries warm and ensures every customer gets a timely next step.',
   outcomes: ['Instant post-call follow-up', 'Confirmation messages', 'Reminder messages', 'Lead nurture workflows']
 },
 {
+  icon: Database,
+  title: 'CRM Sync',
+  desc: 'Push every interaction into the right CRM or business system so your team has cleaner records and less manual admin.',
+  outcomes: ['CRM integration for contacts and notes', 'Update lead records automatically', 'Track call outcomes', 'Reduce manual data entry']
+},
+{
+  icon: MessageSquare,
+  title: 'Website Lead Capture',
+  desc: 'Website AI chat experiences answer questions, capture leads, and help prospects take action faster.',
+  outcomes: ['24/7 website engagement', 'Instant lead capture', 'Pre-qualify enquiries', 'Guide visitors to book or enquire']
+},
+{
   icon: GitBranch,
-  title: 'Workflow Automation',
-  desc: 'Connect your core business tools so calls, bookings, updates, and follow-up all happen in one smoother process.',
-  outcomes: ['Connect key systems', 'Automate repetitive steps', 'Trigger actions across workflows', 'Create cleaner internal handoffs']
+  title: 'Service Business Automation',
+  desc: 'Connect calls, bookings, CRM updates, and follow-up into one AI automation system for a smoother workflow.',
+  outcomes: ['Connect key systems', 'Automate repetitive steps', 'Reduce admin by 65%', 'Save up to $30,000 per year']
 }];
 
 
@@ -52,8 +52,8 @@ export default function Services() {
   return (
     <>
       <SEO
-        title="Services | AI Voice Agents, Receptionists & Automation | AssistantAI"
-        description="Explore AssistantAI services including AI voice agents, AI receptionists, chatbots, CRM automation, booking automation, follow-up, and workflow integrations."
+        title="Services | AI Assistant, AI Receptionist, Lead Capture & CRM Integration | AssistantAI"
+        description="Explore AssistantAI services for Australian service businesses including instant call answering, lead capture, job booking, follow-up automation, CRM integration, and service business automation."
         canonicalPath="/Services"
       />
       <div>
@@ -64,10 +64,10 @@ export default function Services() {
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">SERVICES</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Productised Services Built to <span className="text-gradient">Answer More Calls and Capture More Leads</span>
+              AI Assistant and AI Receptionist Services Built for <span className="text-gradient">Australian Service Businesses</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              AssistantAI.com.au helps Australian service businesses reduce admin, automate follow-up, improve response time, and scale without hiring more staff.
+              AssistantAI is an AI automation system for Australian cleaning, trades, property, and other service businesses focused on instant call answering, lead capture, job booking, follow-up automation, CRM integration, and measurable outcomes.
             </p>
           </div>
 

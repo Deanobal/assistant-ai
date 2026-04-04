@@ -24,8 +24,8 @@ export default function About() {
   return (
     <>
       <SEO
-        title="About | Practical AI Automation for Service Businesses | AssistantAI"
-        description="Learn about AssistantAI, our approach to practical AI automation, and how we help service businesses improve call handling, lead capture, and workflow efficiency."
+        title="About | AI Automation System for Australian Service Businesses | AssistantAI"
+        description="Learn how AssistantAI helps Australian service businesses use an AI assistant and AI receptionist to improve lead capture, CRM integration, service business automation, and response times."
         canonicalPath="/About"
       />
       <div>
@@ -38,9 +38,7 @@ export default function About() {
             className="text-center mb-16">
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">ABOUT US</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">AssistantAI Helps Businesses Work Smarter
-
-
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">AssistantAI Helps Australian Service Businesses Automate Smarter
             </h1>
           </motion.div>
 
@@ -51,14 +49,12 @@ export default function About() {
               viewport={{ once: true }}
               className="space-y-5 text-gray-400 leading-relaxed text-lg">
 
-              <p>AssistantAI was built to help Australian businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.
-
+              <p>AssistantAI was built to help Australian cleaning, trades, property, and other service businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.</p>
+              <p>
+                We focus on practical service business automation with an AI assistant and AI receptionist that answer calls, capture customer details, book jobs, update systems, and follow up automatically.
               </p>
               <p>
-                We focus on practical automation that answers calls, captures customer details, books appointments, updates systems, and follows up automatically.
-              </p>
-              <p>
-                The goal is simple: answer more calls, capture more leads, reduce admin, and give businesses a more reliable front-end customer workflow without adding more staff.
+                The goal is simple: reduce admin by 65%, save up to $30,000 per year per business, cut response times by 80%, improve lead capture, and create a more reliable customer workflow without adding more staff.
               </p>
             </motion.div>
           </div>

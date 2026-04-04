@@ -1,4 +1,5 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wrench, Home, Heart, Stethoscope, Scale, Car, UtensilsCrossed, Building2, ArrowRight } from 'lucide-react';
@@ -67,7 +68,13 @@ export default function Industries() {
   const bottomIndustries = industries.slice(4);
 
   return (
-    <div>
+    <>
+      <SEO
+        title="Industries | AI Assistant and AI Receptionist for Service Businesses | AssistantAI"
+        description="See how AssistantAI supports Australian cleaning, trades, property, medical, dental, legal, automotive, and other service businesses with lead capture, CRM integration, and service business automation."
+        canonicalPath="/Industries"
+      />
+      <div>
       <section className="relative py-24 md:py-32 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -78,11 +85,10 @@ export default function Industries() {
           >
             <p className="text-cyan-400 text-sm font-medium mb-3">INDUSTRIES</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              AI Workflows Adapted for{' '}
-              <span className="text-gradient">Different Industries</span>
+              AI Assistant and AI Receptionist Workflows for <span className="text-gradient">Australian Service Industries</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              See how AssistantAI.com.au can be tailored to the way your industry handles calls, bookings, lead capture, and follow-up.
+              See how AssistantAI can be tailored for cleaning, trades, property, and other service-based businesses that need better lead capture, job booking, CRM integration, and service business automation.
             </p>
           </motion.div>
 
@@ -184,5 +190,6 @@ export default function Industries() {
         </div>
       </section>
     </div>
+    </>
   );
 }

@@ -24,11 +24,11 @@ export default function HeroSection({ heroImage }) {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[4.25rem] font-bold leading-[0.98] tracking-tight mb-5 text-balance">
-              AI Assistant and AI Receptionist for Businesses That Cannot Afford to Miss Calls.
+              The AI Automation System for Australian Service Businesses.
             </h1>
 
             <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl text-pretty">
-              AssistantAI gives Australian service businesses an AI assistant and AI receptionist that answers calls instantly, captures leads, books jobs, and automates follow-up without adding admin overhead.
+              AssistantAI gives Australian cleaning, trades, property, and other service businesses an AI assistant and AI receptionist that answers calls instantly, captures leads, books jobs, automates follow-up, syncs with your CRM, reduces admin by 65%, saves up to $30,000 per year, and cuts response times by 80%.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">

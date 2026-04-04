@@ -2,12 +2,12 @@ import React from 'react';
 import { Phone, UserCheck, CalendarCheck, Database, MessageSquareText, PhoneForwarded } from 'lucide-react';
 
 const cards = [
-  { icon: Phone, title: 'Answer Every Call', desc: 'Make sure valuable enquiries are answered immediately instead of going to voicemail or getting missed.' },
-  { icon: UserCheck, title: 'Qualify Better Leads', desc: 'Ask the right questions up front so your team spends more time on serious opportunities.' },
-  { icon: CalendarCheck, title: 'Book Appointments Automatically', desc: 'Turn inbound demand into booked jobs and scheduled next steps faster.' },
-  { icon: Database, title: 'Update Your CRM Instantly', desc: 'Keep customer records accurate without relying on manual admin after each call.' },
-  { icon: MessageSquareText, title: 'Trigger SMS & Email Follow-Up', desc: 'Keep prospects warm with faster confirmations, reminders, and follow-up messages.' },
-  { icon: PhoneForwarded, title: 'Route Calls Intelligently', desc: 'Send urgent or high-value calls to the right person when human input is needed.' },
+  { icon: Phone, title: 'Instant Call Answering', desc: 'Use an AI receptionist to answer every call instantly so your service business stops losing leads to missed calls and voicemail.' },
+  { icon: UserCheck, title: 'Lead Capture', desc: 'Capture enquiry details, qualify prospects, and pass cleaner information into your workflow from the first conversation.' },
+  { icon: CalendarCheck, title: 'Job Booking', desc: 'Turn inbound demand into booked jobs, appointments, and scheduled next steps faster with less manual coordination.' },
+  { icon: Database, title: 'CRM Sync', desc: 'Keep customer records accurate with CRM integration that updates contacts, notes, and outcomes automatically.' },
+  { icon: MessageSquareText, title: 'Follow-Up Automation', desc: 'Trigger SMS and email follow-up automatically so prospects get fast confirmations, reminders, and next steps.' },
+  { icon: PhoneForwarded, title: 'Smart Call Routing', desc: 'Send urgent or high-value calls to the right person when human input is needed without slowing down response times.' },
 ];
 
 export default function ServicesPreview() {
@@ -15,8 +15,8 @@ export default function ServicesPreview() {
     <section className="relative py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <p className="text-cyan-400 text-lg font-medium mb-3">WHAT OUR AI AGENTS DO</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">What Our AI Agents Do</h2>
+          <p className="text-cyan-400 text-lg font-medium mb-3">CORE FEATURES</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Instant Call Answering, Lead Capture, Job Booking, Follow-Up Automation and CRM Sync</h2>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

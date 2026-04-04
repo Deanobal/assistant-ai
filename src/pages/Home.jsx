@@ -20,31 +20,61 @@ const structuredData = [
     name: 'AssistantAI',
     url: 'https://assistantai.com.au/',
     logo: 'https://assistantai.com.au/icons/admin-inbox-icon.svg',
-    description: 'AssistantAI provides AI assistant and AI receptionist solutions for Australian service businesses.',
+    description: 'AssistantAI is an AI automation system for Australian service businesses focused on call handling, lead capture, job booking, follow-up automation, and CRM integration.',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Australia',
+    },
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'AssistantAI AI Assistant and AI Receptionist',
+    name: 'AssistantAI AI Automation System',
     provider: {
       '@type': 'Organization',
       name: 'AssistantAI',
       url: 'https://assistantai.com.au/',
     },
-    serviceType: 'AI assistant and AI receptionist for call handling, lead capture, booking automation, and follow-up',
+    serviceType: 'AI assistant, AI receptionist, lead capture, CRM integration, and service business automation',
     areaServed: {
       '@type': 'Country',
       name: 'Australia',
     },
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'Australian service businesses',
+    },
     url: 'https://assistantai.com.au/',
-    description: 'AssistantAI helps Australian service businesses use an AI assistant and AI receptionist to answer calls, capture leads, book appointments, and automate follow-up.',
+    description: 'AssistantAI helps Australian cleaning, trades, property, and other service businesses reduce admin by 65%, save up to $30,000 per year, and cut response times by 80% with an AI assistant and AI receptionist.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'AssistantAI',
     url: 'https://assistantai.com.au/',
-    description: 'AI assistant and AI receptionist solutions for Australian service businesses.',
+    description: 'AI assistant, AI receptionist, and AI automation system for Australian service businesses.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What does AssistantAI do for service businesses?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'AssistantAI provides an AI assistant and AI receptionist that answer calls, capture leads, book jobs, automate follow-up, and sync information into CRM systems for Australian service businesses.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Who is AssistantAI built for?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'AssistantAI is built for Australian service-based businesses including cleaning, trades, property, and other service providers that want faster response times and less admin.',
+        },
+      },
+    ],
   },
 ];
 
@@ -52,8 +82,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="AI Assistant & AI Receptionist for Australian Businesses | AssistantAI"
-        description="AssistantAI provides an AI assistant and AI receptionist for Australian service businesses to answer calls, capture leads, book appointments, and automate follow-up."
+        title="AI Automation System for Australian Service Businesses | AI Assistant & AI Receptionist | AssistantAI"
+        description="AssistantAI is an AI automation system for Australian service businesses that reduces admin by 65%, saves up to $30,000 per year, cuts response times by 80%, and improves lead capture, job booking, follow-up automation, and CRM integration."
         canonicalPath="/"
         structuredData={structuredData}
       />

@@ -10,10 +10,10 @@ export default function CTASection() {
       <div className="relative max-w-4xl mx-auto px-6 text-center">
         <div>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-balance">
-            Ready to capture more leads without hiring more staff?
+            Ready for an AI assistant and AI receptionist built for your service business?
           </h2>
           <p className="mt-6 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-            If missed calls, slow follow-up, and disconnected systems are costing you business, we will show you exactly how to fix it.
+            If missed calls, slow follow-up, and disconnected systems are costing you business, AssistantAI will show you how an AI automation system can improve lead capture, CRM integration, and service business automation while reducing admin and response delays.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link

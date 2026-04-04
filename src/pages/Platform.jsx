@@ -1,4 +1,5 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Eye } from 'lucide-react';
@@ -12,7 +13,13 @@ import SupportSection from '../components/dashboard/SupportSection';
 
 export default function Platform() {
   return (
-    <div>
+    <>
+      <SEO
+        title="Platform | AI Automation System Dashboard for Service Businesses | AssistantAI"
+        description="Preview the AssistantAI platform for Australian service businesses including lead capture, job booking, CRM integration, analytics, billing, and support workflows."
+        canonicalPath="/Platform"
+      />
+      <div>
       <section className="relative py-24 md:py-28 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
@@ -26,10 +33,10 @@ export default function Platform() {
               <span className="text-cyan-400 text-xs font-medium">Platform Preview</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
-              Public Preview of the <span className="text-gradient">AssistantAI Platform</span>
+              Public Preview of the <span className="text-gradient">AssistantAI AI Automation System</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              See what the client experience looks like across calls handled, leads captured, appointments booked, analytics, billing, integrations, and support access.
+              See what the client experience looks like across instant call answering, lead capture, job booking, CRM integration, analytics, billing, and support for Australian service businesses.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -93,5 +100,6 @@ export default function Platform() {
         </div>
       </section>
     </div>
+    </>
   );
 }

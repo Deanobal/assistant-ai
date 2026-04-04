@@ -95,8 +95,8 @@ export default function Pricing() {
   return (
     <>
       <SEO
-        title="Pricing | Done-for-You AI Automation Plans | AssistantAI"
-        description="Review AssistantAI pricing for done-for-you AI call handling, lead capture, booking automation, support, optimisation, and ongoing management."
+        title="Pricing | AI Automation System for Service Businesses | AssistantAI"
+        description="Review AssistantAI pricing for an AI assistant and AI receptionist with lead capture, job booking, follow-up automation, CRM integration, and service business automation."
         canonicalPath="/Pricing"
       />
       <div>
@@ -114,7 +114,7 @@ export default function Pricing() {
               <span className="text-gradient">Premium AI Automation</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              All plans include setup, support, optimisation, and ongoing management, so pricing stays clear and commercially usable from day one.
+              All plans include setup, support, optimisation, and ongoing management for Australian service businesses that want stronger lead capture, faster response times, CRM integration, and less admin.
             </p>
           </motion.div>
 
