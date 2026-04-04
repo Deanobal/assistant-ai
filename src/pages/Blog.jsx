@@ -1,34 +1,8 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import SEO from '@/components/SEO';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
-const posts = [
-  {
-    slug: 'how-ai-receptionists-help-service-businesses',
-    title: 'How AI Receptionists Help Service Businesses Capture More Leads',
-    excerpt: 'Discover how faster responses, better call handling, and automated follow-up can reduce missed opportunities.',
-    category: 'Lead Capture',
-    date: 'April 4, 2026',
-  },
-  {
-    slug: 'ai-automation-for-trades-and-clinics',
-    title: 'AI Automation for Trades, Clinics, and Local Service Teams',
-    excerpt: 'A practical look at where AI saves time, reduces admin, and improves customer experience for busy teams.',
-    category: 'Automation',
-    date: 'April 1, 2026',
-  },
-  {
-    slug: 'reduce-admin-with-ai-follow-up',
-    title: 'How to Reduce Admin Work With Smarter Follow-Up',
-    excerpt: 'Learn how automated follow-up keeps leads moving without adding more manual tasks to your day.',
-    category: 'Operations',
-    date: 'March 28, 2026',
-  },
-];
+import BlogPostCard from '@/components/blog/BlogPostCard';
+import { blogPosts } from '@/lib/blogPosts';
 
 export default function Blog() {
   return (
@@ -53,40 +27,8 @@ export default function Blog() {
           </motion.div>
 
           <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {posts.map((post, index) => (
-              <motion.div
-                key={post.slug}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <Card className="h-full border-white/5 bg-[#12121a] transition-colors hover:border-cyan-500/30">
-                  <CardContent className="flex h-full flex-col p-7">
-                    <div className="mb-4 flex items-center gap-3 text-sm text-gray-400">
-                      <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-cyan-300">
-                        {post.category}
-                      </span>
-                      <span>{post.date}</span>
-                    </div>
-
-                    <h2 className="text-2xl font-semibold leading-tight text-white">
-                      {post.title}
-                    </h2>
-                    <p className="mt-4 flex-1 text-base leading-relaxed text-gray-300">
-                      {post.excerpt}
-                    </p>
-
-                    <div className="mt-6">
-                      <Button asChild variant="outline" className="border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]">
-                        <Link to="/Contact">
-                          Read article
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            {blogPosts.map((post, index) => (
+              <BlogPostCard key={post.slug} post={post} index={index} />
             ))}
           </div>
         </div>

@@ -17,6 +17,7 @@ import BookStrategyCall from './pages/BookStrategyCall';
 import GetStartedNow from './pages/GetStartedNow';
 import CaseStudies from './pages/CaseStudies';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
 import AIDemo from './pages/AIDemo';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
         <Route path="/GetStartedNow" element={<GetStartedNow />} />
         <Route path="/CaseStudies" element={<CaseStudies />} />
         <Route path="/Blog" element={<Blog />} />
+        <Route path="/Blog/:slug" element={<BlogPost />} />
         <Route path="/Integrations" element={<Integrations />} />
         <Route path="/Platform" element={<Platform />} />
         <Route path="/AIDemo" element={<AIDemo />} />
