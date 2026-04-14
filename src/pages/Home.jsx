@@ -1,3 +1,4 @@
+<h1>AI Receptionist & Call Answering Service for Australian Businesses</h1>
 import * as React from 'react';
 import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
