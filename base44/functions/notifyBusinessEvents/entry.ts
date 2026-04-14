@@ -19,6 +19,9 @@ const SUPPORTED_EVENT_TYPES = new Set([
   'support_conversation_reply',
   'customer_sms_reply_received',
   'booking_nudge_escalated',
+  'onboarding_task_overdue',
+  'onboarding_blocker_detected',
+  'client_ready_for_go_live',
 ]);
 
 function getErrorMessage(error) {
@@ -355,6 +358,25 @@ function buildLeadMetadata(data, eventType, uniqueKey) {
   };
 }
 
+function buildOnboardingMetadata(data, eventType, uniqueKey) {
+  const clientId = data.client_id || data.id;
+  const blockerText = Array.isArray(data.blockers) ? data.blockers.join(', ') : '';
+  return {
+    entity_event_type: eventType,
+    unique_key: uniqueKey,
+    admin_link: `/ClientWorkspace?id=${clientId}`,
+    full_name: data.full_name || '',
+    business_name: data.business_name || data.task_name || 'Client onboarding',
+    email: data.email || '',
+    mobile_number: data.mobile_number || '',
+    message_preview: (data.task_name || blockerText || data.next_action || '').slice(0, 180),
+    wait_label: 'Just now',
+    channel_label: 'Onboarding',
+    cta_label: 'Open Client',
+    recommended_action: 'Review client',
+  };
+}
+
 function buildSmsMessage(def, data) {
   const leadName = data.full_name || data.business_name || 'Lead';
   const enquiryType = data.enquiry_type || 'general';
@@ -368,81 +390,138 @@ function buildSmsMessage(def, data) {
   return `${def.priority === 'high' ? 'HIGH' : 'ALERT'}: ${enquiryType} | ${leadName} | ${eventLabel}`.slice(0, 160);
 }
 
+function buildOnboardingSmsMessage(def, data) {
+  const name = data.business_name || data.task_name || 'Client';
+  const eventLabel = def.event_type === 'onboarding_task_overdue'
+    ? 'task overdue'
+    : def.event_type === 'onboarding_blocker_detected'
+      ? 'blockers detected'
+      : 'go-live ready';
+  return `${def.priority === 'high' ? 'HIGH' : 'ALERT'}: ${name} | ${eventLabel}`.slice(0, 160);
+}
+
 function buildEventPayload(entityName, eventType, data, oldData) {
-  if (!isLeadEntity(entityName) || !data?.id) return [];
+  if (!data?.id) return [];
 
-  const events = [];
-  const leadLabel = getLeadLabel(data);
-  const strategyCallLead = isStrategyCallLead(data);
-  const bookingConfirmed = isBookingConfirmed(data);
+  if (isLeadEntity(entityName)) {
+    const events = [];
+    const leadLabel = getLeadLabel(data);
+    const strategyCallLead = isStrategyCallLead(data);
+    const bookingConfirmed = isBookingConfirmed(data);
 
-  if (eventType === 'create') {
-    events.push({
-      event_type: 'new_lead_created',
-      logical_event_type: 'new_lead_created',
-      title: 'New lead created',
-      message: `${leadLabel} was captured from ${data.source_page || 'an unknown source'}.`,
-      unique_key: `new_lead_created:${data.id}:${getFirstValue([data.created_at, data.created_date, data.updated_date, 'created'])}`,
-      priority: strategyCallLead ? 'high' : 'normal',
-    });
-
-    if (strategyCallLead && !bookingConfirmed) {
+    if (eventType === 'create') {
       events.push({
-        event_type: 'strategy_call_requested',
-        logical_event_type: 'strategy_call_requested',
-        title: 'New strategy call request',
-        message: `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`,
-        unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
-        priority: 'high',
+        event_type: 'new_lead_created',
+        logical_event_type: 'new_lead_created',
+        title: 'New lead created',
+        message: `${leadLabel} was captured from ${data.source_page || 'an unknown source'}.`,
+        unique_key: `new_lead_created:${data.id}:${getFirstValue([data.created_at, data.created_date, data.updated_date, 'created'])}`,
+        priority: strategyCallLead ? 'high' : 'normal',
       });
+
+      if (strategyCallLead && !bookingConfirmed) {
+        events.push({
+          event_type: 'strategy_call_requested',
+          logical_event_type: 'strategy_call_requested',
+          title: 'New strategy call request',
+          message: `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`,
+          unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
+          priority: 'high',
+        });
+      }
+    }
+
+    if (eventType === 'update') {
+      const oldWasStrategyCall = isStrategyCallLead(oldData);
+      const lastActivityChanged = !!data.last_activity_at && data.last_activity_at !== (oldData?.last_activity_at || '');
+      const newlyRequestedStrategyCall = strategyCallLead && !bookingConfirmed && !oldWasStrategyCall;
+      const repeatStrategyCallRequest = strategyCallLead && !bookingConfirmed && oldWasStrategyCall && lastActivityChanged;
+
+      if (newlyRequestedStrategyCall || repeatStrategyCallRequest) {
+        events.push({
+          event_type: 'strategy_call_requested',
+          logical_event_type: 'strategy_call_requested',
+          title: newlyRequestedStrategyCall ? 'New strategy call request' : 'Repeated strategy call request',
+          message: newlyRequestedStrategyCall
+            ? `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`
+            : `${data.full_name || leadLabel} submitted another strategy call request.`,
+          unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
+          priority: 'high',
+        });
+      }
+
+      const bookingJustConfirmed = strategyCallLead && bookingConfirmed && !isBookingConfirmed(oldData);
+      if (bookingJustConfirmed) {
+        events.push({
+          event_type: 'booking_confirmed',
+          logical_event_type: 'booking_confirmed',
+          title: 'Strategy call booking confirmed',
+          message: `${data.full_name || leadLabel} has a confirmed strategy call${data.confirmed_meeting_date ? ` on ${data.confirmed_meeting_date}` : ''}.`,
+          unique_key: `booking_confirmed:${data.id}:${getConfirmationReference(data)}`,
+          priority: 'high',
+        });
+      }
+
+      const failure = strategyCallLead && !bookingConfirmed ? getNewFailure(data, oldData) : null;
+      if (failure) {
+        events.push({
+          event_type: 'booking_request_failed',
+          logical_event_type: 'booking_failed',
+          title: 'Strategy call booking failed',
+          message: `${data.full_name || leadLabel} has a strategy call booking issue: ${failure.value}`,
+          unique_key: `booking_request_failed:${data.id}:${failure.field}:${sanitizeKeyPart(failure.value)}:${getRequestTimestamp(data)}`,
+          priority: 'high',
+        });
+      }
+    }
+
+    return events;
+  }
+
+  if (entityName === 'OnboardingTask' && eventType !== 'delete') {
+    const dueDate = String(data.due_date || '').trim();
+    const isOverdue = !!dueDate && !data.completed && new Date(`${dueDate}T23:59:59.000Z`) < new Date();
+    const wasOverdue = !!oldData?.due_date && !oldData?.completed && new Date(`${oldData.due_date}T23:59:59.000Z`) < new Date();
+    if (isOverdue && !wasOverdue) {
+      return [{
+        event_type: 'onboarding_task_overdue',
+        logical_event_type: 'onboarding_task_overdue',
+        title: 'Onboarding task overdue',
+        message: `${data.task_name} is overdue.`,
+        unique_key: `onboarding_task_overdue:${data.id}:${dueDate}`,
+        priority: 'high',
+      }];
     }
   }
 
-  if (eventType === 'update') {
-    const oldWasStrategyCall = isStrategyCallLead(oldData);
-    const lastActivityChanged = !!data.last_activity_at && data.last_activity_at !== (oldData?.last_activity_at || '');
-    const newlyRequestedStrategyCall = strategyCallLead && !bookingConfirmed && !oldWasStrategyCall;
-    const repeatStrategyCallRequest = strategyCallLead && !bookingConfirmed && oldWasStrategyCall && lastActivityChanged;
-
-    if (newlyRequestedStrategyCall || repeatStrategyCallRequest) {
+  if (entityName === 'Client' && eventType === 'update') {
+    const events = [];
+    const blockerCount = Array.isArray(data.blockers) ? data.blockers.length : 0;
+    const oldBlockerCount = Array.isArray(oldData?.blockers) ? oldData.blockers.length : 0;
+    if (blockerCount > 0 && oldBlockerCount === 0) {
       events.push({
-        event_type: 'strategy_call_requested',
-        logical_event_type: 'strategy_call_requested',
-        title: newlyRequestedStrategyCall ? 'New strategy call request' : 'Repeated strategy call request',
-        message: newlyRequestedStrategyCall
-          ? `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`
-          : `${data.full_name || leadLabel} submitted another strategy call request.`,
-        unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
+        event_type: 'onboarding_blocker_detected',
+        logical_event_type: 'onboarding_blocker_detected',
+        title: 'Onboarding blockers detected',
+        message: `${data.business_name || 'Client'} now has blockers: ${data.blockers.join(', ')}.`,
+        unique_key: `onboarding_blocker_detected:${data.id}:${sanitizeKeyPart(data.blockers.join('-'))}`,
         priority: 'high',
       });
     }
-
-    const bookingJustConfirmed = strategyCallLead && bookingConfirmed && !isBookingConfirmed(oldData);
-    if (bookingJustConfirmed) {
+    if (data.go_live_ready && !oldData?.go_live_ready) {
       events.push({
-        event_type: 'booking_confirmed',
-        logical_event_type: 'booking_confirmed',
-        title: 'Strategy call booking confirmed',
-        message: `${data.full_name || leadLabel} has a confirmed strategy call${data.confirmed_meeting_date ? ` on ${data.confirmed_meeting_date}` : ''}.`,
-        unique_key: `booking_confirmed:${data.id}:${getConfirmationReference(data)}`,
+        event_type: 'client_ready_for_go_live',
+        logical_event_type: 'client_ready_for_go_live',
+        title: 'Client ready for go-live',
+        message: `${data.business_name || 'Client'} is ready for go-live.`,
+        unique_key: `client_ready_for_go_live:${data.id}:${data.updated_at || data.updated_date || 'ready'}`,
         priority: 'high',
       });
     }
-
-    const failure = strategyCallLead && !bookingConfirmed ? getNewFailure(data, oldData) : null;
-    if (failure) {
-      events.push({
-        event_type: 'booking_request_failed',
-        logical_event_type: 'booking_failed',
-        title: 'Strategy call booking failed',
-        message: `${data.full_name || leadLabel} has a strategy call booking issue: ${failure.value}`,
-        unique_key: `booking_request_failed:${data.id}:${failure.field}:${sanitizeKeyPart(failure.value)}:${getRequestTimestamp(data)}`,
-        priority: 'high',
-      });
-    }
+    return events;
   }
 
-  return events;
+  return [];
 }
 
 async function runAdminAlert(base44, requestUrl, payload) {
@@ -649,19 +728,21 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const def of eventDefs) {
-      const metadata = buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
+      const metadata = entityName === 'Lead'
+        ? buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key)
+        : buildOnboardingMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
       const adminResponse = await runAdminAlert(base44, req.url, {
         eventType: def.event_type,
         entityName,
         entityId: data.id,
-        clientAccountId: data.client_account_id || null,
+        clientAccountId: data.client_account_id || data.client_id || data.id || null,
         title: def.title,
         message: def.message,
         actorEmail: null,
         metadata,
         uniqueKey: def.unique_key,
         priority: def.priority,
-        smsMessage: buildSmsMessage(def, data),
+        smsMessage: entityName === 'Lead' ? buildSmsMessage(def, data) : buildOnboardingSmsMessage(def, data),
       });
 
       results.push({
