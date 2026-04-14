@@ -179,6 +179,39 @@
       ],
       "format": "date",
       "description": "Actual go-live date"
+    },
+    "shared_files": {
+      "type": "array",
+      "description": "Client files visible to admins and in the client portal",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "contract",
+              "brief",
+              "asset",
+              "other"
+            ]
+          },
+          "file_url": {
+            "type": "string"
+          },
+          "uploaded_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "file_url",
+          "uploaded_at"
+        ]
+      }
     }
   },
   "required": [

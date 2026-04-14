@@ -167,7 +167,7 @@ export default function ClientWorkspace() {
         <TabsContent value="integrations"><IntegrationsTab integrations={integrations} onUpdate={(record, status) => { const nextIntegrations = integrations.some((item) => item.id === record.id) ? integrations.map((item) => item.id === record.id ? { ...item, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : item.last_sync } : item) : [...integrations, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null }]; const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Integration status updated' }, activeTasks, intakeDraft, nextIntegrations); setClientDraft(operationalClient); updateIntegrationMutation.mutate({ record, status }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
         <TabsContent value="notes"><NotesTab notes={activeNotes} onCreate={(note) => createNoteMutation.mutate(note)} /></TabsContent>
         <TabsContent value="billing"><BillingTab billing={billing} /></TabsContent>
-        <TabsContent value="files"><FilesTab /></TabsContent>
+        <TabsContent value="files"><FilesTab client={clientDraft} onUpdate={persistClient} /></TabsContent>
         <TabsContent value="go_live"><GoLiveTab client={{ ...clientDraft, progress_percentage: getProgressFromTasks(activeTasks) }} tasks={activeTasks} /></TabsContent>
         <TabsContent value="settings"><SettingsTab client={clientDraft} onUpdate={persistClient} /></TabsContent>
       </Tabs>

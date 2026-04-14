@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock } from 'lucide-react';
+import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock, FolderOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import BillingSection from '../components/dashboard/BillingSection';
 import PortalIntegrations from '../components/dashboard/PortalIntegrations';
 import SupportSection from '../components/dashboard/SupportSection';
+import PortalFilesSection from '../components/portal/PortalFilesSection';
 
 export default function ClientPortal() {
   const [isLoading, setIsLoading] = useState(true);
@@ -119,6 +120,10 @@ export default function ClientPortal() {
               <LifeBuoy className="w-4 h-4 mr-2" />
               Support
             </TabsTrigger>
+            <TabsTrigger value="files" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Files
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -138,6 +143,9 @@ export default function ClientPortal() {
           </TabsContent>
           <TabsContent value="support">
             <SupportSection clientAccountId={currentUser.client_account_id} currentUser={currentUser} />
+          </TabsContent>
+          <TabsContent value="files">
+            <PortalFilesSection clientAccountId={currentUser.client_account_id} />
           </TabsContent>
         </Tabs>
       </div>
