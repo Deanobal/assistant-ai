@@ -31,6 +31,7 @@ import LeadDashboard from './pages/LeadDashboard';
 import LeadDetail from './pages/LeadDetail';
 import OnboardingDashboard from './pages/OnboardingDashboard';
 import OnboardingIntake from './pages/OnboardingIntake';
+import OnboardingSettings from './pages/OnboardingSettings';
 import TeamAccess from './pages/TeamAccess';
 import SystemReadiness from './pages/SystemReadiness';
 import SupportInbox from './pages/SupportInbox';
@@ -93,6 +94,7 @@ const AuthenticatedApp = () => {
         <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
         <Route path="/Onboarding" element={<OnboardingDashboard />} />
         <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
+        <Route path="/OnboardingSettings" element={<OnboardingSettings />} />
         <Route path="/SupportInbox" element={<SupportInbox />} />
         <Route path="/UnmatchedSmsInbox" element={<UnmatchedSmsInbox />} />
         <Route path="/TeamAccess" element={<TeamAccess />} />

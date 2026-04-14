@@ -1,32 +1,45 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import OnboardingLeadCard from '@/components/admin/onboarding/OnboardingLeadCard';
-import OnboardingCard from '@/components/admin/onboarding/OnboardingCard';
-import { getPlanPrice, isPreLiveClient } from '@/lib/onboardingHub';
+import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
+import OnboardingActivityPanel from '@/components/admin/onboarding/OnboardingActivityPanel';
+import OnboardingClientsToolbar from '@/components/admin/onboarding/OnboardingClientsToolbar';
+import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
+import { PLAN_PRICING, getDefaultIntegrationRecords, getProgressFromTasks, getTasksForPlan } from '@/components/admin/onboarding/onboardingConfig';
 
 export default function OnboardingDashboard() {
   const queryClient = useQueryClient();
+  const [filters, setFilters] = useState({ search: '', plan: 'all', status: 'all', owner: 'all' });
 
-  const { data: wonLeads = [] } = useQuery({
-    queryKey: ['won-leads'],
-    queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 50),
+  const { data: clients = [] } = useQuery({
+    queryKey: ['onboarding-clients'],
+    queryFn: () => base44.entities.Client.list('-updated_date', 200),
     initialData: [],
   });
 
-  const { data: onboardings = [] } = useQuery({
-    queryKey: ['onboardings'],
-    queryFn: () => base44.entities.Client.list('-updated_date', 100),
+  const { data: leads = [] } = useQuery({
+    queryKey: ['onboarding-leads'],
+    queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100),
     initialData: [],
   });
 
-  const createMutation = useMutation({
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['onboarding-tasks'],
+    queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500),
+    initialData: [],
+  });
+
+  const { data: notes = [] } = useQuery({
+    queryKey: ['onboarding-notes'],
+    queryFn: () => base44.entities.ClientNote.list('-updated_date', 500),
+    initialData: [],
+  });
+
+  const createClientMutation = useMutation({
     mutationFn: async (lead) => {
-      const existing = onboardings.find((item) => item.email === lead.email);
-      if (existing) return existing;
-
       const plan = 'Starter';
       const client = await base44.entities.Client.create({
         full_name: lead.full_name,
@@ -41,21 +54,40 @@ export default function OnboardingDashboard() {
         current_missed_call_handling: '',
         ai_first_goal: '',
         plan,
-        status: 'Awaiting Assets',
-        lifecycle_state: 'pre_live',
-        progress_percentage: 8,
+        status: 'Awaiting Payment',
+        progress_percentage: 0,
         assigned_owner: lead.assigned_owner || '',
         target_go_live_date: '',
         source_lead_id: lead.id,
-        last_activity: 'Client created from won lead in Onboarding Hub',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        lifecycle_state: 'pre_live',
+        last_activity: 'Client created from sold lead',
         blockers: [],
-        next_action: 'Send intake form and confirm kickoff inputs',
+        next_action: 'Confirm setup payment and send intake form',
         workflow_phase: 'Payment',
-        assets_status: 'waiting',
+        assets_status: 'not_started',
         onboarding_archived: false,
         go_live_ready: false,
         go_live_date: null,
       });
+
+      const planTasks = getTasksForPlan(plan);
+      await base44.entities.OnboardingTask.bulkCreate(planTasks.map((task) => ({
+        client_id: client.id,
+        task_name: task.task_name,
+        task_phase: task.task_phase,
+        required: task.required,
+        completed: false,
+        plan_scope: task.plan_scope,
+        due_date: null,
+        assigned_to: client.assigned_owner || '',
+        notes: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        blocked: false,
+        is_archived: false,
+      })));
 
       await base44.entities.IntakeForm.create({
         client_id: client.id,
@@ -97,13 +129,24 @@ export default function OnboardingDashboard() {
       await base44.entities.BillingStatus.create({
         client_id: client.id,
         plan,
-        setup_fee: getPlanPrice(plan, 'setup_fee'),
-        monthly_fee: getPlanPrice(plan, 'monthly_fee'),
-        billing_status: 'paid',
+        setup_fee: PLAN_PRICING[plan].setup_fee,
+        monthly_fee: PLAN_PRICING[plan].monthly_fee,
+        billing_status: 'awaiting_payment',
         payment_method: '',
         invoice_reference: '',
         renewal_date: null,
         notes: '',
+      });
+
+      await base44.entities.IntegrationStatus.bulkCreate(getDefaultIntegrationRecords(client.id, plan));
+
+      await base44.entities.ClientNote.create({
+        client_id: client.id,
+        note_type: 'onboarding_note',
+        content: 'Client created in Client Onboarding Hub from sold lead.',
+        created_by: 'system',
+        created_at: new Date().toISOString(),
+        is_archived: false,
       });
 
       await base44.entities.Lead.update(lead.id, {
@@ -115,75 +158,86 @@ export default function OnboardingDashboard() {
       return client;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['onboardings'] });
+      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'client-manager-clients', 'admin-leads'].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      });
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Client.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['onboardings'] });
-    },
+  const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
+  const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
+  const taskMap = useMemo(() => tasks.reduce((acc, task) => {
+    acc[task.client_id] = acc[task.client_id] || [];
+    acc[task.client_id].push(task);
+    return acc;
+  }, {}), [tasks]);
+
+  const filteredClients = preLiveClients.filter((client) => {
+    const matchesSearch = !filters.search || [client.business_name, client.full_name].join(' ').toLowerCase().includes(filters.search.toLowerCase());
+    const matchesPlan = filters.plan === 'all' || client.plan === filters.plan;
+    const matchesStatus = filters.status === 'all' || client.status === filters.status;
+    const matchesOwner = filters.owner === 'all' || (client.assigned_owner || 'Unassigned') === filters.owner;
+    return matchesSearch && matchesPlan && matchesStatus && matchesOwner;
   });
 
-  const readyLeads = wonLeads.filter((lead) => !onboardings.some((item) => item.email === lead.email));
-  const activeOnboardings = onboardings.filter((item) => isPreLiveClient(item));
+  const overdueTasks = tasks.filter((task) => task.due_date && !task.completed && new Date(task.due_date) < new Date());
+  const dueToday = tasks.filter((task) => task.due_date === new Date().toISOString().slice(0, 10) && !task.completed);
+  const waitingOnAssets = preLiveClients.filter((client) => client.status === 'Awaiting Assets');
+  const readyForBuild = preLiveClients.filter((client) => client.status === 'Onboarding' || client.workflow_phase === 'Build');
+  const readyForGoLive = preLiveClients.filter((client) => client.status === 'Ready for Go Live');
+
+  const kpis = [
+    { label: 'Total Clients Onboarding', value: preLiveClients.length, helper: 'Pre-live operational pipeline' },
+    { label: 'Tasks Due Today', value: dueToday.length, helper: 'Immediate actions needing attention' },
+    { label: 'Overdue Tasks', value: overdueTasks.length, helper: 'Workflow slippage across onboarding' },
+    { label: 'Ready for Go Live', value: readyForGoLive.length, helper: 'Clients close to launch' },
+    { label: 'Waiting on Assets', value: waitingOnAssets.length, helper: 'Blocked by missing inputs' },
+    { label: 'Ready for Build', value: readyForBuild.length, helper: 'Requirements close to implementation' },
+    { label: 'Starter / Growth / Enterprise', value: `${preLiveClients.filter((c) => c.plan === 'Starter').length} / ${preLiveClients.filter((c) => c.plan === 'Growth').length} / ${preLiveClients.filter((c) => c.plan === 'Enterprise').length}`, helper: 'Plan mix' },
+    { label: 'By Status', value: `${preLiveClients.filter((c) => c.status === 'Awaiting Payment').length}/${preLiveClients.filter((c) => c.status === 'Onboarding').length}/${preLiveClients.filter((c) => c.status === 'Testing').length}`, helper: 'Awaiting payment / onboarding / testing' },
+  ];
+
+  const recentActivity = notes.slice(0, 6).map((note) => ({ title: note.note_type.replaceAll('_', ' '), description: note.content, meta: note.created_at?.slice(0, 10) }));
+  const blockersSummary = preLiveClients.filter((client) => client.blockers?.length).slice(0, 6).map((client) => ({ title: client.business_name, description: client.blockers.join(', '), meta: client.assigned_owner || 'Unassigned' }));
+  const nextActions = preLiveClients.slice(0, 6).map((client) => ({ title: client.business_name, description: client.next_action || 'No next action set', meta: `${getProgressFromTasks(taskMap[client.id] || [])}% progress` }));
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Onboarding</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Internal rollout workspace</Badge>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Onboarding Hub</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">Pre-Live = Onboarding Hub</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">Live = Client Manager</Badge>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Track Clients from Won to Live</h2>
-          <p className="text-gray-400 max-w-3xl">Convert won leads into onboarding records, track every rollout stage, and keep notes in one premium internal dashboard.</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Operational onboarding system for sold AssistantAI clients</h2>
+          <p className="text-gray-400 max-w-4xl">Lead-first onboarding workflow with real client records, structured intake, dynamic checklist logic, integrations tracking, billing status, blockers, notes, and go-live readiness.</p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        {[
-          ['Won Leads Ready', readyLeads.length],
-          ['Pre-Live Clients', activeOnboardings.length],
-          ['Live Clients', onboardings.filter((item) => item.lifecycle_state === 'live').length],
-        ].map(([label, value]) => (
-          <Card key={label} className="bg-[#12121a] border-white/5">
-            <CardContent className="p-5">
-              <p className="text-sm text-gray-400">{label}</p>
-              <p className="text-3xl font-semibold text-white mt-2">{value}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <OnboardingKpiGrid items={kpis} />
+
+      <div className="grid xl:grid-cols-3 gap-6">
+        <OnboardingActivityPanel title="Recent Activity Feed" items={recentActivity} emptyText="No onboarding activity yet." />
+        <OnboardingActivityPanel title="Blockers Summary" items={blockersSummary} emptyText="No blockers currently recorded." />
+        <OnboardingActivityPanel title="Next Recommended Actions" items={nextActions} emptyText="No next actions yet." />
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-white text-xl font-semibold">Won Leads Ready for Onboarding</h3>
+        <h3 className="text-white text-xl font-semibold">Sold Leads Ready to Start Onboarding</h3>
         {readyLeads.length === 0 ? (
-          <Card className="bg-[#12121a] border-white/5">
-            <CardContent className="p-6 text-gray-400">No won leads are waiting to be converted right now.</CardContent>
-          </Card>
+          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-6 text-gray-400">No sold leads are waiting to enter the onboarding hub.</CardContent></Card>
         ) : readyLeads.map((lead) => (
-          <OnboardingLeadCard key={lead.id} lead={lead} onConvert={(item) => createMutation.mutate(item)} disabled={createMutation.isPending} />
+          <OnboardingLeadCard key={lead.id} lead={lead} onConvert={(item) => createClientMutation.mutate(item)} disabled={createClientMutation.isPending} />
         ))}
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-white text-xl font-semibold">Active Onboarding Clients</h3>
-        {activeOnboardings.length === 0 ? (
-          <Card className="bg-[#12121a] border-white/5">
-            <CardContent className="p-6 text-gray-400">No active onboarding clients yet.</CardContent>
-          </Card>
-        ) : activeOnboardings.map((item) => (
-          <OnboardingCard
-            key={item.id}
-            onboarding={item}
-            isSaving={updateMutation.isPending}
-            onSave={(data) => {
-              updateMutation.mutate({ id: item.id, data });
-            }}
-          />
-        ))}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <h3 className="text-white text-xl font-semibold">Clients List</h3>
+        </div>
+        <OnboardingClientsToolbar filters={filters} onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))} />
+        <OnboardingClientsTable clients={filteredClients} />
       </div>
     </div>
   );
