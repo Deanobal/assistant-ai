@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import OnboardingIntakeForm from '@/components/admin/onboarding/OnboardingIntakeForm';
+import AIAdvisorPanel from '@/components/admin/onboarding/AIAdvisorPanel';
 import { getBlockers, getNextActionFromTasks, getProgressFromTasks, getWorkflowPhaseFromTasks, hasMeaningfulIntake, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
 
 export default function OnboardingIntake() {
@@ -17,6 +18,7 @@ export default function OnboardingIntake() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoadingAccess, setIsLoadingAccess] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -74,6 +76,14 @@ export default function OnboardingIntake() {
     if (client) setClientDraft(client);
     if (intake) setIntakeDraft(intake);
   }, [client, intake]);
+
+  const insightsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await base44.functions.invoke('generateOnboardingInsights', { clientId });
+      return response.data.insights;
+    },
+    onSuccess: (data) => setAiInsights(data),
+  });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -135,6 +145,14 @@ export default function OnboardingIntake() {
           <p className="text-gray-400 max-w-3xl">Structured onboarding answers synced to the shared client record for future automation and operational rollout.</p>
         </div>
       </div>
+
+      {currentUser?.role === 'admin' && (
+        <AIAdvisorPanel
+          insights={aiInsights}
+          isLoading={insightsMutation.isPending}
+          onRefresh={() => insightsMutation.mutate()}
+        />
+      )}
 
       <OnboardingIntakeForm
         value={intakeDraft}
