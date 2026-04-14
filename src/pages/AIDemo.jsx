@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import DemoConversation, { transcript } from '../components/demo/DemoConversation';
-import DemoAutomationPanel, { defaultWorkflowItems } from '../components/demo/DemoAutomationPanel';
-import DemoScenarioSelector from '../components/demo/DemoScenarioSelector';
+import DemoConversation, { transcript } from '@/components/demo/DemoConversation';
+import DemoAutomationPanel, { defaultWorkflowItems } from '@/components/demo/DemoAutomationPanel';
+import DemoScenarioSelector from '@/components/demo/DemoScenarioSelector';
 
 const steps = [
 'Incoming call answered instantly',
