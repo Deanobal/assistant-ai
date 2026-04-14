@@ -23,9 +23,9 @@ export default function HeroSection({ heroImage }) {
               <span className="text-cyan-400 text-sm md:text-base font-medium">AI assistant and AI receptionist solutions for Australian service businesses</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-[4.25rem] font-bold leading-[0.98] tracking-tight mb-5 text-balance">
-              The AI Automation System for Australian Service Businesses.
-            </h1>
+<h1 className="text-4xl sm:text-5xl lg:text-[4.25rem] font-bold leading-[0.98] tracking-tight mb-5 text-balance">
+  AI Receptionist & Call Answering Service for Australian Businesses
+</h1>
 
             <p className="text-gray-400 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl text-pretty">
               AssistantAI gives Australian cleaning, trades, property, and other service businesses an AI assistant and AI receptionist that answers calls instantly, captures leads, books jobs, automates follow-up, syncs with your CRM, reduces admin by 65%, saves up to $30,000 per year, and cuts response times by 80%.
