@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY'), {
@@ -80,36 +80,6 @@ Deno.serve(async (req) => {
           lead_id: lead.id,
         });
 
-    const onboardingMatches = await base44.asServiceRole.entities.Onboarding.filter({ lead_id: lead.id }, '-updated_date', 1);
-    const onboardingBase = {
-      client_name: clientRecord.business_name,
-      contact_name: payload.fullName,
-      email: payload.email,
-      mobile: payload.mobile || '',
-      industry: payload.industry || 'other',
-      plan: plan.name,
-      payment_status: 'pending',
-      intake_form_status: 'not_sent',
-      assets_received: false,
-      workflow_mapped: false,
-      ai_agent_built: false,
-      integrations_connected: false,
-      testing_status: 'not_started',
-      go_live_status: 'not_ready',
-      onboarding_stage: 'Checkout Started',
-      lead_id: lead.id,
-      client_account_id: clientRecord.id,
-      onboarding_notes: 'Stripe checkout started from direct-start flow.',
-    };
-
-    if (onboardingMatches[0]) {
-      await base44.asServiceRole.entities.Onboarding.update(onboardingMatches[0].id, {
-        ...onboardingMatches[0],
-        ...onboardingBase,
-      });
-    } else {
-      await base44.asServiceRole.entities.Onboarding.create(onboardingBase);
-    }
 
     const billingMatches = await base44.asServiceRole.entities.BillingRecord.filter({ client_id: clientRecord.id }, '-updated_date', 1);
     const existingBilling = billingMatches[0];
@@ -124,6 +94,7 @@ Deno.serve(async (req) => {
           leadId: lead.id,
           clientAccountId: clientRecord.id,
           planKey: payload.planKey,
+          planName: plan.name,
         },
       });
       stripeCustomerId = customer.id;
@@ -194,6 +165,20 @@ Deno.serve(async (req) => {
       ...(existingBilling?.renewal_date ? { renewal_date: existingBilling.renewal_date } : {}),
     };
 
+    const billingStatusMatches = await base44.asServiceRole.entities.BillingStatus.filter({ client_id: clientRecord.id }, '-updated_date', 1);
+    const existingBillingStatus = billingStatusMatches[0] || null;
+    const billingStatusBase = {
+      client_id: clientRecord.id,
+      plan: plan.name,
+      setup_fee: plan.setupFee,
+      monthly_fee: plan.monthlyFee,
+      billing_status: 'awaiting_payment',
+      payment_method: stripeCustomerId,
+      invoice_reference: session.id,
+      renewal_date: existingBillingStatus?.renewal_date || null,
+      notes: 'Stripe checkout created and waiting for payment confirmation.',
+    };
+
     if (existingBilling) {
       await base44.asServiceRole.entities.BillingRecord.update(existingBilling.id, {
         ...existingBilling,
@@ -201,6 +186,15 @@ Deno.serve(async (req) => {
       });
     } else {
       await base44.asServiceRole.entities.BillingRecord.create(billingBase);
+    }
+
+    if (existingBillingStatus) {
+      await base44.asServiceRole.entities.BillingStatus.update(existingBillingStatus.id, {
+        ...existingBillingStatus,
+        ...billingStatusBase,
+      });
+    } else {
+      await base44.asServiceRole.entities.BillingStatus.create(billingStatusBase);
     }
 
     await base44.asServiceRole.entities.Lead.update(lead.id, {

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
@@ -14,6 +14,20 @@ Deno.serve(async (req) => {
 
     if (!lead || lead.status !== 'Won') {
       return Response.json({ ignored: true, reason: 'Lead is not in Won status' });
+    }
+
+    const existingBilling = lead.client_account_id
+      ? await base44.asServiceRole.entities.BillingRecord.filter({ client_id: lead.client_account_id }, '-updated_date', 1)
+      : lead.email
+        ? await base44.asServiceRole.entities.BillingRecord.filter({}, '-updated_date', 200)
+        : [];
+
+    const matchedBilling = lead.client_account_id
+      ? existingBilling[0] || null
+      : existingBilling.find((item) => item.stripe_customer_id || item.stripe_checkout_session_id) || null;
+
+    if (!matchedBilling || matchedBilling.billing_status !== 'active') {
+      return Response.json({ ignored: true, reason: 'Payment not confirmed yet' });
     }
 
     if (oldLead?.status === 'Won' || oldLead?.status === 'Onboarding') {

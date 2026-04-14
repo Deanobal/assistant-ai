@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY'), {
@@ -8,6 +8,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY'), {
 const PLAN_CONFIG = {
   starter: { name: 'Starter', setupFee: 1500, monthlyFee: 497 },
   growth: { name: 'Growth', setupFee: 3000, monthlyFee: 1500 },
+  enterprise: { name: 'Enterprise', setupFee: 7500, monthlyFee: 3000 },
 };
 
 function mapSubscriptionStatus(status) {
@@ -208,6 +209,31 @@ Deno.serve(async (req) => {
       return base44.asServiceRole.entities.Onboarding.create(payload);
     };
 
+    const upsertBillingStatus = async ({ clientId, customerId, sessionId, planName, setupFeeAmount, monthlyFeeAmount, renewalDate, status, notes }) => {
+      const existing = await base44.asServiceRole.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 1);
+      const current = existing[0] || null;
+      const payload = {
+        client_id: clientId,
+        plan: planName,
+        setup_fee: setupFeeAmount,
+        monthly_fee: monthlyFeeAmount,
+        billing_status: status,
+        payment_method: customerId || current?.payment_method || '',
+        invoice_reference: sessionId || current?.invoice_reference || '',
+        renewal_date: renewalDate ? renewalDate.slice(0, 10) : current?.renewal_date || null,
+        notes: notes || current?.notes || '',
+      };
+
+      if (current) {
+        return base44.asServiceRole.entities.BillingStatus.update(current.id, {
+          ...current,
+          ...payload,
+        });
+      }
+
+      return base44.asServiceRole.entities.BillingStatus.create(payload);
+    };
+
     const upsertBilling = async ({ clientId, customerId, sessionId, subscriptionId, invoiceId, planName, setupFeeAmount, monthlyFeeAmount, nextPaymentDate }) => {
       const bySession = sessionId ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_checkout_session_id: sessionId }, '-updated_date', 1) : [];
       const byCustomer = customerId ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_customer_id: customerId }, '-updated_date', 1) : [];
@@ -334,6 +360,18 @@ Deno.serve(async (req) => {
         nextPaymentDate: renewalDate,
       });
 
+      await upsertBillingStatus({
+        clientId: client.id,
+        customerId,
+        sessionId: session.id,
+        planName: metadata.planName || plan.name,
+        setupFeeAmount: plan.setupFee,
+        monthlyFeeAmount: plan.monthlyFee,
+        renewalDate,
+        status: 'active',
+        notes: 'Stripe payment confirmed and subscription linked.',
+      });
+
       await base44.asServiceRole.entities.ClientAccount.update(client.id, {
         ...client,
         requires_follow_up: false,
@@ -364,13 +402,25 @@ Deno.serve(async (req) => {
         : [];
       const billing = billingMatches[0] || null;
       if (billing) {
+        const mappedStatus = mapSubscriptionStatus(subscription.status);
         await base44.asServiceRole.entities.BillingRecord.update(billing.id, {
           ...billing,
-          billing_status: mapSubscriptionStatus(subscription.status),
+          billing_status: mappedStatus,
           payment_method_status: subscription.default_payment_method ? 'valid' : billing.payment_method_status,
           stripe_subscription_id: subscription.id,
           next_payment_date: unixToIsoDate(subscription.current_period_end) || billing.next_payment_date,
           plan_name: subscription.metadata?.planName || billing.plan_name,
+        });
+        await upsertBillingStatus({
+          clientId: billing.client_id,
+          customerId,
+          sessionId: billing.stripe_checkout_session_id,
+          planName: subscription.metadata?.planName || billing.plan_name,
+          setupFeeAmount: billing.setup_fee_amount,
+          monthlyFeeAmount: billing.monthly_fee_amount,
+          renewalDate: unixToIsoDate(subscription.current_period_end),
+          status: mappedStatus === 'pending' ? 'awaiting_payment' : mappedStatus,
+          notes: `Stripe subscription ${event.type}.`,
         });
       }
     }
@@ -385,15 +435,27 @@ Deno.serve(async (req) => {
         : [];
       const billing = customerMatches[0] || null;
       if (billing) {
+        const billingStatus = event.type === 'invoice.paid' ? 'active' : 'past_due';
         await base44.asServiceRole.entities.BillingRecord.update(billing.id, {
           ...billing,
-          billing_status: event.type === 'invoice.paid' ? 'active' : 'past_due',
+          billing_status: billingStatus,
           payment_method_status: event.type === 'invoice.paid' ? 'valid' : 'failed',
           invoice_reference: invoice.number || invoice.id,
           stripe_subscription_id: subscriptionId || billing.stripe_subscription_id,
           last_payment_date: event.type === 'invoice.paid' ? new Date().toISOString() : billing.last_payment_date,
           next_payment_date: unixToIsoDate(subscription?.current_period_end) || billing.next_payment_date,
           plan_name: subscription?.metadata?.planName || billing.plan_name,
+        });
+        await upsertBillingStatus({
+          clientId: billing.client_id,
+          customerId,
+          sessionId: billing.stripe_checkout_session_id,
+          planName: subscription?.metadata?.planName || billing.plan_name,
+          setupFeeAmount: billing.setup_fee_amount,
+          monthlyFeeAmount: billing.monthly_fee_amount,
+          renewalDate: unixToIsoDate(subscription?.current_period_end),
+          status: billingStatus,
+          notes: `Stripe invoice event: ${event.type}.`,
         });
       }
     }
