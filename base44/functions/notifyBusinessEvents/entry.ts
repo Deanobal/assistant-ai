@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const EVENT_TYPE_ALIASES = {
   booking_failed: 'booking_request_failed',
@@ -22,6 +22,7 @@ const SUPPORTED_EVENT_TYPES = new Set([
   'onboarding_task_overdue',
   'onboarding_blocker_detected',
   'client_ready_for_go_live',
+  'onboarding_task_overdue_sms_hook_prepared',
 ]);
 
 function getErrorMessage(error) {
@@ -369,6 +370,10 @@ function buildOnboardingMetadata(data, eventType, uniqueKey) {
     business_name: data.business_name || data.task_name || 'Client onboarding',
     email: data.email || '',
     mobile_number: data.mobile_number || '',
+    task_name: data.task_name || '',
+    due_date: data.due_date || '',
+    completed: !!data.completed,
+    sms_hook_prepared: eventType === 'onboarding_task_overdue',
     message_preview: (data.task_name || blockerText || data.next_action || '').slice(0, 180),
     wait_label: 'Just now',
     channel_label: 'Onboarding',
@@ -479,15 +484,22 @@ function buildEventPayload(entityName, eventType, data, oldData) {
   }
 
   if (entityName === 'OnboardingTask' && eventType !== 'delete') {
-    const dueDate = String(data.due_date || '').trim();
-    const isOverdue = !!dueDate && !data.completed && new Date(`${dueDate}T23:59:59.000Z`) < new Date();
-    const wasOverdue = !!oldData?.due_date && !oldData?.completed && new Date(`${oldData.due_date}T23:59:59.000Z`) < new Date();
-    if (isOverdue && !wasOverdue) {
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Australia/Sydney',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const dueDate = String(data.due_date || '').trim().slice(0, 10);
+    const oldDueDate = String(oldData?.due_date || '').trim().slice(0, 10);
+    const isOverdue = !!dueDate && dueDate < today && data.completed === false;
+    const wasOverdue = !!oldDueDate && oldDueDate < today && oldData?.completed === false;
+    if (isOverdue && (!wasOverdue || eventType === 'scheduled_overdue_check')) {
       return [{
         event_type: 'onboarding_task_overdue',
         logical_event_type: 'onboarding_task_overdue',
         title: 'Onboarding task overdue',
-        message: `${data.task_name} is overdue.`,
+        message: `${data.task_name} is overdue${dueDate ? ` (due ${dueDate})` : ''}.`,
         unique_key: `onboarding_task_overdue:${data.id}:${dueDate}`,
         priority: 'high',
       }];

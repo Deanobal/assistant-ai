@@ -1,0 +1,229 @@
+{
+  "name": "NotificationLog",
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "new_lead_created",
+        "strategy_call_requested",
+        "booking_confirmed",
+        "booking_request_failed",
+        "lead_marked_won",
+        "onboarding_created",
+        "onboarding_intake_submitted",
+        "billing_status_changed",
+        "integration_status_changed",
+        "note_added",
+        "support_conversation_created",
+        "support_conversation_reply",
+        "customer_sms_reply_received",
+        "customer_sms_reply_unmatched",
+        "admin_sms_reply",
+        "booking_nudge_escalated",
+        "onboarding_task_overdue",
+        "onboarding_blocker_detected",
+        "client_ready_for_go_live",
+        "onboarding_task_overdue_sms_hook_prepared"
+      ],
+      "description": "Business event that triggered the notification"
+    },
+    "entity_name": {
+      "type": "string",
+      "description": "Source entity name"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "Source entity record ID"
+    },
+    "client_account_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked client record when relevant"
+    },
+    "sender_role": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "admin",
+        "client",
+        "system",
+        "unknown",
+        null
+      ],
+      "description": "Who sent the notification or message"
+    },
+    "recipient_role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "client"
+      ],
+      "description": "Who the notification is intended for"
+    },
+    "match_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "matched",
+        "unmatched",
+        "uncertain",
+        null
+      ],
+      "description": "Matching status for inbound messages"
+    },
+    "recipient_email": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Recipient email or phone if known"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "in_app",
+        "email",
+        "sms",
+        "push"
+      ],
+      "description": "Planned or actual delivery channel"
+    },
+    "delivery_status": {
+      "type": "string",
+      "enum": [
+        "stored",
+        "provider_accepted",
+        "queued",
+        "sent",
+        "delivered",
+        "undelivered",
+        "failed",
+        "duplicate_skipped",
+        "not_configured"
+      ],
+      "description": "Notification delivery state"
+    },
+    "provider_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Future delivery provider name"
+    },
+    "provider_message": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Provider response or internal note"
+    },
+    "provider_message_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Provider message identifier such as a Twilio SID"
+    },
+    "provider_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Latest raw provider status"
+    },
+    "provider_error_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Latest provider error code if available"
+    },
+    "provider_error_message": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Latest provider error message if available"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "triggered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event was triggered"
+    },
+    "delivered_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When delivery was confirmed"
+    },
+    "failed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When a final failed or undelivered state was confirmed"
+    },
+    "actor_email": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "User who triggered the event when available"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extra event metadata"
+    }
+  },
+  "required": [
+    "event_type",
+    "entity_name",
+    "entity_id",
+    "recipient_role",
+    "channel",
+    "delivery_status",
+    "title",
+    "message",
+    "triggered_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
