@@ -98,3 +98,38 @@ export function getDefaultIntegrationRecords(clientId, plan) {
 export function getClientLifecycleLabel(client) {
   return client?.lifecycle_state === 'live' ? 'Live = Client Manager' : 'Pre-Live = Onboarding Hub';
 }
+
+export function getWorkflowPhaseFromTasks(tasks = []) {
+  const incompleteRequired = TASK_PHASES.map((phase) => ({
+    phase,
+    items: tasks.filter((task) => task.task_phase === phase && task.required && !task.completed),
+  })).find((group) => group.items.length > 0);
+
+  return incompleteRequired?.phase || 'Go Live';
+}
+
+export function getNextActionFromTasks(tasks = []) {
+  const nextRequiredTask = TASK_PHASES.flatMap((phase) => tasks.filter((task) => task.task_phase === phase && task.required && !task.completed))[0];
+  return nextRequiredTask ? `Complete: ${nextRequiredTask.task_name}` : 'All required onboarding tasks completed';
+}
+
+export function hasMeaningfulIntake(intake) {
+  if (!intake) return false;
+  return !!(intake.business_name && intake.contact_name && intake.email && intake.business_hours && intake.service_areas);
+}
+
+export function getBlockers({ intake, integrations = [], billing, tasks = [] }) {
+  const blockers = [];
+  if (!hasMeaningfulIntake(intake)) blockers.push('Missing intake details');
+  if (billing?.billing_status !== 'paid' && billing?.billing_status !== 'active') blockers.push('Unpaid billing');
+  const requiredIntegrationPending = integrations.some((integration) => integration.integration_type !== 'Optional' && integration.connection_status !== 'connected' && integration.connection_status !== 'not_included');
+  if (requiredIntegrationPending) blockers.push('Missing integrations');
+  const blockedTasks = tasks.some((task) => task.blocked && !task.completed);
+  if (blockedTasks) blockers.push('Blocked tasks');
+  return blockers;
+}
+
+export function isGoLiveReady(tasks = []) {
+  const requiredTasks = tasks.filter((task) => task.required);
+  return requiredTasks.length > 0 && requiredTasks.every((task) => task.completed);
+}

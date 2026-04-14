@@ -15,7 +15,7 @@ import BillingTab from '@/components/admin/onboarding/BillingTab';
 import FilesTab from '@/components/admin/onboarding/FilesTab';
 import GoLiveTab from '@/components/admin/onboarding/GoLiveTab';
 import SettingsTab from '@/components/admin/onboarding/SettingsTab';
-import { PLAN_PRICING, getProgressFromTasks, getTasksForPlan } from '@/components/admin/onboarding/onboardingConfig';
+import { PLAN_PRICING, getBlockers, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
 
 export default function ClientWorkspace() {
   const queryClient = useQueryClient();
@@ -87,11 +87,29 @@ export default function ClientWorkspace() {
 
   const taskSummary = useMemo(() => ({ total: tasks.length, completed: tasks.filter((task) => task.completed).length }), [tasks]);
 
+  const activeTasks = tasks.filter((task) => !task.is_archived);
+  const activeNotes = notes.filter((note) => !note.is_archived || clientDraft?.lifecycle_state === 'live');
+  const progressPercentage = getProgressFromTasks(activeTasks);
+  const workflowPhase = getWorkflowPhaseFromTasks(activeTasks);
+  const nextAction = getNextActionFromTasks(activeTasks);
+  const blockers = getBlockers({ intake: intakeDraft, integrations, billing, tasks: activeTasks });
+  const goLiveReady = isGoLiveReady(activeTasks);
+
   useEffect(() => {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
   }, [clientDraft?.plan]);
 
   if (!clientDraft || !intakeDraft) return <div className="text-gray-400">Client not found.</div>;
+
+  const getOperationalClientState = (baseClient, nextTasks = activeTasks, nextIntake = intakeDraft, nextIntegrations = integrations, nextBilling = billing) => ({
+    ...baseClient,
+    progress_percentage: getProgressFromTasks(nextTasks),
+    workflow_phase: getWorkflowPhaseFromTasks(nextTasks),
+    next_action: getNextActionFromTasks(nextTasks),
+    blockers: getBlockers({ intake: nextIntake, integrations: nextIntegrations, billing: nextBilling, tasks: nextTasks }),
+    go_live_ready: isGoLiveReady(nextTasks),
+    lifecycle_state: baseClient.lifecycle_state || 'pre_live',
+  });
 
   const persistClient = (patch) => {
     const next = { ...clientDraft, ...patch };
@@ -101,13 +119,14 @@ export default function ClientWorkspace() {
     if (patch.plan || patch.status || patch.assigned_owner) {
       next.last_activity = 'Client workspace updated';
     }
-    setClientDraft(next);
-    updateClientMutation.mutate({ ...next, progress_percentage: getProgressFromTasks(tasks), lifecycle_state: next.lifecycle_state || 'pre_live' });
+    const operationalClient = getOperationalClientState(next);
+    setClientDraft(operationalClient);
+    updateClientMutation.mutate(operationalClient);
   };
 
   const handleGoLive = async () => {
     await updateClientMutation.mutateAsync({
-      ...clientDraft,
+      ...getOperationalClientState(clientDraft),
       status: 'Live',
       lifecycle_state: 'live',
       onboarding_archived: true,
@@ -128,9 +147,6 @@ export default function ClientWorkspace() {
     queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });
   };
 
-  const activeTasks = tasks.filter((task) => !task.is_archived);
-  const activeNotes = notes.filter((note) => !note.is_archived || clientDraft.lifecycle_state === 'live');
-
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -138,17 +154,17 @@ export default function ClientWorkspace() {
         {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Mark as Go Live</Button>}
       </div>
 
-      <WorkspaceHeader client={{ ...clientDraft, progress_percentage: getProgressFromTasks(activeTasks) }} />
+      <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady }} />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-[#12121a] border border-white/5 flex flex-wrap h-auto gap-2 p-2 justify-start">
           {['overview', 'intake', 'checklist', 'integrations', 'notes', 'billing', 'files', 'go_live', 'settings'].map((tab) => <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">{tab.replace('_', ' ')}</TabsTrigger>)}
         </TabsList>
 
-        <TabsContent value="overview"><OverviewTab client={clientDraft} intake={intakeDraft} taskSummary={taskSummary} /></TabsContent>
-        <TabsContent value="intake"><OnboardingIntakeForm value={intakeDraft} client={clientDraft} onChange={(key, value) => setIntakeDraft((prev) => ({ ...prev, [key]: value }))} onClientChange={(key, value) => setClientDraft((prev) => ({ ...prev, [key]: value }))} onSave={() => { updateIntakeMutation.mutate(intakeDraft); updateClientMutation.mutate(clientDraft); }} isSaving={updateIntakeMutation.isPending || updateClientMutation.isPending} isReadOnly={!!clientDraft.onboarding_archived} /></TabsContent>
-        <TabsContent value="checklist"><ChecklistTab tasks={activeTasks} onToggleTask={(task) => updateTaskMutation.mutate({ ...task, completed: !task.completed })} onToggleBlocked={(task) => updateTaskMutation.mutate({ ...task, blocked: !task.blocked })} /></TabsContent>
-        <TabsContent value="integrations"><IntegrationsTab integrations={integrations} onUpdate={(record, status) => updateIntegrationMutation.mutate({ record, status })} /></TabsContent>
+        <TabsContent value="overview"><OverviewTab client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers }} intake={intakeDraft} taskSummary={taskSummary} /></TabsContent>
+        <TabsContent value="intake"><OnboardingIntakeForm value={intakeDraft} client={clientDraft} onChange={(key, value) => setIntakeDraft((prev) => ({ ...prev, [key]: value }))} onClientChange={(key, value) => setClientDraft((prev) => ({ ...prev, [key]: value }))} onSave={() => { const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Intake updated', status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding' }, activeTasks, intakeDraft); setClientDraft(operationalClient); updateIntakeMutation.mutate(intakeDraft); updateClientMutation.mutate(operationalClient); }} isSaving={updateIntakeMutation.isPending || updateClientMutation.isPending} isReadOnly={!!clientDraft.onboarding_archived} /></TabsContent>
+        <TabsContent value="checklist"><ChecklistTab tasks={activeTasks} onToggleTask={(task) => { const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, completed: !task.completed } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, completed: !task.completed }); updateClientMutation.mutate(operationalClient); }} onToggleBlocked={(task) => { const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, blocked: !task.blocked } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist blocker updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, blocked: !task.blocked }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
+        <TabsContent value="integrations"><IntegrationsTab integrations={integrations} onUpdate={(record, status) => { const nextIntegrations = integrations.some((item) => item.id === record.id) ? integrations.map((item) => item.id === record.id ? { ...item, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : item.last_sync } : item) : [...integrations, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null }]; const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Integration status updated' }, activeTasks, intakeDraft, nextIntegrations); setClientDraft(operationalClient); updateIntegrationMutation.mutate({ record, status }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
         <TabsContent value="notes"><NotesTab notes={activeNotes} onCreate={(note) => createNoteMutation.mutate(note)} /></TabsContent>
         <TabsContent value="billing"><BillingTab billing={billing} /></TabsContent>
         <TabsContent value="files"><FilesTab /></TabsContent>

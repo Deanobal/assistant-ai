@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import OnboardingIntakeForm from '@/components/admin/onboarding/OnboardingIntakeForm';
+import { getBlockers, getNextActionFromTasks, getProgressFromTasks, getWorkflowPhaseFromTasks, hasMeaningfulIntake, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
 
 export default function OnboardingIntake() {
   const queryClient = useQueryClient();
@@ -44,8 +45,30 @@ export default function OnboardingIntake() {
     enabled: !!clientId && isAuthenticated,
   });
 
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['onboarding-intake-tasks', clientId],
+    queryFn: () => base44.entities.OnboardingTask.filter({ client_id: clientId }, '-updated_date', 300),
+    initialData: [],
+    enabled: !!clientId && isAuthenticated,
+  });
+
+  const { data: integrations = [] } = useQuery({
+    queryKey: ['onboarding-intake-integrations', clientId],
+    queryFn: () => base44.entities.IntegrationStatus.filter({ client_id: clientId }, '-updated_date', 100),
+    initialData: [],
+    enabled: !!clientId && isAuthenticated,
+  });
+
+  const { data: billingRecords = [] } = useQuery({
+    queryKey: ['onboarding-intake-billing', clientId],
+    queryFn: () => base44.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 10),
+    initialData: [],
+    enabled: !!clientId && isAuthenticated,
+  });
+
   const client = clients[0] || null;
   const intake = intakeForms[0] || null;
+  const billing = billingRecords[0] || null;
 
   useEffect(() => {
     if (client) setClientDraft(client);
@@ -54,8 +77,22 @@ export default function OnboardingIntake() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.IntakeForm.update(intakeDraft.id, { ...intakeDraft, last_updated: new Date().toISOString(), approval_status: 'submitted' });
-      await base44.entities.Client.update(clientId, { ...clientDraft, updated_at: new Date().toISOString(), last_activity: 'Intake updated', status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding' });
+      const activeTasks = tasks.filter((task) => !task.is_archived);
+      const nextIntake = { ...intakeDraft, last_updated: new Date().toISOString(), approval_status: hasMeaningfulIntake(intakeDraft) ? 'submitted' : intakeDraft.approval_status };
+      const nextClient = {
+        ...clientDraft,
+        updated_at: new Date().toISOString(),
+        last_activity: 'Intake updated',
+        status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding',
+        progress_percentage: getProgressFromTasks(activeTasks),
+        workflow_phase: getWorkflowPhaseFromTasks(activeTasks),
+        next_action: getNextActionFromTasks(activeTasks),
+        blockers: getBlockers({ intake: nextIntake, integrations, billing, tasks: activeTasks }),
+        go_live_ready: isGoLiveReady(activeTasks),
+      };
+
+      await base44.entities.IntakeForm.update(intakeDraft.id, nextIntake);
+      await base44.entities.Client.update(clientId, nextClient);
       await base44.entities.ClientNote.create({
         client_id: clientId,
         note_type: 'onboarding_note',
@@ -66,7 +103,7 @@ export default function OnboardingIntake() {
       });
     },
     onSuccess: () => {
-      ['onboarding-intake-client', 'onboarding-intake-form', 'onboarding-clients', 'onboarding-notes', 'client-workspace'].forEach((key) => {
+      ['onboarding-intake-client', 'onboarding-intake-form', 'onboarding-intake-tasks', 'onboarding-intake-integrations', 'onboarding-intake-billing', 'onboarding-clients', 'onboarding-notes', 'client-workspace'].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: [key] });
       });
     },
