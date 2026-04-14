@@ -1,0 +1,221 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Primary contact full name"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Client business name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Primary contact email"
+    },
+    "mobile_number": {
+      "type": "string",
+      "description": "Primary contact mobile number"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "trades",
+        "real_estate",
+        "medical_clinic",
+        "dental_clinic",
+        "law_firm",
+        "automotive",
+        "hospitality",
+        "professional_services",
+        "other"
+      ],
+      "description": "Client industry"
+    },
+    "website": {
+      "type": "string",
+      "description": "Business website"
+    },
+    "main_service": {
+      "type": "string",
+      "description": "Main service offered by the client"
+    },
+    "monthly_enquiry_volume": {
+      "type": "string",
+      "enum": [
+        "0_20",
+        "21_100",
+        "101_300",
+        "301_plus"
+      ],
+      "description": "Monthly enquiry or call volume"
+    },
+    "biggest_problem": {
+      "type": "string",
+      "description": "Main business problem to solve"
+    },
+    "current_missed_call_handling": {
+      "type": "string",
+      "description": "How the business currently handles missed calls"
+    },
+    "ai_first_goal": {
+      "type": "string",
+      "description": "The first outcome they want AI to achieve"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "Starter",
+        "Growth",
+        "Enterprise"
+      ],
+      "description": "Plan or tier"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "New",
+        "Awaiting Payment",
+        "Awaiting Assets",
+        "Onboarding",
+        "Build",
+        "Testing",
+        "Ready for Go Live",
+        "Go Live",
+        "Live",
+        "Paused"
+      ],
+      "default": "New",
+      "description": "Operational lifecycle status"
+    },
+    "lifecycle_state": {
+      "type": "string",
+      "enum": [
+        "pre_live",
+        "live"
+      ],
+      "default": "pre_live",
+      "description": "Pre-live clients belong in the onboarding hub, live clients belong in client manager"
+    },
+    "progress_percentage": {
+      "type": "number",
+      "description": "Overall onboarding progress percentage"
+    },
+    "assigned_owner": {
+      "type": "string",
+      "description": "Internal owner assigned to the client"
+    },
+    "target_go_live_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target go-live date"
+    },
+    "source_lead_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Source lead record ID"
+    },
+    "last_activity": {
+      "type": "string",
+      "description": "Latest internal activity summary"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Current blockers preventing progress"
+    },
+    "next_action": {
+      "type": "string",
+      "description": "Next recommended action"
+    },
+    "workflow_phase": {
+      "type": "string",
+      "enum": [
+        "Lead / Qualification",
+        "Payment",
+        "Kickoff",
+        "Asset Collection",
+        "Workflow Mapping",
+        "Integrations",
+        "Build",
+        "Testing",
+        "Approval",
+        "Go Live",
+        "Optimisation"
+      ],
+      "default": "Lead / Qualification",
+      "description": "Current workflow phase"
+    },
+    "assets_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "waiting",
+        "partial",
+        "received"
+      ],
+      "default": "not_started",
+      "description": "Asset collection state"
+    },
+    "onboarding_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether onboarding workspace is archived/read-only after go-live"
+    },
+    "go_live_ready": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the client is ready for go-live"
+    },
+    "go_live_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Actual go-live date"
+    }
+  },
+  "required": [
+    "full_name",
+    "business_name",
+    "email",
+    "plan",
+    "status",
+    "lifecycle_state"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.client_record_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

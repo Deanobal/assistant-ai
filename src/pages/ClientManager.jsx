@@ -10,6 +10,7 @@ import CreateClientCard from '@/components/admin/client-manager/CreateClientCard
 import WonLeadConversionCard from '@/components/admin/client-manager/WonLeadConversionCard';
 import AnalyticsSection from '@/components/dashboard/AnalyticsSection';
 import { calculateManagerStats } from '@/components/admin/client-manager/mockClients';
+import { isLiveClient } from '@/lib/onboardingHub';
 
 export default function ClientManager() {
   const queryClient = useQueryClient();
@@ -171,7 +172,7 @@ export default function ClientManager() {
     },
   });
 
-  const visibleClients = clients.filter((client) => !client.is_archived);
+  const visibleClients = clients.filter((client) => !client.is_archived && isLiveClient(client));
   const convertibleWonLeads = wonLeads.filter((lead) => !lead.client_account_id);
   const onboardingByClientId = Object.fromEntries(onboardings.filter((item) => item.client_account_id).map((item) => [item.client_account_id, item]));
 

@@ -1,0 +1,93 @@
+{
+  "name": "OnboardingTask",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "task_name": {
+      "type": "string"
+    },
+    "task_phase": {
+      "type": "string",
+      "enum": [
+        "Lead / Qualification",
+        "Payment",
+        "Kickoff",
+        "Asset Collection",
+        "Workflow Mapping",
+        "Integrations",
+        "Build",
+        "Testing",
+        "Approval",
+        "Go Live",
+        "Optimisation"
+      ]
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "completed": {
+      "type": "boolean"
+    },
+    "blocked": {
+      "type": "boolean",
+      "default": false
+    },
+    "plan_scope": {
+      "type": "string",
+      "enum": [
+        "Starter",
+        "Growth",
+        "Enterprise"
+      ]
+    },
+    "due_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "client_id",
+    "task_name",
+    "task_phase",
+    "required",
+    "completed",
+    "plan_scope"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

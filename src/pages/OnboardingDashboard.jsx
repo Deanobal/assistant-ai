@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import OnboardingLeadCard from '@/components/admin/onboarding/OnboardingLeadCard';
 import OnboardingCard from '@/components/admin/onboarding/OnboardingCard';
+import { getPlanPrice, isPreLiveClient } from '@/lib/onboardingHub';
 
 export default function OnboardingDashboard() {
   const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export default function OnboardingDashboard() {
 
   const { data: onboardings = [] } = useQuery({
     queryKey: ['onboardings'],
-    queryFn: () => base44.entities.Onboarding.list('-updated_date', 100),
+    queryFn: () => base44.entities.Client.list('-updated_date', 100),
     initialData: [],
   });
 
@@ -26,81 +27,92 @@ export default function OnboardingDashboard() {
       const existing = onboardings.find((item) => item.email === lead.email);
       if (existing) return existing;
 
-      const existingClients = await base44.entities.ClientAccount.filter({ email: lead.email }, '-updated_date', 1);
-      const clientAccount = existingClients[0] || await base44.entities.ClientAccount.create({
+      const plan = 'Starter';
+      const client = await base44.entities.Client.create({
+        full_name: lead.full_name,
         business_name: lead.business_name || lead.full_name,
-        contact_name: lead.full_name,
         email: lead.email,
-        phone: lead.mobile_number || '',
-        website: '',
-        address: '',
+        mobile_number: lead.mobile_number || '',
         industry: lead.industry || 'other',
-        timezone: 'Australia/Sydney',
-        plan_name: '',
-        status: 'Onboarding',
-        monthly_fee: 0,
-        setup_fee_status: 'pending',
-        billing_status: 'active',
-        renewal_date: '',
-        included_calls: 0,
-        used_calls: 0,
-        extra_call_packs: 0,
-        overage_usage: 0,
-        premium_support_add_on: false,
-        monthly_revenue: 0,
-        total_calls_month: 0,
-        leads_captured: 0,
-        appointments_booked: 0,
-        last_activity: 'Client created from won lead',
-        portal_access: true,
-        notification_setting: 'standard',
-        client_permissions: ['Overview', 'Calls', 'Analytics', 'Billing', 'Integrations', 'Support'],
-        payment_method_label: '',
-        requires_follow_up: false,
-        active_services: [],
-        lead_id: lead.id,
-        services: [],
-        notes_entries: [],
-        integrations: [],
-        recent_calls: [],
-        invoices: [],
-        analytics: {
-          lead_conversion: 0,
-          average_call_duration: '',
-          peak_call_times: '',
-          follow_up_metrics: '',
-          trend: [],
-          categories: [],
-        },
+        website: '',
+        main_service: '',
+        monthly_enquiry_volume: lead.monthly_enquiry_volume || '0_20',
+        biggest_problem: lead.message || '',
+        current_missed_call_handling: '',
+        ai_first_goal: '',
+        plan,
+        status: 'Awaiting Assets',
+        lifecycle_state: 'pre_live',
+        progress_percentage: 8,
+        assigned_owner: lead.assigned_owner || '',
+        target_go_live_date: '',
+        source_lead_id: lead.id,
+        last_activity: 'Client created from won lead in Onboarding Hub',
+        blockers: [],
+        next_action: 'Send intake form and confirm kickoff inputs',
+        workflow_phase: 'Payment',
+        assets_status: 'waiting',
+        onboarding_archived: false,
+        go_live_ready: false,
+        go_live_date: null,
+      });
+
+      await base44.entities.IntakeForm.create({
+        client_id: client.id,
+        business_name: client.business_name,
+        contact_name: client.full_name,
+        phone: client.mobile_number,
+        email: client.email,
+        website: '',
+        industry: client.industry,
+        service_areas: '',
+        crm_used_now: '',
+        calendar_used_now: '',
+        messaging_sms_tool: '',
+        payment_billing_method: '',
+        main_business_phone: '',
+        business_hours: '',
+        after_hours_rules: '',
+        hot_lead_definition: '',
+        urgent_job_definition: '',
+        escalation_rules: '',
+        ai_never_say_rules: '',
+        booking_rules: '',
+        required_capture_before_handoff: '',
+        escalation_contacts: '',
+        scripts_assets: '',
+        faq_list: '',
+        pricing_guidance: '',
+        objection_handling: '',
+        sensitive_data_limits: '',
+        recordings_allowed: false,
+        sms_followup_approved: false,
+        outbound_calling_approved: false,
+        final_approver: '',
+        approval_status: 'draft',
+        last_updated: new Date().toISOString(),
         is_archived: false,
+      });
+
+      await base44.entities.BillingStatus.create({
+        client_id: client.id,
+        plan,
+        setup_fee: getPlanPrice(plan, 'setup_fee'),
+        monthly_fee: getPlanPrice(plan, 'monthly_fee'),
+        billing_status: 'paid',
+        payment_method: '',
+        invoice_reference: '',
+        renewal_date: null,
+        notes: '',
       });
 
       await base44.entities.Lead.update(lead.id, {
         ...lead,
         status: 'Onboarding',
-        client_account_id: clientAccount.id,
+        client_account_id: client.id,
       });
 
-      return base44.entities.Onboarding.create({
-        client_name: lead.business_name || lead.full_name,
-        contact_name: lead.full_name,
-        email: lead.email,
-        mobile: lead.mobile_number || '',
-        industry: lead.industry || 'other',
-        plan: '',
-        payment_status: 'paid',
-        intake_form_status: 'not_sent',
-        assets_received: false,
-        workflow_mapped: false,
-        ai_agent_built: false,
-        integrations_connected: false,
-        testing_status: 'not_started',
-        go_live_status: 'not_ready',
-        onboarding_stage: 'Payment Received',
-        lead_id: lead.id,
-        client_account_id: clientAccount.id,
-        onboarding_notes: lead.notes || '',
-      });
+      return client;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboardings'] });
@@ -108,14 +120,14 @@ export default function OnboardingDashboard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Onboarding.update(id, data),
+    mutationFn: ({ id, data }) => base44.entities.Client.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboardings'] });
     },
   });
 
   const readyLeads = wonLeads.filter((lead) => !onboardings.some((item) => item.email === lead.email));
-  const activeOnboardings = onboardings.filter((item) => item.onboarding_stage !== 'Live' && item.onboarding_stage !== 'Optimisation');
+  const activeOnboardings = onboardings.filter((item) => isPreLiveClient(item));
 
   return (
     <div className="space-y-8">
@@ -133,8 +145,8 @@ export default function OnboardingDashboard() {
       <div className="grid md:grid-cols-3 gap-4">
         {[
           ['Won Leads Ready', readyLeads.length],
-          ['Active Onboarding Clients', activeOnboardings.length],
-          ['Live / Optimisation', onboardings.filter((item) => item.onboarding_stage === 'Live' || item.onboarding_stage === 'Optimisation').length],
+          ['Pre-Live Clients', activeOnboardings.length],
+          ['Live Clients', onboardings.filter((item) => item.lifecycle_state === 'live').length],
         ].map(([label, value]) => (
           <Card key={label} className="bg-[#12121a] border-white/5">
             <CardContent className="p-5">

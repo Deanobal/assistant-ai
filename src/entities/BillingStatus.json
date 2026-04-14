@@ -1,0 +1,79 @@
+{
+  "name": "BillingStatus",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "Starter",
+        "Growth",
+        "Enterprise"
+      ]
+    },
+    "setup_fee": {
+      "type": "number"
+    },
+    "monthly_fee": {
+      "type": "number"
+    },
+    "billing_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "awaiting_payment",
+        "paid",
+        "active",
+        "past_due",
+        "paused"
+      ]
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "invoice_reference": {
+      "type": "string"
+    },
+    "renewal_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "plan",
+    "setup_fee",
+    "monthly_fee",
+    "billing_status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

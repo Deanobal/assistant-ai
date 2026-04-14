@@ -1,0 +1,147 @@
+{
+  "name": "IntakeForm",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Linked client ID"
+    },
+    "business_name": {
+      "type": "string"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "industry": {
+      "type": "string"
+    },
+    "service_areas": {
+      "type": "string"
+    },
+    "crm_used_now": {
+      "type": "string"
+    },
+    "calendar_used_now": {
+      "type": "string"
+    },
+    "messaging_sms_tool": {
+      "type": "string"
+    },
+    "payment_billing_method": {
+      "type": "string"
+    },
+    "main_business_phone": {
+      "type": "string"
+    },
+    "business_hours": {
+      "type": "string"
+    },
+    "after_hours_rules": {
+      "type": "string"
+    },
+    "hot_lead_definition": {
+      "type": "string"
+    },
+    "urgent_job_definition": {
+      "type": "string"
+    },
+    "escalation_rules": {
+      "type": "string"
+    },
+    "ai_never_say_rules": {
+      "type": "string"
+    },
+    "booking_rules": {
+      "type": "string"
+    },
+    "required_capture_before_handoff": {
+      "type": "string"
+    },
+    "escalation_contacts": {
+      "type": "string"
+    },
+    "scripts_assets": {
+      "type": "string"
+    },
+    "faq_list": {
+      "type": "string"
+    },
+    "pricing_guidance": {
+      "type": "string"
+    },
+    "objection_handling": {
+      "type": "string"
+    },
+    "sensitive_data_limits": {
+      "type": "string"
+    },
+    "recordings_allowed": {
+      "type": "boolean"
+    },
+    "sms_followup_approved": {
+      "type": "boolean"
+    },
+    "outbound_calling_approved": {
+      "type": "boolean"
+    },
+    "final_approver": {
+      "type": "string"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "approved",
+        "changes_requested"
+      ],
+      "default": "draft"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "client_id",
+    "business_name",
+    "contact_name",
+    "email",
+    "approval_status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

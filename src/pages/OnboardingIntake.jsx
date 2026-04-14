@@ -30,14 +30,14 @@ export default function OnboardingIntake() {
     checkAccess();
   }, []);
 
-  const { data: onboardings = [] } = useQuery({
+  const { data: intakeForms = [] } = useQuery({
     queryKey: ['onboarding-intake', onboardingId],
-    queryFn: () => base44.entities.Onboarding.filter({ id: onboardingId }, '-updated_date', 1),
+    queryFn: () => base44.entities.IntakeForm.filter({ client_id: onboardingId }, '-updated_date', 1),
     initialData: [],
     enabled: !!onboardingId && isAuthenticated,
   });
 
-  const onboarding = onboardings[0] || null;
+  const onboarding = intakeForms[0] || null;
 
   useEffect(() => {
     if (onboarding) {
@@ -47,40 +47,40 @@ export default function OnboardingIntake() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      const hasLogo = !!data.logo_upload;
-      const updatedOnboarding = await base44.entities.Onboarding.update(onboardingId, {
+      const updatedOnboarding = await base44.entities.IntakeForm.update(onboarding.id, {
         ...data,
-        intake_form_status: 'completed',
-        onboarding_stage: 'Intake Form Completed',
-        assets_received: hasLogo || data.assets_received,
+        approval_status: 'submitted',
+        last_updated: new Date().toISOString(),
       });
 
-      if (data.client_account_id) {
-        const existingClient = await base44.entities.ClientAccount.filter({ id: data.client_account_id }, '-updated_date', 1);
-        const client = existingClient[0];
+      const existingClient = await base44.entities.Client.filter({ id: onboardingId }, '-updated_date', 1);
+      const client = existingClient[0];
 
-        if (client) {
-          const nextNotesEntries = [
-            {
-              title: 'Intake Form Submitted',
-              category: 'onboarding',
-              content: data.additional_notes || data.onboarding_notes || 'Client onboarding intake form completed.',
-              date: 'Today',
-            },
-            ...(client.notes_entries || []),
-          ];
+      if (client) {
+        await base44.entities.Client.update(onboardingId, {
+          ...client,
+          full_name: data.contact_name,
+          business_name: data.business_name,
+          email: data.email,
+          mobile_number: data.phone,
+          industry: data.industry,
+          website: data.website,
+          last_activity: 'Onboarding intake form completed',
+          status: 'Onboarding',
+          workflow_phase: 'Kickoff',
+          progress_percentage: Math.max(client.progress_percentage || 0, 20),
+          assets_status: 'partial',
+          next_action: 'Review intake answers and map workflow',
+        });
 
-          await base44.entities.ClientAccount.update(data.client_account_id, {
-            ...client,
-            business_name: data.client_name,
-            contact_name: data.contact_name,
-            email: data.email,
-            phone: data.mobile,
-            industry: data.industry,
-            last_activity: 'Onboarding intake form completed',
-            notes_entries: nextNotesEntries,
-          });
-        }
+        await base44.entities.ClientNote.create({
+          client_id: onboardingId,
+          note_type: 'onboarding_note',
+          content: 'Intake form submitted and synced into the shared client record.',
+          created_by: currentUser?.email || 'system',
+          created_at: new Date().toISOString(),
+          is_archived: false,
+        });
       }
 
       return updatedOnboarding;
@@ -88,7 +88,6 @@ export default function OnboardingIntake() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding-intake', onboardingId] });
       queryClient.invalidateQueries({ queryKey: ['onboardings'] });
-      queryClient.invalidateQueries({ queryKey: ['client-workspace-onboarding'] });
       queryClient.invalidateQueries({ queryKey: ['client-workspace'] });
       queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });
     },
@@ -110,7 +109,7 @@ export default function OnboardingIntake() {
     return <div className="text-gray-400">Onboarding record not found.</div>;
   }
 
-  const hasAccess = currentUser?.role === 'admin' || currentUser?.client_account_id === draft.client_account_id;
+  const hasAccess = currentUser?.role === 'admin' || currentUser?.client_record_id === onboardingId;
 
   if (!hasAccess) {
     return (
@@ -146,7 +145,7 @@ export default function OnboardingIntake() {
           </Link>
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Intake Form</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">{draft.client_name}</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">{draft.business_name}</Badge>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Capture Everything Needed for Setup</h2>
           <p className="text-gray-400 max-w-3xl">Collect business details, service rules, tone guidance, escalation numbers, FAQs, and connected systems in one premium intake workflow.</p>

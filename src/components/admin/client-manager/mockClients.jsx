@@ -17,6 +17,14 @@ export const clientStatusStyles = {
   Trial: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
   Paused: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
   Cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
+  'Awaiting Payment': 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  'Awaiting Assets': 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
+  Build: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
+  Testing: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+  'Ready for Go Live': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  'Go Live': 'bg-green-500/10 text-green-400 border-green-500/20',
+  Live: 'bg-green-500/10 text-green-400 border-green-500/20',
+  New: 'bg-white/5 text-gray-300 border-white/10',
 };
 
 export const serviceStatusStyles = {
