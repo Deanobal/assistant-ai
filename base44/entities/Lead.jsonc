@@ -1,0 +1,200 @@
+{
+  "name": "Lead",
+  "type": "object",
+  "properties": {
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the lead was captured"
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Most recent enquiry or activity timestamp"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full name of the lead"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Business name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "mobile_number": {
+      "type": "string",
+      "description": "Mobile number"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "trades",
+        "real_estate",
+        "medical_clinic",
+        "dental_clinic",
+        "law_firm",
+        "automotive",
+        "hospitality",
+        "professional_services",
+        "other"
+      ],
+      "description": "Industry of the business"
+    },
+    "enquiry_type": {
+      "type": "string",
+      "enum": [
+        "lead_capture",
+        "booking_automation",
+        "integrations",
+        "call_handling",
+        "support",
+        "strategy_call",
+        "other"
+      ],
+      "description": "What the lead needs help with"
+    },
+    "monthly_enquiry_volume": {
+      "type": "string",
+      "enum": [
+        "0_20",
+        "21_100",
+        "101_300",
+        "301_plus"
+      ],
+      "description": "Estimated monthly enquiry volume"
+    },
+    "source_page": {
+      "type": "string",
+      "description": "Page the lead came from"
+    },
+    "message": {
+      "type": "string",
+      "description": "Latest lead message or enquiry"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "New Lead",
+        "Contacted",
+        "Strategy Call Requested",
+        "Strategy Call Booked",
+        "Proposal Sent",
+        "Follow-Up",
+        "Won",
+        "Lost",
+        "Onboarding"
+      ],
+      "default": "New Lead",
+      "description": "Lead status"
+    },
+    "lead_score": {
+      "type": "number",
+      "description": "Lead score for future qualification"
+    },
+    "assigned_owner": {
+      "type": "string",
+      "description": "Assigned owner for follow-up"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal lead notes and appended enquiry history"
+    },
+    "next_action": {
+      "type": "string",
+      "description": "Next action to take on the lead"
+    },
+    "client_account_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked client business record after conversion"
+    },
+    "booking_intent": {
+      "type": "boolean",
+      "description": "Whether the lead submitted a strategy call booking intent"
+    },
+    "booking_source": {
+      "type": "string",
+      "description": "Booking source or booking workflow origin"
+    },
+    "preferred_meeting_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Preferred strategy call date"
+    },
+    "preferred_meeting_time": {
+      "type": "string",
+      "description": "Preferred strategy call time"
+    },
+    "confirmed_meeting_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Confirmed strategy call date once a real booking is made"
+    },
+    "confirmed_meeting_time": {
+      "type": "string",
+      "description": "Confirmed strategy call time once a real booking is made"
+    },
+    "booking_status": {
+      "type": "string",
+      "description": "Booking lifecycle state such as requested or confirmed"
+    },
+    "booking_provider": {
+      "type": "string",
+      "description": "Booking platform or calendar provider used for confirmation"
+    },
+    "booking_reference": {
+      "type": "string",
+      "description": "Booking reference or calendar event ID if available"
+    },
+    "crm_contact_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked GoHighLevel contact ID"
+    },
+    "crm_last_synced_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When this lead was last synced with the CRM"
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "status"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.client_account_id": "{{user.client_account_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

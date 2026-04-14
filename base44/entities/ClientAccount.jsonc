@@ -1,0 +1,457 @@
+{
+  "name": "ClientAccount",
+  "type": "object",
+  "properties": {
+    "business_name": {
+      "type": "string",
+      "description": "Client business name"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Primary contact person"
+    },
+    "email": {
+      "type": "string",
+      "description": "Primary contact email"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Primary contact phone number"
+    },
+    "website": {
+      "type": "string",
+      "description": "Client website URL"
+    },
+    "address": {
+      "type": "string",
+      "description": "Business address"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "trades",
+        "real_estate",
+        "medical_clinic",
+        "dental_clinic",
+        "law_firm",
+        "automotive",
+        "hospitality",
+        "other"
+      ],
+      "description": "Client industry"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Client timezone"
+    },
+    "plan_name": {
+      "type": "string",
+      "description": "Current subscription plan"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Onboarding",
+        "Trial",
+        "Paused",
+        "Cancelled"
+      ],
+      "description": "Current client status"
+    },
+    "monthly_fee": {
+      "type": "number",
+      "description": "Recurring monthly fee"
+    },
+    "setup_fee_status": {
+      "type": "string",
+      "enum": [
+        "paid",
+        "pending",
+        "waived"
+      ],
+      "description": "Setup fee status"
+    },
+    "billing_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "trial",
+        "past_due",
+        "paused",
+        "cancelled"
+      ],
+      "description": "Billing state"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Renewal date"
+    },
+    "included_calls": {
+      "type": "number",
+      "description": "Monthly included calls"
+    },
+    "used_calls": {
+      "type": "number",
+      "description": "Calls used this month"
+    },
+    "extra_call_packs": {
+      "type": "number",
+      "description": "Extra call packs added"
+    },
+    "overage_usage": {
+      "type": "number",
+      "description": "Call usage above included allowance"
+    },
+    "premium_support_add_on": {
+      "type": "boolean",
+      "description": "Whether premium support is active"
+    },
+    "monthly_revenue": {
+      "type": "number",
+      "description": "Current monthly revenue for this client"
+    },
+    "total_calls_month": {
+      "type": "number",
+      "description": "Total calls this month"
+    },
+    "leads_captured": {
+      "type": "number",
+      "description": "Leads captured this month"
+    },
+    "appointments_booked": {
+      "type": "number",
+      "description": "Appointments booked this month"
+    },
+    "last_activity": {
+      "type": "string",
+      "description": "Most recent client activity label"
+    },
+    "portal_access": {
+      "type": "boolean",
+      "description": "Whether client portal access is enabled"
+    },
+    "notification_setting": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "priority",
+        "minimal"
+      ],
+      "description": "Notification preference"
+    },
+    "client_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Portal permission labels"
+    },
+    "payment_method_label": {
+      "type": "string",
+      "description": "Saved payment method description"
+    },
+    "requires_follow_up": {
+      "type": "boolean",
+      "description": "Whether this client requires internal follow-up"
+    },
+    "active_services": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of active services"
+    },
+    "lead_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked lead record that converted into this client"
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Inactive",
+              "Trial",
+              "Add-on"
+            ]
+          },
+          "price": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "price"
+        ]
+      },
+      "description": "Service lineup for the client"
+    },
+    "notes_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "next_action": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "content",
+          "date"
+        ]
+      },
+      "description": "Internal notes and action items"
+    },
+    "integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Connected",
+              "Not Connected",
+              "Needs Attention"
+            ]
+          },
+          "last_sync": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "name",
+          "status",
+          "last_sync"
+        ]
+      },
+      "description": "Connected apps for the client"
+    },
+    "recent_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "caller_name": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "sentiment": {
+            "type": "string"
+          },
+          "urgency": {
+            "type": "string"
+          },
+          "follow_up_required": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_name",
+          "timestamp",
+          "outcome",
+          "sentiment",
+          "urgency",
+          "follow_up_required",
+          "summary"
+        ]
+      },
+      "description": "Recent call activity snapshot"
+    },
+    "invoices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "amount",
+          "status",
+          "date"
+        ]
+      },
+      "description": "Invoice history"
+    },
+    "analytics": {
+      "type": "object",
+      "properties": {
+        "lead_conversion": {
+          "type": "number"
+        },
+        "average_call_duration": {
+          "type": "string"
+        },
+        "peak_call_times": {
+          "type": "string"
+        },
+        "follow_up_metrics": {
+          "type": "string"
+        },
+        "trend": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "calls": {
+                "type": "number"
+              },
+              "leads": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "label",
+              "calls",
+              "leads"
+            ]
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value",
+              "color"
+            ]
+          }
+        }
+      },
+      "required": [
+        "lead_conversion",
+        "average_call_duration",
+        "peak_call_times",
+        "follow_up_metrics",
+        "trend",
+        "categories"
+      ],
+      "description": "Analytics snapshot for the client"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "description": "Whether the client account is archived"
+    },
+    "crm_contact_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked GoHighLevel contact ID"
+    },
+    "crm_last_synced_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When this client account was last synced with the CRM"
+    }
+  },
+  "required": [
+    "business_name",
+    "contact_name",
+    "email",
+    "plan_name",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.client_account_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
