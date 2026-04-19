@@ -1,0 +1,71 @@
+{
+  "name": "IntegrationStatus",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "integration_type": {
+      "type": "string",
+      "enum": [
+        "crm",
+        "calendar",
+        "sms",
+        "payments",
+        "optional"
+      ]
+    },
+    "integration_name": {
+      "type": "string"
+    },
+    "connection_status": {
+      "type": "string",
+      "enum": [
+        "connected",
+        "pending",
+        "planned",
+        "not_included",
+        "upgrade_required"
+      ],
+      "default": "planned"
+    },
+    "last_sync": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "integration_type",
+    "integration_name",
+    "connection_status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
