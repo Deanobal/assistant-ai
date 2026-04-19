@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       const email = clean(contact.email).toLowerCase();
       const phone = normalizePhone(contact.phone);
       const leads = email ? await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 1) : [];
-      const clients = email ? await base44.asServiceRole.entities.ClientAccount.filter({ email }, '-updated_date', 1) : [];
+      const clients = email ? await base44.asServiceRole.entities.Client.filter({ email }, '-updated_date', 1) : [];
       const lead = leads[0] || null;
       const client = clients[0] || null;
 
@@ -62,15 +62,15 @@ Deno.serve(async (req) => {
       }
 
       if (client) {
-        await base44.asServiceRole.entities.ClientAccount.update(client.id, {
+        await base44.asServiceRole.entities.Client.update(client.id, {
           ...client,
-          contact_name: clean(contact.name) || client.contact_name,
-          phone: phone || client.phone,
+          full_name: clean(contact.name) || client.full_name,
+          mobile_number: phone || client.mobile_number,
           business_name: clean(contact.companyName) || client.business_name,
           crm_contact_id: contact.id,
           crm_last_synced_at: syncedAt,
         });
-        updates.push({ entity: 'ClientAccount', id: client.id, contact_id: contact.id });
+        updates.push({ entity: 'Client', id: client.id, contact_id: contact.id });
       }
     }
 

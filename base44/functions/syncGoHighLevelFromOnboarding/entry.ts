@@ -22,12 +22,12 @@ function getHeaders() {
   };
 }
 
-async function updateOpportunity(headers, locationId, contactId, onboarding) {
+async function updateOpportunity(headers, locationId, contactId, client) {
   const payload = {
     locationId,
     contactId,
     status: 'open',
-    title: `${clean(onboarding.client_name) || clean(onboarding.contact_name) || 'Client'} Onboarding`,
+    title: `${clean(client.business_name) || clean(client.full_name) || 'Client'} Onboarding`,
     monetaryValue: 0,
   };
 
@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const onboarding = payload?.data;
-    if (!onboarding?.id || onboarding.onboarding_stage !== 'Live') {
-      return Response.json({ skipped: true, reason: 'Onboarding not completed' });
+    const client = payload?.data;
+    if (!client?.id || client.lifecycle_state !== 'live') {
+      return Response.json({ skipped: true, reason: 'Client is not live' });
     }
 
     const { token, locationId, headers } = getHeaders();
@@ -57,10 +57,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'GoHighLevel secrets are missing' }, { status: 500 });
     }
 
-    const clientMatches = onboarding.client_account_id
-      ? await base44.asServiceRole.entities.ClientAccount.filter({ id: onboarding.client_account_id }, '-updated_date', 1)
-      : [];
-    const client = clientMatches[0] || null;
     const contactId = client?.crm_contact_id || null;
 
     if (!contactId) {
@@ -72,20 +68,20 @@ Deno.serve(async (req) => {
       headers,
       body: JSON.stringify({
         locationId,
-        firstName: clean(onboarding.contact_name) || clean(client?.contact_name) || 'Client',
-        lastName: clean(onboarding.client_name) || clean(client?.business_name),
-        name: clean(onboarding.contact_name) || clean(client?.contact_name) || clean(onboarding.client_name),
-        email: clean(onboarding.email) || clean(client?.email) || undefined,
-        phone: normalizePhone(onboarding.mobile) || normalizePhone(client?.phone) || undefined,
-        companyName: clean(onboarding.client_name) || clean(client?.business_name) || undefined,
-        tags: ['AssistantAI', 'Onboarding Complete'],
+        firstName: clean(client.full_name) || 'Client',
+        lastName: clean(client.business_name),
+        name: clean(client.full_name) || clean(client.business_name),
+        email: clean(client.email) || undefined,
+        phone: normalizePhone(client.mobile_number) || undefined,
+        companyName: clean(client.business_name) || undefined,
+        tags: ['AssistantAI', 'Client Live'],
       }),
     });
 
-    await updateOpportunity(headers, locationId, contactId, onboarding);
+    await updateOpportunity(headers, locationId, contactId, client);
 
     const syncedAt = new Date().toISOString();
-    await base44.asServiceRole.entities.ClientAccount.update(client.id, {
+    await base44.asServiceRole.entities.Client.update(client.id, {
       ...client,
       crm_last_synced_at: syncedAt,
     });
