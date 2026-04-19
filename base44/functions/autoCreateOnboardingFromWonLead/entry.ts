@@ -56,13 +56,13 @@ function getTasksForPlan(plan) {
 
 function getDefaultIntegrationRecords(clientId, plan) {
   const base = [
-    { client_id: clientId, integration_type: 'CRM', integration_name: 'GoHighLevel', connection_status: 'planned', last_sync: null, notes: '' },
-    { client_id: clientId, integration_type: 'Calendar', integration_name: 'Google Calendar', connection_status: 'planned', last_sync: null, notes: '' },
-    { client_id: clientId, integration_type: 'SMS', integration_name: 'Twilio', connection_status: 'planned', last_sync: null, notes: '' },
-    { client_id: clientId, integration_type: 'Payments', integration_name: 'Stripe', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'crm', integration_name: 'GoHighLevel', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'calendar', integration_name: 'Google Calendar', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'sms', integration_name: 'Twilio', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'payments', integration_name: 'Stripe', connection_status: 'planned', last_sync: null, notes: '' },
   ];
-  if (plan !== 'Starter') base.push({ client_id: clientId, integration_type: 'Optional', integration_name: 'Zapier', connection_status: 'planned', last_sync: null, notes: '' });
-  if (plan === 'Enterprise') base.push({ client_id: clientId, integration_type: 'Optional', integration_name: 'Slack', connection_status: 'planned', last_sync: null, notes: '' });
+  if (plan !== 'Starter') base.push({ client_id: clientId, integration_type: 'optional', integration_name: 'Zapier', connection_status: 'planned', last_sync: null, notes: '' });
+  if (plan === 'Enterprise') base.push({ client_id: clientId, integration_type: 'optional', integration_name: 'Slack', connection_status: 'planned', last_sync: null, notes: '' });
   return base;
 }
 
@@ -104,10 +104,8 @@ Deno.serve(async (req) => {
       status: 'Awaiting Payment',
       progress_percentage: 0,
       assigned_owner: lead.assigned_owner || '',
-      target_go_live_date: '',
+      target_go_live_date: null,
       source_lead_id: lead.id,
-      created_at: now,
-      updated_at: now,
       lifecycle_state: 'pre_live',
       last_activity: 'Client created automatically from won lead',
       blockers: ['Missing intake details', 'Unpaid billing', 'Missing integrations'],
@@ -117,6 +115,7 @@ Deno.serve(async (req) => {
       onboarding_archived: false,
       go_live_ready: false,
       go_live_date: null,
+      shared_files: [],
     });
 
     await base44.asServiceRole.entities.OnboardingTask.bulkCreate(getTasksForPlan(plan).map((task) => ({
@@ -129,8 +128,6 @@ Deno.serve(async (req) => {
       due_date: null,
       assigned_to: client.assigned_owner || '',
       notes: '',
-      created_at: now,
-      updated_at: now,
       blocked: false,
       is_archived: false,
     })));

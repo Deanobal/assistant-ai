@@ -53,7 +53,7 @@ async function upsertContact(headers, locationId, record) {
     phone: phone || undefined,
     companyName: clean(record.business_name) || undefined,
     source: 'AssistantAI',
-    tags: [record.status || record.onboarding_stage || 'AssistantAI'],
+    tags: [record.status || 'AssistantAI'],
     customFields: [],
   };
 
