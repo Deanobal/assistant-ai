@@ -1,41 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const EVENT_TYPE_ALIASES = {
-  booking_failed: 'booking_request_failed',
-};
-
 const SUPPORTED_EVENT_TYPES = new Set([
-  'new_lead_created',
-  'strategy_call_requested',
-  'booking_confirmed',
-  'booking_request_failed',
-  'lead_marked_won',
-  'onboarding_created',
-  'onboarding_intake_submitted',
-  'billing_status_changed',
-  'integration_status_changed',
-  'note_added',
-  'support_conversation_created',
-  'support_conversation_reply',
-  'customer_sms_reply_received',
-  'booking_nudge_escalated',
   'onboarding_task_overdue',
   'onboarding_blocker_detected',
   'client_ready_for_go_live',
-  'onboarding_task_overdue_sms_hook_prepared',
 ]);
 
 function getErrorMessage(error) {
   if (error && typeof error === 'object' && 'message' in error) return String(error.message);
   return 'Unknown error';
-}
-
-function normalizeEventType(eventType) {
-  return EVENT_TYPE_ALIASES[eventType] || eventType;
-}
-
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
 }
 
 function normalizeEmail(value) {
@@ -71,13 +44,27 @@ function buildProviderMessage(uniqueKey, details) {
   return text ? `${buildEventKey(uniqueKey)}\n${text}` : buildEventKey(uniqueKey);
 }
 
-function buildAlertMetadata(metadata, normalizedEventType, uniqueKey, priority) {
+function buildFunctionUrl(requestUrl, functionName) {
+  const url = new URL(requestUrl);
+  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+function buildAlertMetadata(metadata, eventType, uniqueKey, priority) {
   return {
     ...(metadata || {}),
-    entity_event_type: normalizedEventType,
+    entity_event_type: eventType,
     unique_key: uniqueKey,
     priority,
   };
+}
+
+function formatHumanLabel(value, fallback) {
+  const raw = String(value || '').trim();
+  if (!raw) return fallback;
+  return raw.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function buildAdminUrl(path) {
@@ -88,45 +75,26 @@ function buildAdminUrl(path) {
   return `https://app.base44.com/apps/${appId}${trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`}`;
 }
 
-function buildFunctionUrl(requestUrl, functionName) {
-  const url = new URL(requestUrl);
-  url.pathname = url.pathname.replace(/\/[^/]+$/, `/${functionName}`);
-  url.search = '';
-  url.hash = '';
-  return url.toString();
-}
-
-function formatHumanLabel(value, fallback) {
-  const raw = String(value || '').trim();
-  if (!raw) return fallback;
-  if (raw === 'general') return 'General enquiry';
-  return raw.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function buildAlertPresentation(title, message, metadata, priority) {
-  const leadName = metadata?.full_name || metadata?.business_name || 'New contact';
-  const channelLabel = metadata?.channel_label || (metadata?.conversation_id ? 'Chat' : metadata?.mobile_number ? 'SMS' : 'Lead');
-  const waitLabel = metadata?.wait_label || 'Just now';
-  const summary = String(metadata?.intent_summary || metadata?.message_preview || message || title || '').trim();
+function buildAlertPresentation(title, message, metadata) {
+  const leadName = metadata?.business_name || metadata?.task_name || 'Client';
+  const channelLabel = metadata?.channel_label || 'Onboarding';
+  const summary = String(metadata?.message_preview || message || title || '').trim();
   const adminUrl = buildAdminUrl(metadata?.admin_link);
-  const categoryLabel = formatHumanLabel(metadata?.enquiry_category, 'General enquiry');
-  const urgencyLabel = formatHumanLabel(metadata?.urgency_level, 'Normal');
-  const recommendedAction = formatHumanLabel(metadata?.recommended_action, metadata?.mobile_number ? 'Call lead' : 'Reply now');
-
-  return { leadName, channelLabel, waitLabel, summary, adminUrl, categoryLabel, urgencyLabel, recommendedAction };
+  const recommendedAction = formatHumanLabel(metadata?.recommended_action, 'Review client');
+  return { leadName, channelLabel, summary, adminUrl, recommendedAction };
 }
 
-function buildEmailBody(title, message, metadata, priority) {
-  const alert = buildAlertPresentation(title, message, metadata, priority);
+function buildEmailBody(title, message, metadata) {
+  const alert = buildAlertPresentation(title, message, metadata);
   return {
-    text: [title, `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`, alert.summary || message, `Category: ${alert.categoryLabel}`, `Urgency: ${alert.urgencyLabel}`, `Waiting: ${alert.waitLabel}`, `Next action: ${alert.recommendedAction}`, alert.adminUrl ? `Reply now:\n${alert.adminUrl}` : null].filter(Boolean).join('\n'),
-    html: ['<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;padding:12px 0;">', `<div style="font-size:22px;font-weight:700;margin-bottom:10px;">${title}</div>`, `<div style="font-size:15px;color:#334155;margin-bottom:8px;">${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}</div>`, '<div style="border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;">', `<div style="font-size:15px;font-weight:600;margin-bottom:10px;">${alert.summary || message}</div>`, `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Category:</strong> ${alert.categoryLabel}</div>`, `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Urgency:</strong> ${alert.urgencyLabel}</div>`, `<div style="font-size:14px;color:#475569;margin-bottom:6px;"><strong>Waiting:</strong> ${alert.waitLabel}</div>`, `<div style="font-size:14px;color:#475569;"><strong>Next action:</strong> ${alert.recommendedAction}</div>`, '</div>', alert.adminUrl ? `<div style="margin-top:14px;"><div style="font-size:13px;color:#64748b;margin-bottom:8px;">Reply now</div><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">Open Conversation</a></div>` : '', '</div>'].join(''),
+    text: [title, `${alert.leadName} · ${alert.channelLabel}`, alert.summary || message, `Next action: ${alert.recommendedAction}`, alert.adminUrl ? `Open:\n${alert.adminUrl}` : null].filter(Boolean).join('\n'),
+    html: ['<div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;padding:12px 0;">', `<div style="font-size:22px;font-weight:700;margin-bottom:10px;">${title}</div>`, `<div style="font-size:15px;color:#334155;margin-bottom:8px;">${alert.leadName} · ${alert.channelLabel}</div>`, '<div style="border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;">', `<div style="font-size:15px;font-weight:600;margin-bottom:10px;">${alert.summary || message}</div>`, `<div style="font-size:14px;color:#475569;"><strong>Next action:</strong> ${alert.recommendedAction}</div>`, '</div>', alert.adminUrl ? `<div style="margin-top:14px;"><a href="${alert.adminUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;">Open Client</a></div>` : '', '</div>'].join(''),
   };
 }
 
-function buildSmsAlertMessage(title, message, metadata, priority) {
-  const alert = buildAlertPresentation(title, message, metadata, priority);
-  return [title, `${alert.leadName}${alert.channelLabel ? ` · ${alert.channelLabel}` : ''}`, alert.summary || message, `Category: ${alert.categoryLabel}`, `Urgency: ${alert.urgencyLabel}`, `Waiting: ${alert.waitLabel}`, `Next action: ${alert.recommendedAction}`, alert.adminUrl ? `Reply now:\n${alert.adminUrl}` : null].filter(Boolean).join('\n').slice(0, 480);
+function buildSmsAlertMessage(title, message, metadata) {
+  const alert = buildAlertPresentation(title, message, metadata);
+  return [title, `${alert.leadName} · ${alert.channelLabel}`, alert.summary || message, `Next: ${alert.recommendedAction}`, alert.adminUrl ? alert.adminUrl : null].filter(Boolean).join('\n').slice(0, 480);
 }
 
 function getProviderMessageId(data) {
@@ -139,7 +107,6 @@ function buildChannelMetadata(baseMetadata, channel, diagnostics) {
     [`${channel}_attempted`]: !!diagnostics.attempted,
     [`${channel}_sent`]: !!diagnostics.sent,
     [`${channel}_delivery_status`]: diagnostics.deliveryStatus || null,
-    [`${channel}_sent_definition`]: channel === 'sms' ? 'Twilio accepted/send state only until callback confirms final delivery' : 'provider acceptance only',
     [`${channel}_error`]: diagnostics.error || null,
     [`${channel}_provider_message_id`]: diagnostics.providerMessageId || null,
     [`${channel}_provider_response`]: diagnostics.providerResponse || null,
@@ -208,9 +175,6 @@ function resolveEmailRecipient(configuredEmail) {
   if (!normalizedConfiguredEmail) {
     return { configuredRecipient: null, actualRecipient: null, deliveryPath: 'unavailable', fallbackReason: 'ADMIN_NOTIFICATION_EMAIL is missing.' };
   }
-  if (!isValidEmail(normalizedConfiguredEmail)) {
-    return { configuredRecipient: normalizedConfiguredEmail, actualRecipient: null, deliveryPath: 'invalid_configured_email', fallbackReason: 'ADMIN_NOTIFICATION_EMAIL is not a valid email address.' };
-  }
   return { configuredRecipient: normalizedConfiguredEmail, actualRecipient: normalizedConfiguredEmail, deliveryPath: 'configured_admin_email', fallbackReason: null };
 }
 
@@ -260,20 +224,12 @@ async function sendTwilioSms(message, to, statusCallbackUrl) {
   const resultText = await response.text();
   let parsed = null;
   try { parsed = JSON.parse(resultText); } catch { parsed = null; }
-  const mismatchError = parsed?.message && /from/i.test(String(parsed.message)) ? `Twilio rejected sender ${fromNumber}: ${parsed.message}` : null;
 
   if (!response.ok) {
-    return { status: 'failed', details: mismatchError || parsed?.message || resultText || 'Twilio SMS send failed.', providerMessageId: getProviderMessageId(parsed), providerResponse: parsed || resultText || null, providerStatus: parsed?.status || null, providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null, fromNumberUsed: fromNumber, configSource };
+    return { status: 'failed', details: parsed?.message || resultText || 'Twilio SMS send failed.', providerMessageId: getProviderMessageId(parsed), providerResponse: parsed || resultText || null, providerStatus: parsed?.status || null, providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null, fromNumberUsed: fromNumber, configSource };
   }
 
   return { status: mapTwilioSmsDeliveryStatus(parsed?.status), details: parsed?.status || 'Twilio SMS accepted by Twilio.', providerStatus: parsed?.status || null, providerMessageId: getProviderMessageId(parsed), providerResponse: parsed || resultText || null, providerErrorCode: parsed?.error_code ? String(parsed.error_code) : null, fromNumberUsed: parsed?.from || fromNumber, configSource };
-}
-
-function getFirstValue(values) {
-  for (const value of values) {
-    if (value) return value;
-  }
-  return '';
 }
 
 function sanitizeKeyPart(value) {
@@ -285,207 +241,28 @@ function sanitizeKeyPart(value) {
     .slice(0, 60) || 'unknown';
 }
 
-function getLeadLabel(data) {
-  return data?.business_name || data?.full_name || 'A lead';
-}
-
-function isLeadEntity(entityName) {
-  return entityName === 'Lead';
-}
-
-function isStrategyCallLead(data) {
-  return !!data && !!data.booking_intent && data.enquiry_type === 'strategy_call';
-}
-
-function isBookingConfirmed(data) {
-  return !!data && (data.status === 'Strategy Call Booked' || data.booking_status === 'confirmed');
-}
-
-function getRequestTimestamp(data) {
-  return getFirstValue([
-    data?.last_activity_at,
-    data?.updated_at,
-    data?.updated_date,
-    data?.created_at,
-    data?.created_date,
-    'unknown',
-  ]);
-}
-
-function getConfirmationReference(data) {
-  return getFirstValue([
-    data?.booking_reference,
-    data?.confirmed_meeting_date && data?.confirmed_meeting_time ? `${data.confirmed_meeting_date}_${data.confirmed_meeting_time}` : '',
-    data?.confirmed_meeting_date,
-    getRequestTimestamp(data),
-  ]);
-}
-
-function getNewFailure(data, oldData) {
-  if (isBookingConfirmed(data)) return null;
-  const fields = ['booking_error', 'last_booking_error', 'error_message'];
-  for (const field of fields) {
-    const nextValue = data?.[field] ? String(data[field]).trim() : '';
-    const previousValue = oldData?.[field] ? String(oldData[field]).trim() : '';
-    if (nextValue && nextValue !== previousValue) return { field, value: nextValue };
-  }
-  return null;
-}
-
-function buildLeadMetadata(data, eventType, uniqueKey) {
+function buildClientMetadata(data, eventType, uniqueKey) {
   return {
     entity_event_type: eventType,
     unique_key: uniqueKey,
-    admin_link: `/LeadDetail?id=${data.id}`,
-    full_name: data.full_name || '',
-    business_name: data.business_name || '',
-    email: data.email || '',
-    mobile_number: data.mobile_number || '',
-    enquiry_type: data.enquiry_type || '',
-    industry: data.industry || '',
-    source_page: data.source_page || '',
-    booking_intent: !!data.booking_intent,
-    preferred_meeting_date: data.preferred_meeting_date || '',
-    preferred_meeting_time: data.preferred_meeting_time || '',
-    confirmed_meeting_date: data.confirmed_meeting_date || '',
-    confirmed_meeting_time: data.confirmed_meeting_time || '',
-    booking_provider: data.booking_provider || '',
-    booking_reference: data.booking_reference || '',
-    message_preview: (data.message || '').slice(0, 180),
-    wait_label: 'Just now',
-    channel_label: 'Lead',
-    cta_label: 'Open Lead',
-    recommended_action: data.mobile_number ? 'Call lead' : 'Open lead',
-  };
-}
-
-function buildOnboardingMetadata(data, eventType, uniqueKey) {
-  const clientId = data.client_id || data.id;
-  const blockerText = Array.isArray(data.blockers) ? data.blockers.join(', ') : '';
-  return {
-    entity_event_type: eventType,
-    unique_key: uniqueKey,
-    admin_link: `/ClientWorkspace?id=${clientId}`,
-    full_name: data.full_name || '',
-    business_name: data.business_name || data.task_name || 'Client onboarding',
+    admin_link: `/ClientWorkspace?id=${data.id || data.client_id}`,
+    business_name: data.business_name || 'Client',
     email: data.email || '',
     mobile_number: data.mobile_number || '',
     task_name: data.task_name || '',
     due_date: data.due_date || '',
-    completed: !!data.completed,
-    sms_hook_prepared: eventType === 'onboarding_task_overdue',
-    message_preview: (data.task_name || blockerText || data.next_action || '').slice(0, 180),
-    wait_label: 'Just now',
+    message_preview: String(data.task_name || (Array.isArray(data.blockers) ? data.blockers.join(', ') : '') || data.next_action || '').slice(0, 180),
     channel_label: 'Onboarding',
-    cta_label: 'Open Client',
-    recommended_action: 'Review client',
+    recommended_action: eventType === 'onboarding_task_overdue' ? 'Review overdue task' : eventType === 'onboarding_blocker_detected' ? 'Resolve blockers' : 'Prepare go live',
   };
-}
-
-function buildSmsMessage(def, data) {
-  const leadName = data.full_name || data.business_name || 'Lead';
-  const enquiryType = data.enquiry_type || 'general';
-  const eventLabel = def.event_type === 'booking_confirmed'
-    ? 'booking confirmed'
-    : def.event_type === 'booking_request_failed'
-      ? 'booking failed'
-      : def.event_type === 'strategy_call_requested'
-        ? 'strategy call'
-        : 'new lead';
-  return `${def.priority === 'high' ? 'HIGH' : 'ALERT'}: ${enquiryType} | ${leadName} | ${eventLabel}`.slice(0, 160);
-}
-
-function buildOnboardingSmsMessage(def, data) {
-  const name = data.business_name || data.task_name || 'Client';
-  const eventLabel = def.event_type === 'onboarding_task_overdue'
-    ? 'task overdue'
-    : def.event_type === 'onboarding_blocker_detected'
-      ? 'blockers detected'
-      : 'go-live ready';
-  return `${def.priority === 'high' ? 'HIGH' : 'ALERT'}: ${name} | ${eventLabel}`.slice(0, 160);
 }
 
 function buildEventPayload(entityName, eventType, data, oldData) {
   if (!data?.id) return [];
 
-  if (isLeadEntity(entityName)) {
-    const events = [];
-    const leadLabel = getLeadLabel(data);
-    const strategyCallLead = isStrategyCallLead(data);
-    const bookingConfirmed = isBookingConfirmed(data);
-
-    if (eventType === 'create') {
-      events.push({
-        event_type: 'new_lead_created',
-        logical_event_type: 'new_lead_created',
-        title: 'New lead created',
-        message: `${leadLabel} was captured from ${data.source_page || 'an unknown source'}.`,
-        unique_key: `new_lead_created:${data.id}:${getFirstValue([data.created_at, data.created_date, data.updated_date, 'created'])}`,
-        priority: strategyCallLead ? 'high' : 'normal',
-      });
-
-      if (strategyCallLead && !bookingConfirmed) {
-        events.push({
-          event_type: 'strategy_call_requested',
-          logical_event_type: 'strategy_call_requested',
-          title: 'New strategy call request',
-          message: `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`,
-          unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
-          priority: 'high',
-        });
-      }
-    }
-
-    if (eventType === 'update') {
-      const oldWasStrategyCall = isStrategyCallLead(oldData);
-      const lastActivityChanged = !!data.last_activity_at && data.last_activity_at !== (oldData?.last_activity_at || '');
-      const newlyRequestedStrategyCall = strategyCallLead && !bookingConfirmed && !oldWasStrategyCall;
-      const repeatStrategyCallRequest = strategyCallLead && !bookingConfirmed && oldWasStrategyCall && lastActivityChanged;
-
-      if (newlyRequestedStrategyCall || repeatStrategyCallRequest) {
-        events.push({
-          event_type: 'strategy_call_requested',
-          logical_event_type: 'strategy_call_requested',
-          title: newlyRequestedStrategyCall ? 'New strategy call request' : 'Repeated strategy call request',
-          message: newlyRequestedStrategyCall
-            ? `${data.full_name || leadLabel} requested a strategy call from ${data.source_page || 'the website'}.`
-            : `${data.full_name || leadLabel} submitted another strategy call request.`,
-          unique_key: `strategy_call_requested:${data.id}:${getRequestTimestamp(data)}`,
-          priority: 'high',
-        });
-      }
-
-      const bookingJustConfirmed = strategyCallLead && bookingConfirmed && !isBookingConfirmed(oldData);
-      if (bookingJustConfirmed) {
-        events.push({
-          event_type: 'booking_confirmed',
-          logical_event_type: 'booking_confirmed',
-          title: 'Strategy call booking confirmed',
-          message: `${data.full_name || leadLabel} has a confirmed strategy call${data.confirmed_meeting_date ? ` on ${data.confirmed_meeting_date}` : ''}.`,
-          unique_key: `booking_confirmed:${data.id}:${getConfirmationReference(data)}`,
-          priority: 'high',
-        });
-      }
-
-      const failure = strategyCallLead && !bookingConfirmed ? getNewFailure(data, oldData) : null;
-      if (failure) {
-        events.push({
-          event_type: 'booking_request_failed',
-          logical_event_type: 'booking_failed',
-          title: 'Strategy call booking failed',
-          message: `${data.full_name || leadLabel} has a strategy call booking issue: ${failure.value}`,
-          unique_key: `booking_request_failed:${data.id}:${failure.field}:${sanitizeKeyPart(failure.value)}:${getRequestTimestamp(data)}`,
-          priority: 'high',
-        });
-      }
-    }
-
-    return events;
-  }
-
   if (entityName === 'OnboardingTask' && eventType !== 'delete') {
     const today = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Australia/Sydney',
+      timeZone: 'Etc/GMT-10',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -497,7 +274,6 @@ function buildEventPayload(entityName, eventType, data, oldData) {
     if (isOverdue && (!wasOverdue || eventType === 'scheduled_overdue_check')) {
       return [{
         event_type: 'onboarding_task_overdue',
-        logical_event_type: 'onboarding_task_overdue',
         title: 'Onboarding task overdue',
         message: `${data.task_name} is overdue${dueDate ? ` (due ${dueDate})` : ''}.`,
         unique_key: `onboarding_task_overdue:${data.id}:${dueDate}`,
@@ -513,7 +289,6 @@ function buildEventPayload(entityName, eventType, data, oldData) {
     if (blockerCount > 0 && oldBlockerCount === 0) {
       events.push({
         event_type: 'onboarding_blocker_detected',
-        logical_event_type: 'onboarding_blocker_detected',
         title: 'Onboarding blockers detected',
         message: `${data.business_name || 'Client'} now has blockers: ${data.blockers.join(', ')}.`,
         unique_key: `onboarding_blocker_detected:${data.id}:${sanitizeKeyPart(data.blockers.join('-'))}`,
@@ -523,7 +298,6 @@ function buildEventPayload(entityName, eventType, data, oldData) {
     if (data.go_live_ready && !oldData?.go_live_ready) {
       events.push({
         event_type: 'client_ready_for_go_live',
-        logical_event_type: 'client_ready_for_go_live',
         title: 'Client ready for go-live',
         message: `${data.business_name || 'Client'} is ready for go-live.`,
         unique_key: `client_ready_for_go_live:${data.id}:${data.updated_at || data.updated_date || 'ready'}`,
@@ -537,26 +311,11 @@ function buildEventPayload(entityName, eventType, data, oldData) {
 }
 
 async function runAdminAlert(base44, requestUrl, payload) {
-  const {
-    eventType,
-    entityName,
-    entityId,
-    clientAccountId = null,
-    title,
-    message,
-    actorEmail = null,
-    metadata = {},
-    uniqueKey,
-    priority = 'normal',
-    smsMessage,
-  } = payload;
-
+  const { eventType, entityName, entityId, clientId = null, title, message, metadata = {}, uniqueKey, priority = 'normal' } = payload;
   if (!eventType || !entityName || !entityId || !title || !message || !uniqueKey) {
     return { error: 'eventType, entityName, entityId, title, message, and uniqueKey are required', status: 400 };
   }
-
-  const normalizedEventType = normalizeEventType(eventType);
-  if (!SUPPORTED_EVENT_TYPES.has(normalizedEventType)) {
+  if (!SUPPORTED_EVENT_TYPES.has(eventType)) {
     return { error: `Unsupported eventType: ${eventType}`, status: 400 };
   }
 
@@ -565,19 +324,18 @@ async function runAdminAlert(base44, requestUrl, payload) {
   const resendFromEmail = readSecretValue('RESEND_FROM_EMAIL');
   const emailRecipient = resolveEmailRecipient(configuredAdminEmail);
   const triggeredAt = new Date().toISOString();
-  const subject = priority === 'high' || priority === 'urgent' ? `[High Priority] ${title}` : title;
-  const alertMetadata = buildAlertMetadata(metadata, normalizedEventType, uniqueKey, priority);
-  const emailBody = buildEmailBody(title, message, alertMetadata, priority);
-  const textMessage = buildSmsAlertMessage(title, smsMessage || message, alertMetadata, priority);
+  const subject = priority === 'high' ? `[High Priority] ${title}` : title;
+  const alertMetadata = buildAlertMetadata(metadata, eventType, uniqueKey, priority);
+  const emailBody = buildEmailBody(title, message, alertMetadata);
+  const textMessage = buildSmsAlertMessage(title, message, alertMetadata);
   const smsStatusCallbackUrl = buildFunctionUrl(requestUrl, 'twilioStatusCallback');
-
   const results = { in_app: null, email: null, sms: null };
 
   const inAppResult = await createLog(base44, {
-    event_type: normalizedEventType,
+    event_type: eventType,
     entity_name: entityName,
     entity_id: entityId,
-    client_account_id: clientAccountId,
+    client_account_id: clientId,
     recipient_role: 'admin',
     recipient_email: emailRecipient.actualRecipient || configuredAdminEmail || null,
     channel: 'in_app',
@@ -587,33 +345,17 @@ async function runAdminAlert(base44, requestUrl, payload) {
     title,
     message,
     triggered_at: triggeredAt,
-    actor_email: actorEmail,
+    actor_email: null,
     metadata: alertMetadata,
   }, uniqueKey);
   results.in_app = inAppResult.isDuplicate ? 'duplicate_skipped' : 'stored';
 
-  const emailDiagnostics = {
-    attempted: false,
-    sent: false,
-    deliveryStatus: null,
-    error: null,
-    providerMessageId: null,
-    providerResponse: null,
-    actualRecipient: emailRecipient.actualRecipient,
-    configuredRecipient: emailRecipient.configuredRecipient,
-    deliveryPath: emailRecipient.deliveryPath,
-    fallbackReason: emailRecipient.fallbackReason,
-    fromAddress: resendFromEmail || null,
-    providerStatus: null,
-    providerErrorCode: null,
-    statusCallbackUrl: null,
-  };
-
+  const emailDiagnostics = { attempted: false, sent: false, deliveryStatus: null, error: null, providerMessageId: null, providerResponse: null, actualRecipient: emailRecipient.actualRecipient, configuredRecipient: emailRecipient.configuredRecipient, deliveryPath: emailRecipient.deliveryPath, fallbackReason: emailRecipient.fallbackReason, fromAddress: resendFromEmail || null, providerStatus: null, providerErrorCode: null, statusCallbackUrl: null };
   const emailResult = await createLog(base44, {
-    event_type: normalizedEventType,
+    event_type: eventType,
     entity_name: entityName,
     entity_id: entityId,
-    client_account_id: clientAccountId,
+    client_account_id: clientId,
     recipient_role: 'admin',
     recipient_email: emailRecipient.actualRecipient || configuredAdminEmail || null,
     channel: 'email',
@@ -623,7 +365,7 @@ async function runAdminAlert(base44, requestUrl, payload) {
     title,
     message,
     triggered_at: triggeredAt,
-    actor_email: actorEmail,
+    actor_email: null,
     metadata: buildChannelMetadata(alertMetadata, 'email', emailDiagnostics),
   }, uniqueKey);
 
@@ -648,30 +390,12 @@ async function runAdminAlert(base44, requestUrl, payload) {
   }
 
   const twilioFromNumber = normalizePhone(readSecretValue('TWILIO_FROM_NUMBER'));
-  const smsDiagnostics = {
-    attempted: false,
-    sent: false,
-    deliveryStatus: null,
-    error: null,
-    providerMessageId: null,
-    providerResponse: null,
-    actualRecipient: configuredAdminPhone || null,
-    configuredRecipient: configuredAdminPhone || null,
-    deliveryPath: configuredAdminPhone ? 'configured_admin_phone' : 'unavailable',
-    fallbackReason: configuredAdminPhone ? null : 'No admin phone is configured.',
-    fromAddress: twilioFromNumber || null,
-    fromNumberUsed: twilioFromNumber || null,
-    configSource: twilioFromNumber ? 'env' : 'missing',
-    providerStatus: null,
-    providerErrorCode: null,
-    statusCallbackUrl: smsStatusCallbackUrl,
-  };
-
+  const smsDiagnostics = { attempted: false, sent: false, deliveryStatus: null, error: null, providerMessageId: null, providerResponse: null, actualRecipient: configuredAdminPhone || null, configuredRecipient: configuredAdminPhone || null, deliveryPath: configuredAdminPhone ? 'configured_admin_phone' : 'unavailable', fallbackReason: configuredAdminPhone ? null : 'No admin phone is configured.', fromAddress: twilioFromNumber || null, fromNumberUsed: twilioFromNumber || null, configSource: twilioFromNumber ? 'env' : 'missing', providerStatus: null, providerErrorCode: null, statusCallbackUrl: smsStatusCallbackUrl };
   const smsResultLog = await createLog(base44, {
-    event_type: normalizedEventType,
+    event_type: eventType,
     entity_name: entityName,
     entity_id: entityId,
-    client_account_id: clientAccountId,
+    client_account_id: clientId,
     recipient_role: 'admin',
     recipient_email: configuredAdminPhone || null,
     channel: 'sms',
@@ -687,7 +411,7 @@ async function runAdminAlert(base44, requestUrl, payload) {
     triggered_at: triggeredAt,
     delivered_at: null,
     failed_at: null,
-    actor_email: actorEmail,
+    actor_email: null,
     metadata: buildChannelMetadata(alertMetadata, 'sms', smsDiagnostics),
   }, uniqueKey);
 
@@ -717,7 +441,7 @@ async function runAdminAlert(base44, requestUrl, payload) {
     results.sms = { status: smsResult.status, delivery_status: smsDeliveryStatus };
   }
 
-  return { success: true, event_type: normalizedEventType, results };
+  return { success: true, event_type: eventType, results };
 }
 
 Deno.serve(async (req) => {
@@ -740,34 +464,22 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const def of eventDefs) {
-      const metadata = entityName === 'Lead'
-        ? buildLeadMetadata(data, def.logical_event_type || def.event_type, def.unique_key)
-        : buildOnboardingMetadata(data, def.logical_event_type || def.event_type, def.unique_key);
+      const metadata = buildClientMetadata(data, def.event_type, def.unique_key);
       const adminResponse = await runAdminAlert(base44, req.url, {
         eventType: def.event_type,
         entityName,
         entityId: data.id,
-        clientAccountId: data.client_account_id || data.client_id || data.id || null,
+        clientId: data.client_id || data.id || null,
         title: def.title,
         message: def.message,
-        actorEmail: null,
         metadata,
         uniqueKey: def.unique_key,
         priority: def.priority,
-        smsMessage: entityName === 'Lead' ? buildSmsMessage(def, data) : buildOnboardingSmsMessage(def, data),
       });
-
-      results.push({
-        event_type: def.logical_event_type || def.event_type,
-        admin_alert: adminResponse,
-      });
+      results.push({ event_type: def.event_type, admin_alert: adminResponse });
     }
 
-    return Response.json({
-      success: true,
-      triggered_events: eventDefs.map((def) => def.logical_event_type || def.event_type),
-      results,
-    });
+    return Response.json({ success: true, triggered_events: eventDefs.map((def) => def.event_type), results });
   } catch (error) {
     return Response.json({ error: getErrorMessage(error) }, { status: 500 });
   }
