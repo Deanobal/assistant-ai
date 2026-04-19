@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function getErrorMessage(error) {
   if (error && typeof error === 'object' && 'message' in error) {
@@ -18,10 +18,11 @@ function getChannelLabel(sourceType) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const service = base44.asServiceRole;
     const nowIso = new Date().toISOString();
     const now = new Date(nowIso).getTime();
-    const conversations = await base44.asServiceRole.entities.SupportConversation.list('-updated_at', 300);
-    const leads = await base44.asServiceRole.entities.Lead.list('-updated_date', 300);
+    const conversations = await service.entities.SupportConversation.list('-updated_at', 300);
+    const leads = await service.entities.Lead.list('-updated_date', 300);
     const leadsById = Object.fromEntries(leads.map((lead) => [lead.id, lead]));
 
     const dueConversations = conversations.filter((conversation) => {
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
       const title = priority === 'high' ? 'High-intent chat needs reply' : 'Snoozed chat needs reply';
       const uniqueKey = `snooze_follow_up:${conversation.id}:${conversation.snoozed_until}`;
 
-      const alertResponse = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+      const alertResponse = await service.functions.invoke('sendAdminAlert', {
         eventType: 'support_conversation_reply',
         entityName: 'SupportConversation',
         entityId: conversation.id,
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
         },
       });
 
-      await base44.asServiceRole.entities.SupportConversation.update(conversation.id, {
+      await service.entities.SupportConversation.update(conversation.id, {
         ...conversation,
         snooze_alert_sent_at: nowIso,
       });
