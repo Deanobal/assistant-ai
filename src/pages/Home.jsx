@@ -88,7 +88,7 @@ export default function Home() {
         structuredData={structuredData}
       />
       <div>
-      <HeroSection heroImage={HERO_IMAGE} />
+      <HeroSection />
       <TrustStrip />
       <ProblemSection />
       <ServicesPreview />
