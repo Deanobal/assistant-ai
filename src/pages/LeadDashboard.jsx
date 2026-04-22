@@ -32,6 +32,22 @@ export default function LeadDashboard() {
     },
   });
 
+  const markWonMutation = useMutation({
+    mutationFn: async (lead) => {
+      const updatedLead = await base44.entities.Lead.update(lead.id, { ...lead, status: 'Won' });
+      await base44.functions.invoke('convertWonLeadToOnboarding', {
+        event: { entity_name: 'Lead', type: 'update' },
+        data: updatedLead,
+        old_data: lead,
+      });
+    },
+    onSuccess: () => {
+      ['admin-leads', 'pipeline-onboardings', 'onboarding-clients', 'onboarding-leads', 'onboarding-tasks'].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      });
+    },
+  });
+
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const parseLeadDate = (lead) => new Date(lead.created_at || lead.created_date || now).getTime();
@@ -81,11 +97,12 @@ export default function LeadDashboard() {
       <PipelineBoard
         stages={stages}
         groupedLeads={groupedLeads}
-        isSaving={updateMutation.isPending}
+        isSaving={updateMutation.isPending || markWonMutation.isPending}
         onStatusChange={(lead, status) => updateMutation.mutate({
           id: lead.id,
           data: { ...lead, status },
         })}
+        onMarkWon={(lead) => markWonMutation.mutate(lead)}
       />
     </div>
   );

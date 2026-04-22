@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function PipelineBoard({ stages, groupedLeads, onStatusChange, isSaving }) {
+export default function PipelineBoard({ stages, groupedLeads, onStatusChange, onMarkWon, isSaving }) {
   return (
     <div className="overflow-x-auto pb-2">
       <div className="grid grid-flow-col auto-cols-[320px] gap-4 min-w-max">
@@ -36,11 +36,23 @@ export default function PipelineBoard({ stages, groupedLeads, onStatusChange, is
                         {stages.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Link to={`/LeadDetail?id=${lead.id}`}>
-                      <Button variant="outline" disabled={isSaving} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
-                        View Lead
-                      </Button>
-                    </Link>
+                    <div className="grid gap-2">
+                      {lead.status !== 'Won' && lead.status !== 'Onboarding' && (
+                        <Button onClick={() => onMarkWon(lead)} disabled={isSaving} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                          Mark as WON
+                        </Button>
+                      )}
+                      {lead.status === 'Won' && !lead.client_account_id && (
+                        <Button onClick={() => onMarkWon(lead)} disabled={isSaving} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                          Start Onboarding
+                        </Button>
+                      )}
+                      <Link to={`/LeadDetail?id=${lead.id}`}>
+                        <Button variant="outline" disabled={isSaving} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
+                          View Lead
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

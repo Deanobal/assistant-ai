@@ -8,7 +8,8 @@ import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
 import OnboardingActivityPanel from '@/components/admin/onboarding/OnboardingActivityPanel';
 import OnboardingClientsToolbar from '@/components/admin/onboarding/OnboardingClientsToolbar';
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
-import { PLAN_PRICING, getDefaultIntegrationRecords, getProgressFromTasks, getTasksForPlan } from '@/components/admin/onboarding/onboardingConfig';
+import { PLAN_PRICING, getDefaultIntegrationRecords, getProgressFromTasks } from '@/components/admin/onboarding/onboardingConfig';
+import { buildCoreOnboardingTasks } from '@/components/admin/onboarding/onboardingTaskLibrary';
 
 export default function OnboardingDashboard() {
   const queryClient = useQueryClient();
@@ -29,6 +30,12 @@ export default function OnboardingDashboard() {
   const { data: tasks = [] } = useQuery({
     queryKey: ['onboarding-tasks'],
     queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500),
+    initialData: [],
+  });
+
+  const { data: onboardingRecords = [] } = useQuery({
+    queryKey: ['onboarding-records'],
+    queryFn: () => base44.entities.Onboarding.list('-updated_date', 200),
     initialData: [],
   });
 
@@ -72,22 +79,17 @@ export default function OnboardingDashboard() {
         go_live_date: null,
       });
 
-      const planTasks = getTasksForPlan(plan);
-      await base44.entities.OnboardingTask.bulkCreate(planTasks.map((task) => ({
+      await base44.entities.Onboarding.create({
         client_id: client.id,
-        task_name: task.task_name,
-        task_phase: task.task_phase,
-        required: task.required,
-        completed: false,
-        plan_scope: task.plan_scope,
-        due_date: null,
-        assigned_to: client.assigned_owner || '',
-        notes: '',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        blocked: false,
-        is_archived: false,
-      })));
+        lead_id: lead.id,
+        status: 'Not Started',
+        progress_percentage: 0,
+        next_action: 'Collect intake details',
+        started_at: null,
+        completed_at: null,
+      });
+
+      await base44.entities.OnboardingTask.bulkCreate(buildCoreOnboardingTasks(client.id, client.assigned_owner || '', plan));
 
       await base44.entities.IntakeForm.create({
         client_id: client.id,
@@ -158,13 +160,17 @@ export default function OnboardingDashboard() {
       return client;
     },
     onSuccess: () => {
-      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'client-manager-clients', 'admin-leads'].forEach((key) => {
+      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-records', 'onboarding-notes', 'client-manager-clients', 'admin-leads'].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: [key] });
       });
     },
   });
 
   const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
+  const onboardingMap = onboardingRecords.reduce((acc, item) => {
+    acc[item.client_id] = item;
+    return acc;
+  }, {});
   const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
   const taskMap = useMemo(() => tasks.reduce((acc, task) => {
     acc[task.client_id] = acc[task.client_id] || [];
@@ -185,6 +191,7 @@ export default function OnboardingDashboard() {
   const waitingOnAssets = preLiveClients.filter((client) => client.status === 'Awaiting Assets');
   const readyForBuild = preLiveClients.filter((client) => client.status === 'Onboarding' || client.workflow_phase === 'Build');
   const readyForGoLive = preLiveClients.filter((client) => client.status === 'Ready for Go Live');
+  const liveClients = clients.filter((client) => client.lifecycle_state === 'live' || client.status === 'Live');
 
   const kpis = [
     { label: 'Total Clients Onboarding', value: preLiveClients.length, helper: 'Pre-live operational pipeline' },
@@ -234,10 +241,19 @@ export default function OnboardingDashboard() {
 
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h3 className="text-white text-xl font-semibold">Clients List</h3>
+          <h3 className="text-white text-xl font-semibold">Active Onboarding</h3>
         </div>
         <OnboardingClientsToolbar filters={filters} onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))} />
         <OnboardingClientsTable clients={filteredClients} />
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-white text-xl font-semibold">Live</h3>
+        {liveClients.length === 0 ? (
+          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-6 text-gray-400">No completed live clients yet.</CardContent></Card>
+        ) : (
+          <OnboardingClientsTable clients={liveClients} />
+        )}
       </div>
     </div>
   );

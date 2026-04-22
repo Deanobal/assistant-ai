@@ -132,6 +132,16 @@ Deno.serve(async (req) => {
       is_archived: false,
     })));
 
+    await base44.asServiceRole.entities.Onboarding.create({
+      client_id: client.id,
+      lead_id: lead.id,
+      status: 'Not Started',
+      progress_percentage: 0,
+      next_action: 'Collect intake details',
+      started_at: null,
+      completed_at: null,
+    });
+
     await base44.asServiceRole.entities.IntakeForm.create({
       client_id: client.id,
       business_name: client.business_name,

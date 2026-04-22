@@ -1,6 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function OnboardingStatusView({ onboardings }) {
   return (
@@ -23,7 +25,14 @@ export default function OnboardingStatusView({ onboardings }) {
                   <p className="text-white font-medium">{item.client_name}</p>
                   <p className="text-sm text-gray-400">{item.contact_name} • {item.email}</p>
                 </div>
-                <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 w-fit">{item.onboarding_stage}</Badge>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 w-fit">{item.status || item.onboarding_stage}</Badge>
+                  {item.client_id && (
+                    <Link to={`/ClientWorkspace?id=${item.client_id}`}>
+                      <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Continue Onboarding</Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>
