@@ -95,7 +95,6 @@ export default function ClientWorkspace() {
   const nextAction = getNextActionFromTasks(activeTasks);
   const blockers = getBlockers({ intake: intakeDraft, integrations, billing, tasks: activeTasks });
   const goLiveReady = isGoLiveReady(activeTasks);
-  const onboardingStatus = progressPercentage >= 100 ? 'Completed' : progressPercentage > 0 ? 'In Progress' : 'Not Started';
 
   useEffect(() => {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
@@ -156,7 +155,7 @@ export default function ClientWorkspace() {
         {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Mark as Go Live</Button>}
       </div>
 
-      <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: onboardingStatus === 'Completed' && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
+      <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: goLiveReady && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-[#12121a] border border-white/5 flex flex-wrap h-auto gap-2 p-2 justify-start">

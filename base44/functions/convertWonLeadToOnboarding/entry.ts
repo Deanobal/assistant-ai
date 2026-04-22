@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       return Response.json({ ignored: true, reason: 'Lead is not in Won status' });
     }
 
-    if (oldLead?.status === 'Won' || oldLead?.status === 'Onboarding') {
+    if (oldLead?.status === 'Won' || oldLead?.client_account_id) {
       return Response.json({ ignored: true, reason: 'Lead was already processed' });
     }
 

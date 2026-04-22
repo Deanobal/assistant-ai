@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const lead = body?.data;
     const oldLead = body?.old_data;
 
-    if (!lead || lead.status !== 'Won' || oldLead?.status === 'Won') {
+    if (!lead || lead.status !== 'Won' || oldLead?.status === 'Won' || oldLead?.client_account_id) {
       return Response.json({ skipped: true, reason: 'Lead is not newly marked Won' });
     }
     if (lead.client_account_id) {
