@@ -33,15 +33,21 @@ export default function OnboardingDashboard() {
     initialData: [],
   });
 
-  const { data: onboardingRecords = [] } = useQuery({
-    queryKey: ['onboarding-records'],
-    queryFn: () => base44.entities.Onboarding.list('-updated_date', 200),
-    initialData: [],
-  });
-
   const { data: notes = [] } = useQuery({
     queryKey: ['onboarding-notes'],
     queryFn: () => base44.entities.ClientNote.list('-updated_date', 500),
+    initialData: [],
+  });
+
+  const { data: billingRecords = [] } = useQuery({
+    queryKey: ['onboarding-billing'],
+    queryFn: () => base44.entities.BillingStatus.list('-updated_date', 300),
+    initialData: [],
+  });
+
+  const { data: integrationRecords = [] } = useQuery({
+    queryKey: ['onboarding-integrations'],
+    queryFn: () => base44.entities.IntegrationStatus.list('-updated_date', 300),
     initialData: [],
   });
 
@@ -77,16 +83,6 @@ export default function OnboardingDashboard() {
         onboarding_archived: false,
         go_live_ready: false,
         go_live_date: null,
-      });
-
-      await base44.entities.Onboarding.create({
-        client_id: client.id,
-        lead_id: lead.id,
-        status: 'Not Started',
-        progress_percentage: 0,
-        next_action: 'Collect intake details',
-        started_at: null,
-        completed_at: null,
       });
 
       await base44.entities.OnboardingTask.bulkCreate(buildCoreOnboardingTasks(client.id, client.assigned_owner || '', plan));
@@ -160,18 +156,23 @@ export default function OnboardingDashboard() {
       return client;
     },
     onSuccess: () => {
-      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-records', 'onboarding-notes', 'client-manager-clients', 'admin-leads'].forEach((key) => {
+      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads'].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: [key] });
       });
     },
   });
 
   const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
-  const onboardingMap = onboardingRecords.reduce((acc, item) => {
+  const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
+  const billingMap = billingRecords.reduce((acc, item) => {
     acc[item.client_id] = item;
     return acc;
   }, {});
-  const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
+  const integrationMap = integrationRecords.reduce((acc, item) => {
+    acc[item.client_id] = acc[item.client_id] || [];
+    acc[item.client_id].push(item);
+    return acc;
+  }, {});
   const taskMap = useMemo(() => tasks.reduce((acc, task) => {
     acc[task.client_id] = acc[task.client_id] || [];
     acc[task.client_id].push(task);
@@ -190,7 +191,7 @@ export default function OnboardingDashboard() {
   const dueToday = tasks.filter((task) => task.due_date === new Date().toISOString().slice(0, 10) && !task.completed);
   const waitingOnAssets = preLiveClients.filter((client) => client.status === 'Awaiting Assets');
   const readyForBuild = preLiveClients.filter((client) => client.status === 'Onboarding' || client.workflow_phase === 'Build');
-  const readyForGoLive = preLiveClients.filter((client) => client.status === 'Ready for Go Live');
+  const readyForGoLive = preLiveClients.filter((client) => client.go_live_ready || client.status === 'Ready for Go Live');
   const liveClients = clients.filter((client) => client.lifecycle_state === 'live' || client.status === 'Live');
 
   const kpis = [

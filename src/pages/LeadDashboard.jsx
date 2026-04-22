@@ -19,9 +19,9 @@ export default function LeadDashboard() {
     initialData: [],
   });
 
-  const { data: onboardings = [] } = useQuery({
-    queryKey: ['pipeline-onboardings'],
-    queryFn: () => base44.entities.Onboarding.list('-updated_date', 50),
+  const { data: clients = [] } = useQuery({
+    queryKey: ['pipeline-clients'],
+    queryFn: () => base44.entities.Client.list('-updated_date', 100),
     initialData: [],
   });
 
@@ -42,7 +42,7 @@ export default function LeadDashboard() {
       });
     },
     onSuccess: () => {
-      ['admin-leads', 'pipeline-onboardings', 'onboarding-clients', 'onboarding-leads', 'onboarding-tasks'].forEach((key) => {
+      ['admin-leads', 'pipeline-clients', 'onboarding-clients', 'onboarding-leads', 'onboarding-tasks'].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: [key] });
       });
     },
@@ -91,7 +91,7 @@ export default function LeadDashboard() {
 
       <div className="grid xl:grid-cols-[0.95fr_1.05fr] gap-6">
         <LeadSourceSummary sources={sourceCounts} />
-        <OnboardingStatusView onboardings={onboardings} />
+        <OnboardingStatusView clients={clients} />
       </div>
 
       <PipelineBoard

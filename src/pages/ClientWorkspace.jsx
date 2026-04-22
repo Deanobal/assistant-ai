@@ -29,12 +29,10 @@ export default function ClientWorkspace() {
   const { data: integrations = [] } = useQuery({ queryKey: ['client-workspace-integrations', clientId], queryFn: () => base44.entities.IntegrationStatus.filter({ client_id: clientId }, '-updated_date', 100), initialData: [] });
   const { data: notes = [] } = useQuery({ queryKey: ['client-workspace-notes', clientId], queryFn: () => base44.entities.ClientNote.filter({ client_id: clientId }, '-updated_date', 200), initialData: [] });
   const { data: billingRecords = [] } = useQuery({ queryKey: ['client-workspace-billing', clientId], queryFn: () => base44.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 10), initialData: [] });
-  const { data: onboardingRecords = [] } = useQuery({ queryKey: ['client-workspace-onboarding', clientId], queryFn: () => base44.entities.Onboarding.filter({ client_id: clientId }, '-updated_date', 1), initialData: [] });
 
   const client = clients[0] || null;
   const intake = intakeForms[0] || null;
   const billing = billingRecords[0] || null;
-  const onboarding = onboardingRecords[0] || null;
 
   useEffect(() => {
     if (client) setClientDraft(client);
@@ -76,13 +74,6 @@ export default function ClientWorkspace() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] }),
   });
 
-  const updateOnboardingMutation = useMutation({
-    mutationFn: (data) => {
-      if (!onboarding?.id) return Promise.resolve(null);
-      return base44.entities.Onboarding.update(onboarding.id, data);
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-onboarding', clientId] }),
-  });
 
   const ensurePlanTasksMutation = useMutation({
     mutationFn: async (plan) => {
@@ -105,18 +96,6 @@ export default function ClientWorkspace() {
   const blockers = getBlockers({ intake: intakeDraft, integrations, billing, tasks: activeTasks });
   const goLiveReady = isGoLiveReady(activeTasks);
   const onboardingStatus = progressPercentage >= 100 ? 'Completed' : progressPercentage > 0 ? 'In Progress' : 'Not Started';
-
-  useEffect(() => {
-    if (!onboarding?.id) return;
-    updateOnboardingMutation.mutate({
-      ...onboarding,
-      status: onboardingStatus,
-      progress_percentage: progressPercentage,
-      next_action: nextAction,
-      started_at: onboarding.started_at || (progressPercentage > 0 ? new Date().toISOString() : null),
-      completed_at: progressPercentage >= 100 ? new Date().toISOString() : null,
-    });
-  }, [onboarding?.id, onboardingStatus, progressPercentage, nextAction]);
 
   useEffect(() => {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
