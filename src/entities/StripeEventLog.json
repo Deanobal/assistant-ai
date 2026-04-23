@@ -1,0 +1,53 @@
+{
+  "name": "StripeEventLog",
+  "type": "object",
+  "properties": {
+    "stripe_event_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "processed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["processing", "processed", "skipped", "failed"]
+    },
+    "related_client_id": {
+      "type": ["string", "null"]
+    },
+    "error_message": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": [
+    "stripe_event_id",
+    "event_type",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

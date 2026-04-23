@@ -28,6 +28,7 @@
         "active",
         "past_due",
         "paused",
+        "payment_failed",
         "cancelled"
       ]
     },
