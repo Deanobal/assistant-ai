@@ -35,7 +35,7 @@ export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, cli
               <h3 className="text-white font-semibold">{phase}</h3>
               <div className="space-y-3">
                 {phaseTasks.map((task) => {
-                  const smartTask = getSmartPriorityTask(task, client, tasks);
+                  const smartTask = getSmartPriorityTask(task, client);
 
                   return (
                   <div key={task.id} className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -47,7 +47,7 @@ export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, cli
                         {smartTask.days_overdue > 0 && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Overdue</Badge>}
                         {smartTask.smart_priority && <Badge className="bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20">Smart Priority</Badge>}
                       </div>
-                      <p className="text-sm text-gray-400 mt-1">Owner: {task.assigned_to || 'Unassigned'}{task.due_date ? ` • Due ${task.due_date}` : ''}{smartTask.priority_score >= 2 ? ` • Score ${smartTask.priority_score}` : ''}</p>
+                      <p className="text-sm text-gray-400 mt-1">Owner: {task.assigned_to || 'Unassigned'}{task.due_date ? ` • Due ${task.due_date}` : ''}{smartTask.smart_priority ? ` • Score ${smartTask.priority_score}` : ''}</p>
                       {task.notes && <p className="text-sm text-gray-500 mt-2">{task.notes}</p>}
                     </div>
                     <div className="flex flex-wrap gap-2">

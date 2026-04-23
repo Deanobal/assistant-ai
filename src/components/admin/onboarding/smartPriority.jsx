@@ -1,4 +1,4 @@
-import { TASK_PHASES } from './onboardingConfig';
+export const GO_LIVE_BLOCKING_PHASES = ['Payment', 'Asset Collection', 'Workflow Mapping', 'Integrations', 'Testing', 'Approval', 'Go Live'];
 
 export function getTaskDaysOverdue(task) {
   if (!task?.due_date || task.completed) return 0;
@@ -10,17 +10,28 @@ export function getTaskDaysOverdue(task) {
   return diff > 0 ? Math.floor(diff / (1000 * 60 * 60 * 24)) : 0;
 }
 
-export function getGoLiveBlockingTask(tasks = []) {
-  return TASK_PHASES.flatMap((phase) => tasks.filter((task) => task.task_phase === phase && task.required && !task.completed))[0] || null;
+export function isTaskBlockingGoLive(task, client) {
+  if (!task || task.completed || !task.required) return false;
+  if (!GO_LIVE_BLOCKING_PHASES.includes(task.task_phase)) return false;
+  if (client?.lifecycle_state === 'live' || client?.status === 'Live') return false;
+  if (client?.onboarding_archived) return false;
+  return true;
 }
 
-export function getSmartPriorityTask(task, client, clientTasks = []) {
+export function getClientUrgencyScore(client) {
+  if (client?.go_live_ready || client?.status === 'Ready for Go Live') return 3;
+  if (client?.status === 'Testing' || client?.status === 'Build') return 2;
+  if (client?.status === 'Onboarding' || client?.status === 'Awaiting Assets') return 1;
+  return 0;
+}
+
+export function getSmartPriorityTask(task, client) {
   const daysOverdue = getTaskDaysOverdue(task);
-  const blockingTask = getGoLiveBlockingTask(clientTasks);
-  const isBlockingGoLive = blockingTask?.id === task.id;
+  const isBlockingGoLive = isTaskBlockingGoLive(task, client);
   const isOverdue = daysOverdue > 0;
   const smart_priority = !task.completed && isOverdue && isBlockingGoLive;
   const priority_score = (isBlockingGoLive ? 2 : 0) + (isOverdue ? 1 : 0);
+  const client_urgency = getClientUrgencyScore(client);
 
   return {
     ...task,
@@ -30,6 +41,7 @@ export function getSmartPriorityTask(task, client, clientTasks = []) {
     is_blocking_go_live: isBlockingGoLive,
     smart_priority,
     priority_score,
+    client_urgency,
   };
 }
 
@@ -37,11 +49,12 @@ export function getSmartPriorityQueue(clients = [], taskMap = {}) {
   return clients
     .flatMap((client) => {
       const clientTasks = (taskMap[client.id] || []).filter((task) => !task.is_archived);
-      return clientTasks.map((task) => getSmartPriorityTask(task, client, clientTasks));
+      return clientTasks.map((task) => getSmartPriorityTask(task, client));
     })
-    .filter((task) => task.priority_score >= 2)
+    .filter((task) => !task.completed && task.days_overdue > 0 && task.is_blocking_go_live)
     .sort((a, b) => {
-      if (b.priority_score !== a.priority_score) return b.priority_score - a.priority_score;
-      return b.days_overdue - a.days_overdue;
+      if (b.days_overdue !== a.days_overdue) return b.days_overdue - a.days_overdue;
+      if (b.client_urgency !== a.client_urgency) return b.client_urgency - a.client_urgency;
+      return b.priority_score - a.priority_score;
     });
 }

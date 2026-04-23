@@ -22,7 +22,7 @@ export default function SmartPriorityQueue({ items }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-white font-medium">{item.client_name}</p>
                       <Badge className="bg-red-500/10 text-red-300 border-red-500/20">{item.days_overdue}d overdue</Badge>
-                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Score {item.priority_score}</Badge>
+                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Urgency {item.client_urgency}</Badge>
                     </div>
                     <p className="text-sm text-white/90">{item.task_name}</p>
                     <p className="text-sm text-gray-400">{item.task_phase} • {item.assigned_owner}</p>
