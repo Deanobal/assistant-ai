@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import OnboardingLeadCard from '@/components/admin/onboarding/OnboardingLeadCard';
 import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
@@ -9,13 +11,25 @@ import OnboardingActivityPanel from '@/components/admin/onboarding/OnboardingAct
 import OnboardingClientsToolbar from '@/components/admin/onboarding/OnboardingClientsToolbar';
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
 import SmartPriorityQueue from '@/components/admin/onboarding/SmartPriorityQueue';
-import { PLAN_PRICING, getDefaultIntegrationRecords, getProgressFromTasks } from '@/components/admin/onboarding/onboardingConfig';
+import NewOnboardingDialog from '@/components/admin/onboarding/NewOnboardingDialog';
+import { getProgressFromTasks } from '@/components/admin/onboarding/onboardingConfig';
 import { getSmartPriorityQueue } from '@/components/admin/onboarding/smartPriority';
-import { buildCoreOnboardingTasks } from '@/components/admin/onboarding/onboardingTaskLibrary';
 
 export default function OnboardingDashboard() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ search: '', plan: 'all', status: 'all', owner: 'all' });
+  const [isNewOnboardingOpen, setIsNewOnboardingOpen] = useState(false);
+  const [newOnboardingForm, setNewOnboardingForm] = useState({
+    full_name: '',
+    business_name: '',
+    mobile_number: '',
+    email: '',
+    industry: 'other',
+    website: '',
+    plan: 'Starter',
+    source: 'manual_sale',
+  });
 
   const { data: clients = [] } = useQuery({
     queryKey: ['onboarding-clients'],
@@ -55,112 +69,61 @@ export default function OnboardingDashboard() {
 
   const createClientMutation = useMutation({
     mutationFn: async (lead) => {
-      const plan = 'Starter';
-      const client = await base44.entities.Client.create({
-        full_name: lead.full_name,
-        business_name: lead.business_name || lead.full_name,
-        email: lead.email,
-        mobile_number: lead.mobile_number || '',
-        industry: lead.industry || 'other',
-        website: '',
-        main_service: '',
-        monthly_enquiry_volume: lead.monthly_enquiry_volume || '0_20',
-        biggest_problem: lead.message || '',
-        current_missed_call_handling: '',
-        ai_first_goal: '',
-        plan,
-        status: 'Awaiting Payment',
-        progress_percentage: 0,
-        assigned_owner: lead.assigned_owner || '',
-        target_go_live_date: '',
-        source_lead_id: lead.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        lifecycle_state: 'pre_live',
-        last_activity: 'Client created from sold lead',
-        blockers: [],
-        next_action: 'Confirm setup payment and send intake form',
-        workflow_phase: 'Payment',
-        assets_status: 'not_started',
-        onboarding_archived: false,
-        go_live_ready: false,
-        go_live_date: null,
+      const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
+        event: { entity_name: 'Lead', type: 'update' },
+        data: lead,
+        old_data: { ...lead, status: 'New Lead' },
       });
-
-      await base44.entities.OnboardingTask.bulkCreate(buildCoreOnboardingTasks(client.id, client.assigned_owner || '', plan));
-
-      await base44.entities.IntakeForm.create({
-        client_id: client.id,
-        business_name: client.business_name,
-        contact_name: client.full_name,
-        phone: client.mobile_number,
-        email: client.email,
-        website: '',
-        industry: client.industry,
-        service_areas: '',
-        crm_used_now: '',
-        calendar_used_now: '',
-        messaging_sms_tool: '',
-        payment_billing_method: '',
-        main_business_phone: '',
-        business_hours: '',
-        after_hours_rules: '',
-        hot_lead_definition: '',
-        urgent_job_definition: '',
-        escalation_rules: '',
-        ai_never_say_rules: '',
-        booking_rules: '',
-        required_capture_before_handoff: '',
-        escalation_contacts: '',
-        scripts_assets: '',
-        faq_list: '',
-        pricing_guidance: '',
-        objection_handling: '',
-        sensitive_data_limits: '',
-        recordings_allowed: false,
-        sms_followup_approved: false,
-        outbound_calling_approved: false,
-        final_approver: '',
-        approval_status: 'draft',
-        last_updated: new Date().toISOString(),
-        is_archived: false,
-      });
-
-      await base44.entities.BillingStatus.create({
-        client_id: client.id,
-        plan,
-        setup_fee: PLAN_PRICING[plan].setup_fee,
-        monthly_fee: PLAN_PRICING[plan].monthly_fee,
-        billing_status: 'awaiting_payment',
-        payment_method: '',
-        invoice_reference: '',
-        renewal_date: null,
-        notes: '',
-      });
-
-      await base44.entities.IntegrationStatus.bulkCreate(getDefaultIntegrationRecords(client.id, plan));
-
-      await base44.entities.ClientNote.create({
-        client_id: client.id,
-        note_type: 'onboarding_note',
-        content: 'Client created in Client Onboarding Hub from sold lead.',
-        created_by: 'system',
-        created_at: new Date().toISOString(),
-        is_archived: false,
-      });
-
-      await base44.entities.Lead.update(lead.id, {
-        ...lead,
-        status: 'Onboarding',
-        client_account_id: client.id,
-      });
-
-      return client;
+      return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads'].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: [key] });
       });
+      if (result?.client_id) navigate(`/ClientWorkspace?id=${result.client_id}`);
+    },
+  });
+
+  const createManualOnboardingMutation = useMutation({
+    mutationFn: async (form) => {
+      const lead = await base44.entities.Lead.create({
+        full_name: form.full_name,
+        business_name: form.business_name,
+        email: form.email,
+        mobile_number: form.mobile_number,
+        industry: form.industry,
+        website: form.website,
+        source_page: form.source,
+        message: `Manual onboarding entry from ${form.source.replaceAll('_', ' ')}.`,
+        status: 'Won',
+        plan: form.plan,
+        booking_intent: false,
+      });
+
+      const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
+        event: { entity_name: 'Lead', type: 'update' },
+        data: lead,
+        old_data: { ...lead, status: 'New Lead' },
+      });
+
+      return response.data;
+    },
+    onSuccess: (result) => {
+      setIsNewOnboardingOpen(false);
+      setNewOnboardingForm({
+        full_name: '',
+        business_name: '',
+        mobile_number: '',
+        email: '',
+        industry: 'other',
+        website: '',
+        plan: 'Starter',
+        source: 'manual_sale',
+      });
+      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads'].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      });
+      if (result?.client_id) navigate(`/ClientWorkspace?id=${result.client_id}`);
     },
   });
 
@@ -223,8 +186,22 @@ export default function OnboardingDashboard() {
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Operational onboarding system for sold AssistantAI clients</h2>
           <p className="text-gray-400 max-w-4xl">Lead-first onboarding workflow with real client records, structured intake, dynamic checklist logic, integrations tracking, billing status, blockers, notes, and go-live readiness.</p>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+              + New Onboarding
+            </Button>
+          </div>
         </div>
       </div>
+
+      <NewOnboardingDialog
+        open={isNewOnboardingOpen}
+        onOpenChange={setIsNewOnboardingOpen}
+        form={newOnboardingForm}
+        onChange={(key, value) => setNewOnboardingForm((prev) => ({ ...prev, [key]: value }))}
+        onSubmit={() => createManualOnboardingMutation.mutate(newOnboardingForm)}
+        isSaving={createManualOnboardingMutation.isPending}
+      />
 
       <OnboardingKpiGrid items={kpis} />
 

@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString();
-    const plan = 'Starter';
+    const plan = lead.plan === 'Growth' || lead.plan === 'Enterprise' ? lead.plan : 'Starter';
 
     const client = await base44.asServiceRole.entities.Client.create({
       full_name: lead.full_name || 'Primary Contact',
@@ -111,10 +111,11 @@ Deno.serve(async (req) => {
       email: lead.email || '',
       mobile_number: lead.mobile_number || '',
       industry: lead.industry || 'other',
-      website: '',
+      website: lead.website || '',
       main_service: '',
       monthly_enquiry_volume: lead.monthly_enquiry_volume || '0_20',
       biggest_problem: lead.message || '',
+      source_lead_id: lead.id,
       current_missed_call_handling: '',
       ai_first_goal: '',
       plan,
@@ -155,7 +156,7 @@ Deno.serve(async (req) => {
       contact_name: client.full_name,
       phone: client.mobile_number,
       email: client.email,
-      website: '',
+      website: client.website || '',
       industry: client.industry,
       service_areas: '',
       crm_used_now: '',
@@ -203,7 +204,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.ClientNote.create({
       client_id: client.id,
       note_type: 'onboarding_note',
-      content: 'Lead converted to onboarding and linked to client.',
+      content: `Lead converted to onboarding and linked to client. Source: ${lead.source_page || 'manual'}.`,
       created_by: 'system',
       created_at: now,
       is_archived: false,
