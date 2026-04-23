@@ -2,10 +2,11 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { TASK_PHASES, getProgressFromTasks } from './onboardingConfig';
 import { getSmartPriorityTask } from './smartPriority';
 
-export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, client }) {
+export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, onUpdateDueDate, client }) {
   const progress = getProgressFromTasks(tasks);
 
   return (
@@ -50,7 +51,13 @@ export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, cli
                       <p className="text-sm text-gray-400 mt-1">Owner: {task.assigned_to || 'Unassigned'}{task.due_date ? ` • Due ${task.due_date}` : ''}{smartTask.smart_priority ? ` • Score ${smartTask.priority_score}` : ''}</p>
                       {task.notes && <p className="text-sm text-gray-500 mt-2">{task.notes}</p>}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <Input
+                        type="date"
+                        value={task.due_date || ''}
+                        onChange={(e) => onUpdateDueDate(task, e.target.value)}
+                        className="w-full sm:w-[170px] bg-transparent border-white/10 text-white"
+                      />
                       <Button size="sm" variant={task.completed ? 'secondary' : 'outline'} onClick={() => onToggleTask(task)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
                         {task.completed ? 'Completed' : 'Mark Complete'}
                       </Button>
