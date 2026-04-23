@@ -8,7 +8,9 @@ import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
 import OnboardingActivityPanel from '@/components/admin/onboarding/OnboardingActivityPanel';
 import OnboardingClientsToolbar from '@/components/admin/onboarding/OnboardingClientsToolbar';
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
+import SmartPriorityQueue from '@/components/admin/onboarding/SmartPriorityQueue';
 import { PLAN_PRICING, getDefaultIntegrationRecords, getProgressFromTasks } from '@/components/admin/onboarding/onboardingConfig';
+import { getSmartPriorityQueue } from '@/components/admin/onboarding/smartPriority';
 import { buildCoreOnboardingTasks } from '@/components/admin/onboarding/onboardingTaskLibrary';
 
 export default function OnboardingDashboard() {
@@ -208,6 +210,7 @@ export default function OnboardingDashboard() {
   const recentActivity = notes.slice(0, 6).map((note) => ({ title: note.note_type.replaceAll('_', ' '), description: note.content, meta: note.created_at?.slice(0, 10) }));
   const blockersSummary = preLiveClients.filter((client) => client.blockers?.length).slice(0, 6).map((client) => ({ title: client.business_name, description: client.blockers.join(', '), meta: client.assigned_owner || 'Unassigned' }));
   const nextActions = preLiveClients.slice(0, 6).map((client) => ({ title: client.business_name, description: client.next_action || 'No next action set', meta: `${getProgressFromTasks(taskMap[client.id] || [])}% progress` }));
+  const smartPriorityQueue = getSmartPriorityQueue(preLiveClients, taskMap);
 
   return (
     <div className="space-y-8">
@@ -230,6 +233,8 @@ export default function OnboardingDashboard() {
         <OnboardingActivityPanel title="Blockers Summary" items={blockersSummary} emptyText="No blockers currently recorded." />
         <OnboardingActivityPanel title="Next Recommended Actions" items={nextActions} emptyText="No next actions yet." />
       </div>
+
+      <SmartPriorityQueue items={smartPriorityQueue} />
 
       <div className="space-y-4">
         <h3 className="text-white text-xl font-semibold">Sold Leads Ready to Start Onboarding</h3>
