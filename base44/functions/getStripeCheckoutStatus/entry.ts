@@ -18,14 +18,10 @@ Deno.serve(async (req) => {
       expand: ['subscription'],
     });
 
-    const billingMatches = await base44.asServiceRole.entities.BillingRecord.filter({ stripe_checkout_session_id: session.id }, '-updated_date', 1);
+    const billingMatches = await base44.asServiceRole.entities.BillingStatus.filter({ stripe_checkout_session_id: session.id }, '-updated_date', 1);
     const billing = billingMatches[0] || null;
-    const onboardingMatches = billing?.client_id
-      ? await base44.asServiceRole.entities.Onboarding.filter({ client_account_id: billing.client_id }, '-updated_date', 1)
-      : [];
-    const onboarding = onboardingMatches[0] || null;
-
-    const paymentConfirmed = billing?.billing_status === 'active' && session.payment_status === 'paid';
+    const clientMatches = billing?.client_id ? await base44.asServiceRole.entities.Client.filter({ id: billing.client_id }, '-updated_date', 1) : [];
+    const client = clientMatches[0] || null;
 
     return Response.json({
       success: true,
@@ -34,11 +30,11 @@ Deno.serve(async (req) => {
       status: session.status,
       customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id || null,
       subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null,
-      onboarding_started: !!onboarding && paymentConfirmed,
-      billing_status: billing?.billing_status || 'pending',
-      plan_name: billing?.plan_name || session.metadata?.planName || null,
-      onboarding_id: onboarding?.id || null,
-      intake_url: onboarding?.id ? `/OnboardingIntake?id=${onboarding.id}` : null,
+      onboarding_started: billing?.billing_status === 'active' && !!client,
+      billing_status: billing?.billing_status || 'awaiting_payment',
+      plan_name: billing?.plan || session.metadata?.planName || null,
+      client_id: client?.id || null,
+      workspace_url: client?.id ? `/ClientWorkspace?id=${client.id}` : null,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

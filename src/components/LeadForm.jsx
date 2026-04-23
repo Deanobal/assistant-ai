@@ -65,6 +65,7 @@ export default function LeadForm({
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
+    website: '',
     email: '',
     mobile_number: '',
     industry: '',
@@ -224,6 +225,15 @@ export default function LeadForm({
       </div>
 
       <div className="grid sm:grid-cols-2 gap-5">
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm">Website</Label>
+          <Input
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+            className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            placeholder="https://yourbusiness.com.au"
+          />
+        </div>
         <div className="space-y-2">
           <Label className="text-gray-400 text-sm">Email *</Label>
           <Input

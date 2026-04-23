@@ -5,458 +5,303 @@ const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY'), {
   apiVersion: '2025-02-24.acacia',
 });
 
-const PLAN_CONFIG = {
-  starter: { name: 'Starter', setupFee: 1500, monthlyFee: 497 },
-  growth: { name: 'Growth', setupFee: 3000, monthlyFee: 1500 },
-  enterprise: { name: 'Enterprise', setupFee: 7500, monthlyFee: 3000 },
+const PLAN_PRICING = {
+  Starter: { setup_fee: 1500, monthly_fee: 497 },
+  Growth: { setup_fee: 3000, monthly_fee: 1500 },
+  Enterprise: { setup_fee: 7500, monthly_fee: 3000 },
 };
+
+const TASK_LIBRARY = [
+  { task_name: 'confirm signed approval', task_phase: 'Lead / Qualification', plan_scope: 'Starter', required: true },
+  { task_name: 'confirm setup payment received', task_phase: 'Payment', plan_scope: 'Starter', required: true },
+  { task_name: 'collect business description', task_phase: 'Kickoff', plan_scope: 'Starter', required: true },
+  { task_name: 'collect services list', task_phase: 'Kickoff', plan_scope: 'Starter', required: true },
+  { task_name: 'collect service areas', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'collect hours', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'collect emergency rules', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'collect FAQ list', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'collect pricing guidance', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'collect escalation contact', task_phase: 'Asset Collection', plan_scope: 'Starter', required: true },
+  { task_name: 'choose channel', task_phase: 'Workflow Mapping', plan_scope: 'Starter', required: true },
+  { task_name: 'build basic agent', task_phase: 'Build', plan_scope: 'Starter', required: true },
+  { task_name: 'test real scenarios', task_phase: 'Testing', plan_scope: 'Starter', required: true },
+  { task_name: 'client approval', task_phase: 'Approval', plan_scope: 'Starter', required: true },
+  { task_name: 'go live', task_phase: 'Go Live', plan_scope: 'Starter', required: true },
+  { task_name: '7-day review', task_phase: 'Optimisation', plan_scope: 'Starter', required: true },
+  { task_name: 'CRM access received', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'calendar access received', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'SMS platform access received', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'email automation requirements confirmed', task_phase: 'Workflow Mapping', plan_scope: 'Growth', required: true },
+  { task_name: 'workflow mapping completed', task_phase: 'Workflow Mapping', plan_scope: 'Growth', required: true },
+  { task_name: 'CRM sync configured', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'calendar logic configured', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'SMS follow-up configured', task_phase: 'Integrations', plan_scope: 'Growth', required: true },
+  { task_name: 'analytics categories configured', task_phase: 'Build', plan_scope: 'Growth', required: false },
+  { task_name: 'portal visibility enabled', task_phase: 'Go Live', plan_scope: 'Growth', required: true },
+  { task_name: '14-day optimisation review', task_phase: 'Optimisation', plan_scope: 'Growth', required: true },
+  { task_name: 'technical discovery complete', task_phase: 'Kickoff', plan_scope: 'Enterprise', required: true },
+  { task_name: 'deployment model decided', task_phase: 'Kickoff', plan_scope: 'Enterprise', required: true },
+  { task_name: 'workspace/access model defined', task_phase: 'Kickoff', plan_scope: 'Enterprise', required: true },
+  { task_name: 'workflow modules approved', task_phase: 'Workflow Mapping', plan_scope: 'Enterprise', required: true },
+  { task_name: 'custom integration scope confirmed', task_phase: 'Integrations', plan_scope: 'Enterprise', required: true },
+  { task_name: 'webhook requirements confirmed', task_phase: 'Integrations', plan_scope: 'Enterprise', required: true },
+  { task_name: 'monitoring rules defined', task_phase: 'Testing', plan_scope: 'Enterprise', required: true },
+  { task_name: 'staged rollout approved', task_phase: 'Approval', plan_scope: 'Enterprise', required: true },
+  { task_name: 'security/compliance review complete', task_phase: 'Approval', plan_scope: 'Enterprise', required: true },
+  { task_name: 'executive go-live pack delivered', task_phase: 'Go Live', plan_scope: 'Enterprise', required: true },
+  { task_name: '30-day executive review booked', task_phase: 'Optimisation', plan_scope: 'Enterprise', required: true }
+];
+
+const PLAN_ORDER = { Starter: 1, Growth: 2, Enterprise: 3 };
+
+function getTasksForPlan(plan) {
+  return TASK_LIBRARY.filter((task) => PLAN_ORDER[task.plan_scope] <= PLAN_ORDER[plan]);
+}
+
+function getDefaultIntegrationRecords(clientId, plan) {
+  const base = [
+    { client_id: clientId, integration_type: 'CRM', integration_name: 'GoHighLevel', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'Calendar', integration_name: 'Google Calendar', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'SMS', integration_name: 'Twilio', connection_status: 'planned', last_sync: null, notes: '' },
+    { client_id: clientId, integration_type: 'Payments', integration_name: 'Stripe', connection_status: 'connected', last_sync: new Date().toISOString(), notes: 'Managed by Stripe billing flow.' },
+  ];
+  if (plan !== 'Starter') base.push({ client_id: clientId, integration_type: 'Optional', integration_name: 'Zapier', connection_status: 'planned', last_sync: null, notes: '' });
+  if (plan === 'Enterprise') base.push({ client_id: clientId, integration_type: 'Optional', integration_name: 'Slack', connection_status: 'planned', last_sync: null, notes: '' });
+  return base;
+}
 
 function mapSubscriptionStatus(status) {
   if (status === 'active' || status === 'trialing') return 'active';
   if (status === 'past_due' || status === 'unpaid') return 'past_due';
   if (status === 'canceled' || status === 'incomplete_expired') return 'cancelled';
-  return 'pending';
+  return 'awaiting_payment';
 }
 
-function unixToIsoDate(seconds) {
-  if (!seconds) return null;
-  return new Date(seconds * 1000).toISOString();
-}
-
-function buildIntakeUrl(origin, onboardingId) {
-  if (!origin || !onboardingId) return null;
-  return `${origin}/OnboardingIntake?id=${onboardingId}`;
-}
-
-function appendNote(existing, note) {
-  return existing ? `${existing}\n\n${note}` : note;
+function formatDate(value) {
+  return value ? new Date(value).toISOString().slice(0, 10) : null;
 }
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-
   try {
+    const base44 = createClientFromRequest(req);
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+    const event = await stripe.webhooks.constructEventAsync(body, signature, Deno.env.get('STRIPE_WEBHOOK_SECRET'));
 
-    const findLead = async ({ leadId, email }) => {
-      if (leadId) {
-        const matches = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
-        if (matches[0]) return matches[0];
+    const getLeadFromMetadata = async (metadata, customerEmail) => {
+      if (metadata?.leadId) {
+        const byId = await base44.asServiceRole.entities.Lead.filter({ id: metadata.leadId }, '-updated_date', 1);
+        if (byId[0]) return byId[0];
       }
-      if (!email) return null;
-      const matches = await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 1);
-      return matches[0] || null;
+      if (customerEmail) {
+        const byEmail = await base44.asServiceRole.entities.Lead.filter({ email: customerEmail }, '-updated_date', 1);
+        if (byEmail[0]) return byEmail[0];
+      }
+      return null;
     };
 
-    const upsertClient = async ({ clientId, lead, email, fullName, businessName, phone, industry, planName, monthlyFee, renewalDate }) => {
-      const byId = clientId ? await base44.asServiceRole.entities.ClientAccount.filter({ id: clientId }, '-updated_date', 1) : [];
-      const byLead = lead?.id ? await base44.asServiceRole.entities.ClientAccount.filter({ lead_id: lead.id }, '-updated_date', 1) : [];
-      const byEmail = email ? await base44.asServiceRole.entities.ClientAccount.filter({ email }, '-updated_date', 1) : [];
-      const existingClient = byId[0] || byLead[0] || byEmail[0] || null;
+    const getBillingBySessionOrCustomer = async ({ sessionId, customerId }) => {
+      const bySession = sessionId ? await base44.asServiceRole.entities.BillingStatus.filter({ stripe_checkout_session_id: sessionId }, '-updated_date', 1) : [];
+      const byCustomer = customerId ? await base44.asServiceRole.entities.BillingStatus.filter({ stripe_customer_id: customerId }, '-updated_date', 1) : [];
+      return bySession[0] || byCustomer[0] || null;
+    };
 
-      const payload = {
-        business_name: businessName || fullName,
-        contact_name: fullName,
-        email,
-        phone: phone || '',
-        industry: industry || existingClient?.industry || 'other',
-        plan_name: planName || existingClient?.plan_name || '',
-        status: 'Onboarding',
-        monthly_fee: monthlyFee ?? existingClient?.monthly_fee ?? 0,
-        setup_fee_status: 'paid',
-        billing_status: 'active',
-        last_activity: 'Stripe payment confirmed',
-        requires_follow_up: true,
-        lead_id: lead?.id || existingClient?.lead_id || null,
-        renewal_date: renewalDate ? renewalDate.slice(0, 10) : existingClient?.renewal_date || undefined,
-      };
-
-      if (existingClient) {
-        const nextClient = {
-          ...existingClient,
-          ...payload,
-        };
-        if (!nextClient.renewal_date) delete nextClient.renewal_date;
-        return base44.asServiceRole.entities.ClientAccount.update(existingClient.id, nextClient);
+    const createClientBundleFromLead = async ({ lead, customerId, subscriptionId, sessionId, renewalDate }) => {
+      const plan = lead.plan === 'Growth' || lead.plan === 'Enterprise' ? lead.plan : 'Starter';
+      const existingClient = await base44.asServiceRole.entities.Client.filter({ source_lead_id: lead.id }, '-updated_date', 1);
+      if (existingClient[0]) {
+        return existingClient[0];
       }
 
-      return base44.asServiceRole.entities.ClientAccount.create({
-        business_name: payload.business_name,
-        contact_name: payload.contact_name,
-        email: payload.email,
-        phone: payload.phone,
-        website: '',
-        address: '',
-        industry: payload.industry,
-        timezone: 'Australia/Sydney',
-        plan_name: payload.plan_name,
-        status: payload.status,
-        monthly_fee: payload.monthly_fee,
-        setup_fee_status: payload.setup_fee_status,
-        billing_status: payload.billing_status,
-        ...(payload.renewal_date ? { renewal_date: payload.renewal_date } : {}),
-        included_calls: 0,
-        used_calls: 0,
-        extra_call_packs: 0,
-        overage_usage: 0,
-        premium_support_add_on: false,
-        monthly_revenue: payload.monthly_fee,
-        total_calls_month: 0,
-        leads_captured: 0,
-        appointments_booked: 0,
-        last_activity: payload.last_activity,
-        portal_access: true,
-        notification_setting: 'standard',
-        client_permissions: ['Overview', 'Calls', 'Analytics', 'Billing', 'Integrations', 'Support'],
-        payment_method_label: '',
-        requires_follow_up: payload.requires_follow_up,
-        active_services: [planName ? `${planName} Plan` : 'AssistantAI'],
-        lead_id: payload.lead_id,
-        services: [],
-        notes_entries: [],
-        integrations: [],
-        recent_calls: [],
-        invoices: [],
-        analytics: {
-          lead_conversion: 0,
-          average_call_duration: '',
-          peak_call_times: '',
-          follow_up_metrics: '',
-          trend: [],
-          categories: [],
-        },
+      const pricing = PLAN_PRICING[plan];
+      const client = await base44.asServiceRole.entities.Client.create({
+        full_name: lead.full_name || 'Primary Contact',
+        business_name: lead.business_name || lead.full_name || 'New Client',
+        email: lead.email || '',
+        mobile_number: lead.mobile_number || '',
+        industry: lead.industry || 'other',
+        website: lead.website || '',
+        main_service: '',
+        monthly_enquiry_volume: lead.monthly_enquiry_volume || '0_20',
+        biggest_problem: lead.message || '',
+        current_missed_call_handling: '',
+        ai_first_goal: '',
+        plan,
+        status: 'Onboarding',
+        lifecycle_state: 'pre_live',
+        progress_percentage: 0,
+        assigned_owner: lead.assigned_owner || '',
+        target_go_live_date: null,
+        source_lead_id: lead.id,
+        last_activity: 'Stripe payment confirmed',
+        blockers: ['Missing intake details', 'Missing integrations'],
+        next_action: 'Complete: confirm signed approval',
+        workflow_phase: 'Lead / Qualification',
+        assets_status: 'not_started',
+        onboarding_archived: false,
+        go_live_ready: false,
+        go_live_date: null,
+        shared_files: [],
+      });
+
+      await base44.asServiceRole.entities.OnboardingTask.bulkCreate(getTasksForPlan(plan).map((task) => ({
+        client_id: client.id,
+        task_name: task.task_name,
+        task_phase: task.task_phase,
+        required: task.required,
+        completed: false,
+        blocked: false,
+        plan_scope: task.plan_scope,
+        due_date: null,
+        assigned_to: client.assigned_owner || '',
+        notes: '',
+        is_archived: false,
+      })));
+
+      await base44.asServiceRole.entities.IntakeForm.create({
+        client_id: client.id,
+        business_name: client.business_name,
+        contact_name: client.full_name,
+        phone: client.mobile_number,
+        email: client.email,
+        website: client.website || '',
+        industry: client.industry,
+        service_areas: '',
+        crm_used_now: '',
+        calendar_used_now: '',
+        messaging_sms_tool: '',
+        payment_billing_method: 'Stripe',
+        main_business_phone: '',
+        business_hours: '',
+        after_hours_rules: '',
+        hot_lead_definition: '',
+        urgent_job_definition: '',
+        escalation_rules: '',
+        ai_never_say_rules: '',
+        booking_rules: '',
+        required_capture_before_handoff: '',
+        escalation_contacts: '',
+        scripts_assets: '',
+        faq_list: '',
+        pricing_guidance: '',
+        objection_handling: '',
+        sensitive_data_limits: '',
+        recordings_allowed: false,
+        sms_followup_approved: false,
+        outbound_calling_approved: false,
+        final_approver: '',
+        approval_status: 'draft',
+        last_updated: new Date().toISOString(),
         is_archived: false,
       });
-    };
 
-    const upsertLead = async ({ lead, clientId, email, fullName, businessName, phone, industry, planName }) => {
-      const note = `[${new Date().toISOString()}] Stripe payment confirmed for ${planName}.`;
-      if (lead) {
-        return base44.asServiceRole.entities.Lead.update(lead.id, {
-          ...lead,
-          full_name: lead.full_name || fullName,
-          business_name: lead.business_name || businessName || fullName,
-          email: lead.email || email,
-          mobile_number: lead.mobile_number || phone || '',
-          industry: lead.industry || industry || 'other',
-          client_account_id: clientId,
-          status: 'Onboarding',
-          next_action: 'Payment received. Review onboarding and send client intake steps.',
-          notes: appendNote(lead.notes, note),
-          last_activity_at: new Date().toISOString(),
-        });
-      }
-
-      return base44.asServiceRole.entities.Lead.create({
-        full_name: fullName,
-        business_name: businessName || fullName,
-        email,
-        mobile_number: phone || '',
-        industry: industry || 'other',
-        enquiry_type: 'other',
-        monthly_enquiry_volume: '',
-        source_page: '/GetStartedNow',
-        message: `${planName} paid via Stripe checkout.`,
-        created_at: new Date().toISOString(),
-        last_activity_at: new Date().toISOString(),
-        status: 'Onboarding',
-        next_action: 'Payment received. Review onboarding and send client intake steps.',
-        notes: note,
-        client_account_id: clientId,
-        booking_intent: false,
-        booking_source: 'stripe_checkout',
-      });
-    };
-
-    const upsertOnboarding = async ({ lead, client, email, fullName, phone, industry, planName }) => {
-      const byClient = await base44.asServiceRole.entities.Onboarding.filter({ client_account_id: client.id }, '-updated_date', 1);
-      const byLead = lead?.id ? await base44.asServiceRole.entities.Onboarding.filter({ lead_id: lead.id }, '-updated_date', 1) : [];
-      const byEmail = email ? await base44.asServiceRole.entities.Onboarding.filter({ email }, '-updated_date', 1) : [];
-      const existingOnboarding = byClient[0] || byLead[0] || byEmail[0] || null;
-      const note = `[${new Date().toISOString()}] Stripe payment confirmed. Onboarding moved to Payment Received.`;
-
-      const payload = {
-        client_name: client.business_name,
-        contact_name: fullName,
-        email,
-        mobile: phone || '',
-        industry: industry || 'other',
-        plan: planName,
-        payment_status: 'paid',
-        intake_form_status: existingOnboarding?.intake_form_status || 'not_sent',
-        assets_received: existingOnboarding?.assets_received || false,
-        workflow_mapped: existingOnboarding?.workflow_mapped || false,
-        ai_agent_built: existingOnboarding?.ai_agent_built || false,
-        integrations_connected: existingOnboarding?.integrations_connected || false,
-        testing_status: existingOnboarding?.testing_status || 'not_started',
-        go_live_status: existingOnboarding?.go_live_status || 'not_ready',
-        onboarding_stage: 'Payment Received',
-        lead_id: lead?.id || existingOnboarding?.lead_id || null,
-        client_account_id: client.id,
-        onboarding_notes: appendNote(existingOnboarding?.onboarding_notes, note),
-      };
-
-      if (existingOnboarding) {
-        return base44.asServiceRole.entities.Onboarding.update(existingOnboarding.id, {
-          ...existingOnboarding,
-          ...payload,
-        });
-      }
-
-      return base44.asServiceRole.entities.Onboarding.create(payload);
-    };
-
-    const upsertBillingStatus = async ({ clientId, customerId, sessionId, planName, setupFeeAmount, monthlyFeeAmount, renewalDate, status, notes }) => {
-      const existing = await base44.asServiceRole.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 1);
-      const current = existing[0] || null;
-      const payload = {
-        client_id: clientId,
-        plan: planName,
-        setup_fee: setupFeeAmount,
-        monthly_fee: monthlyFeeAmount,
-        billing_status: status,
-        payment_method: customerId || current?.payment_method || '',
-        invoice_reference: sessionId || current?.invoice_reference || '',
-        renewal_date: renewalDate ? renewalDate.slice(0, 10) : current?.renewal_date || null,
-        notes: notes || current?.notes || '',
-      };
-
-      if (current) {
-        return base44.asServiceRole.entities.BillingStatus.update(current.id, {
-          ...current,
-          ...payload,
-        });
-      }
-
-      return base44.asServiceRole.entities.BillingStatus.create(payload);
-    };
-
-    const upsertBilling = async ({ clientId, customerId, sessionId, subscriptionId, invoiceId, planName, setupFeeAmount, monthlyFeeAmount, nextPaymentDate }) => {
-      const bySession = sessionId ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_checkout_session_id: sessionId }, '-updated_date', 1) : [];
-      const byCustomer = customerId ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_customer_id: customerId }, '-updated_date', 1) : [];
-      const byClient = clientId ? await base44.asServiceRole.entities.BillingRecord.filter({ client_id: clientId }, '-updated_date', 1) : [];
-      const billing = bySession[0] || byCustomer[0] || byClient[0] || null;
-
-      const payload = {
-        client_id: clientId,
-        plan_name: planName,
-        setup_fee_amount: setupFeeAmount,
-        monthly_fee_amount: monthlyFeeAmount,
+      await base44.asServiceRole.entities.BillingStatus.create({
+        client_id: client.id,
+        plan,
+        setup_fee: pricing.setup_fee,
+        monthly_fee: pricing.monthly_fee,
         billing_status: 'active',
-        payment_method_status: 'valid',
-        invoice_reference: invoiceId || sessionId,
+        payment_method: customerId || '',
+        invoice_reference: sessionId || '',
+        renewal_date: renewalDate,
         stripe_customer_id: customerId || null,
-        stripe_checkout_session_id: sessionId || billing?.stripe_checkout_session_id || null,
-        stripe_subscription_id: subscriptionId || billing?.stripe_subscription_id || null,
-        last_payment_date: new Date().toISOString(),
-        next_payment_date: nextPaymentDate || billing?.next_payment_date || null,
-      };
+        stripe_subscription_id: subscriptionId || null,
+        stripe_checkout_session_id: sessionId || null,
+        admin_override: false,
+        notes: 'Stripe payment confirmed and billing activated.',
+      });
 
-      if (billing) {
-        return base44.asServiceRole.entities.BillingRecord.update(billing.id, {
-          ...billing,
-          ...payload,
+      await base44.asServiceRole.entities.IntegrationStatus.bulkCreate(getDefaultIntegrationRecords(client.id, plan));
+
+      await base44.asServiceRole.entities.ClientNote.create({
+        client_id: client.id,
+        note_type: 'onboarding_note',
+        content: 'Client created from successful Stripe payment and linked to onboarding.',
+        created_by: 'system',
+        created_at: new Date().toISOString(),
+        is_archived: false,
+      });
+
+      await base44.asServiceRole.entities.Lead.update(lead.id, {
+        ...lead,
+        status: 'Onboarding',
+        client_account_id: client.id,
+        last_activity_at: new Date().toISOString(),
+        next_action: 'Complete onboarding intake form',
+      });
+
+      return client;
+    };
+
+    const updateClientBillingState = async (clientId, billingStatus, subscriptionId, customerId, planName) => {
+      const clientMatches = await base44.asServiceRole.entities.Client.filter({ id: clientId }, '-updated_date', 1);
+      const client = clientMatches[0] || null;
+      if (!client) return;
+      await base44.asServiceRole.entities.Client.update(client.id, {
+        ...client,
+        plan: planName || client.plan,
+        last_activity: `Stripe billing updated: ${billingStatus}`,
+        blockers: billingStatus === 'active' ? (client.blockers || []).filter((item) => item !== 'Unpaid billing') : Array.from(new Set([...(client.blockers || []), 'Unpaid billing'])),
+      });
+
+      const noteMatches = await base44.asServiceRole.entities.ClientNote.filter({ client_id: client.id }, '-updated_date', 1);
+      if (!noteMatches[0] || noteMatches[0].content !== `Stripe billing updated: ${billingStatus}`) {
+        await base44.asServiceRole.entities.ClientNote.create({
+          client_id: client.id,
+          note_type: 'onboarding_note',
+          content: `Stripe billing updated: ${billingStatus}`,
+          created_by: 'system',
+          created_at: new Date().toISOString(),
+          is_archived: false,
         });
       }
-
-      return base44.asServiceRole.entities.BillingRecord.create(payload);
-    };
-
-    const sendOnboardingEmail = async ({ email, fullName, planName, intakeUrl }) => {
-      if (!email || !intakeUrl) return;
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: email,
-        subject: `Payment received — your ${planName} onboarding has started`,
-        body: `Hi ${fullName},\n\nWe have received your payment for the ${planName} plan and your AssistantAI onboarding has now started.\n\nNext step: complete your onboarding intake form here:\n${intakeUrl}\n\nOnce submitted, our team will review your details and usually begin the onboarding handoff within one business day.\n\nAssistantAI`,
-      });
-    };
-
-    const createAdminTask = async ({ clientId, onboardingId, email, planName, intakeUrl }) => {
-      await base44.asServiceRole.entities.NotificationLog.create({
-        event_type: 'onboarding_created',
-        entity_name: 'Onboarding',
-        entity_id: onboardingId,
-        client_account_id: clientId,
-        recipient_role: 'admin',
-        recipient_email: null,
-        channel: 'in_app',
-        delivery_status: 'stored',
-        provider_name: 'Stripe',
-        provider_message: 'Payment confirmed. Admin onboarding review required.',
-        title: 'New paid onboarding requires review',
-        message: `${planName} payment confirmed for ${email}. Review onboarding and intake readiness.${intakeUrl ? ` Intake form: ${intakeUrl}` : ''}`,
-        triggered_at: new Date().toISOString(),
-        actor_email: email || null,
-        metadata: {
-          client_id: clientId,
-          onboarding_id: onboardingId,
-          intake_url: intakeUrl,
-        },
-      });
     };
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null;
       const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id || null;
+      const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null;
       const subscription = subscriptionId ? await stripe.subscriptions.retrieve(subscriptionId) : null;
-      const metadata = session.metadata || {};
+      const renewalDate = formatDate(subscription?.current_period_end ? subscription.current_period_end * 1000 : null);
       const email = session.customer_details?.email || session.customer_email || '';
-      const fullName = session.customer_details?.name || metadata.contactName || 'Client';
-      const phone = session.customer_details?.phone || '';
-      const planKey = (metadata.planKey || '').toLowerCase();
-      const plan = PLAN_CONFIG[planKey] || {
-        name: metadata.planName || 'AssistantAI',
-        setupFee: 0,
-        monthlyFee: 0,
-      };
-      const renewalDate = unixToIsoDate(subscription?.current_period_end);
-      const lead = await findLead({ leadId: metadata.leadId, email });
-      const client = await upsertClient({
-        clientId: metadata.clientAccountId || null,
-        lead,
-        email,
-        fullName,
-        businessName: lead?.business_name || fullName,
-        phone,
-        industry: lead?.industry || 'other',
-        planName: metadata.planName || plan.name,
-        monthlyFee: plan.monthlyFee,
-        renewalDate,
-      });
-      const confirmedLead = await upsertLead({
-        lead,
-        clientId: client.id,
-        email,
-        fullName,
-        businessName: lead?.business_name || fullName,
-        phone,
-        industry: lead?.industry || 'other',
-        planName: metadata.planName || plan.name,
-      });
-      const onboarding = await upsertOnboarding({
-        lead: confirmedLead,
-        client,
-        email,
-        fullName,
-        phone,
-        industry: confirmedLead?.industry || 'other',
-        planName: metadata.planName || plan.name,
-      });
-      const intakeUrl = buildIntakeUrl(metadata.origin, onboarding.id);
+      const lead = await getLeadFromMetadata(session.metadata, email);
+      if (!lead) {
+        return Response.json({ received: true, ignored: true, reason: 'Lead not found' });
+      }
 
-      await upsertBilling({
-        clientId: client.id,
+      const client = await createClientBundleFromLead({
+        lead,
         customerId,
-        sessionId: session.id,
         subscriptionId,
-        invoiceId: session.id,
-        planName: metadata.planName || plan.name,
-        setupFeeAmount: plan.setupFee,
-        monthlyFeeAmount: plan.monthlyFee,
-        nextPaymentDate: renewalDate,
-      });
-
-      await upsertBillingStatus({
-        clientId: client.id,
-        customerId,
         sessionId: session.id,
-        planName: metadata.planName || plan.name,
-        setupFeeAmount: plan.setupFee,
-        monthlyFeeAmount: plan.monthlyFee,
         renewalDate,
-        status: 'active',
-        notes: 'Stripe payment confirmed and subscription linked.',
       });
 
-      await base44.asServiceRole.entities.ClientAccount.update(client.id, {
-        ...client,
-        requires_follow_up: false,
-        last_activity: 'Stripe payment confirmed and onboarding started',
-      });
-
-      await sendOnboardingEmail({
-        email,
-        fullName,
-        planName: metadata.planName || plan.name,
-        intakeUrl,
-      });
-
-      await createAdminTask({
-        clientId: client.id,
-        onboardingId: onboarding.id,
-        email,
-        planName: metadata.planName || plan.name,
-        intakeUrl,
-      });
+      await updateClientBillingState(client.id, 'active', subscriptionId, customerId, lead.plan);
     }
 
-    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-      const subscription = event.data.object;
-      const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id || null;
-      const billingMatches = customerId
-        ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_customer_id: customerId }, '-updated_date', 1)
-        : [];
-      const billing = billingMatches[0] || null;
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed' || event.type === 'invoice.paid') {
+      const object = event.data.object;
+      const customerId = typeof object.customer === 'string' ? object.customer : object.customer?.id || null;
+      const sessionId = object.checkout_session || null;
+      const billing = await getBillingBySessionOrCustomer({ sessionId, customerId });
       if (billing) {
-        const mappedStatus = mapSubscriptionStatus(subscription.status);
-        await base44.asServiceRole.entities.BillingRecord.update(billing.id, {
+        const mappedStatus = event.type === 'invoice.payment_failed'
+          ? 'past_due'
+          : event.type === 'invoice.paid'
+            ? 'active'
+            : mapSubscriptionStatus(object.status);
+
+        await base44.asServiceRole.entities.BillingStatus.update(billing.id, {
           ...billing,
           billing_status: mappedStatus,
-          payment_method_status: subscription.default_payment_method ? 'valid' : billing.payment_method_status,
-          stripe_subscription_id: subscription.id,
-          next_payment_date: unixToIsoDate(subscription.current_period_end) || billing.next_payment_date,
-          plan_name: subscription.metadata?.planName || billing.plan_name,
+          stripe_customer_id: customerId || billing.stripe_customer_id,
+          stripe_subscription_id: object.id?.startsWith?.('sub_') ? object.id : billing.stripe_subscription_id,
+          renewal_date: formatDate(object.current_period_end ? object.current_period_end * 1000 : billing.renewal_date),
+          notes: `Stripe webhook received: ${event.type}`,
         });
-        await upsertBillingStatus({
-          clientId: billing.client_id,
-          customerId,
-          sessionId: billing.stripe_checkout_session_id,
-          planName: subscription.metadata?.planName || billing.plan_name,
-          setupFeeAmount: billing.setup_fee_amount,
-          monthlyFeeAmount: billing.monthly_fee_amount,
-          renewalDate: unixToIsoDate(subscription.current_period_end),
-          status: mappedStatus === 'pending' ? 'awaiting_payment' : mappedStatus,
-          notes: `Stripe subscription ${event.type}.`,
-        });
-      }
-    }
 
-    if (event.type === 'invoice.paid' || event.type === 'invoice.payment_failed') {
-      const invoice = event.data.object;
-      const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id || null;
-      const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || null;
-      const subscription = subscriptionId ? await stripe.subscriptions.retrieve(subscriptionId) : null;
-      const customerMatches = customerId
-        ? await base44.asServiceRole.entities.BillingRecord.filter({ stripe_customer_id: customerId }, '-updated_date', 1)
-        : [];
-      const billing = customerMatches[0] || null;
-      if (billing) {
-        const billingStatus = event.type === 'invoice.paid' ? 'active' : 'past_due';
-        await base44.asServiceRole.entities.BillingRecord.update(billing.id, {
-          ...billing,
-          billing_status: billingStatus,
-          payment_method_status: event.type === 'invoice.paid' ? 'valid' : 'failed',
-          invoice_reference: invoice.number || invoice.id,
-          stripe_subscription_id: subscriptionId || billing.stripe_subscription_id,
-          last_payment_date: event.type === 'invoice.paid' ? new Date().toISOString() : billing.last_payment_date,
-          next_payment_date: unixToIsoDate(subscription?.current_period_end) || billing.next_payment_date,
-          plan_name: subscription?.metadata?.planName || billing.plan_name,
-        });
-        await upsertBillingStatus({
-          clientId: billing.client_id,
-          customerId,
-          sessionId: billing.stripe_checkout_session_id,
-          planName: subscription?.metadata?.planName || billing.plan_name,
-          setupFeeAmount: billing.setup_fee_amount,
-          monthlyFeeAmount: billing.monthly_fee_amount,
-          renewalDate: unixToIsoDate(subscription?.current_period_end),
-          status: billingStatus,
-          notes: `Stripe invoice event: ${event.type}.`,
-        });
+        await updateClientBillingState(billing.client_id, mappedStatus, billing.stripe_subscription_id, customerId, billing.plan);
       }
     }
 

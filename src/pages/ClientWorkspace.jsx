@@ -71,8 +71,26 @@ export default function ClientWorkspace() {
   });
 
   const updateBillingMutation = useMutation({
-    mutationFn: (patch) => billing?.id ? base44.entities.BillingStatus.update(billing.id, { ...billing, ...patch }) : base44.entities.BillingStatus.create({ client_id: clientId, plan: clientDraft.plan, setup_fee: PLAN_PRICING[clientDraft.plan].setup_fee, monthly_fee: PLAN_PRICING[clientDraft.plan].monthly_fee, billing_status: 'draft', payment_method: '', invoice_reference: '', renewal_date: null, notes: '', ...patch }),
+    mutationFn: (patch) => billing?.id ? base44.entities.BillingStatus.update(billing.id, { ...billing, ...patch }) : base44.entities.BillingStatus.create({ client_id: clientId, plan: clientDraft.plan, setup_fee: PLAN_PRICING[clientDraft.plan].setup_fee, monthly_fee: PLAN_PRICING[clientDraft.plan].monthly_fee, billing_status: 'draft', payment_method: '', invoice_reference: '', renewal_date: null, stripe_customer_id: null, stripe_subscription_id: null, stripe_checkout_session_id: null, admin_override: false, notes: '', ...patch }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] }),
+  });
+
+  const sendCheckoutMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] });
+      if (response?.data?.checkout_url) {
+        window.open(response.data.checkout_url, '_blank');
+      }
+    },
+  });
+
+  const overrideBillingMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('adminOverrideBillingStatus', { clientId, billingStatus: 'active' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['client-workspace', clientId] });
+    },
   });
 
 
@@ -96,6 +114,7 @@ export default function ClientWorkspace() {
   const workflowPhase = getWorkflowPhaseFromTasks(activeTasks);
   const nextAction = getNextActionFromTasks(activeTasks);
   const blockers = getBlockers({ intake: intakeDraft, integrations, billing, tasks: activeTasks });
+  const isBillingActive = billing?.billing_status === 'active';
   const goLiveReady = isGoLiveReady(activeTasks);
 
   useEffect(() => {
@@ -128,6 +147,7 @@ export default function ClientWorkspace() {
   };
 
   const handleGoLive = async () => {
+    if (!isBillingActive) return;
     await updateClientMutation.mutateAsync({
       ...getOperationalClientState(clientDraft),
       status: 'Live',
@@ -154,7 +174,7 @@ export default function ClientWorkspace() {
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
         <Link to={clientDraft.lifecycle_state === 'live' ? '/ClientManager' : '/Onboarding'} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" />Back</Link>
-        {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Mark as Go Live</Button>}
+        {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} disabled={!isBillingActive} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50">Mark as Go Live</Button>}
       </div>
 
       <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: goLiveReady && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
@@ -165,11 +185,11 @@ export default function ClientWorkspace() {
         </TabsList>
 
         <TabsContent value="overview"><OverviewTab client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers }} intake={intakeDraft} taskSummary={taskSummary} /></TabsContent>
-        <TabsContent value="intake"><OnboardingIntakeForm value={intakeDraft} client={clientDraft} onChange={(key, value) => setIntakeDraft((prev) => ({ ...prev, [key]: value }))} onClientChange={(key, value) => setClientDraft((prev) => ({ ...prev, [key]: value }))} onSave={() => { const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Intake updated', status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding' }, activeTasks, intakeDraft); setClientDraft(operationalClient); updateIntakeMutation.mutate(intakeDraft); updateClientMutation.mutate(operationalClient); }} isSaving={updateIntakeMutation.isPending || updateClientMutation.isPending} isReadOnly={!!clientDraft.onboarding_archived} /></TabsContent>
-        <TabsContent value="checklist"><ChecklistTab client={clientDraft} tasks={activeTasks} onToggleTask={(task) => { const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, completed: !task.completed } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, completed: !task.completed }); updateClientMutation.mutate(operationalClient); }} onToggleBlocked={(task) => { const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, blocked: !task.blocked } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist blocker updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, blocked: !task.blocked }); updateClientMutation.mutate(operationalClient); }} onUpdateDueDate={(task, dueDate) => { const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, due_date: dueDate || null } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist due date updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, due_date: dueDate || null }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
+        <TabsContent value="intake"><OnboardingIntakeForm value={intakeDraft} client={clientDraft} onChange={(key, value) => setIntakeDraft((prev) => ({ ...prev, [key]: value }))} onClientChange={(key, value) => setClientDraft((prev) => ({ ...prev, [key]: value }))} onSave={() => { const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Intake updated', status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding' }, activeTasks, intakeDraft); setClientDraft(operationalClient); updateIntakeMutation.mutate(intakeDraft); updateClientMutation.mutate(operationalClient); }} isSaving={updateIntakeMutation.isPending || updateClientMutation.isPending} isReadOnly={!!clientDraft.onboarding_archived || !isBillingActive} /></TabsContent>
+        <TabsContent value="checklist"><ChecklistTab client={clientDraft} tasks={activeTasks} onToggleTask={(task) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, completed: !task.completed } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, completed: !task.completed }); updateClientMutation.mutate(operationalClient); }} onToggleBlocked={(task) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, blocked: !task.blocked } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist blocker updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, blocked: !task.blocked }); updateClientMutation.mutate(operationalClient); }} onUpdateDueDate={(task, dueDate) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, due_date: dueDate || null } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist due date updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, due_date: dueDate || null }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
         <TabsContent value="integrations"><IntegrationsTab integrations={integrations} onUpdate={(record, status) => { const nextIntegrations = integrations.some((item) => item.id === record.id) ? integrations.map((item) => item.id === record.id ? { ...item, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : item.last_sync } : item) : [...integrations, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null }]; const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Integration status updated' }, activeTasks, intakeDraft, nextIntegrations); setClientDraft(operationalClient); updateIntegrationMutation.mutate({ record, status }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
         <TabsContent value="notes"><NotesTab notes={activeNotes} onCreate={(note) => createNoteMutation.mutate(note)} /></TabsContent>
-        <TabsContent value="billing"><BillingTab billing={billing} /></TabsContent>
+        <TabsContent value="billing"><BillingTab billing={billing} onSendCheckout={() => sendCheckoutMutation.mutate()} onOverrideActive={() => overrideBillingMutation.mutate()} isSendingCheckout={sendCheckoutMutation.isPending} isUpdatingBilling={overrideBillingMutation.isPending} /></TabsContent>
         <TabsContent value="files"><FilesTab client={clientDraft} onUpdate={persistClient} /></TabsContent>
         <TabsContent value="go_live"><GoLiveTab client={{ ...clientDraft, progress_percentage: getProgressFromTasks(activeTasks) }} tasks={activeTasks} /></TabsContent>
         <TabsContent value="settings"><SettingsTab client={clientDraft} onUpdate={persistClient} /></TabsContent>
