@@ -98,8 +98,18 @@ export default function GetStartedNow() {
 
                   console.log('createStripeCheckout payload', checkoutPayload);
 
-                  const response = await base44.functions.invoke('createStripeCheckout', checkoutPayload);
-                  return response.data;
+                  const response = await base44.functions.invoke('createStripeCheckout', {
+                    ...checkoutPayload,
+                    plan: 'Starter',
+                  });
+
+                  if (!response?.data?.checkout_url) {
+                    throw new Error(response?.data?.error || 'Unable to start Stripe checkout.');
+                  }
+
+                  return {
+                    redirectTo: response.data.checkout_url,
+                  };
                 }}
               />
             </motion.div>

@@ -15,7 +15,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const plan = PLAN_CONFIG[(payload.planKey || '').toLowerCase()];
+    const normalizedPlanKey = (payload.planKey || payload.plan || '').toLowerCase();
+    const plan = PLAN_CONFIG[normalizedPlanKey];
 
     if (!plan) {
       return Response.json({ error: 'Unsupported plan' }, { status: 400 });
@@ -41,9 +42,9 @@ Deno.serve(async (req) => {
         phone: payload.mobile || undefined,
         metadata: {
           clientId: client.id,
-          planKey: payload.planKey,
+          planKey: normalizedPlanKey,
           planName: plan.name,
-          source: 'public_pricing_flow',
+          source: 'public_get_started',
         },
       });
       stripeCustomerId = customer.id;
@@ -52,22 +53,22 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: stripeCustomerId,
-      success_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${payload.planKey}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${payload.planKey}&checkout=cancelled`,
+      success_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${payload.planKey || 'starter'}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${payload.planKey || 'starter'}&checkout=cancelled`,
       metadata: {
         clientId: client.id,
-        planKey: payload.planKey,
+        planKey: normalizedPlanKey,
         planName: plan.name,
         origin: payload.origin,
-        source: 'public_pricing_flow',
+        source: 'public_get_started',
       },
       subscription_data: {
         metadata: {
           clientId: client.id,
-          planKey: payload.planKey,
+          planKey: normalizedPlanKey,
           planName: plan.name,
           origin: payload.origin,
-          source: 'public_pricing_flow',
+          source: 'public_get_started',
         },
       },
       line_items: [
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
           stripe_subscription_id: existingBilling.stripe_subscription_id || null,
           stripe_checkout_session_id: session.id,
           admin_override: false,
-          notes: 'Stripe checkout created from public pricing flow.',
+          notes: 'Stripe checkout created from public get started flow.',
         }
       : {
           client_id: client.id,
@@ -125,7 +126,7 @@ Deno.serve(async (req) => {
           stripe_subscription_id: null,
           stripe_checkout_session_id: session.id,
           admin_override: false,
-          notes: 'Stripe checkout created from public pricing flow.',
+          notes: 'Stripe checkout created from public get started flow.',
         };
 
     if (existingBilling?.id) {

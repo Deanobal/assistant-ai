@@ -100,6 +100,10 @@ export default function LeadForm({
         result = await onSubmitted({ lead, form });
         setSubmitResult(result || null);
       }
+      if (result?.redirectTo) {
+        window.location.href = result.redirectTo;
+        return;
+      }
       const formType = bookingIntent ? 'strategy_call_form' : 'contact_form';
       const strategyCallBooked = result?.booking_status === 'confirmed' || !!result?.confirmed_start;
       trackLeadSuccess({
