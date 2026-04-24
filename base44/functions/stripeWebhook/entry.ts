@@ -95,6 +95,14 @@ Deno.serve(async (req) => {
       Deno.env.get('STRIPE_TEST_WEBHOOK_SECRET') || Deno.env.get('STRIPE_WEBHOOK_SECRET')
     );
 
+    console.log('stripeWebhook incoming event', {
+      eventType: event.type,
+      objectId: event.data?.object?.id || null,
+      customer: event.data?.object?.customer || null,
+      subscription: event.data?.object?.subscription || null,
+      metadata: event.data?.object?.metadata || null,
+    });
+
     const existingLog = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
     if (existingLog[0]) {
       await base44.asServiceRole.entities.StripeEventLog.update(existingLog[0].id, {
@@ -125,6 +133,12 @@ Deno.serve(async (req) => {
         if (byEmail[0]) return byEmail[0];
       }
       return null;
+    };
+
+    const getClientByMetadata = async (clientId) => {
+      if (!clientId) return null;
+      const byId = await base44.asServiceRole.entities.Client.filter({ id: clientId }, '-updated_date', 1);
+      return byId[0] || null;
     };
 
     const getClientByIdentity = async ({ sourceLeadId, stripeCustomerId, stripeSubscriptionId, email, phone }) => {
@@ -320,54 +334,46 @@ Deno.serve(async (req) => {
       const stripeSubscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null;
       const email = session.customer_details?.email || session.customer_email || '';
       const phone = session.customer_details?.phone || '';
-      const lead = await getLeadFromMetadata(session.metadata || {}, email);
-      if (!lead) {
-        await markLogProcessed(null);
-        return Response.json({ received: true, ignored: true, reason: 'Lead not found', event_type: event.type });
-      }
+      const metadataClientId = session.metadata?.clientId || null;
 
-      let client = await getClientByIdentity({
-        sourceLeadId: lead.id,
-        stripeCustomerId,
-        stripeSubscriptionId,
+      console.log('stripeWebhook checkout.session.completed link check', {
+        sessionId: session.id,
+        metadataClientId,
         email,
-        phone,
       });
 
-      const plan = lead.plan || session.metadata?.planName || 'Starter';
-      const renewalDate = stripeSubscriptionId ? toDateOnlyFromUnix((await stripe.subscriptions.retrieve(stripeSubscriptionId)).current_period_end) : null;
-
-      if (!client) {
-        client = await base44.asServiceRole.entities.Client.create({
-          full_name: lead.full_name || 'Primary Contact',
-          business_name: lead.business_name || lead.full_name || 'New Client',
-          email: lead.email || email,
-          mobile_number: lead.mobile_number || phone || '',
-          industry: lead.industry || 'other',
-          website: lead.website || '',
-          main_service: '',
-          monthly_enquiry_volume: lead.monthly_enquiry_volume || '0_20',
-          biggest_problem: lead.message || '',
-          current_missed_call_handling: '',
-          ai_first_goal: '',
-          plan,
-          status: 'Onboarding',
-          lifecycle_state: 'pre_live',
-          progress_percentage: 0,
-          assigned_owner: lead.assigned_owner || '',
-          target_go_live_date: null,
-          source_lead_id: lead.id,
-          last_activity: 'Stripe payment confirmed',
-          blockers: ['Missing intake details', 'Missing integrations'],
-          next_action: 'Complete: confirm signed approval',
-          workflow_phase: 'Lead / Qualification',
-          assets_status: 'not_started',
-          onboarding_archived: false,
-          go_live_ready: false,
-          go_live_date: null,
-          shared_files: [],
-        });
+      if (!metadataClientId) {
+        const missingClientIdError = 'Stripe checkout session metadata.clientId is missing';
+        console.error(missingClientIdError, { sessionId: session.id, metadata: session.metadata || null });
+        if (logRecord) {
+          await base44.asServiceRole.entities.StripeEventLog.update(logRecord.id, {
+            ...logRecord,
+            status: 'failed',
+            processed_at: new Date().toISOString(),
+            error_message: missingClientIdError,
+          });
+        }
+        return Response.json({ received: true, event_type: event.type, error: missingClientIdError });
       }
+
+      let client = await getClientByMetadata(metadataClientId);
+      if (!client) {
+        const clientMatchError = `Client not found for metadata.clientId ${metadataClientId}`;
+        console.error(clientMatchError);
+        if (logRecord) {
+          await base44.asServiceRole.entities.StripeEventLog.update(logRecord.id, {
+            ...logRecord,
+            status: 'failed',
+            processed_at: new Date().toISOString(),
+            error_message: clientMatchError,
+          });
+        }
+        return Response.json({ received: true, event_type: event.type, error: clientMatchError });
+      }
+
+      const lead = await getLeadFromMetadata(session.metadata || {}, email);
+      const plan = client.plan || session.metadata?.planName || 'Starter';
+      const renewalDate = stripeSubscriptionId ? toDateOnlyFromUnix((await stripe.subscriptions.retrieve(stripeSubscriptionId)).current_period_end) : null;
 
       await ensureTasks(client.id, plan, client.assigned_owner || '');
       await ensureIntakeForm(client);
@@ -384,13 +390,17 @@ Deno.serve(async (req) => {
       });
       await ensureIntegrations(client.id, plan);
       await ensureClientNote(client.id, 'Client created from successful Stripe payment and linked to onboarding.');
-      await base44.asServiceRole.entities.Lead.update(lead.id, {
-        ...lead,
-        status: 'Onboarding',
-        client_account_id: client.id,
-        last_activity_at: new Date().toISOString(),
-        next_action: 'Complete onboarding intake form',
-      });
+
+      if (lead) {
+        await base44.asServiceRole.entities.Lead.update(lead.id, {
+          ...lead,
+          status: 'Onboarding',
+          client_account_id: client.id,
+          last_activity_at: new Date().toISOString(),
+          next_action: 'Complete onboarding intake form',
+        });
+      }
+
       await unlockClientOnPaid(client.id);
       await markLogProcessed(client.id);
       return Response.json({ received: true, event_type: event.type, client_id: client.id });

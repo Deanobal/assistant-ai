@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       cancel_url: `https://assistantai.com.au/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=cancelled`,
       metadata: {
         clientId: client.id,
+        plan: normalizedPlanKey,
         planKey: normalizedPlanKey,
         planName: plan.name,
         origin: payload.origin,
@@ -65,6 +66,7 @@ Deno.serve(async (req) => {
       subscription_data: {
         metadata: {
           clientId: client.id,
+          plan: normalizedPlanKey,
           planKey: normalizedPlanKey,
           planName: plan.name,
           origin: payload.origin,
