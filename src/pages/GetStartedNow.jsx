@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
@@ -28,6 +28,16 @@ export default function GetStartedNow() {
   const checkoutState = urlParams.get('checkout') || '';
   const sessionId = urlParams.get('session_id') || '';
   const plan = plans[planKey] || plans.growth;
+  const isCheckoutReturn = checkoutState === 'success' || checkoutState === 'cancelled';
+  const renderedView = isCheckoutReturn ? `checkout_${checkoutState}` : 'lead_form';
+
+  useEffect(() => {
+    console.log('GetStartedNow routing', {
+      checkout: checkoutState,
+      session_id: sessionId,
+      renderedView,
+    });
+  }, [checkoutState, sessionId, renderedView]);
 
   return (
     <div>
@@ -48,7 +58,7 @@ export default function GetStartedNow() {
             </p>
           </motion.div>
 
-          {checkoutState ? (
+          {isCheckoutReturn ? (
             <div className="max-w-4xl mx-auto">
               <CheckoutReturnCard planName={plan.name} checkoutState={checkoutState} sessionId={sessionId} />
             </div>
