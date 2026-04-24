@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY'), {
+const stripe = new Stripe(Deno.env.get('STRIPE_TEST_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY'), {
   apiVersion: '2025-02-24.acacia',
 });
 
@@ -89,7 +89,11 @@ Deno.serve(async (req) => {
   try {
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
-    const event = await stripe.webhooks.constructEventAsync(body, signature, Deno.env.get('STRIPE_WEBHOOK_SECRET'));
+    const event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      Deno.env.get('STRIPE_TEST_WEBHOOK_SECRET') || Deno.env.get('STRIPE_WEBHOOK_SECRET')
+    );
 
     const existingLog = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
     if (existingLog[0]) {
