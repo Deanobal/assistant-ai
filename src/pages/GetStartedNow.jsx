@@ -81,17 +81,24 @@ export default function GetStartedNow() {
                     plan: plan.name,
                   });
 
-                  const response = await base44.functions.invoke('createStripeCheckout', {
-                    clientId: clientResponse.data.client.id,
-                    planKey: plan.key,
-                    fullName: form.full_name,
-                    businessName: form.business_name,
-                    email: form.email,
-                    mobile: form.mobile_number,
-                    industry: form.industry,
-                    website: form.website || '',
-                    origin: window.location.origin,
-                  });
+                  const clientId = clientResponse?.data?.client?.id;
+                  const fullName = form.full_name?.trim();
+                  const email = form.email?.trim();
+
+                  if (!clientId || !fullName || !email) {
+                    throw new Error('Missing required checkout details.');
+                  }
+
+                  const checkoutPayload = {
+                    clientId,
+                    fullName,
+                    email,
+                    origin: 'public_get_started',
+                  };
+
+                  console.log('createStripeCheckout payload', checkoutPayload);
+
+                  const response = await base44.functions.invoke('createStripeCheckout', checkoutPayload);
                   return response.data;
                 }}
               />
