@@ -9,18 +9,32 @@
       "type": "string"
     },
     "processed_at": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "status": {
       "type": "string",
-      "enum": ["processing", "processed", "skipped", "failed"]
+      "enum": [
+        "processing",
+        "processed",
+        "skipped",
+        "failed"
+      ]
     },
     "related_client_id": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "error_message": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "required": [
