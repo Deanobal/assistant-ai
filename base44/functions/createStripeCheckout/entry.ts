@@ -21,22 +21,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unsupported plan' }, { status: 400 });
     }
 
-    if (!payload.leadId || !payload.fullName || !payload.email || !payload.origin) {
-      return Response.json({ error: 'leadId, fullName, email, and origin are required' }, { status: 400 });
+    if (!payload.clientId || !payload.fullName || !payload.email || !payload.origin) {
+      return Response.json({ error: 'clientId, fullName, email, and origin are required' }, { status: 400 });
     }
 
-    const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: payload.leadId }, '-updated_date', 1);
-    const lead = leadMatches[0];
-    if (!lead) {
-      return Response.json({ error: 'Lead not found' }, { status: 404 });
+    const client = await base44.asServiceRole.entities.Client.get(payload.clientId);
+    if (!client) {
+      return Response.json({ error: 'Client not found' }, { status: 404 });
     }
 
-    const clientMatches = await base44.asServiceRole.entities.Client.filter({ source_lead_id: lead.id }, '-updated_date', 1);
-    if (clientMatches[0]) {
-      return Response.json({ error: 'Client already created for this lead' }, { status: 400 });
-    }
-
-    const billingMatches = await base44.asServiceRole.entities.BillingStatus.filter({ invoice_reference: lead.id }, '-updated_date', 1);
+    const billingMatches = await base44.asServiceRole.entities.BillingStatus.filter({ client_id: client.id }, '-updated_date', 1);
     const existingBilling = billingMatches[0] || null;
 
     let stripeCustomerId = existingBilling?.stripe_customer_id || null;
@@ -46,7 +40,7 @@ Deno.serve(async (req) => {
         email: payload.email,
         phone: payload.mobile || undefined,
         metadata: {
-          leadId: lead.id,
+          clientId: client.id,
           planKey: payload.planKey,
           planName: plan.name,
           source: 'public_pricing_flow',
@@ -61,7 +55,7 @@ Deno.serve(async (req) => {
       success_url: `${payload.origin}/GetStartedNow?plan=${payload.planKey}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${payload.origin}/GetStartedNow?plan=${payload.planKey}&checkout=cancelled`,
       metadata: {
-        leadId: lead.id,
+        clientId: client.id,
         planKey: payload.planKey,
         planName: plan.name,
         origin: payload.origin,
@@ -69,7 +63,7 @@ Deno.serve(async (req) => {
       },
       subscription_data: {
         metadata: {
-          leadId: lead.id,
+          clientId: client.id,
           planKey: payload.planKey,
           planName: plan.name,
           origin: payload.origin,
@@ -119,7 +113,7 @@ Deno.serve(async (req) => {
           notes: 'Stripe checkout created from public pricing flow.',
         }
       : {
-          client_id: lead.id,
+          client_id: client.id,
           plan: plan.name,
           setup_fee: plan.setupFee,
           monthly_fee: plan.monthlyFee,
@@ -140,14 +134,14 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.BillingStatus.create(billingPayload);
     }
 
-    await base44.asServiceRole.entities.Lead.update(lead.id, {
-      ...lead,
-      status: 'Won',
-      notes: lead.notes ? `${lead.notes}\n\n[${new Date().toISOString()}] Stripe checkout created for ${plan.name}.` : `[${new Date().toISOString()}] Stripe checkout created for ${plan.name}.`,
-      next_action: 'Complete Stripe checkout to start onboarding.',
-      last_activity_at: new Date().toISOString(),
-      website: payload.website || lead.website || '',
+    await base44.asServiceRole.entities.Client.update(client.id, {
+      ...client,
       plan: plan.name,
+      website: payload.website || client.website || '',
+      last_activity: `Stripe checkout created for ${plan.name}.`,
+      next_action: 'Complete Stripe checkout to unlock onboarding.',
+      workflow_phase: 'Payment',
+      status: client.status === 'Live' ? client.status : 'Awaiting Payment',
     });
 
     return Response.json({
