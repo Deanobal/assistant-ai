@@ -53,8 +53,8 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: stripeCustomerId,
-      success_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${new URL('/GetStartedNow', req.url).origin}/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=cancelled`,
+      success_url: `https://assistantai.com.au/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://assistantai.com.au/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=cancelled`,
       metadata: {
         clientId: client.id,
         planKey: normalizedPlanKey,
