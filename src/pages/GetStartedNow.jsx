@@ -100,7 +100,7 @@ export default function GetStartedNow() {
 
                   const response = await base44.functions.invoke('createStripeCheckout', {
                     ...checkoutPayload,
-                    plan: 'Starter',
+                    plan: 'starter',
                   });
 
                   if (!response?.data?.checkout_url) {
