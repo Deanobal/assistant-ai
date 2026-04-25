@@ -11,6 +11,11 @@ const PLAN_CONFIG = {
   enterprise: { name: 'Enterprise', setupFee: 7500, monthlyFee: 3000 },
 };
 
+function getBaseUrl(origin) {
+  if (origin && /^https?:\/\//.test(origin)) return origin.replace(/\/$/, '');
+  return 'https://assistantai.com.au';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -22,9 +27,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unsupported plan' }, { status: 400 });
     }
 
-    if (!payload.clientId || !payload.fullName || !payload.email || !payload.origin) {
-      return Response.json({ error: 'clientId, fullName, email, and origin are required' }, { status: 400 });
+    if (!payload.clientId || !payload.fullName || !payload.email) {
+      return Response.json({ error: 'clientId, fullName, and email are required' }, { status: 400 });
     }
+
+    const baseUrl = getBaseUrl(payload.origin);
+    const sourcePage = payload.sourcePage || 'homepage_pricing';
 
     const client = await base44.asServiceRole.entities.Client.get(payload.clientId);
     if (!client) {
@@ -44,6 +52,10 @@ Deno.serve(async (req) => {
           clientId: client.id,
           planKey: normalizedPlanKey,
           planName: plan.name,
+          selected_plan: plan.name,
+          setup_fee: String(plan.setupFee),
+          monthly_fee: String(plan.monthlyFee),
+          source_page: sourcePage,
           source: 'public_get_started',
         },
       });
@@ -53,14 +65,18 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: stripeCustomerId,
-      success_url: `https://assistantai.com.au/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://assistantai.com.au/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=cancelled`,
+      success_url: `${baseUrl}/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/GetStartedNow?plan=${normalizedPlanKey || 'starter'}&checkout=cancelled`,
       metadata: {
         clientId: client.id,
         plan: normalizedPlanKey,
         planKey: normalizedPlanKey,
         planName: plan.name,
-        origin: payload.origin,
+        selected_plan: plan.name,
+        setup_fee: String(plan.setupFee),
+        monthly_fee: String(plan.monthlyFee),
+        source_page: sourcePage,
+        origin: baseUrl,
         source: 'public_get_started',
       },
       subscription_data: {
@@ -69,7 +85,11 @@ Deno.serve(async (req) => {
           plan: normalizedPlanKey,
           planKey: normalizedPlanKey,
           planName: plan.name,
-          origin: payload.origin,
+          selected_plan: plan.name,
+          setup_fee: String(plan.setupFee),
+          monthly_fee: String(plan.monthlyFee),
+          source_page: sourcePage,
+          origin: baseUrl,
           source: 'public_get_started',
         },
       },
@@ -113,7 +133,7 @@ Deno.serve(async (req) => {
           stripe_subscription_id: existingBilling.stripe_subscription_id || null,
           stripe_checkout_session_id: session.id,
           admin_override: false,
-          notes: 'Stripe checkout created from public get started flow.',
+          notes: `Stripe checkout created from ${sourcePage}.`,
         }
       : {
           client_id: client.id,
@@ -128,7 +148,7 @@ Deno.serve(async (req) => {
           stripe_subscription_id: null,
           stripe_checkout_session_id: session.id,
           admin_override: false,
-          notes: 'Stripe checkout created from public get started flow.',
+          notes: `Stripe checkout created from ${sourcePage}.`,
         };
 
     if (existingBilling?.id) {

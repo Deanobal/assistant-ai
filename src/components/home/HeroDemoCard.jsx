@@ -89,11 +89,14 @@ export default function HeroDemoCard() {
               Start call
             </Button>
             <Button
+              asChild
               variant="outline"
               className="h-11 flex-1 rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
             >
-              <Play className="h-4 w-4 text-cyan-300" />
-              Try live demo
+              <a href="/AIDemo">
+                <Play className="h-4 w-4 text-cyan-300" />
+                Try live demo
+              </a>
             </Button>
           </div>
 

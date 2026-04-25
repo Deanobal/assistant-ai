@@ -4,24 +4,30 @@ import { Link } from 'react-router-dom';
 const plans = [
   {
     name: 'Starter',
+    slug: 'starter',
     setup: '$1,500',
     monthly: '$497',
     desc: 'For businesses getting started with better call handling and lead capture.',
     featured: false,
+    directStart: true,
   },
   {
     name: 'Growth',
+    slug: 'growth',
     setup: '$3,000',
     monthly: '$1,500',
     desc: 'For businesses ready to combine calls, bookings, CRM sync, and follow-up automation.',
     featured: true,
+    directStart: true,
   },
   {
     name: 'Enterprise',
+    slug: 'enterprise',
     setup: '$7,500+',
     monthly: '$3,000+',
     desc: 'For larger or more complex service workflows that need deeper automation and integration.',
     featured: false,
+    directStart: false,
   },
 ];
 
@@ -38,11 +44,11 @@ export default function PricingPreview() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.map((plan, index) => (
+        <div className="grid gap-6 md:grid-cols-3">
+          {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative p-8 rounded-2xl border ${
+              className={`relative flex h-full flex-col rounded-2xl border p-6 md:p-8 ${
                 plan.featured
                   ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border'
                   : 'border-white/5 bg-[#12121a]'
@@ -54,28 +60,38 @@ export default function PricingPreview() {
                 </div>
               )}
 
-              <h3 className="text-white font-semibold text-lg">{plan.name}</h3>
-              <p className="text-gray-400 mt-2 mb-6 leading-relaxed">{plan.desc}</p>
+              <h3 className="text-lg font-semibold text-white md:text-xl">{plan.name}</h3>
+              <p className="mt-2 mb-6 text-sm leading-relaxed text-gray-400 md:text-base">{plan.desc}</p>
 
               <div className="space-y-2">
-                <p className="text-white text-3xl font-bold">{plan.setup}</p>
-                <p className="text-gray-500">setup</p>
+                <p className="text-3xl font-bold text-white md:text-4xl">{plan.setup}</p>
+                <p className="text-sm text-gray-500">setup</p>
               </div>
               <div className="mt-6 space-y-2">
-                <p className="text-white text-3xl font-bold">{plan.monthly}</p>
-                <p className="text-gray-500">per month</p>
+                <p className="text-3xl font-bold text-white md:text-4xl">{plan.monthly}</p>
+                <p className="text-sm text-gray-500">per month</p>
               </div>
 
-              <Link
-                to="/BookStrategyCall"
-                className={`mt-8 block w-full text-center py-3 rounded-full text-sm font-medium transition-all ${
-                  plan.featured
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'
-                    : 'border border-white/10 text-white hover:bg-white/5'
-                }`}
-              >
-                Book Free Strategy Call
-              </Link>
+              <div className="mt-8 space-y-3">
+                <Link
+                  to="/BookStrategyCall"
+                  className={`block w-full rounded-full py-3 text-center text-sm font-medium transition-all ${
+                    plan.featured
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'
+                      : 'border border-white/10 text-white hover:bg-white/5'
+                  }`}
+                >
+                  Book Free Strategy Call
+                </Link>
+                {plan.directStart && (
+                  <Link
+                    to={`/GetStartedNow?plan=${plan.slug}`}
+                    className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                  >
+                    Get Started Now
+                  </Link>
+                )}
+              </div>
             </div>
           ))}
         </div>

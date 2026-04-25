@@ -103,14 +103,17 @@ export default function GetStartedNow() {
                     clientId,
                     fullName,
                     email,
-                    origin: 'public_get_started',
+                    mobile: form.mobile_number,
+                    website: form.website || '',
+                    origin: window.location.origin,
+                    sourcePage: 'homepage_pricing',
                   };
 
                   console.log('createStripeCheckout payload', checkoutPayload);
 
                   const response = await base44.functions.invoke('createStripeCheckout', {
                     ...checkoutPayload,
-                    plan: 'starter',
+                    plan: plan.key,
                   });
 
                   if (!response?.data?.checkout_url) {
