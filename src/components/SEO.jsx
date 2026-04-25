@@ -26,7 +26,7 @@ function upsertLink(selector, attributes) {
   });
 }
 
-export default function SEO({ title, description, canonicalPath = '/', structuredData = [] }) {
+export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image, imageAlt }) {
   useEffect(() => {
     const origin = window.location.origin || DEFAULT_ORIGIN;
     const canonicalUrl = new URL(canonicalPath, origin).toString();
@@ -37,9 +37,21 @@ export default function SEO({ title, description, canonicalPath = '/', structure
     upsertMeta('meta[property="og:description"]', { property: 'og:description', content: description });
     upsertMeta('meta[property="og:type"]', { property: 'og:type', content: 'website' });
     upsertMeta('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
+    if (image) {
+      upsertMeta('meta[property="og:image"]', { property: 'og:image', content: image });
+      if (imageAlt) {
+        upsertMeta('meta[property="og:image:alt"]', { property: 'og:image:alt', content: imageAlt });
+      }
+    }
     upsertMeta('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
     upsertMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: title });
     upsertMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
+    if (image) {
+      upsertMeta('meta[name="twitter:image"]', { name: 'twitter:image', content: image });
+      if (imageAlt) {
+        upsertMeta('meta[name="twitter:image:alt"]', { name: 'twitter:image:alt', content: imageAlt });
+      }
+    }
     upsertLink('link[rel="canonical"]', { rel: 'canonical', href: canonicalUrl });
 
     const existingStructuredData = document.head.querySelectorAll('script[data-seo-ld="true"]');
@@ -57,7 +69,7 @@ export default function SEO({ title, description, canonicalPath = '/', structure
     return () => {
       document.head.querySelectorAll('script[data-seo-ld="true"]').forEach((node) => node.remove());
     };
-  }, [title, description, canonicalPath, structuredData]);
+  }, [title, description, canonicalPath, structuredData, image, imageAlt]);
 
   return null;
 }

@@ -12,6 +12,7 @@ import PricingPreview from '../components/home/PricingPreview';
 import CTASection from '../components/home/CTASection';
 
 const HERO_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/9541496d0_generated_bc3bb2a9.png';
+const HERO_IMAGE_ALT = 'AssistantAI AI receptionist and lead capture system for Australian service businesses';
 
 const structuredData = [
   {
@@ -86,6 +87,8 @@ export default function Home() {
         description="AssistantAI is an AI automation system for Australian service businesses that reduces admin by 65%, saves up to $30,000 per year, cuts response times by 80%, and improves lead capture, job booking, follow-up automation, and CRM integration."
         canonicalPath="/"
         structuredData={structuredData}
+        image={HERO_IMAGE}
+        imageAlt={HERO_IMAGE_ALT}
       />
       <div>
       <HeroSection />
