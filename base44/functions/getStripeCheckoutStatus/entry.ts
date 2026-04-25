@@ -18,19 +18,41 @@ Deno.serve(async (req) => {
       expand: ['subscription'],
     });
 
-    const billingMatches = await base44.asServiceRole.entities.BillingStatus.filter({ stripe_checkout_session_id: session.id }, '-updated_date', 1);
-    const billing = billingMatches[0] || null;
+    const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null;
+    const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id || null;
+
+    let billing = (await base44.asServiceRole.entities.BillingStatus.filter({ stripe_checkout_session_id: session.id }, '-updated_date', 1))[0] || null;
+
+    if (!billing && subscriptionId) {
+      billing = (await base44.asServiceRole.entities.BillingStatus.filter({ stripe_subscription_id: subscriptionId }, '-updated_date', 1))[0] || null;
+    }
+
+    if (!billing && customerId) {
+      billing = (await base44.asServiceRole.entities.BillingStatus.filter({ stripe_customer_id: customerId }, '-updated_date', 1))[0] || null;
+    }
+
+    if (!billing) {
+      const checkoutLogs = await base44.asServiceRole.entities.StripeEventLog.filter({ related_client_id: session.metadata?.clientId || null }, '-updated_date', 10);
+      const eventLog = checkoutLogs.find((item) => item.event_type === 'checkout.session.completed') || null;
+      const derivedClientId = eventLog?.related_client_id || session.metadata?.clientId || null;
+      if (derivedClientId) {
+        billing = (await base44.asServiceRole.entities.BillingStatus.filter({ client_id: derivedClientId }, '-updated_date', 1))[0] || null;
+      }
+    }
+
     const clientMatches = billing?.client_id ? await base44.asServiceRole.entities.Client.filter({ id: billing.client_id }, '-updated_date', 1) : [];
     const client = clientMatches[0] || null;
+    const onboarding_status = billing?.billing_status === 'active' ? 'active' : client ? 'created' : 'pending';
 
     return Response.json({
       success: true,
       session_id: session.id,
       payment_status: session.payment_status,
       status: session.status,
-      customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id || null,
-      subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || null,
-      onboarding_started: billing?.billing_status === 'active' && !!client,
+      customer_id: customerId,
+      subscription_id: subscriptionId,
+      onboarding_status,
+      onboarding_started: onboarding_status === 'active',
       billing_status: billing?.billing_status || 'awaiting_payment',
       plan_name: billing?.plan || session.metadata?.planName || null,
       client_id: client?.id || null,

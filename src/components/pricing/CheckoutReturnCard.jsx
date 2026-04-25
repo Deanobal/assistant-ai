@@ -54,7 +54,7 @@ export default function CheckoutReturnCard({ planName, checkoutState, sessionId 
             <p className="text-gray-400 max-w-2xl mx-auto">You returned from Stripe successfully, but onboarding stays locked until the Stripe webhook confirms payment.</p>
             <p className="text-sm text-amber-200">{state.error}</p>
           </>
-        ) : state.data?.onboarding_started ? (
+        ) : state.data?.billing_status === 'active' ? (
           <>
             <CheckCircle2 className="w-10 h-10 text-cyan-300 mx-auto" />
             <h2 className="text-2xl font-bold text-white">Payment Confirmed — Onboarding Started</h2>
@@ -82,6 +82,9 @@ export default function CheckoutReturnCard({ planName, checkoutState, sessionId 
             <Clock3 className="w-10 h-10 text-amber-300 mx-auto" />
             <h2 className="text-2xl font-bold text-white">Checkout Complete — Waiting for Webhook Confirmation</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Your return from Stripe was received, but billing stays pending until the Stripe webhook marks it active.</p>
+            {state.data?.billing_status && state.data?.billing_status !== 'awaiting_payment' && (
+              <p className="text-sm text-amber-200">Current billing status: {state.data.billing_status}</p>
+            )}
           </>
         )}
       </CardContent>
