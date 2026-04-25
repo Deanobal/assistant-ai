@@ -41,7 +41,7 @@ export default function HeroSection() {
                 to="/BookStrategyCall"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-7 py-4 font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto"
               >
-                Call the receptionist
+                Book a strategy call
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link

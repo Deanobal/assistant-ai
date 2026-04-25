@@ -1,24 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 export default function ClientLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError('Please enter your email and password');
-      return;
-    }
-    setError('');
+  const handleLogin = () => {
     base44.auth.redirectToLogin('/ClientPortal');
   };
 
@@ -37,36 +26,24 @@ export default function ClientLogin() {
             <h1 className="text-2xl font-bold text-white text-center mb-2">Client Login</h1>
             <p className="text-gray-400 mb-6 text-base text-center leading-relaxed">Access your AssistantAI client portal to review call activity, billing, integrations, and performance.</p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600" />
-
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-600" />
-
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-gray-300 leading-relaxed">
+                Client portal access uses AssistantAI’s secure sign-in flow. Continue below to log in or request help from our team.
+              </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Private client-only access</span>
                 <Link to="/Contact" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Forgot password?
+                  Need access?
                 </Link>
               </div>
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              <Button type="submit" className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-                Sign In
+              <Button onClick={handleLogin} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
+                Continue to Secure Login
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Secure sign-in continues through the protected login flow.
+                You’ll be redirected to the protected login flow and then returned to your client portal.
               </p>
-            </form>
+            </div>
 
             <div className="mt-6 text-center text-sm space-y-2">
               <Link to="/Contact" className="block text-cyan-400 hover:text-cyan-300 transition-colors">

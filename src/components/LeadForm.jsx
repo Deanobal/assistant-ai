@@ -113,7 +113,11 @@ export default function LeadForm({
         strategyCallRequested: bookingIntent,
         strategyCallBooked,
       });
-      navigate(`/thank-you?form=${encodeURIComponent(formType)}&lead=${encodeURIComponent(lead?.id || '')}&email=${encodeURIComponent(form?.email || '')}&phone=${encodeURIComponent(form?.mobile_number || '')}`);
+      const shouldUseThankYouRedirect = !onSubmitted && !successActionHref && !successSecondaryActionHref && !successTertiaryActionHref && !successEmbedUrl;
+      if (shouldUseThankYouRedirect) {
+        navigate(`/thank-you?form=${encodeURIComponent(formType)}&lead=${encodeURIComponent(lead?.id || '')}&email=${encodeURIComponent(form?.email || '')}&phone=${encodeURIComponent(form?.mobile_number || '')}`);
+        return;
+      }
       setSubmitted(true);
     } catch (error) {
       console.error('Lead submission failed', error);

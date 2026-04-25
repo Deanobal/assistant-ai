@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+const { useEffect } = React;
+
 const DEFAULT_ORIGIN = 'https://assistantai.com.au';
 
 function upsertMeta(selector, attributes) {
@@ -25,12 +27,19 @@ function upsertLink(selector, attributes) {
 }
 
 export default function SEO({ title, description, canonicalPath = '/', structuredData = [] }) {
-  React.useEffect(() => {
+  useEffect(() => {
     const origin = window.location.origin || DEFAULT_ORIGIN;
     const canonicalUrl = new URL(canonicalPath, origin).toString();
 
     document.title = title;
     upsertMeta('meta[name="description"]', { name: 'description', content: description });
+    upsertMeta('meta[property="og:title"]', { property: 'og:title', content: title });
+    upsertMeta('meta[property="og:description"]', { property: 'og:description', content: description });
+    upsertMeta('meta[property="og:type"]', { property: 'og:type', content: 'website' });
+    upsertMeta('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
+    upsertMeta('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
+    upsertMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: title });
+    upsertMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
     upsertLink('link[rel="canonical"]', { rel: 'canonical', href: canonicalUrl });
 
     const existingStructuredData = document.head.querySelectorAll('script[data-seo-ld="true"]');
