@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle2, Clock3, Database, MessageSquare, PhoneCall, UserCheck } from 'lucide-react';
 
 export const defaultWorkflowItems = [
