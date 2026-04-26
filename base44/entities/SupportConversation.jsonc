@@ -1,0 +1,320 @@
+{
+  "name": "SupportConversation",
+  "type": "object",
+  "properties": {
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the conversation was first created"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the conversation was last updated"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "open",
+        "waiting_on_admin",
+        "waiting_on_customer",
+        "resolved",
+        "closed"
+      ],
+      "default": "new",
+      "description": "Current support conversation status"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "public_site",
+        "client_portal",
+        "admin_internal"
+      ],
+      "description": "Where the conversation started"
+    },
+    "source_page": {
+      "type": "string",
+      "description": "Page or route where the conversation originated"
+    },
+    "visitor_name": {
+      "type": "string",
+      "description": "Visitor or customer name"
+    },
+    "visitor_email": {
+      "type": "string",
+      "description": "Visitor or customer email"
+    },
+    "visitor_phone": {
+      "type": "string",
+      "description": "Visitor or customer phone number"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Conversation subject or title"
+    },
+    "assigned_admin_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Assigned admin user ID"
+    },
+    "linked_lead_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked lead record ID"
+    },
+    "linked_client_account_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked client account record ID"
+    },
+    "unread_for_admin": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether there are unread messages for admins"
+    },
+    "unread_for_client": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether there are unread messages for the client side"
+    },
+    "last_message_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Timestamp of the latest message"
+    },
+    "last_message_preview": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short preview of the latest message"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal",
+      "description": "Support priority level"
+    },
+    "ai_mode": {
+      "type": "string",
+      "enum": [
+        "ai_active",
+        "human_required",
+        "escalated",
+        "closed"
+      ],
+      "default": "ai_active",
+      "description": "Whether AI is actively handling the conversation or a human is required"
+    },
+    "ai_stage": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "qualification",
+        "knowledge_answer",
+        "closing_mode",
+        "handoff_waiting",
+        "waiting_on_customer",
+        "closed"
+      ],
+      "default": "discovery",
+      "description": "Deterministic conversation stage"
+    },
+    "primary_intent": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "pricing_question",
+        "package_question",
+        "business_fit",
+        "integration_capability",
+        "high_buying_intent",
+        "callback_request",
+        "booking_request",
+        "billing_issue",
+        "urgent_support",
+        "human_request",
+        "support_request",
+        "unknown_out_of_knowledge",
+        null
+      ],
+      "description": "Primary deterministic intent for the conversation"
+    },
+    "detected_intents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "pricing_question",
+          "package_question",
+          "business_fit",
+          "integration_capability",
+          "high_buying_intent",
+          "callback_request",
+          "booking_request",
+          "billing_issue",
+          "urgent_support",
+          "human_request",
+          "support_request",
+          "unknown_out_of_knowledge"
+        ]
+      },
+      "description": "All deterministic intents detected in the thread"
+    },
+    "pricing_shown": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether pricing has already been shown in the thread"
+    },
+    "high_value_lead": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the conversation is a high-value buying opportunity"
+    },
+    "enquiry_category": {
+      "type": "string",
+      "enum": [
+        "sales",
+        "onboarding",
+        "support",
+        "urgent",
+        "general"
+      ],
+      "default": "general",
+      "description": "AI-classified enquiry category"
+    },
+    "urgency_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal",
+      "description": "AI-classified urgency level"
+    },
+    "ai_summary": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "AI summary of the conversation and recommended next step"
+    },
+    "ai_last_response_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the AI last responded in the conversation"
+    },
+    "ai_handover_reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Reason the conversation was handed to a human"
+    },
+    "preferred_contact_time": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Preferred callback or contact time"
+    },
+    "captured_business_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Detected business type from the conversation"
+    },
+    "qualification_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Missing qualification details still needed in the thread"
+    },
+    "snoozed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the current snooze was created"
+    },
+    "snoozed_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the conversation should reappear for follow-up"
+    },
+    "snooze_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Human-friendly snooze label"
+    },
+    "snooze_alert_sent_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the latest snooze reminder alert was sent"
+    }
+  },
+  "required": [
+    "created_at",
+    "updated_at",
+    "status",
+    "source_type",
+    "subject",
+    "priority"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

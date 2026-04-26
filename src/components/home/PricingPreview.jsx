@@ -81,15 +81,20 @@ export default function PricingPreview() {
                       : 'border border-white/10 text-white hover:bg-white/5'
                   }`}
                 >
-                  Book Free Strategy Call
+Book Free Strategy Call
                 </Link>
                 {plan.directStart && (
-                  <Link
-                    to={`/GetStartedNow?plan=${plan.slug}`}
-                    className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
-                  >
-                    Get Started Now
-                  </Link>
+                  <>
+                    <Link
+                      to={`/GetStartedNow?plan=${plan.slug}`}
+                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                    >
+                      Get Started Now
+                    </Link>
+                    <p className="px-2 text-center text-xs text-gray-500">
+                      Start your setup immediately and we’ll begin onboarding your system.
+                    </p>
+                  </>
                 )}
               </div>
             </div>

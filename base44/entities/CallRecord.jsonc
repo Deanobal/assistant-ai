@@ -1,0 +1,128 @@
+{
+  "name": "CallRecord",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the call was received"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Call duration in seconds"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "answered",
+        "missed",
+        "disconnected",
+        "transferred",
+        "booked"
+      ],
+      "description": "Outcome status of the call"
+    },
+    "lead_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked lead ID when a lead was captured"
+    },
+    "client_account_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Linked client business record"
+    },
+    "caller_name": {
+      "type": "string",
+      "description": "Name of the caller"
+    },
+    "caller_phone": {
+      "type": "string",
+      "description": "Phone number of the caller"
+    },
+    "enquiry_category": {
+      "type": "string",
+      "enum": [
+        "booking",
+        "pricing",
+        "urgent service",
+        "general enquiry",
+        "follow-up",
+        "support",
+        "reschedule"
+      ],
+      "description": "Main reason for the enquiry"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "description": "Overall caller sentiment"
+    },
+    "follow_up_required": {
+      "type": "boolean",
+      "description": "Whether the call needs a follow-up action"
+    },
+    "appointment_booked": {
+      "type": "boolean",
+      "description": "Whether an appointment was booked during the call"
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "AI-generated call summary"
+    },
+    "outcome_label": {
+      "type": "string",
+      "description": "Client-friendly outcome label"
+    }
+  },
+  "required": [
+    "timestamp",
+    "duration",
+    "status",
+    "caller_name",
+    "caller_phone",
+    "enquiry_category",
+    "sentiment",
+    "follow_up_required",
+    "appointment_booked",
+    "ai_summary",
+    "outcome_label"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_account_id": "{{user.client_account_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "name": "SupportMessage",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Parent support conversation ID"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "visitor",
+        "client",
+        "admin",
+        "system"
+      ],
+      "description": "Who sent the message"
+    },
+    "sender_user_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Sender user ID when the sender is authenticated"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Sender display name"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Sender email address"
+    },
+    "message_body": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "attachment_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional attachment file URL"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was created"
+    },
+    "is_internal_note": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this message is an internal admin note"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "sender_type",
+    "sender_name",
+    "sender_email",
+    "message_body",
+    "created_at",
+    "is_internal_note"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
