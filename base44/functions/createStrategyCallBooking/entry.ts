@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 async function notifyAdmins(base44, lead, details) {
   const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '-created_date', 100);
