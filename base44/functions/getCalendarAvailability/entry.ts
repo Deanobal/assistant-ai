@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function overlaps(slotStart, slotEnd, busyStart, busyEnd) {
   return busyStart < slotEnd && busyEnd > slotStart;
@@ -8,6 +8,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json().catch(() => ({}));
+    if (req.headers.get('authorization')) {
+      await base44.auth.me().catch(() => null);
+    }
     const slotMinutes = Math.min(Math.max(Number(payload.slotMinutes) || 60, 15), 120);
     const daysAhead = Math.min(Math.max(Number(payload.daysAhead) || 10, 1), 14);
     const timezone = 'UTC';
