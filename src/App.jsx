@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@/lib/AuthContext';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -38,46 +39,48 @@ import AdminLayout from './components/admin/AdminLayout';
 function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <Router>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/Home" element={<Navigate to="/" replace />} />
-            <Route path="/Services" element={<Services />} />
-            <Route path="/Industries" element={<Industries />} />
-            <Route path="/Pricing" element={<Pricing />} />
-            <Route path="/About" element={<About />} />
-            <Route path="/Contact" element={<Contact />} />
-            <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
-            <Route path="/GetStartedNow" element={<GetStartedNow />} />
-            <Route path="/CaseStudies" element={<CaseStudies />} />
-            <Route path="/Blog" element={<Blog />} />
-            <Route path="/Blog/:slug" element={<BlogPost />} />
-            <Route path="/Integrations" element={<Integrations />} />
-            <Route path="/Platform" element={<Platform />} />
-            <Route path="/AIDemo" element={<AIDemo />} />
-            <Route path="/ClientLogin" element={<ClientLogin />} />
-            <Route path="/ClientPortal" element={<ClientPortal />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-          </Route>
-          <Route path="/Dashboard" element={<Dashboard />} />
-          <Route element={<AdminLayout />}>
-            <Route path="/ActionInbox" element={<ActionInbox />} />
-            <Route path="/LeadDashboard" element={<LeadDashboard />} />
-            <Route path="/LeadDetail" element={<LeadDetail />} />
-            <Route path="/ClientManager" element={<ClientManager />} />
-            <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
-            <Route path="/Onboarding" element={<OnboardingDashboard />} />
-            <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
-            <Route path="/OnboardingSettings" element={<OnboardingSettings />} />
-            <Route path="/SupportInbox" element={<SupportInbox />} />
-            <Route path="/UnmatchedSmsInbox" element={<UnmatchedSmsInbox />} />
-            <Route path="/TeamAccess" element={<TeamAccess />} />
-            <Route path="/SystemReadiness" element={<SystemReadiness />} />
-          </Route>
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/Home" element={<Navigate to="/" replace />} />
+              <Route path="/Services" element={<Services />} />
+              <Route path="/Industries" element={<Industries />} />
+              <Route path="/Pricing" element={<Pricing />} />
+              <Route path="/About" element={<About />} />
+              <Route path="/Contact" element={<Contact />} />
+              <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
+              <Route path="/GetStartedNow" element={<GetStartedNow />} />
+              <Route path="/CaseStudies" element={<CaseStudies />} />
+              <Route path="/Blog" element={<Blog />} />
+              <Route path="/Blog/:slug" element={<BlogPost />} />
+              <Route path="/Integrations" element={<Integrations />} />
+              <Route path="/Platform" element={<Platform />} />
+              <Route path="/AIDemo" element={<AIDemo />} />
+              <Route path="/ClientLogin" element={<ClientLogin />} />
+              <Route path="/ClientPortal" element={<ClientPortal />} />
+              <Route path="/thank-you" element={<ThankYou />} />
+            </Route>
+            <Route path="/Dashboard" element={<Dashboard />} />
+            <Route element={<AdminLayout />}>
+              <Route path="/ActionInbox" element={<ActionInbox />} />
+              <Route path="/LeadDashboard" element={<LeadDashboard />} />
+              <Route path="/LeadDetail" element={<LeadDetail />} />
+              <Route path="/ClientManager" element={<ClientManager />} />
+              <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
+              <Route path="/Onboarding" element={<OnboardingDashboard />} />
+              <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
+              <Route path="/OnboardingSettings" element={<OnboardingSettings />} />
+              <Route path="/SupportInbox" element={<SupportInbox />} />
+              <Route path="/UnmatchedSmsInbox" element={<UnmatchedSmsInbox />} />
+              <Route path="/TeamAccess" element={<TeamAccess />} />
+              <Route path="/SystemReadiness" element={<SystemReadiness />} />
+            </Route>
+            <Route path="*" element={<PageNotFound />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
