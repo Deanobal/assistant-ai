@@ -8,7 +8,11 @@ const plans = [
     monthly: '$497',
     desc: 'For businesses getting started with better call handling and lead capture.',
     featured: false,
-    directStart: true,
+    primaryCtaLabel: 'Book A Demo',
+    primaryCtaTo: '/BookStrategyCall',
+    secondaryCtaLabel: 'Talk To Us',
+    secondaryCtaTo: '/Contact',
+    helper: 'Confirm fit, scope, and next steps with the team first.',
   },
   {
     name: 'Growth',
@@ -17,7 +21,11 @@ const plans = [
     monthly: '$1,500',
     desc: 'For businesses ready to combine calls, bookings, CRM sync, and follow-up automation.',
     featured: true,
-    directStart: true,
+    primaryCtaLabel: 'Book A Demo',
+    primaryCtaTo: '/BookStrategyCall',
+    secondaryCtaLabel: 'Start Your Setup',
+    secondaryCtaTo: '/GetStartedNow?plan=growth',
+    helper: 'Submit your details and continue into the setup flow.',
   },
   {
     name: 'Enterprise',
@@ -26,7 +34,11 @@ const plans = [
     monthly: '$3,000+',
     desc: 'For larger or more complex service workflows that need deeper automation and integration.',
     featured: false,
-    directStart: false,
+    primaryCtaLabel: 'Talk To Us',
+    primaryCtaTo: '/Contact',
+    secondaryCtaLabel: 'Book A Demo',
+    secondaryCtaTo: '/BookStrategyCall',
+    helper: 'Best for custom scoping, integrations, and rollout planning.',
   },
 ];
 
@@ -59,42 +71,40 @@ export default function PricingPreview() {
                 </div>
               )}
 
-              <h3 className="text-lg font-semibold text-white md:text-xl">{plan.name}</h3>
-              <p className="mt-2 mb-6 text-sm leading-relaxed text-gray-400 md:text-base">{plan.desc}</p>
+              <div className="min-h-[7.5rem]">
+                <h3 className="text-lg font-semibold text-white md:text-xl">{plan.name}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-400 md:text-base">{plan.desc}</p>
+              </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-h-[5rem]">
                 <p className="text-3xl font-bold text-white md:text-4xl">{plan.setup}</p>
                 <p className="text-sm text-gray-500">setup</p>
               </div>
-              <div className="mt-6 space-y-2">
+              <div className="mt-6 space-y-2 min-h-[5rem]">
                 <p className="text-3xl font-bold text-white md:text-4xl">{plan.monthly}</p>
                 <p className="text-sm text-gray-500">per month</p>
               </div>
 
-              <div className="mt-8 space-y-3">
+              <div className="mt-8 mt-auto space-y-3">
                 <Link
-                  to="/BookStrategyCall"
+                  to={plan.primaryCtaTo}
                   className={`block w-full rounded-full py-3 text-center text-sm font-medium transition-all ${
                     plan.featured
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'
                       : 'border border-white/10 text-white hover:bg-white/5'
                   }`}
                 >
-Book Free Strategy Call
+                  {plan.primaryCtaLabel}
                 </Link>
-                {plan.directStart && (
-                  <>
-                    <Link
-                      to={`/GetStartedNow?plan=${plan.slug}`}
-                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
-                    >
-                      Get Started Now
-                    </Link>
-                    <p className="px-2 text-center text-xs text-gray-500">
-                      Start your setup immediately and we’ll begin onboarding your system.
-                    </p>
-                  </>
-                )}
+                <Link
+                  to={plan.secondaryCtaTo}
+                  className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                >
+                  {plan.secondaryCtaLabel}
+                </Link>
+                <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
+                  {plan.helper}
+                </p>
               </div>
             </div>
           ))}

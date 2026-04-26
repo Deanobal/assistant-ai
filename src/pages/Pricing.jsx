@@ -20,8 +20,13 @@ const plans = [
   'AI call handling and lead capture'],
 
   featured: false,
-  directStart: true
-},
+  directStart: false,
+  primaryCtaLabel: 'Book A Demo',
+  primaryCtaTo: '/BookStrategyCall',
+  secondaryCtaLabel: 'Talk To Us',
+  secondaryCtaTo: '/Contact',
+  secondaryHelper: 'Best if you want to confirm fit, scope, and next steps first.'
+  },
 {
   name: 'Growth',
   slug: 'growth',
@@ -38,8 +43,13 @@ const plans = [
   'CRM, calendar, and follow-up automation'],
 
   featured: true,
-  directStart: true
-},
+  directStart: true,
+  primaryCtaLabel: 'Book A Demo',
+  primaryCtaTo: '/BookStrategyCall',
+  secondaryCtaLabel: 'Start Your Setup',
+  secondaryCtaTo: '/GetStartedNow?plan=growth',
+  secondaryHelper: 'Best for teams ready to submit details and continue into the setup flow.'
+  },
 {
   name: 'Enterprise',
   slug: 'enterprise',
@@ -56,8 +66,13 @@ const plans = [
   'Custom integrations and workflow design'],
 
   featured: false,
-  directStart: false
-}];
+  directStart: false,
+  primaryCtaLabel: 'Talk To Us',
+  primaryCtaTo: '/Contact',
+  secondaryCtaLabel: 'Book A Demo',
+  secondaryCtaTo: '/BookStrategyCall',
+  secondaryHelper: 'Best for custom scoping, integrations, and rollout planning.'
+  }];
 
 
 const faqs = [
@@ -138,17 +153,21 @@ export default function Pricing() {
                   </div>
               }
 
-                <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
-                <p className="text-gray-400 mt-2 mb-6 text-base leading-relaxed">{plan.desc}</p>
-
-                <div className="mb-2">
-                  <span className="text-4xl font-bold text-white">{plan.monthly}</span>
-                  <span className="text-gray-500 text-sm">/month</span>
+                <div className="min-h-[8.5rem]">
+                  <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
+                  <p className="text-gray-400 mt-2 text-base leading-relaxed">{plan.desc}</p>
                 </div>
-                <p className="text-gray-500 text-base">{plan.setup} setup fee</p>
-                <p className="text-gray-300 text-sm leading-relaxed mt-3 mb-8">{plan.valueLine}</p>
 
-                <ul className="space-y-3 mb-8">
+                <div className="mb-2 mt-2 min-h-[5.5rem]">
+                  <div className="flex flex-wrap items-end gap-2">
+                    <span className="text-4xl font-bold text-white">{plan.monthly}</span>
+                    <span className="pb-1 text-sm text-gray-500">/month</span>
+                  </div>
+                  <p className="mt-2 text-base text-gray-500">{plan.setup} setup fee</p>
+                </div>
+                <p className="min-h-[4.5rem] text-sm leading-relaxed text-gray-300 mt-3 mb-8">{plan.valueLine}</p>
+
+                <ul className="space-y-3 mb-8 min-h-[13rem]">
                   {plan.features.map((f) =>
                 <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
                       <Check className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -157,31 +176,27 @@ export default function Pricing() {
                 )}
                 </ul>
 
-                <div className="space-y-3">
+                <div className="mt-auto space-y-3">
                   <Link
-                  to="/BookStrategyCall"
-                  className={`block w-full text-center py-3.5 rounded-full text-sm font-medium transition-all ${
-                  plan.featured ?
-                  'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
-                  'border border-white/10 text-white hover:bg-white/5'}`
-                  }>
-
-                    Book Free Strategy Call
+                    to={plan.primaryCtaTo}
+                    className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
+                    plan.featured ?
+                    'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
+                    'border border-white/10 text-white hover:bg-white/5'}`
+                    }
+                  >
+                    {plan.primaryCtaLabel}
                   </Link>
 
-                  {plan.directStart && (
-                    <>
-                      <Link
-                        to={`/GetStartedNow?plan=${plan.slug}`}
-                        className="block w-full text-center py-3.5 rounded-full text-sm font-medium border border-cyan-500/20 bg-cyan-500/5 text-white hover:bg-cyan-500/10 transition-all"
-                      >
-                        Get Started Now
-                      </Link>
-                      <p className="text-xs text-gray-500 text-center px-2">
-                        Start your setup immediately and we’ll begin onboarding your system.
-                      </p>
-                    </>
-                  )}
+                  <Link
+                    to={plan.secondaryCtaTo}
+                    className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                  >
+                    {plan.secondaryCtaLabel}
+                  </Link>
+                  <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
+                    {plan.secondaryHelper}
+                  </p>
                 </div>
               </motion.div>
             )}
