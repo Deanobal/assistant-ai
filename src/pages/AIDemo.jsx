@@ -220,13 +220,11 @@ The final assistant message should show that the enquiry has been captured and a
             
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-cyan-300 text-xs font-medium mb-5">
               <Sparkles className="h-3.5 w-3.5" />
-              AI Demo
+              Live Product Demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Watch How AssistantAI.com.au Handles a Lead from Call to Follow-Up
-
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">See How AssistantAI Handles a Lead from Call to Follow-Up</h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">
-              This demo now uses more natural browser-selected voices and turn-by-turn playback so it feels closer to a real AI phone interaction.
+              This is the main demo experience for AssistantAI. Explore a realistic call flow, hear the interaction, and see what the system does after the enquiry is captured.
             </p>
           </motion.div>
 
@@ -254,7 +252,7 @@ The final assistant message should show that the enquiry has been captured and a
                   </div>
                 </div>
                 <p className="mt-2 text-white font-medium text-lg">{workflowItems[currentStep]?.title || steps[currentStep]}</p>
-                <p className="mt-2 text-sm text-gray-500">The demo now uses separate caller and assistant voices and waits longer between each spoken message.</p>
+                <p className="mt-2 text-sm text-gray-500">Follow the conversation, watch the workflow update live, and use this page as the main proof experience before booking a strategy call.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button
