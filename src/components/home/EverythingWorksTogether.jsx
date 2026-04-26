@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { TimerReset, TrendingUp, ClipboardMinus, Smile, Users2, Database } from 'lucide-react';
 
 const outcomes = [

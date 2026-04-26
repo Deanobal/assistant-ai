@@ -1,4 +1,3 @@
-import React from 'react';
 import { Phone, UserCheck, CalendarCheck, Database, MessageSquareText, PhoneForwarded } from 'lucide-react';
 
 const cards = [

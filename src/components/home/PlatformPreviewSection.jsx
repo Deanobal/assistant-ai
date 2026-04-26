@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, PhoneCall, Users, CalendarCheck2, Send, PlugZap } from 'lucide-react';
 

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Database, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
 
 const items = [

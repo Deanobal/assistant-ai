@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { PhoneMissed, Clock3, Users, ArrowRightCircle } from 'lucide-react';
 
 const problems = [

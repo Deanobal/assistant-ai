@@ -1,4 +1,3 @@
-import * as React from 'react';
 import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';

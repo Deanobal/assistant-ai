@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { PhoneCall, Lightbulb, Link as LinkIcon, Rocket } from 'lucide-react';
 
 const steps = [
