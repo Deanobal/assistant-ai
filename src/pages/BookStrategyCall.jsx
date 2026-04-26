@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
@@ -87,7 +87,7 @@ export default function BookStrategyCall() {
                     : 'Follow up on strategy call request and send booking next step.'}
                 bookingIntent={true}
                 bookingSource="strategy_call_page"
-                enquiryTypeOverride="strategy_call"
+                enquiryTypeOverride="other"
                 showPreferredMeetingFields={!hasLiveBooking}
                 successActionHref={!hasGoogleCalendarLive ? STRATEGY_CALL_BOOKING_URL || undefined : undefined}
                 successActionLabel={!hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_URL ? `Open ${providerLabel}` : undefined}

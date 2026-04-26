@@ -1,4 +1,3 @@
-import React from 'react';
 import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

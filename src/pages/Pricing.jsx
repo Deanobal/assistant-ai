@@ -32,7 +32,7 @@ const plans = [
   slug: 'growth',
   setup: '$3,000',
   monthly: '$1,500',
-  desc: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
+  desc: 'Best for growing businesses that want AI call handling, booking automation, CRM sync, and follow-up.',
   valueLine: 'Setup, management, support, and optimisation for businesses ready to scale faster.',
   features: [
   'Done-for-you setup',
