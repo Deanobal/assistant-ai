@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { ArrowRight, Play } from 'lucide-react';
 import HeroDemoCard from './HeroDemoCard';
 
@@ -32,20 +31,20 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <Link
-                to="/AIDemo"
+              <a
+                href="#homepage-demo"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]"
               >
                 <Play className="h-4.5 w-4.5" />
                 <span>Try The AI Receptionist</span>
-              </Link>
-              <Link
-                to="/AIDemo"
+              </a>
+              <a
+                href="#how-it-works"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]"
               >
-                <span>Watch Demo</span>
+                <span>See How It Works</span>
                 <ArrowRight className="h-4.5 w-4.5 text-cyan-300" />
-              </Link>
+              </a>
             </div>
 
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
