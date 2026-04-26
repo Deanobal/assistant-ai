@@ -1,7 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_TEST_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY'), {
+const stripeSecretKey = Deno.env.get('BASE44_ENV') === 'production'
+  ? Deno.env.get('STRIPE_API_KEY')
+  : Deno.env.get('STRIPE_TEST_SECRET_KEY');
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-02-24.acacia',
 });
 
