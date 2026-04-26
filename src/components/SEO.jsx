@@ -1,6 +1,5 @@
-import * as React from 'react';
+import { useEffect } from 'react';
 
-const { useEffect } = React;
 
 const DEFAULT_ORIGIN = 'https://assistantai.com.au';
 
