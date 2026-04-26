@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import CrispChat from './chat/CrispChat';
@@ -19,7 +19,7 @@ const mobileNavLinks = [
 ];
 
 function Navbar() {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
   return (
