@@ -21,7 +21,7 @@ const problems = [
 
 export default function ProblemSection() {
   return (
-    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
+    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-8 lg:gap-12 items-start">
           <div>

@@ -95,7 +95,7 @@ function Footer() {
   return (
     <footer className="bg-[#070710] border-t border-white/5">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
               <img
@@ -105,10 +105,10 @@ function Footer() {
 
               <span className="text-white font-semibold text-lg">AssistantAI</span>
             </div>
-            <p className="text-gray-500 text-base leading-relaxed max-w-sm">Premium AI automation for Australian service businesses, designed to answer calls, capture leads, sync systems, and automate follow-up with a more productised service experience.
+            <p className="max-w-sm text-base leading-7 text-gray-500">Premium AI automation for Australian service businesses, designed to answer calls, capture leads, sync systems, and automate follow-up with a more productised service experience.
 
             </p>
-            <p className="text-gray-600 mt-4 text-base">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
+            <p className="mt-4 text-base leading-7 text-gray-600">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
           </div>
 
           <div>
@@ -139,7 +139,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/5 mt-12 pt-8 text-center">
-          <p className="text-gray-600 text-xs">© 2026 AssistantAI. All rights reserved.</p>
+          <p className="text-gray-600 text-sm">© 2026 AssistantAI. All rights reserved.</p>
         </div>
       </div>
     </footer>);

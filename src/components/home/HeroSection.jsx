@@ -23,15 +23,15 @@ export default function HeroSection() {
               <span className="text-sm font-medium text-cyan-300">AI receptionist for service businesses</span>
             </div>
 
-            <h1 className="max-w-3xl text-4xl font-bold leading-[0.96] tracking-[-0.04em] text-white sm:text-5xl lg:text-[4.6rem]">
+            <h1 className="max-w-3xl text-4xl font-bold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl lg:text-[4.35rem] xl:text-[4.7rem]">
               Never Miss A Lead Again
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl">
+            <p className="mt-6 max-w-2xl text-[1.05rem] leading-8 text-slate-300 md:text-xl md:leading-8">
               AssistantAI gives your business an AI receptionist that answers instantly, qualifies leads, books calls, and keeps follow-up moving 24/7.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 to="/AIDemo"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]"
@@ -48,7 +48,7 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
               Built for service businesses that want faster response times, fewer missed enquiries, and less admin.
             </p>
           </div>

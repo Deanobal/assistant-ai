@@ -11,7 +11,7 @@ const cards = [
 
 export default function ServicesPreview() {
   return (
-    <section className="relative py-16 md:py-20">
+    <section className="relative py-18 md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-cyan-400 text-lg font-medium mb-3">CORE FEATURES</p>

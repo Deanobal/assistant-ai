@@ -10,7 +10,7 @@ const industries = [
 
 export default function UseCasesPreview() {
   return (
-    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
+    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">

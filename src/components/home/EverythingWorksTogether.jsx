@@ -11,7 +11,7 @@ const outcomes = [
 
 export default function EverythingWorksTogether() {
   return (
-    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
+    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">WHY IT MATTERS</p>

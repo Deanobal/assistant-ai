@@ -14,7 +14,7 @@ export default function TrustStrip() {
           {items.map((item, index) =>
           <div
             key={item.label}
-            className="flex items-center justify-center gap-2.5 rounded-full border border-white/6 bg-white/[0.02] px-4 py-2.5 text-center">
+            className="flex min-h-[2.85rem] items-center justify-center gap-2.5 rounded-full border border-white/6 bg-white/[0.02] px-4 py-2.5 text-center">
 
               <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
                 <item.icon className="w-3.5 h-3.5 text-cyan-400" />

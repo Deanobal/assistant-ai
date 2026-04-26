@@ -44,18 +44,18 @@ const plans = [
 
 export default function PricingPreview() {
   return (
-    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
+    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
       <div className="bg-radial-glow absolute inset-0" />
       <div className="relative max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING SNAPSHOT</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple Pricing for a Productised Service</h2>
-          <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
+        <div className="text-center mb-12 md:mb-14">
+          <p className="text-cyan-400 mb-3 text-base font-medium tracking-[0.16em]">PRICING SNAPSHOT</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Simple Pricing for a Productised Service</h2>
+          <p className="mt-4 max-w-2xl mx-auto text-base leading-7 text-gray-400 md:text-lg">
             All plans include setup, support, optimisation, and ongoing management.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {plans.map((plan) => (
             <div
               key={plan.name}
