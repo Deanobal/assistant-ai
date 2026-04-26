@@ -1,18 +1,18 @@
-import * as React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 
-const AuthContext = React.createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = React.useState(null);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-  const [isLoadingAuth, setIsLoadingAuth] = React.useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = React.useState(true);
-  const [authError, setAuthError] = React.useState(null);
-  const [appPublicSettings, setAppPublicSettings] = React.useState(null); // Contains only { id, public_settings }
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
-  React.useEffect(() => {
+  useEffect(() => {
     checkAppState();
   }, []);
 
@@ -154,7 +154,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
