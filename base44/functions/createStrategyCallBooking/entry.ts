@@ -82,7 +82,6 @@ async function notifyAdmins(base44, lead, details) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    await base44.auth.isAuthenticated().catch(() => false);
     const payload = await req.json();
     const {
       leadId,

@@ -7,7 +7,6 @@ function overlaps(slotStart, slotEnd, busyStart, busyEnd) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    await base44.auth.isAuthenticated().catch(() => false);
     const payload = await req.json().catch(() => ({}));
     const slotMinutes = Math.min(Math.max(Number(payload.slotMinutes) || 60, 15), 120);
     const daysAhead = Math.min(Math.max(Number(payload.daysAhead) || 10, 1), 14);
