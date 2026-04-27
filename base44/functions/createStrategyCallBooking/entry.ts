@@ -242,6 +242,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    const ghlApiKey = Deno.env.get('GOHIGHLEVEL_API_KEY');
+    const ghlLocationId = Deno.env.get('GOHIGHLEVEL_LOCATION_ID');
+    if (ghlApiKey && ghlLocationId) {
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      await fetch('https://api.leadconnectorhq.com/v1/contacts/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ghlApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          phone: lead?.mobile_number || '',
+          locationId: ghlLocationId,
+          tags: ['Website Lead'],
+          source: 'Strategy Call Booking',
+        }),
+      });
+    }
+
     return Response.json({
       success: true,
       provider: 'Google Calendar',
