@@ -416,6 +416,11 @@
       ],
       "format": "date-time",
       "description": "When this client account was last synced with the CRM"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or notes (up to 1000 characters)"
     }
   },
   "required": [

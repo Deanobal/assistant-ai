@@ -191,6 +191,11 @@
     "metadata": {
       "type": "object",
       "description": "Extra event metadata"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or notes (up to 1000 characters)"
     }
   },
   "required": [
