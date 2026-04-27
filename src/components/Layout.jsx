@@ -35,8 +35,8 @@ function Navbar() {
           <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
         </Link>
 
-        <div className="hidden md:flex items-center justify-end gap-6 flex-1 min-w-0">
-          <div className="flex items-center gap-6 min-w-0">
+        <div className="hidden lg:flex items-center justify-end gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-4 min-w-0 overflow-hidden">
             {navLinks.map((link) =>
             <Link
               key={link.path}
@@ -61,7 +61,7 @@ function Navbar() {
         </div>
 
         <button
-          className="md:hidden text-white"
+          className="lg:hidden text-white"
           onClick={() => setMobileOpen(!mobileOpen)}>
 
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -69,7 +69,7 @@ function Navbar() {
       </div>
 
       {mobileOpen &&
-        <div className="md:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
+        <div className="lg:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
 
             <div className="px-6 py-4 space-y-3">
               {mobileNavLinks.map((link) =>
