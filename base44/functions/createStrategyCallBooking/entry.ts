@@ -224,6 +224,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    const slackWebhookUrl = Deno.env.get('SLACK_WEBHOOK_URL');
+    if (slackWebhookUrl) {
+      const adminLink = lead?.id ? `https://assistantai.com.au/LeadDetail?id=${lead.id}` : (event.htmlLink || 'N/A');
+      const slackText = [
+        `📅 *New Strategy Call Booking*`,
+        `Name: ${fullName}`,
+        `Business: ${businessName || 'N/A'}`,
+        `Email: ${email}`,
+        `Phone: ${lead?.mobile_number || 'N/A'}`,
+        `Booking link: ${event.htmlLink || adminLink}`,
+      ].join('\n');
+      await fetch(slackWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: slackText }),
+      });
+    }
+
     return Response.json({
       success: true,
       provider: 'Google Calendar',
