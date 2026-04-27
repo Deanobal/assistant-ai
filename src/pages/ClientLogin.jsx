@@ -18,7 +18,7 @@ export default function ClientLogin() {
         className="w-full max-w-md">
 
         <Card className="bg-[#12121a] border-white/5 shadow-2xl shadow-cyan-500/5">
-          <CardContent className="p-8">
+          <CardContent className="p-8 hidden">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mx-auto mb-6">
               <Lock className="w-7 h-7 text-cyan-400" />
             </div>
