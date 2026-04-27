@@ -2,6 +2,9 @@ import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
 import ProblemSection from '../components/home/ProblemSection';
+import SampleCallDemo from '../components/home/SampleCallDemo';
+import HowItWorksSection from '../components/home/HowItWorksSection';
+import CredibilitySection from '../components/home/CredibilitySection';
 import ServicesPreview from '../components/home/ServicesPreview';
 import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
 import HowItWorks from '../components/home/HowItWorks';
@@ -93,6 +96,9 @@ export default function Home() {
       <HeroSection />
       <TrustStrip />
       <ProblemSection />
+      <SampleCallDemo />
+      <HowItWorksSection />
+      <CredibilitySection />
       <ServicesPreview />
       <EverythingWorksTogether />
       <HowItWorks />
