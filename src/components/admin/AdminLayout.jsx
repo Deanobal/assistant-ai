@@ -165,7 +165,7 @@ export default function AdminLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-400/40 bg-cyan-500/12 text-white ring-1 ring-cyan-300/10' : item.label === 'Admin' ? 'border-transparent text-slate-500 hover:bg-white/[0.02] hover:text-slate-200' : 'border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-white'}`}
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-400/40 bg-cyan-500/12 text-white ring-1 ring-cyan-300/10' : ['Admin', 'Marketing'].includes(item.label) ? 'border-transparent text-slate-500 hover:bg-white/[0.02] hover:text-slate-200' : 'border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-white'}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <item.icon className="h-4 w-4 shrink-0" />
