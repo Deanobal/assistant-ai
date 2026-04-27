@@ -1,0 +1,156 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Campaign name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "email",
+        "sms",
+        "email_sms"
+      ],
+      "description": "Campaign type"
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "follow_up",
+        "promotional",
+        "announcement",
+        "custom"
+      ],
+      "description": "Campaign template"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "sent",
+        "paused"
+      ],
+      "default": "draft",
+      "description": "Campaign status"
+    },
+    "segment": {
+      "type": "string",
+      "description": "Lead segment or filter criteria"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject or SMS title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Email body or SMS content"
+    },
+    "cta_text": {
+      "type": "string",
+      "description": "Call-to-action text"
+    },
+    "cta_url": {
+      "type": "string",
+      "description": "Call-to-action URL"
+    },
+    "scheduled_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Scheduled send date/time"
+    },
+    "sent_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Actual send date"
+    },
+    "total_recipients": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of recipients"
+    },
+    "total_sent": {
+      "type": "number",
+      "default": 0,
+      "description": "Total messages sent"
+    },
+    "total_opened": {
+      "type": "number",
+      "default": 0,
+      "description": "Email opens"
+    },
+    "total_clicked": {
+      "type": "number",
+      "default": 0,
+      "description": "Link clicks"
+    },
+    "total_replied": {
+      "type": "number",
+      "default": 0,
+      "description": "Replies received"
+    },
+    "total_bounced": {
+      "type": "number",
+      "default": 0,
+      "description": "Bounced messages"
+    },
+    "open_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Open rate percentage"
+    },
+    "click_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Click rate percentage"
+    },
+    "reply_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Reply rate percentage"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Admin who created the campaign"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "template",
+    "status",
+    "segment",
+    "subject",
+    "body"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

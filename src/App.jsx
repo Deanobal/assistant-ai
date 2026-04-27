@@ -35,6 +35,10 @@ import SupportInbox from './pages/SupportInbox';
 import ActionInbox from './pages/ActionInbox';
 import UnmatchedSmsInbox from './pages/UnmatchedSmsInbox';
 import AdminLayout from './components/admin/AdminLayout';
+import MarketingLayout from './components/admin/MarketingLayout';
+import SeoDashboard from './pages/admin/marketing/SeoDashboard';
+import Campaigns from './pages/admin/marketing/Campaigns';
+import MarketingSettings from './pages/admin/marketing/Settings';
 
 function App() {
   return (
@@ -76,6 +80,11 @@ function App() {
               <Route path="/UnmatchedSmsInbox" element={<UnmatchedSmsInbox />} />
               <Route path="/TeamAccess" element={<TeamAccess />} />
               <Route path="/SystemReadiness" element={<SystemReadiness />} />
+            </Route>
+            <Route element={<MarketingLayout />}>
+              <Route path="/admin/marketing/seo-dashboard" element={<SeoDashboard />} />
+              <Route path="/admin/marketing/campaigns" element={<Campaigns />} />
+              <Route path="/admin/marketing/settings" element={<MarketingSettings />} />
             </Route>
             <Route path="*" element={<PageNotFound />} />
           </Routes>

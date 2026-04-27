@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart3, BriefcaseBusiness, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck, TrendingUp } from 'lucide-react';
 
 const navItems = [
   {
@@ -42,6 +42,13 @@ const navItems = [
     icon: ShieldCheck,
     subtitle: 'System controls',
     match: ['/ClientManager', '/ClientWorkspace', '/TeamAccess', '/SystemReadiness'],
+  },
+  {
+    label: 'Marketing',
+    path: '/admin/marketing/seo-dashboard',
+    icon: TrendingUp,
+    subtitle: 'SEO & campaigns',
+    match: ['/admin/marketing'],
   },
 ];
 
