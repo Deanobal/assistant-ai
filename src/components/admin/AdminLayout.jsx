@@ -204,7 +204,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f18]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-6 gap-2">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));
             const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
