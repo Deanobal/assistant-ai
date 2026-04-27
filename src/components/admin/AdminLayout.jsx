@@ -152,6 +152,12 @@ export default function AdminLayout() {
           </Link>
 
           <div className="flex-1 space-y-2">
+            <Link
+              to="/"
+              className="flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-slate-200 transition-colors mb-4 pb-4 border-b border-white/10"
+            >
+              ← Back to Site
+            </Link>
             {navItems.map((item) => {
               const isActive = item.match.some((path) => location.pathname.startsWith(path));
               const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
@@ -174,7 +180,7 @@ export default function AdminLayout() {
             })}
           </div>
 
-          <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="border-white/10 text-white hover:bg-white/5">
+          <Button onClick={() => base44.auth.logout('/')} className="w-full bg-slate-700 hover:bg-slate-600 text-white">
             <LogOut className="mr-2 h-4 w-4" />
             Log Out
           </Button>
