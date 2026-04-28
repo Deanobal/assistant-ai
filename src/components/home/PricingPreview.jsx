@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
 
 const plans = [
   {
@@ -6,7 +7,15 @@ const plans = [
     slug: 'starter',
     setup: '$1,500',
     monthly: '$497',
-    desc: 'For businesses getting started with better call handling and lead capture.',
+    desc: 'Best for businesses starting with AI call handling and lead capture.',
+    valueLine: 'Setup, monthly management, support, and reporting in one premium service path.',
+    features: [
+      'Done-for-you setup',
+      'Monthly management',
+      'Support included',
+      'Reporting included',
+      'AI call handling and lead capture',
+    ],
     featured: false,
     primaryCtaLabel: 'Book A Demo',
     primaryCtaTo: '/BookStrategyCall',
@@ -19,7 +28,16 @@ const plans = [
     slug: 'growth',
     setup: '$3,000',
     monthly: '$1,500',
-    desc: 'For businesses ready to combine calls, bookings, CRM sync, and follow-up automation.',
+    desc: 'Best for growing businesses that want AI call handling, booking automation, CRM sync, and follow-up.',
+    valueLine: 'Setup, management, support, and optimisation for businesses ready to scale faster.',
+    features: [
+      'Done-for-you setup',
+      'Monthly management',
+      'Optimisation included',
+      'Support included',
+      'Reporting included',
+      'CRM, calendar, and follow-up automation',
+    ],
     featured: true,
     primaryCtaLabel: 'Book A Demo',
     primaryCtaTo: '/BookStrategyCall',
@@ -32,7 +50,16 @@ const plans = [
     slug: 'enterprise',
     setup: '$7,500+',
     monthly: '$3,000+',
-    desc: 'For larger or more complex service workflows that need deeper automation and integration.',
+    desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
+    valueLine: 'Custom setup, management, support, optimisation, and workflow design for larger operations.',
+    features: [
+      'Advanced setup',
+      'Monthly management',
+      'Optimisation included',
+      'Support included',
+      'Reporting included',
+      'Custom integrations and workflow design',
+    ],
     featured: false,
     primaryCtaLabel: 'Talk To Us',
     primaryCtaTo: '/Contact',
@@ -59,7 +86,7 @@ export default function PricingPreview() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative flex h-full flex-col rounded-2xl border p-6 md:p-8 ${
+              className={`relative flex h-full flex-col rounded-2xl border p-8 card-hover ${
                 plan.featured
                   ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border'
                   : 'border-white/5 bg-[#12121a]'
@@ -71,24 +98,34 @@ export default function PricingPreview() {
                 </div>
               )}
 
-              <div className="min-h-[7.5rem]">
-                <h3 className="text-lg font-semibold text-white md:text-xl">{plan.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-400 md:text-base">{plan.desc}</p>
+              <div className="min-h-[8.5rem]">
+                <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
+                <p className="text-gray-400 mt-2 text-base leading-relaxed">{plan.desc}</p>
               </div>
 
-              <div className="space-y-2 min-h-[5rem]">
-                <p className="text-3xl font-bold text-white md:text-4xl">{plan.setup}</p>
-                <p className="text-sm text-gray-500">setup</p>
-              </div>
-              <div className="mt-6 space-y-2 min-h-[5rem]">
-                <p className="text-3xl font-bold text-white md:text-4xl">{plan.monthly}</p>
-                <p className="text-sm text-gray-500">per month</p>
+              <div className="mb-2 mt-2 min-h-[5.5rem]">
+                <div className="flex flex-wrap items-end gap-2">
+                  <span className="text-4xl font-bold text-white">{plan.monthly}</span>
+                  <span className="pb-1 text-sm text-gray-500">/month</span>
+                </div>
+                <p className="mt-2 text-base text-gray-500">{plan.setup} setup fee</p>
               </div>
 
-              <div className="mt-8 mt-auto space-y-3">
+              <p className="min-h-[4.5rem] text-sm leading-relaxed text-gray-300 mt-3 mb-8">{plan.valueLine}</p>
+
+              <ul className="space-y-3 mb-8 min-h-[13rem]">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
+                    <Check className="w-4 h-4 text-cyan-400 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto space-y-3">
                 <Link
                   to={plan.primaryCtaTo}
-                  className={`block w-full rounded-full py-3 text-center text-sm font-medium transition-all ${
+                  className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
                     plan.featured
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20'
                       : 'border border-white/10 text-white hover:bg-white/5'
@@ -98,7 +135,7 @@ export default function PricingPreview() {
                 </Link>
                 <Link
                   to={plan.secondaryCtaTo}
-                  className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                  className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
                 >
                   {plan.secondaryCtaLabel}
                 </Link>
