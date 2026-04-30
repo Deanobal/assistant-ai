@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Play, Pause, SmilePlus, Frown, Meh, Clock, User, Phone } from 'lucide-react';
+import { SmilePlus, Frown, Meh, Clock, User, Phone } from 'lucide-react';
+import AudioPlayer from '@/components/calls/AudioPlayer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -53,7 +54,6 @@ const labelColors = {
 };
 
 export default function CallRecordings({ mode = 'live', clientAccountId = null }) {
-  const [playingId, setPlayingId] = useState(null);
   const isSample = mode === 'sample';
 
   const { data: records = [], isLoading } = useQuery({
@@ -81,6 +81,7 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
         urgency: record.enquiry_category === 'urgent service' ? 'Urgent' : 'Standard',
         followUpStatus: record.follow_up_required ? 'Follow-up required' : 'No follow-up needed',
         leadQuality: record.lead_id ? 'Qualified' : 'Needs Review',
+        recording_url: record.recording_url || null,
       }));
 
   const getSentimentIcon = (sentiment) => {
@@ -166,24 +167,7 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-[#0a0a0f] border border-white/5">
-                <button
-                  onClick={() => setPlayingId(playingId === call.id ? null : call.id)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-                >
-                  {playingId === call.id ? (
-                    <Pause className="w-4 h-4 text-white" />
-                  ) : (
-                    <Play className="w-4 h-4 text-white ml-0.5" />
-                  )}
-                </button>
-                <div className="flex-1">
-                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style={{ width: playingId === call.id ? '36%' : '0%' }} />
-                  </div>
-                </div>
-                <span className="text-gray-500 text-sm">{call.duration}</span>
-              </div>
+              <AudioPlayer src={call.recording_url} duration={call.duration} />
 
               <div>
                 <h4 className="text-white text-sm font-semibold mb-2">AI Summary</h4>

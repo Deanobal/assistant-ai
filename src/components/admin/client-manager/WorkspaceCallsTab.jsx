@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import AudioPlayer from '@/components/calls/AudioPlayer';
 
 export default function WorkspaceCallsTab({ client }) {
   if (!client.recent_calls || client.recent_calls.length === 0) {
@@ -31,8 +32,8 @@ export default function WorkspaceCallsTab({ client }) {
               </div>
             </div>
             <p className="text-gray-300 leading-relaxed">{call.summary}</p>
+            <AudioPlayer src={call.recording_url || null} />
             <div className="flex flex-wrap gap-3 text-sm text-gray-400">
-              <span>Recording: Available</span>
               <span>Follow-Up Required: {call.follow_up_required ? 'Yes' : 'No'}</span>
             </div>
           </CardContent>
