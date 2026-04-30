@@ -88,83 +88,45 @@ Deno.serve(async (req) => {
 
   // Try GHL sync — never let it break the response
   let ghlWarning = null;
+  let ghlResponseBody = null;
   try {
-    const ghlBaseUrl = 'https://rest.gohighlevel.com/v1';
-
-    // Search for existing contact by phone or email
-    let existingContactId = null;
-
-    const searchParams = new URLSearchParams({ locationId: ghlLocationId, query: phone.trim() });
-    const searchRes = await fetch(`${ghlBaseUrl}/contacts/search?${searchParams}`, {
-      headers: {
-        Authorization: `Bearer ${ghlApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (searchRes.ok) {
-      const searchData = await searchRes.json();
-      const contacts = searchData?.contacts || [];
-      if (contacts.length > 0) {
-        existingContactId = contacts[0].id;
-      }
-    }
-
+    const nameParts = full_name.trim().split(' ');
     const ghlPayload = {
       locationId: ghlLocationId,
-      firstName: full_name.trim().split(' ')[0],
-      lastName: full_name.trim().split(' ').slice(1).join(' ') || '',
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(' ') || '',
       phone: phone.trim(),
       ...(email ? { email } : {}),
-      ...(business_name ? { companyName: business_name } : {}),
       source: 'ElevenLabs website demo',
       tags: ['Website Lead', 'ElevenLabs Demo', 'AssistantAI'],
-      customField: [
-        { key: 'service_needed', field_value: service_needed },
-        { key: 'urgency', field_value: urgency },
-        { key: 'preferred_callback_time', field_value: preferred_callback_time || '' },
-        { key: 'conversation_summary', field_value: conversation_summary || '' },
-      ],
     };
 
-    let ghlRes;
-    if (existingContactId) {
-      ghlRes = await fetch(`${ghlBaseUrl}/contacts/${existingContactId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${ghlApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(ghlPayload),
-      });
-    } else {
-      ghlRes = await fetch(`${ghlBaseUrl}/contacts/`, {
+    const ghlRes = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${ghlApiKey}`,
+        Version: '2021-07-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(ghlPayload),
+    });
+
+    ghlResponseBody = await ghlRes.json().catch(() => null);
+
+    if (!ghlRes.ok) {
+      ghlWarning = `GoHighLevel sync failed (${ghlRes.status}): ${JSON.stringify(ghlResponseBody)}`;
+    } else if (notes && ghlResponseBody?.contact?.id) {
+      // Add a note with the conversation summary
+      const ghlContactId = ghlResponseBody.contact.id;
+      await fetch(`https://services.leadconnectorhq.com/contacts/${ghlContactId}/notes`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${ghlApiKey}`,
+          Version: '2021-07-28',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(ghlPayload),
+        body: JSON.stringify({ body: notes }),
       });
-    }
-
-    if (!ghlRes.ok) {
-      const errText = await ghlRes.text();
-      ghlWarning = `GoHighLevel sync failed (${ghlRes.status}): ${errText}`;
-    } else {
-      // Add a note to the GHL contact with the full summary
-      const ghlData = await ghlRes.json();
-      const ghlContactId = existingContactId || ghlData?.contact?.id;
-      if (ghlContactId && notes) {
-        await fetch(`${ghlBaseUrl}/contacts/${ghlContactId}/notes`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${ghlApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ body: notes, userId: ghlContactId }),
-        });
-      }
     }
   } catch (err) {
     ghlWarning = `GoHighLevel sync failed: ${err.message}`;
@@ -176,6 +138,7 @@ Deno.serve(async (req) => {
       lead_id: leadId,
       warning: 'Lead saved but GoHighLevel sync failed.',
       ghl_error: ghlWarning,
+      ghl_response: ghlResponseBody,
       next_step: 'Lead captured. The team will contact the caller shortly.',
     });
   }
