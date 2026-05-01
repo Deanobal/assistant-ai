@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { getBase44Client } from '@/api/base44Client';
 
 const CRISP_SCRIPT_ID = 'assistantai-crisp-script';
 
@@ -13,7 +13,8 @@ export default function CrispChat() {
       const existingScript = document.getElementById(CRISP_SCRIPT_ID);
       if (existingScript) return;
 
-      const response = await base44.functions.invoke('getCrispWebsiteConfig', {});
+      const client = await getBase44Client();
+      const response = await client.functions.invoke('getCrispWebsiteConfig', {});
       const websiteId = response?.data?.websiteId;
       if (!websiteId || cancelled) return;
 
