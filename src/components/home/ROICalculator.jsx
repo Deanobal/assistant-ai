@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, TrendingUp, Clock, DollarSign, PhoneCall, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -9,8 +9,8 @@ const CONVERSION_RATE = 0.35;
 const MINS_PER_CALL = 8; // admin time per missed call follow-up
 
 export default function ROICalculator() {
-  const [missedCalls, setMissedCalls] = useState('');
-  const [avgJobValue, setAvgJobValue] = useState('');
+  const [missedCalls, setMissedCalls] = React.useState('');
+  const [avgJobValue, setAvgJobValue] = React.useState('');
 
   const missed = Math.max(0, parseInt(missedCalls) || 0);
   const jobValue = parseFloat(avgJobValue) || DEFAULT_AVG_JOB;
