@@ -12,6 +12,7 @@ import UseCasesPreview from '../components/home/UseCasesPreview';
 import PlatformPreviewSection from '../components/home/PlatformPreviewSection';
 import PricingPreview from '../components/home/PricingPreview';
 import CTASection from '../components/home/CTASection';
+import ROICalculator from '../components/home/ROICalculator';
 
 const HERO_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/9541496d0_generated_bc3bb2a9.png';
 const HERO_IMAGE_ALT = 'AssistantAI AI receptionist and lead capture system for Australian service businesses';
@@ -96,6 +97,7 @@ export default function Home() {
       <HeroSection />
       <TrustStrip />
       <ProblemSection />
+      <ROICalculator />
       <LiveDemoSection />
       <HowItWorksSection />
       <CredibilitySection />
