@@ -24,6 +24,7 @@ export default function LiveDemoSection() {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadForm, setLeadForm] = useState({ full_name: '', phone: '', service_needed: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [shouldLoadWidget, setShouldLoadWidget] = useState(false);
   const [widgetReady, setWidgetReady] = useState(false);
   const [widgetFailed, setWidgetFailed] = useState(false);
 
@@ -37,7 +38,7 @@ export default function LiveDemoSection() {
   }, []);
 
   useEffect(() => {
-    if (!ELEVENLABS_AGENT_ID || typeof window === 'undefined') return;
+    if (!shouldLoadWidget || !ELEVENLABS_AGENT_ID || typeof window === 'undefined' || typeof document === 'undefined') return;
 
     if (window.customElements?.get(ELEVENLABS_WIDGET_TAG)) {
       setWidgetReady(true);
@@ -48,7 +49,7 @@ export default function LiveDemoSection() {
     const script = existingScript || document.createElement('script');
 
     const markReady = () => {
-      customElements.whenDefined(ELEVENLABS_WIDGET_TAG)
+      window.customElements?.whenDefined(ELEVENLABS_WIDGET_TAG)
         .then(() => setWidgetReady(true))
         .catch(() => setWidgetFailed(true));
     };
@@ -70,13 +71,11 @@ export default function LiveDemoSection() {
     }, 8000);
 
     return () => window.clearTimeout(timeout);
-  }, []);
+  }, [shouldLoadWidget]);
 
   const handleStartDemo = async () => {
-    if (!isLive || !widgetReady) {
-      setWidgetFailed(true);
-      return;
-    }
+    if (!isLive) return;
+    setShouldLoadWidget(true);
     if (micPermission === 'denied') return;
     if (micPermission !== 'granted') {
       try {
@@ -307,11 +306,11 @@ export default function LiveDemoSection() {
               {isLive ? (
                 <Button
                   onClick={handleStartDemo}
-                  disabled={micPermission === 'denied' || !widgetReady}
+                  disabled={micPermission === 'denied'}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Mic className="h-4 w-4" />
-                  {!widgetReady ? 'Loading Live Demo…' : demoStatus === 'ended' ? 'Start New Session' : 'Start Live Demo'}
+                  {demoStatus === 'ended' ? 'Start New Session' : 'Start Live Demo'}
                 </Button>
               ) : (
                 <Link
