@@ -5,7 +5,7 @@ import '@/index.css'
 import { registerPwaServiceWorker } from '@/lib/pwa'
 import { prewarmBase44Client } from '@/api/base44Client'
 
-// Kick off the SDK dynamic import NOW, before React renders.
+// SDK client is initialized synchronously via createClient.
 // By the time any component's useEffect fires the promise will be resolved.
 prewarmBase44Client()
 

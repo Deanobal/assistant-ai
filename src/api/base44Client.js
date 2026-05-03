@@ -39,3 +39,8 @@ export async function authIsAuthenticated() {
 export async function invokeFunction(name, payload) {
   return base44.functions.invoke(name, payload);
 }
+
+// Compatibility shim: some files import getBase44Client expecting a client instance
+export function getBase44Client() {
+  return base44;
+}
