@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 
 const CAPTURE_ENDPOINT = 'https://ai-assistant-flow.base44.app/functions/captureElevenLabsLead';
 const ELEVENLABS_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID || null;
+const ELEVENLABS_WIDGET_SRC = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
+const ELEVENLABS_WIDGET_TAG = 'elevenlabs-convai';
 
 const sampleTranscript = [
   { role: 'ai', text: "Hi, thanks for calling! I'm the AI receptionist for AssistantAI. How can I help you today?" },
@@ -22,8 +24,10 @@ export default function LiveDemoSection() {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadForm, setLeadForm] = useState({ full_name: '', phone: '', service_needed: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetFailed, setWidgetFailed] = useState(false);
 
-  const isLive = !!ELEVENLABS_AGENT_ID;
+  const isLive = !!ELEVENLABS_AGENT_ID && !widgetFailed;
 
   useEffect(() => {
     if (!navigator.permissions) return;
@@ -32,8 +36,47 @@ export default function LiveDemoSection() {
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!ELEVENLABS_AGENT_ID || typeof window === 'undefined') return;
+
+    if (window.customElements?.get(ELEVENLABS_WIDGET_TAG)) {
+      setWidgetReady(true);
+      return;
+    }
+
+    const existingScript = document.querySelector(`script[src="${ELEVENLABS_WIDGET_SRC}"]`);
+    const script = existingScript || document.createElement('script');
+
+    const markReady = () => {
+      customElements.whenDefined(ELEVENLABS_WIDGET_TAG)
+        .then(() => setWidgetReady(true))
+        .catch(() => setWidgetFailed(true));
+    };
+
+    script.addEventListener('load', markReady, { once: true });
+    script.addEventListener('error', () => setWidgetFailed(true), { once: true });
+
+    if (!existingScript) {
+      script.src = ELEVENLABS_WIDGET_SRC;
+      script.async = true;
+      script.type = 'text/javascript';
+      document.head.appendChild(script);
+    } else {
+      markReady();
+    }
+
+    const timeout = window.setTimeout(() => {
+      if (!window.customElements?.get(ELEVENLABS_WIDGET_TAG)) setWidgetFailed(true);
+    }, 8000);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
   const handleStartDemo = async () => {
-    if (!isLive) return;
+    if (!isLive || !widgetReady) {
+      setWidgetFailed(true);
+      return;
+    }
     if (micPermission === 'denied') return;
     if (micPermission !== 'granted') {
       try {
@@ -153,7 +196,23 @@ export default function LiveDemoSection() {
           )}
 
           {/* Sample / idle transcript */}
-          {demoStatus !== 'active' && (
+          {demoStatus !== 'active' && isLive && (
+            <div className="p-6 border-b border-white/8">
+              <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-5 text-center">
+                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-300">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-semibold text-white">
+                  {widgetReady ? 'Live receptionist ready' : 'Loading live receptionist…'}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Click Start Live Demo to allow microphone access and begin a real ElevenLabs voice session.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {demoStatus !== 'active' && !isLive && (
             <div className="p-6 border-b border-white/8">
               <div className="mb-3 flex items-center gap-2 text-xs text-slate-500 uppercase tracking-widest">
                 <Phone className="h-3 w-3 text-cyan-400" />
@@ -248,11 +307,11 @@ export default function LiveDemoSection() {
               {isLive ? (
                 <Button
                   onClick={handleStartDemo}
-                  disabled={micPermission === 'denied'}
+                  disabled={micPermission === 'denied' || !widgetReady}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Mic className="h-4 w-4" />
-                  {demoStatus === 'ended' ? 'Start New Session' : 'Start Live Demo'}
+                  {!widgetReady ? 'Loading Live Demo…' : demoStatus === 'ended' ? 'Start New Session' : 'Start Live Demo'}
                 </Button>
               ) : (
                 <Link
