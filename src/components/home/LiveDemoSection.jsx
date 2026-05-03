@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Phone, PhoneOff, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Phone, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const CAPTURE_ENDPOINT = 'https://ai-assistant-flow.base44.app/functions/captureElevenLabsLead';
 const ELEVENLABS_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID || null;
 
-// Sample transcript for fallback display
 const sampleTranscript = [
   { role: 'ai', text: "Hi, thanks for calling! I'm the AI receptionist for AssistantAI. How can I help you today?" },
   { role: 'customer', text: "Hey, my hot water system just stopped working. I need someone urgently." },
@@ -16,102 +15,25 @@ const sampleTranscript = [
   { role: 'ai', text: "Thanks James. I've captured your details and flagged this as urgent. Our on-call technician will call you within 15 minutes to confirm a time." },
 ];
 
-// ElevenLabs widget loader
-function useElevenLabsWidget(agentId, onCallEnd) {
-  const [status, setStatus] = useState('idle'); // idle | loading | active | ended | error
-  const [errorMsg, setErrorMsg] = useState('');
-  const widgetRef = useRef(null);
-
-  const startCall = async () => {
-    if (!agentId) {
-      setStatus('error');
-      setErrorMsg('ElevenLabs Agent ID is not configured. This demo is running in sample mode.');
-      return;
-    }
-
-    setStatus('loading');
-
-    try {
-      // Dynamically load ElevenLabs Conversational AI widget script
-      if (!document.getElementById('elevenlabs-widget-script')) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.id = 'elevenlabs-widget-script';
-          script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed/dist/index.js';
-          script.type = 'text/javascript';
-          script.onload = resolve;
-          script.onerror = () => reject(new Error('Failed to load ElevenLabs widget script.'));
-          document.head.appendChild(script);
-        });
-      }
-
-      // Small delay to ensure custom element is registered
-      await new Promise((r) => setTimeout(r, 300));
-
-      setStatus('active');
-    } catch (err) {
-      setStatus('error');
-      setErrorMsg(err.message || 'Failed to start demo. Please try again.');
-    }
-  };
-
-  const endCall = () => {
-    setStatus('ended');
-    if (onCallEnd) onCallEnd();
-  };
-
-  return { status, errorMsg, startCall, endCall, widgetRef };
-}
-
-// Lead capture after ElevenLabs conversation
-async function captureLeadFromConversation(leadData) {
-  const webhookSecret = import.meta.env.VITE_ELEVENLABS_WEBHOOK_SECRET;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(webhookSecret ? { 'x-webhook-secret': webhookSecret } : {}),
-  };
-
-  const response = await fetch(CAPTURE_ENDPOINT, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      ...leadData,
-      lead_source: 'ElevenLabs website demo',
-    }),
-  });
-
-  return response.json();
-}
-
 export default function LiveDemoSection() {
-  const [micPermission, setMicPermission] = useState('unknown'); // unknown | granted | denied
+  const [micPermission, setMicPermission] = useState('unknown');
+  const [demoStatus, setDemoStatus] = useState('idle'); // idle | active | ended
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadForm, setLeadForm] = useState({ full_name: '', phone: '', service_needed: '' });
   const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState(null);
-
-  const { status, errorMsg, startCall, endCall } = useElevenLabsWidget(
-    ELEVENLABS_AGENT_ID,
-    () => setShowLeadForm(true)
-  );
 
   const isLive = !!ELEVENLABS_AGENT_ID;
 
-  const checkMicPermission = async () => {
-    try {
-      const result = await navigator.permissions.query({ name: 'microphone' });
-      setMicPermission(result.state === 'granted' ? 'granted' : result.state === 'denied' ? 'denied' : 'unknown');
-    } catch {
-      setMicPermission('unknown');
-    }
-  };
-
   useEffect(() => {
-    checkMicPermission();
+    if (!navigator.permissions) return;
+    navigator.permissions.query({ name: 'microphone' }).then((result) => {
+      setMicPermission(result.state === 'granted' ? 'granted' : result.state === 'denied' ? 'denied' : 'unknown');
+    }).catch(() => {});
   }, []);
 
   const handleStartDemo = async () => {
+    if (!isLive) return;
     if (micPermission === 'denied') return;
     if (micPermission !== 'granted') {
       try {
@@ -122,7 +44,12 @@ export default function LiveDemoSection() {
         return;
       }
     }
-    startCall();
+    setDemoStatus('active');
+  };
+
+  const handleEndCall = () => {
+    setDemoStatus('ended');
+    setShowLeadForm(true);
   };
 
   const handleLeadSubmit = async (e) => {
@@ -130,18 +57,24 @@ export default function LiveDemoSection() {
     if (!leadForm.full_name || !leadForm.phone || !leadForm.service_needed) return;
     setSubmitting(true);
     try {
-      const result = await captureLeadFromConversation({
-        full_name: leadForm.full_name,
-        phone: leadForm.phone,
-        service_needed: leadForm.service_needed,
-        urgency: 'medium',
-        conversation_summary: 'Lead captured via ElevenLabs website demo interaction.',
+      const webhookSecret = import.meta.env.VITE_ELEVENLABS_WEBHOOK_SECRET;
+      await fetch(CAPTURE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(webhookSecret ? { 'x-webhook-secret': webhookSecret } : {}),
+        },
+        body: JSON.stringify({
+          ...leadForm,
+          urgency: 'medium',
+          lead_source: 'ElevenLabs website demo',
+          conversation_summary: 'Lead captured via ElevenLabs website demo interaction.',
+        }),
       });
-      setSubmitResult(result);
       setLeadCaptured(true);
       setShowLeadForm(false);
-    } catch (err) {
-      setSubmitResult({ error: err.message });
+    } catch {
+      // silently fail — lead form still shown
     } finally {
       setSubmitting(false);
     }
@@ -149,7 +82,6 @@ export default function LiveDemoSection() {
 
   return (
     <section id="homepage-demo" className="relative py-16 md:py-24 bg-[#070a12] scroll-mt-20">
-      {/* Background glow */}
       <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
       <div className="absolute inset-0 bg-grid pointer-events-none opacity-40" />
 
@@ -162,20 +94,10 @@ export default function LiveDemoSection() {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-4 py-1.5 mb-5">
-            {isLive ? (
-              <>
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-                <span className="text-sm font-medium text-cyan-300">Live AI Receptionist</span>
-              </>
-            ) : (
-              <>
-                <Phone className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="text-sm font-medium text-cyan-300">Sample AI receptionist call</span>
-              </>
-            )}
+            <Phone className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="text-sm font-medium text-cyan-300">
+              {isLive ? 'Live AI Receptionist' : 'Sample AI receptionist call'}
+            </span>
           </div>
 
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -186,11 +108,10 @@ export default function LiveDemoSection() {
           </p>
 
           {!isLive && (
-            <div className="mt-4 inline-flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-amber-300 max-w-xl mx-auto">
+            <div className="mt-4 inline-flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-amber-300 max-w-xl mx-auto text-left">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
-                <strong>Sample mode:</strong> ElevenLabs Agent ID not configured. This shows a sample transcript.{' '}
-                Set <code className="font-mono text-xs bg-white/10 px-1 py-0.5 rounded">VITE_ELEVENLABS_AGENT_ID</code> to enable live voice.
+                <strong>Sample mode:</strong> Set <code className="font-mono text-xs bg-white/10 px-1 py-0.5 rounded">VITE_ELEVENLABS_AGENT_ID</code> in environment variables to enable live voice.
               </span>
             </div>
           )}
@@ -202,12 +123,12 @@ export default function LiveDemoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="rounded-[28px] border border-white/10 bg-[#0b0f18]/90 overflow-hidden shadow-[0_24px_90px_rgba(6,182,212,0.10)] backdrop-blur-xl"
+          className="relative rounded-[28px] border border-white/10 bg-[#0b0f18]/90 overflow-hidden shadow-[0_24px_90px_rgba(6,182,212,0.10)] backdrop-blur-xl"
         >
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
 
-          {/* Live ElevenLabs widget area */}
-          {isLive && status === 'active' && (
+          {/* Live ElevenLabs widget — only rendered when active & agent ID set */}
+          {isLive && demoStatus === 'active' && (
             <div className="p-6 border-b border-white/8">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -218,26 +139,25 @@ export default function LiveDemoSection() {
                   <span className="text-sm font-medium text-white">Live session active</span>
                 </div>
                 <button
-                  onClick={endCall}
+                  onClick={handleEndCall}
                   className="flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-sm text-red-300 hover:bg-red-500/20 transition-colors"
                 >
-                  <PhoneOff className="h-3.5 w-3.5" />
                   End Call
                 </button>
               </div>
-              {/* ElevenLabs embeddable widget */}
-              <div className="rounded-2xl overflow-hidden bg-black/30 min-h-[120px] flex items-center justify-center">
-                <elevenlabs-convai agent-id={ELEVENLABS_AGENT_ID} className="w-full" />
+              {/* ElevenLabs custom element — script loaded via index.html when agent ID is configured */}
+              <div className="rounded-2xl overflow-hidden bg-black/30 min-h-[140px] flex items-center justify-center">
+                <elevenlabs-convai agent-id={ELEVENLABS_AGENT_ID} style={{ width: '100%' }} />
               </div>
             </div>
           )}
 
-          {/* Sample transcript (shown when not live or not active) */}
-          {(!isLive || status === 'idle' || status === 'ended' || status === 'error') && (
+          {/* Sample / idle transcript */}
+          {demoStatus !== 'active' && (
             <div className="p-6 border-b border-white/8">
               <div className="mb-3 flex items-center gap-2 text-xs text-slate-500 uppercase tracking-widest">
                 <Phone className="h-3 w-3 text-cyan-400" />
-                {isLive ? 'Previous session ended' : 'Sample call transcript'}
+                {demoStatus === 'ended' ? 'Session ended' : 'Sample call transcript'}
               </div>
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                 {sampleTranscript.map((line, i) => (
@@ -265,51 +185,26 @@ export default function LiveDemoSection() {
             </div>
           )}
 
-          {/* Loading state */}
-          {status === 'loading' && (
-            <div className="px-6 py-8 flex flex-col items-center gap-3 text-slate-300">
-              <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-              <p className="text-sm">Connecting to AI receptionist…</p>
-            </div>
-          )}
-
-          {/* Error state */}
-          {status === 'error' && (
-            <div className="px-6 py-4 flex items-start gap-3 bg-red-500/5 border-t border-red-500/10">
-              <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-300">{errorMsg}</p>
-            </div>
-          )}
-
-          {/* Mic permission warning */}
+          {/* Mic blocked warning */}
           {micPermission === 'denied' && isLive && (
-            <div className="px-6 py-3 flex items-start gap-3 bg-amber-400/5 border-t border-amber-400/10">
+            <div className="px-6 py-3 flex items-start gap-3 bg-amber-400/5 border-b border-amber-400/10">
               <MicOff className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-300">
-                Microphone access is blocked. Allow microphone access to speak with the AI receptionist.
-              </p>
-            </div>
-          )}
-
-          {micPermission === 'unknown' && isLive && status === 'idle' && (
-            <div className="px-6 py-3 flex items-start gap-3 bg-cyan-400/5 border-t border-cyan-400/10">
-              <Mic className="h-4 w-4 text-cyan-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-cyan-200">Allow microphone access to speak with the AI receptionist.</p>
+              <p className="text-sm text-amber-300">Microphone access is blocked. Allow microphone access to speak with the AI receptionist.</p>
             </div>
           )}
 
           {/* Lead capture success */}
           {leadCaptured && (
-            <div className="px-6 py-4 flex items-start gap-3 bg-emerald-500/5 border-t border-emerald-500/10">
+            <div className="px-6 py-4 flex items-start gap-3 bg-emerald-500/5 border-b border-emerald-500/10">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
               <p className="text-sm text-emerald-300">Your details have been captured. Our team will be in touch shortly.</p>
             </div>
           )}
 
-          {/* Lead form (post-call capture) */}
+          {/* Post-call lead form */}
           {showLeadForm && !leadCaptured && (
-            <div className="p-6 border-t border-white/8">
-              <p className="text-sm font-medium text-white mb-4">Capture your demo enquiry details</p>
+            <div className="p-6 border-b border-white/8">
+              <p className="text-sm font-medium text-white mb-4">Leave your details and we'll follow up</p>
               <form onSubmit={handleLeadSubmit} className="grid sm:grid-cols-3 gap-3">
                 <input
                   type="text"
@@ -340,7 +235,7 @@ export default function LiveDemoSection() {
                   disabled={submitting}
                   className="sm:col-span-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full"
                 >
-                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {submitting ? 'Sending…' : 'Send My Details'}
                 </Button>
               </form>
@@ -348,19 +243,18 @@ export default function LiveDemoSection() {
           )}
 
           {/* CTA buttons */}
-          <div className="p-6 border-t border-white/8">
+          <div className="p-6">
             <div className="flex flex-col sm:flex-row gap-3">
-              {isLive && status !== 'active' && (
+              {isLive ? (
                 <Button
                   onClick={handleStartDemo}
-                  disabled={micPermission === 'denied' || status === 'loading'}
+                  disabled={micPermission === 'denied'}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Mic className="h-4 w-4" />
-                  {status === 'ended' ? 'Start New Session' : 'Start Live Demo'}
+                  {demoStatus === 'ended' ? 'Start New Session' : 'Start Live Demo'}
                 </Button>
-              )}
-              {!isLive && (
+              ) : (
                 <Link
                   to="/AIDemo"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
@@ -377,11 +271,8 @@ export default function LiveDemoSection() {
                 Book Free Strategy Call
               </Link>
             </div>
-
             <p className="mt-3 text-xs text-slate-500">
-              {isLive
-                ? 'Live voice demo. Your enquiry details may be captured for follow-up.'
-                : 'No commitment. 30 minutes. Real results. Set VITE_ELEVENLABS_AGENT_ID to enable live voice.'}
+              No commitment. 30 minutes. Real results.
             </p>
           </div>
         </motion.div>
