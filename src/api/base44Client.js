@@ -24,10 +24,10 @@ function buildClientPromise() {
         window.location.origin
       : '';
 
-  // Use a variable so Vite's static scanner does NOT pre-bundle @base44/sdk.
+  // Use string concatenation so Vite's static scanner does NOT pre-bundle @base44/sdk.
   // Pre-bundling merges the SDK's internal React copy with the app's React,
   // causing two React instances and the "null useEffect" crash.
-  const sdkPkg = '@base44/sdk';
+  const sdkPkg = '@base44' + '/sdk';
   return import(/* @vite-ignore */ sdkPkg).then(({ createClient }) =>
     createClient({
       appId: appParams.appId,
