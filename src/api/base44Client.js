@@ -1,109 +1,57 @@
 import { appParams } from '@/lib/app-params';
+import { createClient } from '@base44/sdk';
 
-// --- Async client initialisation ---
-// @base44/sdk is loaded via dynamic import ONLY, so its bundled React copy
-// is never evaluated during the initial module-graph traversal.
-// This prevents the "duplicate React instance / null hook" crash.
+// ---------------------------------------------------------------------------
+// Single client instance — created once, synchronously at module init time.
+// Using a static import (not dynamic) ensures Vite deduplicates React correctly
+// and prevents the "duplicate React / null hook" crash.
+// ---------------------------------------------------------------------------
 
-let _clientPromise = null;
+const serverUrl =
+  typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('server_url') ||
+      window.location.origin
+    : '';
 
-function buildClientPromise() {
-  const { appId, token, functionsVersion, appBaseUrl } = appParams;
-  const serverUrl =
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('server_url') ||
-        window.location.origin
-      : '';
+const _client = createClient({
+  appId: appParams.appId,
+  token: appParams.token,
+  functionsVersion: appParams.functionsVersion,
+  serverUrl,
+  requiresAuth: false,
+  appBaseUrl: appParams.appBaseUrl,
+});
 
-  return import('@base44/sdk').then(({ createClient }) =>
-    createClient({
-      appId,
-      token,
-      functionsVersion,
-      serverUrl,
-      requiresAuth: false,
-      appBaseUrl,
-    })
-  );
-}
-
-/** Returns a Promise<client>. Safe to call multiple times (singleton). */
+/** Returns the client (sync). Kept for backwards compatibility. */
 export function getBase44Client() {
-  if (!_clientPromise) {
-    _clientPromise = buildClientPromise();
-  }
-  return _clientPromise;
+  return Promise.resolve(_client);
 }
 
 // ---------------------------------------------------------------------------
-// Async wrapper helpers
-// These let callers write one-liners without repeating getBase44Client() everywhere.
+// Async wrapper helpers (kept for backwards compatibility)
 // ---------------------------------------------------------------------------
 
 export async function authMe() {
-  const c = await getBase44Client();
-  return c.auth.me();
+  return _client.auth.me();
 }
 
 export async function authLogout(redirectUrl) {
-  const c = await getBase44Client();
-  return c.auth.logout(redirectUrl);
+  return _client.auth.logout(redirectUrl);
 }
 
 export async function authRedirectToLogin(nextUrl) {
-  const c = await getBase44Client();
-  return c.auth.redirectToLogin(nextUrl);
+  return _client.auth.redirectToLogin(nextUrl);
 }
 
 export async function authIsAuthenticated() {
-  const c = await getBase44Client();
-  return c.auth.isAuthenticated();
+  return _client.auth.isAuthenticated();
 }
 
 export async function invokeFunction(name, payload) {
-  const c = await getBase44Client();
-  return c.functions.invoke(name, payload);
+  return _client.functions.invoke(name, payload);
 }
 
 // ---------------------------------------------------------------------------
-// Lazy synchronous Proxy
-//
-// Many existing files do:  import { base44 } from '@/api/base44Client'
-// and then call base44.entities.Foo.list() inside useEffect / async handlers.
-// Those calls are ALWAYS made after React has mounted (never at module-parse
-// time), so by then the dynamic import has already resolved and _resolvedClient
-// is set.  The Proxy just forwards to it.
-//
-// The only requirement: nothing may call base44.X at module top-level.
+// Named export — used by most components as: import { base44 } from '@/api/base44Client'
 // ---------------------------------------------------------------------------
-
-let _resolvedClient = null;
-
-// Kick off the import immediately so it resolves as early as possible,
-// but don't block module evaluation.
-getBase44Client().then((c) => {
-  _resolvedClient = c;
-});
-
-function resolved() {
-  if (!_resolvedClient) {
-    throw new Error(
-      '[base44] Client not ready yet. ' +
-        'Make sure you only call base44.* inside useEffect, event handlers, or async functions — never at module top-level.'
-    );
-  }
-  return _resolvedClient;
-}
-
-export const base44 = new Proxy(
-  {},
-  {
-    get(_t, prop) {
-      return resolved()[prop];
-    },
-    set(_t, prop, value) {
-      resolved()[prop] = value;
-      return true;
-    },
-  }
-);
+export const base44 = _client;
