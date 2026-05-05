@@ -1,5 +1,51 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+function normalizeIntentValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isHighIntentLead({ urgency, service_needed, conversation_summary }) {
+  const normalizedUrgency = normalizeIntentValue(urgency);
+  const combined = [service_needed, conversation_summary].filter(Boolean).join(' ').toLowerCase();
+  return ['high', 'urgent', 'emergency'].includes(normalizedUrgency)
+    || /urgent|emergency|ready to start|book now|call me back|quote|pricing|price|cost|proposal|integration|crm|calendar/.test(combined);
+}
+
+async function sendHighIntentPushAlert(base44, leadId, leadData, requestUrl) {
+  const highIntent = isHighIntentLead(leadData);
+  if (!highIntent) return { status: 'not_applicable' };
+
+  const urgencyLevel = normalizeIntentValue(leadData.urgency) === 'urgent' || normalizeIntentValue(leadData.urgency) === 'emergency' ? 'urgent' : 'high';
+  const messagePreview = `${leadData.service_needed}${leadData.preferred_callback_time ? ` · Callback: ${leadData.preferred_callback_time}` : ''}`;
+
+  const response = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+    eventType: 'new_lead_created',
+    entityName: 'Lead',
+    entityId: leadId,
+    title: 'High-intent AI receptionist lead',
+    message: messagePreview,
+    uniqueKey: `elevenlabs_high_intent_lead_${leadId}`,
+    priority: urgencyLevel,
+    metadata: {
+      full_name: leadData.full_name,
+      business_name: leadData.business_name || null,
+      mobile_number: leadData.phone,
+      lead_source: leadData.lead_source,
+      channel_label: 'AI Receptionist',
+      urgency_level: urgencyLevel,
+      high_value_lead: true,
+      alert_category: 'high_intent_ai_receptionist',
+      intent_summary: leadData.conversation_summary || messagePreview,
+      message_preview: messagePreview,
+      linked_lead_id: leadId,
+      recommended_action: 'Call lead now',
+      admin_link: `/LeadDetail?id=${leadId}`,
+    },
+  });
+
+  return response?.data || { status: 'sent' };
+}
+
 Deno.serve(async (req) => {
   // Only allow POST
   if (req.method !== 'POST') {
@@ -73,6 +119,23 @@ Deno.serve(async (req) => {
     return Response.json({ error: `Failed to create lead: ${err.message}` }, { status: 500 });
   }
 
+  let pushAlertResult = { status: 'not_applicable' };
+  try {
+    pushAlertResult = await sendHighIntentPushAlert(base44, leadId, {
+      full_name: full_name.trim(),
+      phone: phone.trim(),
+      email,
+      business_name,
+      service_needed: service_needed.trim(),
+      urgency,
+      preferred_callback_time,
+      lead_source,
+      conversation_summary,
+    }, req.url);
+  } catch (err) {
+    pushAlertResult = { status: 'failed', error: err.message };
+  }
+
   // --- GoHighLevel sync (optional) ---
   const ghlApiKey = Deno.env.get('GHL_API_KEY');
   const ghlLocationId = Deno.env.get('GHL_LOCATION_ID');
@@ -82,6 +145,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       lead_id: leadId,
+      push_alert: pushAlertResult,
       next_step: 'Lead captured. The team will contact the caller shortly.',
     });
   }
@@ -139,6 +203,7 @@ Deno.serve(async (req) => {
       warning: 'Lead saved but GoHighLevel sync failed.',
       ghl_error: ghlWarning,
       ghl_response: ghlResponseBody,
+      push_alert: pushAlertResult,
       next_step: 'Lead captured. The team will contact the caller shortly.',
     });
   }
