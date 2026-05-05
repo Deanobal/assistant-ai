@@ -32,18 +32,18 @@ export default function HeroSection() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <a
-                href="#live-demo"
+                href="/GetStartedNow"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]"
               >
-                <Play className="h-4.5 w-4.5" />
-                <span>Try Live AI Receptionist</span>
+                <span>Get Started</span>
+                <ArrowRight className="h-4.5 w-4.5" />
               </a>
               <a
                 href="#live-demo"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]"
               >
+                <Play className="h-4.5 w-4.5 text-cyan-300" />
                 <span>Try Live AI Receptionist</span>
-                <ArrowRight className="h-4.5 w-4.5 text-cyan-300" />
               </a>
             </div>
 
