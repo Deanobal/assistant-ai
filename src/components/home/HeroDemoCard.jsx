@@ -87,7 +87,7 @@ export default function HeroDemoCard() {
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <a
-                      href="/#live-demo"
+                      href="#live-demo"
                       className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
                     >
                       Launch Live Demo

@@ -17,7 +17,7 @@ export default function LiveDemoSection() {
             Live AI Receptionist Demo
           </h2>
           <p className="mt-4 text-base text-slate-400 max-w-2xl mx-auto leading-7">
-            The live receptionist section is ready here. The embedded voice widget is temporarily paused to keep the public site stable.
+            The live voice demo is being connected. You can still book a strategy call or view the sample call flow.
           </p>
         </div>
 
@@ -29,9 +29,9 @@ export default function LiveDemoSection() {
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-300">
                 <Mic className="h-5 w-5" />
               </div>
-              <p className="text-sm font-semibold text-white">Start Live Demo</p>
+              <p className="text-sm font-semibold text-white">Sample call flow</p>
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                The live voice widget is paused while we stabilise production, but this is now the correct Watch Demo destination.
+                Preview how AssistantAI answers, qualifies, and routes a service enquiry.
               </p>
             </div>
           </div>
@@ -67,7 +67,7 @@ export default function LiveDemoSection() {
                 href="/AIDemo"
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all"
               >
-                View Sample Demo
+                View Sample Call
               </a>
             </div>
           </div>
