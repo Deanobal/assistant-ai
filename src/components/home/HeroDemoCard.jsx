@@ -90,7 +90,7 @@ export default function HeroDemoCard() {
                       href="#live-demo"
                       className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
                     >
-                      Launch Live Demo
+                      Try Live AI Receptionist
                       <ArrowRight className="h-4 w-4" />
                     </a>
                     <Link

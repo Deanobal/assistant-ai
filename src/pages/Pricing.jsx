@@ -21,7 +21,7 @@ const plans = [
 
   featured: false,
   directStart: false,
-  primaryCtaLabel: 'Try Live Demo',
+  primaryCtaLabel: 'Try Live AI Receptionist',
   primaryCtaTo: '/#live-demo',
   secondaryCtaLabel: 'Talk To Us',
   secondaryCtaTo: '/Contact',
@@ -44,7 +44,7 @@ const plans = [
 
   featured: true,
   directStart: true,
-  primaryCtaLabel: 'Try Live Demo',
+  primaryCtaLabel: 'Try Live AI Receptionist',
   primaryCtaTo: '/#live-demo',
   secondaryCtaLabel: 'Start Your Setup',
   secondaryCtaTo: '/GetStartedNow?plan=growth',
