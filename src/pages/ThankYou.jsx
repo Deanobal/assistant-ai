@@ -78,11 +78,11 @@ export default function ThankYou() {
                       </Button>
                     </Link>
                   )}
-                  <Link to="/AIDemo" className="w-full sm:w-auto">
+                  <a href="/#live-demo" className="w-full sm:w-auto">
                     <Button variant="outline" className="w-full min-h-14 rounded-full border-white/10 bg-white/[0.03] px-8 text-white hover:bg-white/[0.06]">
                       Watch 2-Min Demo
                     </Button>
-                  </Link>
+                  </a>
                 </div>
 
                 <div className="space-y-2">
@@ -153,9 +153,9 @@ export default function ThankYou() {
               <Link to="/" className="w-full sm:w-auto">
                 <Button className="w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 text-white">Back to Home</Button>
               </Link>
-              <Link to="/AIDemo" className="w-full sm:w-auto">
+              <a href="/#live-demo" className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full rounded-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]">Watch Demo</Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>

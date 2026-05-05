@@ -139,7 +139,7 @@ export default function LiveDemoSection() {
                 href="/AIDemo"
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all"
               >
-                View Sample Call
+                View Sample Demo
               </a>
             </div>
           </div>
