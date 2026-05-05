@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Mic, PhoneCall } from 'lucide-react';
 
 export default function HeroDemoCard() {
   return (
-    <div id="homepage-demo" className="relative w-full max-w-[500px] scroll-mt-28">
+    <div id="hero-demo-preview" className="relative w-full max-w-[500px] scroll-mt-28">
       <div className="absolute inset-0 rounded-[32px] bg-cyan-500/10 blur-3xl" />
       <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0f18]/90 p-4 shadow-[0_24px_90px_rgba(6,182,212,0.14)] backdrop-blur-xl sm:p-6">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
@@ -87,7 +87,7 @@ export default function HeroDemoCard() {
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <Link
-                      to="/AIDemo"
+                      to="/#live-demo"
                       className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
                     >
                       Launch Live Demo

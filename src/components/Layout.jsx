@@ -6,7 +6,7 @@ import CrispChat from './chat/CrispChat';
 const navLinks = [
 { label: 'Home', path: '/' },
 { label: 'Services', path: '/Services' },
-{ label: 'Demo', path: '/AIDemo' },
+{ label: 'Live Demo', path: '/#live-demo' },
 { label: 'Integrations', path: '/Integrations' },
 { label: 'Pricing', path: '/Pricing' },
 { label: 'Blog', path: '/Blog' },

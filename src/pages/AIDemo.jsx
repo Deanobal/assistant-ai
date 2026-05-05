@@ -220,11 +220,11 @@ The final assistant message should show that the enquiry has been captured and a
             
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-cyan-300 text-xs font-medium mb-5">
               <Sparkles className="h-3.5 w-3.5" />
-              Live Product Demo
+              Sample Demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">See How AssistantAI Handles a Lead from Call to Follow-Up</h1>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Sample AI Call Flow Demo</h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">
-              This is the main demo experience for AssistantAI. Explore a realistic call flow, hear the interaction, and see what the system does after the enquiry is captured.
+              This is the older sample demo experience for AssistantAI. For the live ElevenLabs receptionist, use the homepage Live Demo section.
             </p>
           </motion.div>
 

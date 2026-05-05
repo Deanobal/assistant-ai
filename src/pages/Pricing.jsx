@@ -21,8 +21,8 @@ const plans = [
 
   featured: false,
   directStart: false,
-  primaryCtaLabel: 'Book A Demo',
-  primaryCtaTo: '/BookStrategyCall',
+  primaryCtaLabel: 'Try Live Demo',
+  primaryCtaTo: '/#live-demo',
   secondaryCtaLabel: 'Talk To Us',
   secondaryCtaTo: '/Contact',
   secondaryHelper: 'Best if you want to confirm fit, scope, and next steps first.'
@@ -44,8 +44,8 @@ const plans = [
 
   featured: true,
   directStart: true,
-  primaryCtaLabel: 'Book A Demo',
-  primaryCtaTo: '/BookStrategyCall',
+  primaryCtaLabel: 'Try Live Demo',
+  primaryCtaTo: '/#live-demo',
   secondaryCtaLabel: 'Start Your Setup',
   secondaryCtaTo: '/GetStartedNow?plan=growth',
   secondaryHelper: 'Best for teams ready to submit details and continue into the setup flow.'
@@ -69,8 +69,8 @@ const plans = [
   directStart: false,
   primaryCtaLabel: 'Talk To Us',
   primaryCtaTo: '/Contact',
-  secondaryCtaLabel: 'Book A Demo',
-  secondaryCtaTo: '/BookStrategyCall',
+  secondaryCtaLabel: 'Try Live Demo',
+  secondaryCtaTo: '/#live-demo',
   secondaryHelper: 'Best for custom scoping, integrations, and rollout planning.'
   }];
 

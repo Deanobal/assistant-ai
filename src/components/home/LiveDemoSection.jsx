@@ -104,7 +104,7 @@ export default function LiveDemoSection() {
   const showFallback = scriptStatus === 'fallback';
 
   return (
-    <section id="homepage-demo" className="relative py-16 md:py-24 bg-[#070a12] scroll-mt-20">
+    <section id="live-demo" className="relative py-16 md:py-24 bg-[#070a12] scroll-mt-20">
       <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
       <div className="absolute inset-0 bg-grid pointer-events-none opacity-40" />
 
