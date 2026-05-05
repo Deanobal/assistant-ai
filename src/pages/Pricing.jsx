@@ -177,23 +177,45 @@ export default function Pricing() {
                 </ul>
 
                 <div className="mt-auto space-y-3">
-                  <Link
-                    to={plan.primaryCtaTo}
-                    className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
-                    plan.featured ?
-                    'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
-                    'border border-white/10 text-white hover:bg-white/5'}`
-                    }
-                  >
-                    {plan.primaryCtaLabel}
-                  </Link>
+                  {plan.primaryCtaTo.includes('#') ? (
+                    <a
+                      href={plan.primaryCtaTo}
+                      className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
+                      plan.featured ?
+                      'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
+                      'border border-white/10 text-white hover:bg-white/5'}`
+                      }
+                    >
+                      {plan.primaryCtaLabel}
+                    </a>
+                  ) : (
+                    <Link
+                      to={plan.primaryCtaTo}
+                      className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
+                      plan.featured ?
+                      'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
+                      'border border-white/10 text-white hover:bg-white/5'}`
+                      }
+                    >
+                      {plan.primaryCtaLabel}
+                    </Link>
+                  )}
 
-                  <Link
-                    to={plan.secondaryCtaTo}
-                    className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
-                  >
-                    {plan.secondaryCtaLabel}
-                  </Link>
+                  {plan.secondaryCtaTo.includes('#') ? (
+                    <a
+                      href={plan.secondaryCtaTo}
+                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                    >
+                      {plan.secondaryCtaLabel}
+                    </a>
+                  ) : (
+                    <Link
+                      to={plan.secondaryCtaTo}
+                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
+                    >
+                      {plan.secondaryCtaLabel}
+                    </Link>
+                  )}
                   <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
                     {plan.secondaryHelper}
                   </p>

@@ -38,17 +38,26 @@ function Navbar() {
         <div className="hidden lg:flex items-center justify-end gap-4 flex-1 min-w-0">
           <div className="flex items-center gap-4 min-w-0 overflow-hidden">
             {navLinks.map((link) =>
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`text-sm font-medium whitespace-nowrap transition-colors ${
-              location.pathname === link.path ?
-              'text-cyan-400' :
-              'text-gray-400 hover:text-cyan-400'}`
-              }>
-
-                {link.label}
-              </Link>
+              link.path.includes('#') ? (
+                <a
+                  key={link.path}
+                  href={link.path}
+                  className="text-sm font-medium whitespace-nowrap text-gray-400 transition-colors hover:text-cyan-400"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`text-sm font-medium whitespace-nowrap transition-colors ${
+                    location.pathname === link.path ?
+                    'text-cyan-400' :
+                    'text-gray-400 hover:text-cyan-400'}`
+                  }>
+                  {link.label}
+                </Link>
+              )
             )}
           </div>
 
@@ -73,16 +82,26 @@ function Navbar() {
 
             <div className="px-6 py-4 space-y-3">
               {mobileNavLinks.map((link) =>
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setMobileOpen(false)}
-              className={`block py-2 text-sm font-medium ${
-              location.pathname === link.path ? 'text-cyan-400' : 'text-gray-400'}`
-              }>
-
-                  {link.label}
-                </Link>
+                link.path.includes('#') ? (
+                  <a
+                    key={link.path}
+                    href={link.path}
+                    onClick={() => setMobileOpen(false)}
+                    className="block py-2 text-sm font-medium text-gray-400"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={`block py-2 text-sm font-medium ${
+                    location.pathname === link.path ? 'text-cyan-400' : 'text-gray-400'}`
+                    }>
+                    {link.label}
+                  </Link>
+                )
             )}
             </div>
           </div>
@@ -115,9 +134,15 @@ function Footer() {
             <h4 className="text-white font-medium text-sm mb-4">Company</h4>
             <div className="space-y-2.5">
               {navLinks.map((link) =>
-              <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
-                  {link.label}
-                </Link>
+                link.path.includes('#') ? (
+                  <a key={link.path} href={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                    {link.label}
+                  </Link>
+                )
               )}
             </div>
           </div>

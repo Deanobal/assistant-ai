@@ -86,13 +86,13 @@ export default function HeroDemoCard() {
                   </div>
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                    <Link
-                      to="/#live-demo"
+                    <a
+                      href="/#live-demo"
                       className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
                     >
                       Launch Live Demo
                       <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </a>
                     <Link
                       to="/BookStrategyCall"
                       className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/[0.05]"
