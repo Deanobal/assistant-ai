@@ -6,6 +6,7 @@ import LeadStats from '@/components/admin/leads/LeadStats';
 import LeadSourceSummary from '@/components/admin/leads/LeadSourceSummary';
 import OnboardingStatusView from '@/components/admin/leads/OnboardingStatusView';
 import PipelineBoard from '@/components/admin/leads/PipelineBoard';
+import SimpleLeadBoard from '@/components/admin/leads/SimpleLeadBoard';
 import AnalyticsSection from '@/components/dashboard/AnalyticsSection';
 
 const stages = ['New Lead', 'Contacted', 'Strategy Call Booked', 'Proposal Sent', 'Follow-Up', 'Won', 'Lost', 'Onboarding'];
@@ -48,6 +49,20 @@ export default function LeadDashboard() {
     },
   });
 
+  const appendFollowupComment = (lead, comment) => {
+    const timestamp = new Date().toLocaleString();
+    const notes = [lead.notes, `Follow-up comment (${timestamp}): ${comment}`].filter(Boolean).join('\n\n');
+    updateMutation.mutate({
+      id: lead.id,
+      data: { ...lead, notes, last_activity_at: new Date().toISOString() },
+    });
+  };
+
+  const acceptLead = (lead) => updateMutation.mutate({
+    id: lead.id,
+    data: { ...lead, status: 'Contacted', next_action: 'Follow-up in progress', last_activity_at: new Date().toISOString() },
+  });
+
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const parseLeadDate = (lead) => new Date(lead.created_at || lead.created_date || now).getTime();
@@ -86,6 +101,14 @@ export default function LeadDashboard() {
       </div>
 
       <LeadStats stats={stats} />
+
+      <SimpleLeadBoard
+        leads={leads}
+        isSaving={updateMutation.isPending || markWonMutation.isPending}
+        onAccept={acceptLead}
+        onConvert={(lead) => markWonMutation.mutate(lead)}
+        onComment={appendFollowupComment}
+      />
 
       <AnalyticsSection />
 
