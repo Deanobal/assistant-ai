@@ -4,9 +4,9 @@ export default function HeroBrainCard() {
       <div className="absolute -inset-10 -z-10 rounded-full bg-cyan-400/10 blur-3xl" />
       <div className="relative overflow-hidden rounded-[22px] border border-white/20 bg-[#080c14]">
         <img
-          src="https://media.base44.com/images/public/69b3622e4aaa6acc06c2547f/48ee5a895_new.jpg"
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
           alt="Glowing AI brain illustration"
-          className="aspect-[1.18/1] w-full object-cover object-[75%_52%]"
+          className="aspect-[1.18/1] w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#06080d]/92 via-transparent to-transparent" />
         <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-[#080c14]/88 p-4 backdrop-blur-md">
