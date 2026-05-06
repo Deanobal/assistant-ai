@@ -1,5 +1,5 @@
 import { ArrowRight, Play } from 'lucide-react';
-import HeroDemoCard from './HeroDemoCard';
+import HeroBrainCard from './HeroBrainCard';
 
 export default function HeroSection() {
   return (
@@ -53,7 +53,7 @@ export default function HeroSection() {
           </div>
 
           <div className="flex justify-center lg:justify-end">
-            <HeroDemoCard />
+            <HeroBrainCard />
           </div>
         </div>
       </div>
