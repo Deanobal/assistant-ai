@@ -4,7 +4,7 @@ export default function HeroBrainCard() {
       <div className="absolute -inset-10 -z-10 rounded-full bg-cyan-400/10 blur-3xl" />
       <div className="relative overflow-hidden rounded-[22px] border border-white/20 bg-[#080c14]">
         <img
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
+          src="https://media.base44.com/images/public/69b3622e4aaa6acc06c2547f/13f816ce8_9541496d0_generated_bc3bb2a9.png"
           alt="Glowing AI brain illustration"
           className="aspect-[1.18/1] w-full object-cover object-center"
         />
