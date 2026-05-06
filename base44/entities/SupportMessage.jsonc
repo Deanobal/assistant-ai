@@ -51,6 +51,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this message is an internal admin note"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or notes (up to 1000 characters)"
     }
   },
   "required": [
