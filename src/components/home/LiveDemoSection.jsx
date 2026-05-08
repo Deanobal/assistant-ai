@@ -43,25 +43,25 @@ function startElevenLabsDemo() {
     status.textContent = 'Loading live voice demo...';
   }
 
-  loadElevenLabsScript()
-    .then(() => {
-      if (!mount) return;
+  loadElevenLabsScript().
+  then(() => {
+    if (!mount) return;
 
-      if (!mount.querySelector('elevenlabs-convai')) {
-        const widget = document.createElement('elevenlabs-convai');
-        widget.setAttribute('agent-id', ELEVENLABS_AGENT_ID);
-        mount.appendChild(widget);
-      }
+    if (!mount.querySelector('elevenlabs-convai')) {
+      const widget = document.createElement('elevenlabs-convai');
+      widget.setAttribute('agent-id', ELEVENLABS_AGENT_ID);
+      mount.appendChild(widget);
+    }
 
-      if (status) {
-        status.textContent = 'Live demo ready. Your browser may ask for microphone permission.';
-      }
-    })
-    .catch(() => {
-      if (status) {
-        status.textContent = 'Live demo is temporarily unavailable. The sample call flow remains available below.';
-      }
-    });
+    if (status) {
+      status.textContent = 'Live demo ready. Your browser may ask for microphone permission.';
+    }
+  }).
+  catch(() => {
+    if (status) {
+      status.textContent = 'Live demo is temporarily unavailable. The sample call flow remains available below.';
+    }
+  });
 }
 
 export default function LiveDemoSection() {
@@ -93,16 +93,16 @@ export default function LiveDemoSection() {
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-300">
                 <Mic className="h-5 w-5" />
               </div>
-              <p className="text-sm font-semibold text-white">Start the live AI voice demo</p>
-              <p id="elevenlabs-demo-status" className="mt-2 text-sm leading-6 text-slate-400" aria-live="polite">
-                Click Start Live Demo when you are ready. If the live widget is unavailable, this fallback stays visible.
+              <p className="font-semibold text-white text-base">Start the live AI voice demo</p>
+              <p id="elevenlabs-demo-status" className="mt-2 leading-6 text-slate-400 text-lg" aria-live="polite">Click Start Live Demo when you are ready. If the live widget is unavailable, this fallback stays visible.
+
               </p>
               <div id="elevenlabs-demo-mount" className="mt-5 flex justify-center" />
               <button
                 type="button"
                 onClick={startElevenLabsDemo}
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-              >
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+                
                 Start Live Demo
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -131,20 +131,20 @@ export default function LiveDemoSection() {
             <div className="flex flex-col sm:flex-row gap-3">
               <a
                 href="/BookStrategyCall"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all"
-              >
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all">
+                
                 Book Free Strategy Call
               </a>
               <a
                 href="/AIDemo"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all"
-              >
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white hover:bg-white/[0.06] transition-all">
+                
                 View Sample Demo
               </a>
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
