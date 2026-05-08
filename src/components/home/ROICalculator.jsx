@@ -77,7 +77,7 @@ export default function ROICalculator() {
                       className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-400" />
                     
                   </div>
-                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span>0</span><span>200</span></div>
+                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span className="text-lg">0</span><span className="text-lg">200</span></div>
                 </div>
 
                 <div>
@@ -97,7 +97,7 @@ export default function ROICalculator() {
                       className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-400" />
                     
                   </div>
-                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span>$100</span><span>$5,000</span></div>
+                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span className="text-lg">$100</span><span className="text-lg">$5,000</span></div>
                 </div>
 
                 <p className="rounded-xl border border-white/5 bg-white/[0.02] p-4 leading-6 text-slate-500 text-lg">Adjust the values above to see the potential revenue captured when more missed calls are answered and qualified by your AI receptionist.
@@ -114,7 +114,7 @@ export default function ROICalculator() {
                 <div key={card.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
                     <p className="mb-2 text-slate-500 text-base">{card.label}</p>
                     <p className="text-2xl font-bold text-white">{card.value}</p>
-                    <p className="mt-1 text-xs text-slate-600">{card.helper}</p>
+                    <p className="mt-1 text-slate-600 text-base">{card.helper}</p>
                   </div>
                 )}
               </div>
