@@ -42,13 +42,13 @@ export default function UseCasesPreview() {
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Example Outcome</p>
             <h3 className="text-white text-xl font-semibold mb-3">Follow-Up Stops Falling Through the Cracks</h3>
-            <p className="text-gray-400 leading-relaxed">Customer details, call context, and next actions move into the workflow automatically so your team can respond faster and more consistently.</p>
+            <p className="text-gray-400 leading-relaxed text-lg">Customer details, call context, and next actions move into the workflow automatically so your team can respond faster and more consistently.</p>
           </div>
         </div>
 
         <div className="mt-10 text-center">
-          <Link to="/CaseStudies" className="text-cyan-400 text-base font-medium inline-flex items-center gap-2 hover:text-cyan-300 transition-colors">
-            See More Use Cases <ArrowRight className="w-4 h-4" />
+          <Link to="/CaseStudies" className="text-cyan-400 font-medium inline-flex items-center gap-2 hover:text-cyan-300 transition-colors text-lg">See More Use Cases
+
           </Link>
         </div>
       </div>
