@@ -41,8 +41,8 @@ export default function ROICalculator() {
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Reveal The Revenue Your Missed Calls Could Capture
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-400">
-            Move the sliders to estimate how much potential revenue AssistantAI.com.au could help capture by answering missed calls, qualifying leads, and moving customers to the next step.
+          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-400 text-lg text-center">Move the sliders to estimate how much potential revenue AssistantAI.com.au could help capture by answering missed calls, qualifying leads, and moving customers to the next step.
+
           </p>
         </motion.div>
 
@@ -136,8 +136,8 @@ export default function ROICalculator() {
           </div>
         </motion.div>
 
-        <p className="mt-4 text-center text-xs leading-6 text-slate-600">
-          Assumptions: 95% of missed calls are answered by the AI receptionist, 35% of captured leads convert into jobs, and revenue is calculated from the selected average job value.
+        <p className="mt-4 text-center leading-6 text-slate-600 text-sm">Assumptions: 95% of missed calls are answered by the AI receptionist, 35% of captured leads convert into jobs, and revenue is calculated from the selected average job value.
+
         </p>
       </div>
     </section>);

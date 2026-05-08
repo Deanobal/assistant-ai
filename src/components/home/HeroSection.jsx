@@ -8,8 +8,8 @@ export default function HeroSection() {
         <img
           src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
           alt="AssistantAI background"
-          className="h-full w-full object-cover opacity-20"
-        />
+          className="h-full w-full object-cover opacity-20" />
+        
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_24%,rgba(34,211,238,0.14),transparent_28%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#06080d] via-[#070a12]/96 to-[#06080d]" />
       </div>
@@ -33,22 +33,22 @@ export default function HeroSection() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <a
                 href="/GetStartedNow"
-                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]"
-              >
+                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]">
+                
                 <span>Get Started</span>
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
               <a
                 href="#live-demo"
-                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]"
-              >
+                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]">
+                
                 <Play className="h-4.5 w-4.5 text-cyan-300" />
                 <span>Try Live AI Receptionist</span>
               </a>
             </div>
 
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
-              Built for service businesses that want faster response times, fewer missed enquiries, and less admin.
+            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Built for service businesses that want faster response times, fewer missed enquiries, and less admin.
+
             </p>
           </div>
 
@@ -57,6 +57,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
