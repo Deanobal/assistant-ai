@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { Wrench, HeartPulse, Building2, Briefcase, ArrowRight } from 'lucide-react';
 
 const industries = [
-  { icon: Wrench, title: 'Trades', desc: 'Capture urgent jobs, quote requests, and after-hours enquiries faster.' },
-  { icon: HeartPulse, title: 'Clinics', desc: 'Handle appointments, reschedules, and patient enquiries with less front-desk pressure.' },
-  { icon: Building2, title: 'Real Estate', desc: 'Respond quickly to listings, rental enquiries, and high-intent buyer calls.' },
-  { icon: Briefcase, title: 'Professional Services', desc: 'Make sure valuable new business enquiries get answered and followed up properly.' },
-];
+{ icon: Wrench, title: 'Trades', desc: 'Capture urgent jobs, quote requests, and after-hours enquiries faster.' },
+{ icon: HeartPulse, title: 'Clinics', desc: 'Handle appointments, reschedules, and patient enquiries with less front-desk pressure.' },
+{ icon: Building2, title: 'Real Estate', desc: 'Respond quickly to listings, rental enquiries, and high-intent buyer calls.' },
+{ icon: Briefcase, title: 'Professional Services', desc: 'Make sure valuable new business enquiries get answered and followed up properly.' }];
+
 
 export default function UseCasesPreview() {
   return (
@@ -19,25 +19,25 @@ export default function UseCasesPreview() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {industries.map((item, index) => (
-            <div
-              key={item.title}
-              className="p-6 rounded-2xl border border-white/5 bg-[#12121a]"
-            >
+          {industries.map((item, index) =>
+          <div
+            key={item.title}
+            className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
+            
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
                 <item.icon className="w-5 h-5 text-cyan-400" />
               </div>
               <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+              <p className="text-gray-400 leading-relaxed text-lg">{item.desc}</p>
             </div>
-          ))}
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Sample Use Case</p>
             <h3 className="text-white text-xl font-semibold mb-3">Missed Calls Turn Into Booked Work</h3>
-            <p className="text-gray-400 leading-relaxed">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, and books the next step instead of letting the enquiry go cold.</p>
+            <p className="text-gray-400 leading-relaxed text-lg">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, and books the next step instead of letting the enquiry go cold.</p>
           </div>
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Example Outcome</p>
@@ -52,6 +52,6 @@ export default function UseCasesPreview() {
           </Link>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
