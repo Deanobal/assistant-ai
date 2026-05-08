@@ -6,6 +6,7 @@ import LiveDemoSection from '../components/home/LiveDemoSection';
 import HowItWorksSection from '../components/home/HowItWorksSection';
 import CredibilitySection from '../components/home/CredibilitySection';
 import ServicesPreview from '../components/home/ServicesPreview';
+import AdvancedAIFeatures from '../components/home/AdvancedAIFeatures';
 import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
 import HowItWorks from '../components/home/HowItWorks';
 import UseCasesPreview from '../components/home/UseCasesPreview';
@@ -102,6 +103,7 @@ export default function Home() {
       <HowItWorksSection />
       <CredibilitySection />
       <ServicesPreview />
+      <AdvancedAIFeatures />
       <EverythingWorksTogether />
       <HowItWorks />
       <UseCasesPreview />

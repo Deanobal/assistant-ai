@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock, FolderOpen } from 'lucide-react';
+import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock, FolderOpen, ClipboardList } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import ClientOverviewSection from '../components/portal/ClientOverviewSection';
+import ClientLeadsSection from '../components/portal/ClientLeadsSection';
 import CallRecordings from '../components/dashboard/CallRecordings';
 import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import BillingSection from '../components/dashboard/BillingSection';
@@ -100,6 +101,10 @@ export default function ClientPortal() {
             <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
               Overview
             </TabsTrigger>
+            <TabsTrigger value="leads" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
+              <ClipboardList className="w-4 h-4 mr-2" />
+              Leads
+            </TabsTrigger>
             <TabsTrigger value="calls" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
               <Headphones className="w-4 h-4 mr-2" />
               Call Recordings
@@ -128,6 +133,9 @@ export default function ClientPortal() {
 
           <TabsContent value="overview">
             <ClientOverviewSection clientAccountId={currentUser.client_account_id} />
+          </TabsContent>
+          <TabsContent value="leads">
+            <ClientLeadsSection clientAccountId={currentUser.client_account_id} />
           </TabsContent>
           <TabsContent value="calls">
             <CallRecordings clientAccountId={currentUser.client_account_id} />
