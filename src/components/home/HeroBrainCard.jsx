@@ -6,16 +6,16 @@ export default function HeroBrainCard() {
         <img
           src="https://media.base44.com/images/public/69b3622e4aaa6acc06c2547f/13f816ce8_9541496d0_generated_bc3bb2a9.png"
           alt="Glowing AI brain illustration"
-          className="aspect-[1.18/1] w-full object-cover object-center"
-        />
+          className="aspect-[1.18/1] w-full object-cover object-center" />
+        
         <div className="absolute inset-0 bg-gradient-to-t from-[#06080d]/92 via-transparent to-transparent" />
         <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-[#080c14]/88 p-4 backdrop-blur-md">
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-cyan-300">Workflow</p>
-          <p className="mt-1 text-sm font-medium leading-6 text-white">
-            Call answered → lead captured → follow-up queued
+          <p className="font-bold uppercase tracking-[0.22em] text-cyan-300 text-lg">WORKFLOW</p>
+          <p className="mt-1 font-medium leading-6 text-white text-base">Call answered → lead captured → follow-up queued
+
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
