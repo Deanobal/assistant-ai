@@ -57,7 +57,7 @@ export default function ROICalculator() {
 
           <div className="grid divide-y divide-white/8 md:grid-cols-2 md:divide-x md:divide-y-0">
             <div className="p-8 md:p-10">
-              <h3 className="mb-6 text-base font-semibold text-white">Your numbers</h3>
+              <h3 className="mb-6 font-semibold text-white text-xl">Your numbers</h3>
 
               <div className="space-y-8">
                 <div>
@@ -107,7 +107,7 @@ export default function ROICalculator() {
             </div>
 
             <div className="flex flex-col p-8 md:p-10">
-              <h3 className="mb-6 text-base font-semibold text-white">Potential with AssistantAI.com.au</h3>
+              <h3 className="mb-6 font-semibold text-white text-xl">Potential with AssistantAI.com.au</h3>
 
               <div className="grid flex-1 gap-3 sm:grid-cols-2">
                 {resultCards.map((card) =>
