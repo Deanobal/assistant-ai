@@ -139,7 +139,7 @@ export default function PricingPreview() {
                 
                   {plan.secondaryCtaLabel}
                 </Link>
-                <p className="px-2 text-center leading-relaxed text-gray-500 text-base">
+                <p className="px-2 text-center leading-relaxed text-gray-500 text-sm">
                   {plan.helper}
                 </p>
               </div>
