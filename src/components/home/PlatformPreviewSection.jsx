@@ -38,7 +38,7 @@ export default function PlatformPreviewSection() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
                   <item.icon className="w-5 h-5 text-cyan-400" />
                 </div>
-                <p className="text-sm text-gray-500">{item.label}</p>
+                <p className="text-gray-500 text-base">{item.label}</p>
                 <p className="text-2xl font-semibold text-white mt-2">{item.value}</p>
                 <p className="text-gray-400 mt-2 leading-relaxed text-base">{item.helper}</p>
               </div>
