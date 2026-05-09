@@ -1,9 +1,30 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY') || Deno.env.get('STRIPE_TEST_SECRET_KEY'), {
-  apiVersion: '2025-02-24.acacia',
-});
+function getStripeMode() {
+  const mode = clean(Deno.env.get('STRIPE_MODE')).toLowerCase();
+  return mode === 'live' ? 'live' : 'test';
+}
+
+function getStripeSecret(mode) {
+  const secret = mode === 'test'
+    ? clean(Deno.env.get('STRIPE_TEST_SECRET_KEY'))
+    : clean(Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY'));
+  if (!secret) throw new Error(`Missing Stripe ${mode} secret key`);
+  if (mode === 'test' && secret.startsWith('sk_live_')) throw new Error('STRIPE_MODE=test cannot use a live Stripe key');
+  if (mode === 'live' && secret.startsWith('sk_test_')) throw new Error('STRIPE_MODE=live cannot use a test Stripe key');
+  return secret;
+}
+
+function getStripeWebhookSecret(mode) {
+  const secret = mode === 'test' ? clean(Deno.env.get('STRIPE_TEST_WEBHOOK_SECRET')) : clean(Deno.env.get('STRIPE_WEBHOOK_SECRET'));
+  if (!secret) throw new Error(`Missing Stripe ${mode} webhook secret`);
+  return secret;
+}
+
+function getStripeClient(mode) {
+  return new Stripe(getStripeSecret(mode), { apiVersion: '2025-02-24.acacia' });
+}
 
 function clean(value) {
   return String(value || '').trim();
@@ -53,10 +74,11 @@ async function notifyFollowUp(base44, leadId, title, message) {
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   try {
+    const stripeMode = getStripeMode();
+    const stripe = getStripeClient(stripeMode);
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
-    const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || Deno.env.get('STRIPE_TEST_WEBHOOK_SECRET');
-    const event = await stripe.webhooks.constructEventAsync(body, signature, secret);
+    const event = await stripe.webhooks.constructEventAsync(body, signature, getStripeWebhookSecret(stripeMode));
 
     const duplicate = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
     if (duplicate[0]?.status === 'processed') {
@@ -95,6 +117,11 @@ Deno.serve(async (req) => {
       const leadId = clean(session.metadata?.lead_id || session.metadata?.leadId);
       await updateLeadPayment(base44, leadId, 'cancelled', 'Follow up after abandoned checkout');
       await notifyFollowUp(base44, leadId, 'Checkout expired', 'A qualified buyer did not complete checkout. Follow up quickly.');
+      await logEvent(base44, event, 'processed');
+      return Response.json({ received: true, event_type: event.type });
+    }
+
+    if (event.type === 'payment_intent.succeeded' || event.type === 'invoice.payment_succeeded') {
       await logEvent(base44, event, 'processed');
       return Response.json({ received: true, event_type: event.type });
     }

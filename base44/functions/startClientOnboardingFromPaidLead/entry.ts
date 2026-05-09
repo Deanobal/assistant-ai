@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Lead.update(lead.id, {
       ...lead,
       status: 'Won',
-      payment_status: payload.subscription_configured === false ? 'setup_paid_subscription_pending' : 'paid',
+      payment_status: 'paid',
       selected_plan: plan,
       client_account_id: client.id,
       last_activity_at: now,
@@ -237,7 +237,17 @@ Deno.serve(async (req) => {
       notes: [lead.notes, `[${now}] Stripe payment confirmed. Client onboarding started automatically.`].filter(Boolean).join('\n\n'),
     });
 
-    await notify(base44, client, lead, plan);
+    try {
+      await notify(base44, client, lead, plan);
+    } catch {
+      // Onboarding must not be blocked by notification delivery.
+    }
+
+    try {
+      await base44.asServiceRole.functions.invoke('syncGoHighLevelContact', { lead_id: lead.id, client_id: client.id, event_type: 'paid_signup' });
+    } catch {
+      // GoHighLevel sync is optional and should not block onboarding.
+    }
 
     return Response.json({ success: true, client_id: client.id, lead_id: lead.id, plan });
   } catch (error) {

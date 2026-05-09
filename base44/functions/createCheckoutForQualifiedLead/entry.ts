@@ -1,15 +1,37 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY') || Deno.env.get('STRIPE_TEST_SECRET_KEY'), {
-  apiVersion: '2025-02-24.acacia',
-});
-
 const PLANS = {
-  Starter: { setupFee: 1500, monthlyFee: 497, setupPriceEnv: 'STRIPE_STARTER_SETUP_PRICE_ID', monthlyPriceEnv: 'STRIPE_STARTER_PRICE_ID' },
-  Growth: { setupFee: 3000, monthlyFee: 1500, setupPriceEnv: 'STRIPE_GROWTH_SETUP_PRICE_ID', monthlyPriceEnv: 'STRIPE_GROWTH_PRICE_ID' },
-  Enterprise: { setupFee: 7500, monthlyFee: 3000, setupPriceEnv: 'STRIPE_ENTERPRISE_SETUP_PRICE_ID', monthlyPriceEnv: 'STRIPE_ENTERPRISE_PRICE_ID' },
+  Starter: { setupFee: 1500, monthlyFee: 497 },
+  Growth: { setupFee: 3000, monthlyFee: 1500 },
+  Enterprise: { setupFee: 7500, monthlyFee: 3000 },
 };
+
+function getStripeMode() {
+  const mode = clean(Deno.env.get('STRIPE_MODE')).toLowerCase();
+  return mode === 'live' ? 'live' : 'test';
+}
+
+function getStripeSecret(mode) {
+  const secret = mode === 'test'
+    ? clean(Deno.env.get('STRIPE_TEST_SECRET_KEY'))
+    : clean(Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY'));
+
+  if (!secret) throw new Error(`Missing Stripe ${mode} secret key`);
+  if (mode === 'test' && secret.startsWith('sk_live_')) throw new Error('STRIPE_MODE=test cannot use a live Stripe key');
+  if (mode === 'live' && secret.startsWith('sk_test_')) throw new Error('STRIPE_MODE=live cannot use a test Stripe key');
+  return secret;
+}
+
+function getStripeClient(mode) {
+  return new Stripe(getStripeSecret(mode), { apiVersion: '2025-02-24.acacia' });
+}
+
+function priceEnvName(mode, planName, type) {
+  const prefix = mode === 'test' ? 'STRIPE_TEST_' : 'STRIPE_';
+  const suffix = type === 'setup' ? '_SETUP_PRICE_ID' : '_PRICE_ID';
+  return `${prefix}${planName.toUpperCase()}${suffix}`;
+}
 
 function optionalSecret(name) {
   return clean(Deno.env.toObject()[name]);
@@ -29,10 +51,11 @@ function absoluteUrl(envName, fallback) {
   return value || fallback;
 }
 
-function buildLineItems(planName, paymentMode) {
+function buildLineItems(planName, paymentMode, stripeMode) {
   const plan = PLANS[planName];
-  const setupPrice = optionalSecret(plan.setupPriceEnv);
-  const monthlyPrice = optionalSecret(plan.monthlyPriceEnv);
+  const setupPrice = optionalSecret(priceEnvName(stripeMode, planName, 'setup'));
+  const monthlyPrice = optionalSecret(priceEnvName(stripeMode, planName, 'monthly'));
+  const wantsSubscription = paymentMode !== 'setup_only';
   const lineItems = [];
 
   if (setupPrice) {
@@ -48,19 +71,25 @@ function buildLineItems(planName, paymentMode) {
     });
   }
 
-  if (paymentMode !== 'setup_only' && monthlyPrice) {
+  if (wantsSubscription && monthlyPrice) {
     lineItems.push({ price: monthlyPrice, quantity: 1 });
-  } else if (paymentMode !== 'setup_only' && !monthlyPrice) {
-    return { lineItems, mode: 'payment', subscriptionConfigured: false };
+    return { lineItems, mode: 'subscription', subscriptionConfigured: true, setupOnlyReason: null };
   }
 
-  return { lineItems, mode: monthlyPrice && paymentMode !== 'setup_only' ? 'subscription' : 'payment', subscriptionConfigured: !!monthlyPrice && paymentMode !== 'setup_only' };
+  return {
+    lineItems,
+    mode: 'payment',
+    subscriptionConfigured: false,
+    setupOnlyReason: wantsSubscription ? 'Monthly subscription price ID missing. Setup Fee Only mode used.' : 'Setup Fee Only mode requested.',
+  };
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
+    const stripeMode = getStripeMode();
+    const stripe = getStripeClient(stripeMode);
 
     if (!payload.buyer_confirmed_intent) {
       return Response.json({ error: 'Buyer must confirm they want to proceed before checkout is created' }, { status: 400 });
@@ -107,7 +136,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email and full name are required for checkout' }, { status: 400 });
     }
 
-    const { lineItems, mode, subscriptionConfigured } = buildLineItems(selectedPlan, clean(payload.payment_mode));
+    const { lineItems, mode, subscriptionConfigured, setupOnlyReason } = buildLineItems(selectedPlan, clean(payload.payment_mode), stripeMode);
     const successUrl = absoluteUrl('STRIPE_SUCCESS_URL', 'https://assistantai.com.au/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}');
     const cancelUrl = absoluteUrl('STRIPE_CANCEL_URL', 'https://assistantai.com.au/GetStartedNow?payment=cancelled');
 
@@ -126,6 +155,8 @@ Deno.serve(async (req) => {
       likely_plan_fit: lead.likely_plan_fit || selectedPlan,
       payment_intent_type: 'new_client_signup',
       subscription_configured: String(subscriptionConfigured),
+      stripe_mode: stripeMode,
+      setup_only_reason: setupOnlyReason || '',
     };
 
     const sessionParams = {
@@ -157,7 +188,7 @@ Deno.serve(async (req) => {
       checkout_session_id: session.id,
       checkout_created_at: now,
       last_activity_at: now,
-      next_action: subscriptionConfigured ? 'Complete Stripe checkout' : 'Complete setup payment; subscription follow-up required',
+      next_action: subscriptionConfigured ? 'Complete Stripe checkout' : 'Setup Fee Only mode: complete setup payment; subscription follow-up required',
     });
 
     try {
@@ -173,7 +204,7 @@ Deno.serve(async (req) => {
       // Checkout must not be blocked by notification delivery.
     }
 
-    return Response.json({ success: true, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, lead: updatedLead });
+    return Response.json({ success: true, stripe_mode: stripeMode, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, setup_only_reason: setupOnlyReason, lead: updatedLead });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

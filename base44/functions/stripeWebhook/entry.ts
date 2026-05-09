@@ -329,9 +329,16 @@ Deno.serve(async (req) => {
     };
 
     if (event.type === 'checkout.session.completed' && (event.data.object?.metadata?.payment_intent_type === 'new_client_signup' || event.data.object?.metadata?.source === 'AI receptionist demo')) {
-      const forwarded = await base44.asServiceRole.functions.invoke('handleStripeWebhook', {});
-      await markLogProcessed(null);
-      return Response.json({ received: true, forwarded_to_commercial_handler: true, result: forwarded?.data || null });
+      const errorMessage = 'Commercial AI signup webhooks must point directly to handleStripeWebhook. Unsafe forwarding from stripeWebhook is disabled.';
+      if (logRecord) {
+        await base44.asServiceRole.entities.StripeEventLog.update(logRecord.id, {
+          ...logRecord,
+          status: 'failed',
+          processed_at: new Date().toISOString(),
+          error_message: errorMessage,
+        });
+      }
+      return Response.json({ received: false, error: errorMessage }, { status: 400 });
     }
 
     if (event.type === 'checkout.session.completed') {
