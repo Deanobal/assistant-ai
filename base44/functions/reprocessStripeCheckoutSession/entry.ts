@@ -13,7 +13,7 @@ function getStripeMode() {
 function getStripeSecret(mode) {
   const secret = mode === 'test'
     ? clean(Deno.env.get('STRIPE_TEST_SECRET_KEY'))
-    : clean(Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY'));
+    : clean(Deno.env.get('STRIPE_SECRET_KEY'));
   if (!secret) throw new Error(`Missing Stripe ${mode} secret key`);
   if (mode === 'test' && secret.startsWith('sk_live_')) throw new Error('STRIPE_MODE=test cannot use a live Stripe key');
   if (mode === 'live' && secret.startsWith('sk_test_')) throw new Error('STRIPE_MODE=live cannot use a test Stripe key');

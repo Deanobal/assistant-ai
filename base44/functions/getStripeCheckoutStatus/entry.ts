@@ -1,17 +1,30 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@18.4.0';
 
-const stripeSecretKey = Deno.env.get('BASE44_ENV') === 'production'
-  ? Deno.env.get('STRIPE_API_KEY')
-  : Deno.env.get('STRIPE_TEST_SECRET_KEY');
+function clean(value) {
+  return String(value || '').trim();
+}
 
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-02-24.acacia',
-});
+function getStripeMode() {
+  const mode = clean(Deno.env.get('STRIPE_MODE')).toLowerCase();
+  return mode === 'live' ? 'live' : 'test';
+}
+
+function getStripeSecret(mode) {
+  const secret = mode === 'live'
+    ? clean(Deno.env.get('STRIPE_SECRET_KEY'))
+    : clean(Deno.env.get('STRIPE_TEST_SECRET_KEY'));
+  if (!secret) throw new Error(`Missing Stripe ${mode} secret key`);
+  if (mode === 'live' && !secret.startsWith('sk_live_')) throw new Error('STRIPE_MODE=live requires STRIPE_SECRET_KEY to be a live key');
+  if (mode === 'test' && !secret.startsWith('sk_test_')) throw new Error('STRIPE_MODE=test requires STRIPE_TEST_SECRET_KEY to be a test key');
+  return secret;
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const stripeMode = getStripeMode();
+    const stripe = new Stripe(getStripeSecret(stripeMode), { apiVersion: '2025-02-24.acacia' });
     const { sessionId } = await req.json();
 
     if (!sessionId) {
