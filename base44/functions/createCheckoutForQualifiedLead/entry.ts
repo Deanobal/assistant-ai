@@ -160,14 +160,18 @@ Deno.serve(async (req) => {
       next_action: subscriptionConfigured ? 'Complete Stripe checkout' : 'Complete setup payment; subscription follow-up required',
     });
 
-    await base44.asServiceRole.functions.invoke('sendAdminAlert', {
-      event_type: 'billing_status_changed',
-      entity_name: 'Lead',
-      entity_id: lead.id,
-      title: `${selectedPlan} checkout created`,
-      message: `${businessName || fullName} received a Stripe checkout link from the AI receptionist flow.`,
-      channels: ['in_app', 'email'],
-    });
+    try {
+      await base44.asServiceRole.functions.invoke('sendAdminAlert', {
+        event_type: 'billing_status_changed',
+        entity_name: 'Lead',
+        entity_id: lead.id,
+        title: `${selectedPlan} checkout created`,
+        message: `${businessName || fullName} received a Stripe checkout link from the AI receptionist flow.`,
+        channels: ['in_app', 'email'],
+      });
+    } catch {
+      // Checkout must not be blocked by notification delivery.
+    }
 
     return Response.json({ success: true, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, lead: updatedLead });
   } catch (error) {
