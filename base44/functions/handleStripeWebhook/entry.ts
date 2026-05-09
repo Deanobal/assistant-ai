@@ -30,19 +30,75 @@ function clean(value) {
   return String(value || '').trim();
 }
 
-async function logEvent(base44, event, status, errorMessage = null, relatedClientId = null) {
+function getObjectId(event) {
+  const object = event.data?.object || {};
+  return object.id || null;
+}
+
+function getLeadIdFromEvent(event) {
+  const object = event.data?.object || {};
+  return clean(object.metadata?.lead_id || object.metadata?.leadId);
+}
+
+async function prepareEventLog(base44, event) {
   const existing = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
+  const current = existing[0] || null;
+
+  if (current?.processing_status === 'event_processed_successfully') {
+    return { logRecord: current, shouldSkip: true };
+  }
+
+  const now = new Date().toISOString();
   const payload = {
+    ...(current || {}),
     stripe_event_id: event.id,
     event_type: event.type,
-    processed_at: new Date().toISOString(),
-    status,
-    related_client_id: relatedClientId,
-    error_message: errorMessage,
+    checkout_session_id: event.type === 'checkout.session.completed' || event.type === 'checkout.session.expired' ? getObjectId(event) : current?.checkout_session_id || null,
+    lead_id: getLeadIdFromEvent(event) || current?.lead_id || null,
+    processing_status: 'event_processing',
+    processing_started_at: now,
+    processing_completed_at: null,
+    business_result: null,
+    error_message: null,
+    retry_count: current ? Number(current.retry_count || 0) + 1 : 0,
+    processed_at: null,
+    status: 'processing',
   };
-  return existing[0]
-    ? base44.asServiceRole.entities.StripeEventLog.update(existing[0].id, { ...existing[0], ...payload })
-    : base44.asServiceRole.entities.StripeEventLog.create(payload);
+
+  const logRecord = current
+    ? await base44.asServiceRole.entities.StripeEventLog.update(current.id, payload)
+    : await base44.asServiceRole.entities.StripeEventLog.create(payload);
+
+  return { logRecord, shouldSkip: false };
+}
+
+async function markEventLogSuccess(base44, logRecord, event, result, relatedClientId = null) {
+  const now = new Date().toISOString();
+  return base44.asServiceRole.entities.StripeEventLog.update(logRecord.id, {
+    ...logRecord,
+    stripe_event_id: event.id,
+    event_type: event.type,
+    processing_status: 'event_processed_successfully',
+    processing_completed_at: now,
+    processed_at: now,
+    status: 'processed',
+    related_client_id: relatedClientId,
+    business_result: result || {},
+    error_message: null,
+  });
+}
+
+async function markEventLogFailed(base44, logRecord, error) {
+  if (!logRecord) return null;
+  const now = new Date().toISOString();
+  return base44.asServiceRole.entities.StripeEventLog.update(logRecord.id, {
+    ...logRecord,
+    processing_status: 'event_failed',
+    processing_completed_at: now,
+    processed_at: now,
+    status: 'failed',
+    error_message: error.message,
+  });
 }
 
 async function updateLeadPayment(base44, leadId, paymentStatus, nextAction) {
@@ -80,9 +136,9 @@ Deno.serve(async (req) => {
     const body = await req.text();
     const event = await stripe.webhooks.constructEventAsync(body, signature, getStripeWebhookSecret(stripeMode));
 
-    const duplicate = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
-    if (duplicate[0]?.status === 'processed') {
-      return Response.json({ received: true, skipped: true });
+    const { logRecord, shouldSkip } = await prepareEventLog(base44, event);
+    if (shouldSkip) {
+      return Response.json({ received: true, skipped: true, reason: 'already_processed_successfully' });
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -108,7 +164,7 @@ Deno.serve(async (req) => {
         subscription_configured: subscriptionConfigured,
       });
 
-      await logEvent(base44, event, 'processed', null, result?.data?.client_id || null);
+      await markEventLogSuccess(base44, logRecord, event, result?.data, result?.data?.client_id || null);
       return Response.json({ received: true, event_type: event.type, result: result?.data });
     }
 
@@ -117,12 +173,12 @@ Deno.serve(async (req) => {
       const leadId = clean(session.metadata?.lead_id || session.metadata?.leadId);
       await updateLeadPayment(base44, leadId, 'cancelled', 'Follow up after abandoned checkout');
       await notifyFollowUp(base44, leadId, 'Checkout expired', 'A qualified buyer did not complete checkout. Follow up quickly.');
-      await logEvent(base44, event, 'processed');
+      await markEventLogSuccess(base44, logRecord, event, { cancelled: true });
       return Response.json({ received: true, event_type: event.type });
     }
 
     if (event.type === 'payment_intent.succeeded' || event.type === 'invoice.payment_succeeded') {
-      await logEvent(base44, event, 'processed');
+      await markEventLogSuccess(base44, logRecord, event, { acknowledged: true });
       return Response.json({ received: true, event_type: event.type });
     }
 
@@ -131,14 +187,25 @@ Deno.serve(async (req) => {
       const leadId = clean(object.metadata?.lead_id || object.metadata?.leadId);
       await updateLeadPayment(base44, leadId, 'failed', 'Follow up after failed payment');
       await notifyFollowUp(base44, leadId, 'Payment failed', 'A qualified buyer payment failed. Follow up and help them complete signup.');
-      await logEvent(base44, event, 'processed');
+      await markEventLogSuccess(base44, logRecord, event, { payment_failed: true });
       return Response.json({ received: true, event_type: event.type });
     }
 
-    await logEvent(base44, event, 'skipped');
+    await markEventLogSuccess(base44, logRecord, event, { ignored: true });
     return Response.json({ received: true, event_type: event.type, ignored: true });
   } catch (error) {
     console.error('handleStripeWebhook failed', error);
+    try {
+      const stripeMode = getStripeMode();
+      const stripe = getStripeClient(stripeMode);
+      const signature = req.headers.get('stripe-signature');
+      const body = await req.clone().text();
+      const event = await stripe.webhooks.constructEventAsync(body, signature, getStripeWebhookSecret(stripeMode));
+      const existing = await base44.asServiceRole.entities.StripeEventLog.filter({ stripe_event_id: event.id }, '-updated_date', 1);
+      if (existing[0]) await markEventLogFailed(base44, existing[0], error);
+    } catch {
+      // Signature or body may already be consumed; return original error.
+    }
     return Response.json({ error: error.message }, { status: 400 });
   }
 });

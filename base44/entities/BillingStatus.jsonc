@@ -30,7 +30,26 @@
         "paused",
         "payment_failed",
         "cancelled",
-        "setup_paid_subscription_pending"
+        "setup_paid_subscription_pending",
+        "setup_paid_subscription_active"
+      ]
+    },
+    "setup_fee_paid": {
+      "type": "boolean",
+      "default": false
+    },
+    "subscription_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "active",
+        "pending",
+        "past_due",
+        "cancelled",
+        "none",
+        null
       ]
     },
     "payment_method": {

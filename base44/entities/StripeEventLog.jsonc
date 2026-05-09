@@ -8,6 +8,58 @@
     "event_type": {
       "type": "string"
     },
+    "checkout_session_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lead_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "processing_status": {
+      "type": "string",
+      "enum": [
+        "event_received",
+        "event_processing",
+        "event_processed_successfully",
+        "event_failed",
+        "event_skipped_duplicate"
+      ]
+    },
+    "processing_started_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "processing_completed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "business_result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "error_message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "retry_count": {
+      "type": "number",
+      "default": 0
+    },
     "processed_at": {
       "type": [
         "string",
@@ -30,12 +82,6 @@
         "null"
       ]
     },
-    "error_message": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
     "description": {
       "type": "string",
       "maxLength": 1000,
@@ -45,7 +91,7 @@
   "required": [
     "stripe_event_id",
     "event_type",
-    "status"
+    "processing_status"
   ],
   "rls": {
     "create": {

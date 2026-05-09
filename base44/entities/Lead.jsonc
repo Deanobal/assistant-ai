@@ -204,6 +204,28 @@
       "format": "date-time",
       "description": "When checkout was created"
     },
+    "stripe_customer_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Stripe customer ID after payment"
+    },
+    "stripe_subscription_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Stripe subscription ID after payment"
+    },
+    "payment_confirmed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When Stripe payment was confirmed"
+    },
     "lead_score": {
       "type": "number",
       "description": "Lead score for qualification"
