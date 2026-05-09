@@ -1,25 +1,30 @@
-import { CheckCircle2, Clock3, Database, MessageSquare, PhoneCall, UserCheck } from 'lucide-react';
+import { CheckCircle2, Clock3, CreditCard, Database, PhoneCall, Sparkles, UserCheck } from 'lucide-react';
 
 export const defaultWorkflowItems = [
   {
     icon: PhoneCall,
-    title: 'Call Answered',
-    desc: 'AssistantAI answers instantly and starts qualification.',
+    title: 'AI Answers & Qualifies',
+    desc: 'AssistantAI answers live, identifies the business need, and asks qualification questions.',
   },
   {
-    icon: UserCheck,
-    title: 'Lead Qualified',
-    desc: 'Urgency, location, and job details are captured automatically.',
+    icon: Sparkles,
+    title: 'Plan Recommended',
+    desc: 'The AI recommends Starter, Growth, or Enterprise based on volume, booking, CRM, follow-up, and complexity.',
   },
   {
     icon: Database,
-    title: 'CRM Updated',
-    desc: 'The enquiry is pushed into the workflow with notes attached.',
+    title: 'Lead Created / Updated',
+    desc: 'Contact details, business details, summary, intent, and likely plan fit are saved to the lead system.',
   },
   {
-    icon: MessageSquare,
-    title: 'Follow-Up Sent',
-    desc: 'A confirmation message goes out without manual admin.',
+    icon: CreditCard,
+    title: 'Checkout Offered',
+    desc: 'Ready buyers can receive an instant Stripe checkout link instead of waiting for a strategy call.',
+  },
+  {
+    icon: UserCheck,
+    title: 'Onboarding Starts',
+    desc: 'Once Stripe confirms payment, the client, billing, intake, integrations, tasks, and admin alerts are created.',
   },
 ];
 

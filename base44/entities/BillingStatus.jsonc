@@ -27,7 +27,10 @@
         "paid",
         "active",
         "past_due",
-        "paused"
+        "paused",
+        "payment_failed",
+        "cancelled",
+        "setup_paid_subscription_pending"
       ]
     },
     "payment_method": {
@@ -42,6 +45,28 @@
         "null"
       ],
       "format": "date"
+    },
+    "stripe_customer_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stripe_subscription_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stripe_checkout_session_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "admin_override": {
+      "type": "boolean",
+      "default": false
     },
     "notes": {
       "type": "string"

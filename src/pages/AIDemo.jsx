@@ -9,10 +9,12 @@ import DemoAutomationPanel, { defaultWorkflowItems } from '@/components/demo/Dem
 import DemoScenarioSelector from '@/components/demo/DemoScenarioSelector';
 
 const steps = [
-'Incoming call answered instantly',
-'Lead qualification questions handled by AI',
-'Customer details and urgency captured',
-'CRM update and follow-up triggered automatically'];
+  'AI answers and qualifies the buyer',
+  'Likely plan fit is recommended',
+  'Lead record is created or updated',
+  'Checkout link is offered to ready buyers',
+  'Payment starts onboarding automatically',
+];
 
 const MESSAGE_DELAY = 2600;
 
@@ -157,15 +159,16 @@ export default function AIDemo() {
     base44.integrations.Core.InvokeLLM({
       prompt: `Create a realistic Australian business phone call simulation for this scenario: ${selectedScenario.context}.
 
-Return exactly 4 messages in transcript order:
-1. caller
-2. assistant
-3. caller
-4. assistant
+Return exactly 5 messages in transcript order:
+1. caller explains the problem
+2. assistant asks qualification questions
+3. caller gives business details and buying intent
+4. assistant recommends Starter, Growth, or Enterprise using AssistantAI done-for-you pricing language
+5. assistant asks: "Would you like to get started now, or would you prefer to speak with someone first?"
 
-Also return exactly 4 workflow items showing what the AI system is doing after each stage.
-Keep the tone natural, concise, professional, and business-focused.
-The final assistant message should show that the enquiry has been captured and a next step has been triggered.`,
+Also return exactly 5 workflow items showing qualification, plan recommendation, lead creation/update, checkout creation for ready buyers, and paid onboarding automation.
+Keep the tone natural, concise, professional, and commercially focused.
+The final assistant message should make clear that ready buyers can receive a secure payment link immediately.`,
       response_json_schema: {
         type: 'object',
         properties: {
