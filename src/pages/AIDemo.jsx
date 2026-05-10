@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall } from 'lucide-react';
+import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import DemoConversation, { transcript } from '@/components/demo/DemoConversation';
@@ -16,30 +16,32 @@ const steps = [
   'Payment starts onboarding automatically',
 ];
 
+const capabilities = [
+  'Answer questions',
+  'Qualify the business',
+  'Identify pain points',
+  'Recommend Starter, Growth, or Enterprise',
+  'Capture contact details',
+  'Create payment link for ready buyers',
+  'Trigger onboarding after payment',
+];
+
+const salesFlow = [
+  'Customer asks about missed calls',
+  'AI qualifies business',
+  'AI recommends Starter or Growth',
+  'Customer confirms they want to proceed',
+  'AI creates secure checkout',
+  'Payment confirmed',
+  'Onboarding starts automatically',
+];
+
 const MESSAGE_DELAY = 2600;
 
 const scenarios = [
-  {
-    id: 'trades',
-    label: 'Trades',
-    title: 'Emergency plumbing lead',
-    description: 'A homeowner calls with an urgent plumbing issue and needs fast help.',
-    context: 'Australian plumbing business, urgent residential lead, goal is qualification and booking.',
-  },
-  {
-    id: 'clinic',
-    label: 'Clinic',
-    title: 'New patient booking enquiry',
-    description: 'A patient calls a clinic to ask about appointment availability and next steps.',
-    context: 'Australian clinic, new patient enquiry, goal is capture details and book appointment.',
-  },
-  {
-    id: 'realestate',
-    label: 'Real Estate',
-    title: 'Property appraisal enquiry',
-    description: 'A homeowner calls to request an appraisal and speak with an agent.',
-    context: 'Australian real estate business, appraisal enquiry, goal is lead capture and follow-up.',
-  },
+  { id: 'trades', label: 'Trades', title: 'Missed-call revenue enquiry', description: 'A trade business asks how to stop losing urgent calls.', context: 'Australian trade business, missed-call problem, goal is qualification, plan recommendation, and signup readiness.' },
+  { id: 'clinic', label: 'Clinic', title: 'Front desk overflow enquiry', description: 'A clinic needs help answering calls and booking appointments.', context: 'Australian clinic, appointment overflow, goal is qualification, booking automation, and plan recommendation.' },
+  { id: 'realestate', label: 'Real Estate', title: 'High-intent appraisal enquiry', description: 'A real estate office wants faster qualification and follow-up.', context: 'Australian real estate business, appraisal enquiry, goal is lead qualification, CRM sync, and signup readiness.' },
 ];
 
 export default function AIDemo() {
@@ -54,99 +56,46 @@ export default function AIDemo() {
   const [workflowItems, setWorkflowItems] = useState(defaultWorkflowItems);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!('speechSynthesis' in window)) return;
-
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     const loadVoices = () => setVoicesLoaded(true);
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
   }, []);
 
   const selectedVoices = useMemo(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      return { caller: null, assistant: null };
-    }
-
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return { caller: null, assistant: null };
     const voices = window.speechSynthesis.getVoices();
-    const findVoice = (keywords, excludeName = '') =>
-      voices.find((voice) =>
-        voice.name !== excludeName && keywords.some((keyword) => voice.name.toLowerCase().includes(keyword))
-      ) || null;
-
-    const assistantVoice =
-      findVoice(['samantha', 'aria', 'zira', 'serena', 'google uk english female', 'female']) ||
-      voices.find((voice) => voice.name.toLowerCase().includes('female')) ||
-      voices[0] ||
-      null;
-
-    const callerVoice =
-      findVoice(['daniel', 'alex', 'fred', 'google uk english male', 'male'], assistantVoice?.name) ||
-      voices.find((voice) => voice.name !== assistantVoice?.name && voice.name.toLowerCase().includes('male')) ||
-      voices.find((voice) => voice.name !== assistantVoice?.name) ||
-      assistantVoice ||
-      null;
-
-    return {
-      assistant: assistantVoice,
-      caller: callerVoice,
-    };
+    const findVoice = (keywords, excludeName = '') => voices.find((voice) => voice.name !== excludeName && keywords.some((keyword) => voice.name.toLowerCase().includes(keyword))) || null;
+    const assistant = findVoice(['samantha', 'aria', 'zira', 'serena', 'female']) || voices[0] || null;
+    const caller = findVoice(['daniel', 'alex', 'fred', 'male'], assistant?.name) || voices.find((voice) => voice.name !== assistant?.name) || assistant;
+    return { assistant, caller };
   }, [voicesLoaded]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!('speechSynthesis' in window)) return;
-
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
-
     if (!isPlaying || !voicesLoaded) return;
-
     const message = demoTranscript[currentStep];
     if (!message) return;
-
     const moveToNextStep = () => {
-      if (currentStep < steps.length - 1) {
-        setTimeout(() => {
-          setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-        }, MESSAGE_DELAY);
-      }
+      if (currentStep < steps.length - 1) setTimeout(() => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1)), MESSAGE_DELAY);
     };
-
-    if (!isVoiceEnabled) {
-      moveToNextStep();
-      return;
-    }
-
+    if (!isVoiceEnabled) { moveToNextStep(); return; }
     const utterance = new SpeechSynthesisUtterance(message.text);
     utterance.voice = message.role === 'assistant' ? selectedVoices.assistant : selectedVoices.caller;
     utterance.rate = message.role === 'assistant' ? 0.94 : 0.88;
     utterance.pitch = message.role === 'assistant' ? 1.04 : 0.82;
-    utterance.volume = 1;
     utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      moveToNextStep();
-    };
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      moveToNextStep();
-    };
+    utterance.onend = () => { setIsSpeaking(false); moveToNextStep(); };
+    utterance.onerror = () => { setIsSpeaking(false); moveToNextStep(); };
     window.speechSynthesis.speak(utterance);
-
-    return () => {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    };
+    return () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
   }, [currentStep, isPlaying, isVoiceEnabled, selectedVoices, voicesLoaded, demoTranscript]);
 
   const handleRestart = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     setCurrentStep(0);
     setIsPlaying(true);
     setIsSpeaking(false);
@@ -155,60 +104,22 @@ export default function AIDemo() {
   const handleGenerateSimulation = () => {
     setIsGenerating(true);
     setIsPlaying(false);
-
     base44.integrations.Core.InvokeLLM({
-      prompt: `Create a realistic Australian business phone call simulation for this scenario: ${selectedScenario.context}.
-
-Return exactly 5 messages in transcript order:
-1. caller explains the problem
-2. assistant asks qualification questions
-3. caller gives business details and buying intent
-4. assistant recommends Starter, Growth, or Enterprise using AssistantAI done-for-you pricing language
-5. assistant asks: "Would you like to get started now, or would you prefer to speak with someone first?"
-
-Also return exactly 5 workflow items showing qualification, plan recommendation, lead creation/update, checkout creation for ready buyers, and paid onboarding automation.
-Keep the tone natural, concise, professional, and commercially focused.
-The final assistant message should make clear that ready buyers can receive a secure payment link immediately.`,
+      prompt: `Create a realistic Australian business phone call simulation for this scenario: ${selectedScenario.context}. Return exactly 5 messages showing the AI answering, qualifying, recommending Starter/Growth/Enterprise, and moving a ready buyer toward secure signup. Enterprise must be escalated for review, not closed automatically.`,
       response_json_schema: {
         type: 'object',
         properties: {
-          transcript: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                role: { type: 'string', enum: ['caller', 'assistant'] },
-                text: { type: 'string' },
-              },
-              required: ['role', 'text'],
-            },
-          },
-          workflow: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                desc: { type: 'string' },
-              },
-              required: ['title', 'desc'],
-            },
-          },
+          transcript: { type: 'array', items: { type: 'object', properties: { role: { type: 'string', enum: ['caller', 'assistant'] }, text: { type: 'string' } }, required: ['role', 'text'] } },
+          workflow: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, desc: { type: 'string' } }, required: ['title', 'desc'] } },
         },
         required: ['transcript', 'workflow'],
       },
     }).then((result) => {
       setDemoTranscript(result.transcript);
-      setWorkflowItems(result.workflow.map((item, index) => ({
-        ...defaultWorkflowItems[index],
-        title: item.title,
-        desc: item.desc,
-      })));
+      setWorkflowItems(result.workflow.map((item, index) => ({ ...defaultWorkflowItems[index], title: item.title, desc: item.desc })));
       setCurrentStep(0);
       setIsPlaying(true);
-    }).finally(() => {
-      setIsGenerating(false);
-    });
+    }).finally(() => setIsGenerating(false));
   };
 
   return (
@@ -216,29 +127,30 @@ The final assistant message should make clear that ready buyers can receive a se
       <section className="relative py-24 md:py-28 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6 md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-14">
-            
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-cyan-300 text-xs font-medium mb-5">
-              <Sparkles className="h-3.5 w-3.5" />
-              Sample Demo
+              <Sparkles className="h-3.5 w-3.5" /> AI selling demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Sample AI Call Flow Demo</h1>
-            <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">
-              This is the older sample demo experience for AssistantAI. For the live ElevenLabs receptionist, use the homepage Live Demo section.
-            </p>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Talk to the AI That Can Qualify and Sign Up New Clients</h1>
+            <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">Experience how AssistantAI handles a real enquiry — from answering the call to qualifying the buyer, recommending a plan, and moving them toward secure signup.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <a href="/#live-demo" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 font-semibold text-white">Try the AI Receptionist <ArrowRight className="h-4 w-4" /></a>
+              <Link to="/GetStartedNow" className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-8 py-3.5 font-semibold text-white">Get Started Now</Link>
+            </div>
           </motion.div>
 
-          <DemoScenarioSelector
-            scenarios={scenarios}
-            selectedScenario={selectedScenario}
-            onSelect={setSelectedScenario}
-            onGenerate={handleGenerateSimulation}
-            isGenerating={isGenerating}
-          />
+          <div className="mb-10 grid gap-6 lg:grid-cols-3">
+            <div className="rounded-[28px] border border-white/5 bg-[#12121a] p-6 lg:col-span-1">
+              <h2 className="text-xl font-bold text-white mb-4">What the AI Can Do</h2>
+              <div className="space-y-3">{capabilities.map((item) => <div key={item} className="flex gap-3 text-gray-300"><CheckCircle2 className="h-5 w-5 shrink-0 text-cyan-300" />{item}</div>)}</div>
+            </div>
+            <div className="rounded-[28px] border border-white/5 bg-[#12121a] p-6 lg:col-span-2">
+              <h2 className="text-xl font-bold text-white mb-4">Example Sales Flow</h2>
+              <div className="grid gap-3 sm:grid-cols-2">{salesFlow.map((item, index) => <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-gray-300"><span className="text-cyan-300">{index + 1}. </span>{item}</div>)}</div>
+            </div>
+          </div>
 
+          <DemoScenarioSelector scenarios={scenarios} selectedScenario={selectedScenario} onSelect={setSelectedScenario} onGenerate={handleGenerateSimulation} isGenerating={isGenerating} />
           <div className="grid xl:grid-cols-[1.2fr_0.8fr] gap-6 items-start">
             <DemoConversation currentStep={currentStep} messages={demoTranscript} />
             <DemoAutomationPanel currentStep={currentStep} items={workflowItems} />
@@ -247,57 +159,19 @@ The final assistant message should make clear that ready buyers can receive a se
           <div className="mt-8 rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
               <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Current Step</p>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-gray-300">
-                    <PhoneCall className="h-3.5 w-3.5 text-cyan-400" />
-                    {isSpeaking ? 'Speaking live' : 'Waiting for next turn'}
-                  </div>
-                </div>
-                <p className="mt-2 text-white font-medium text-lg">{workflowItems[currentStep]?.title || steps[currentStep]}</p>
-                <p className="mt-2 text-sm text-gray-500">Follow the conversation, watch the workflow update live, and use this page as the main proof experience before booking a strategy call.</p>
+                <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Honest Limits</p>
+                <p className="mt-2 text-white font-medium text-lg">The AI can take payment for standard Starter and Growth plans. Enterprise or complex builds are escalated for human review.</p>
+                <p className="mt-2 text-sm text-gray-500">{isSpeaking ? 'AI speaking live' : workflowItems[currentStep]?.title || steps[currentStep]}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPlaying) {
-                      window.speechSynthesis.cancel();
-                    }
-                    setIsPlaying((prev) => !prev);
-                  }}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                  
-                  {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-                  {isPlaying ? 'Pause Demo' : 'Play Demo'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsVoiceEnabled((prev) => !prev)}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                  
-                  {isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
-                  {isVoiceEnabled ? 'Voice On' : 'Voice Off'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleRestart}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                  
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Restart
-                </Button>
-                <Link to="/BookStrategyCall">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-                    Book Free Strategy Call
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button variant="outline" onClick={() => { if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPlaying) window.speechSynthesis.cancel(); setIsPlaying((prev) => !prev); }} className="border-white/10 bg-transparent text-white hover:bg-white/5">{isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}{isPlaying ? 'Pause Demo' : 'Play Demo'}</Button>
+                <Button variant="outline" onClick={() => setIsVoiceEnabled((prev) => !prev)} className="border-white/10 bg-transparent text-white hover:bg-white/5">{isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}{isVoiceEnabled ? 'Voice On' : 'Voice Off'}</Button>
+                <Button variant="outline" onClick={handleRestart} className="border-white/10 bg-transparent text-white hover:bg-white/5"><RotateCcw className="mr-2 h-4 w-4" />Restart</Button>
               </div>
             </div>
           </div>
         </div>
       </section>
-    </div>);
-
+    </div>
+  );
 }

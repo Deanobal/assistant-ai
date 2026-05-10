@@ -30,6 +30,7 @@ export default function SignupReviewStep({ selectedPlan, form, error, submitting
         <Row label="Customer name" value={form.full_name} />
         <Row label="Email" value={form.email} />
         <Row label="Phone" value={form.mobile_number} />
+        <Row label="What they want automated" value={form.service_needed} />
       </div>
 
       {error && (

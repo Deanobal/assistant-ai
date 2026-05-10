@@ -51,10 +51,10 @@ export default function About() {
 
               <p>AssistantAI was built to help Australian cleaning, trades, property, and other service businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.</p>
               <p>
-                We focus on practical service business automation with an AI assistant and AI receptionist that answer calls, capture customer details, book jobs, update systems, and follow up automatically.
+                We focus on practical service business automation with an AI receptionist that answers calls, qualifies buyers, recommends the right plan, creates secure checkout for ready Starter and Growth customers, updates systems, and triggers onboarding after payment.
               </p>
               <p>
-                The goal is simple: reduce admin by 65%, save up to $30,000 per year per business, cut response times by 80%, improve lead capture, and create a more reliable customer workflow without adding more staff.
+                The goal is simple: help businesses qualify leads while they are live, secure payment instantly for standard plans, and stop hot buyers from cooling down while admin catches up.
               </p>
             </motion.div>
           </div>
@@ -98,8 +98,8 @@ export default function About() {
               'AI call handling',
               'Lead capture automation',
               'CRM sync',
-              'Calendar booking',
-              'Follow-up workflows'].
+              'Secure payment flow',
+              'Onboarding automation'].
               map((item) =>
               <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-4 text-gray-300">
                   <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -134,13 +134,13 @@ export default function About() {
 
             <h3 className="text-2xl font-bold text-white mb-3">Ready to See What AI Could Look Like in Your Business?</h3>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Book a free strategy call and we’ll map out where AssistantAI.com.au can help with calls, bookings, lead capture, and follow-up.
+              Talk to the AI receptionist or choose a plan to start your AI receptionist setup.
             </p>
             <Link
-              to="/BookStrategyCall"
+              to="/GetStartedNow"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
-              Book Free Strategy Call
+              Get Started Now
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

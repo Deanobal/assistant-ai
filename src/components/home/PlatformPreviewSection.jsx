@@ -3,10 +3,10 @@ import { ArrowRight, PhoneCall, Users, CalendarCheck2, Send, PlugZap } from 'luc
 
 const previewItems = [
 { icon: PhoneCall, label: 'Calls Handled', value: 'Live', helper: 'Every call tracked in one place' },
-{ icon: Users, label: 'Leads Captured', value: 'Tracked', helper: 'Qualified enquiries logged automatically' },
-{ icon: CalendarCheck2, label: 'Appointments Booked', value: 'Synced', helper: 'Bookings aligned with availability' },
+{ icon: Users, label: 'Buyers Qualified', value: 'Scored', helper: 'Plan fit and intent captured automatically' },
+{ icon: CalendarCheck2, label: 'Checkout Status', value: 'Secure', helper: 'Starter and Growth payment flow visibility' },
 { icon: Send, label: 'Follow-Up Status', value: 'Automated', helper: 'SMS and email actions triggered fast' },
-{ icon: PlugZap, label: 'Integrations Connected', value: 'Active', helper: 'CRM, calendar, and workflow visibility' }];
+{ icon: PlugZap, label: 'Onboarding Sync', value: 'Active', helper: 'CRM, billing, intake, notes, and tasks aligned' }];
 
 
 export default function PlatformPreviewSection() {
@@ -15,8 +15,8 @@ export default function PlatformPreviewSection() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-cyan-400 mb-3 text-lg font-medium">PLATFORM PREVIEW</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">See the Operating Layer Behind the Calls</h2>
-          <p className="mt-4 text-gray-400 max-w-3xl mx-auto text-lg">AssistantAI gives you a cleaner view of calls handled, leads captured, appointments booked, follow-up status, and integrations connected.
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">See the Operating Layer Behind Calls, Payments, and Onboarding</h2>
+          <p className="mt-4 text-gray-400 max-w-3xl mx-auto text-lg">AssistantAI gives you a cleaner view of calls handled, buyers qualified, checkout status, follow-up, and onboarding sync.
 
           </p>
         </div>

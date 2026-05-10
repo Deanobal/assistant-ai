@@ -19,15 +19,15 @@ export default function HeroSection() {
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-              <span className="text-sm font-medium text-cyan-300">AI receptionist for service businesses</span>
+              <span className="text-sm font-medium text-cyan-300">AI Receptionist + Sales Automation for Australian Businesses</span>
             </div>
 
             <h1 className="max-w-3xl text-4xl font-bold leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl lg:text-[4.35rem] xl:text-[4.7rem]">
-              Never Miss A Lead Again
+              Turn Missed Calls Into Paid Clients
             </h1>
 
             <p className="mt-6 max-w-2xl text-[1.05rem] leading-8 text-slate-300 md:text-xl md:leading-8">
-              AssistantAI gives your business an AI receptionist that answers instantly, qualifies leads, books calls, and keeps follow-up moving 24/7.
+              AssistantAI answers calls, qualifies enquiries, recommends the right plan, creates a secure checkout, and starts onboarding automatically when a client is ready to move.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -35,7 +35,7 @@ export default function HeroSection() {
                 href="/GetStartedNow"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]">
                 
-                <span>Get Started</span>
+                <span>Get Started Now</span>
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
               <a
@@ -43,13 +43,18 @@ export default function HeroSection() {
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]">
                 
                 <Play className="h-4.5 w-4.5 text-cyan-300" />
-                <span>Try Live AI Receptionist</span>
+                <span>Talk to Our AI Receptionist</span>
               </a>
             </div>
 
-            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Built for service businesses that want faster response times, fewer missed enquiries, and less admin.
-
+            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Choose Starter or Growth, complete secure checkout, and start onboarding instantly.
             </p>
+
+            <div className="mt-6 flex flex-wrap gap-2 text-sm text-slate-300">
+              {['Call answered', 'Lead qualified', 'Plan selected', 'Payment secured', 'Onboarding started'].map((step) => (
+                <span key={step} className="rounded-full border border-cyan-400/15 bg-cyan-400/5 px-3 py-1.5">{step}</span>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-center lg:justify-end">

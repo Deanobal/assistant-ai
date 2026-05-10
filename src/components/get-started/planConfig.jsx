@@ -23,9 +23,9 @@ export const GET_STARTED_PLANS = {
 
 export const ENTERPRISE_PLAN = {
   name: 'Enterprise',
-  setupLabel: 'Custom setup',
-  monthlyLabel: 'Custom monthly',
-  description: 'For multi-location, advanced workflows, and complex integrations',
+  setupLabel: 'Custom setup from $7,500 + $3,000/month',
+  monthlyLabel: 'Custom review',
+  description: 'Best for multiple locations, custom workflows, advanced integrations, or compliance needs',
 };
 
 export function getPlanFromUrl() {

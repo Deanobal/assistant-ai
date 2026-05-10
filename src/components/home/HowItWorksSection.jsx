@@ -16,14 +16,14 @@ const steps = [
   {
     icon: CalendarCheck,
     number: '03',
-    heading: 'Books or Routes the Lead',
-    description: 'Books the appointment directly into your calendar or escalates urgent jobs to the right team member instantly.',
+    heading: 'Recommends the Plan',
+    description: 'Identifies whether the buyer likely fits Starter, Growth, or Enterprise and keeps Enterprise deals on a custom review path.',
   },
   {
     icon: RefreshCw,
     number: '04',
-    heading: 'Syncs to Your Tools',
-    description: 'Notes, follow-up tasks, and lead details are pushed straight into your CRM, calendar, and communication tools automatically.',
+    heading: 'Payment and Onboarding',
+    description: 'For ready Starter and Growth buyers, secure checkout is created and onboarding begins after Stripe confirms payment.',
   },
 ];
 
@@ -37,10 +37,10 @@ export default function HowItWorksSection() {
             <span className="text-sm font-medium text-cyan-300">How it works</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            From First Ring to Booked Job
+            From First Ring to Paid Onboarding
           </h2>
           <p className="mt-4 text-base text-slate-400 max-w-xl mx-auto leading-7">
-            Four steps. Fully automated. Zero dropped leads.
+            Answers, qualifies, recommends, and starts onboarding when payment is confirmed.
           </p>
         </div>
 

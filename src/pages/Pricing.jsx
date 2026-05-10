@@ -10,8 +10,8 @@ const plans = [
   slug: 'starter',
   setup: '$1,500',
   monthly: '$497',
-  desc: 'Best for businesses starting with AI call handling and lead capture.',
-  valueLine: 'Setup, monthly management, support, and reporting in one premium service path.',
+  desc: 'Simple call capture and follow-up for missed-call coverage.',
+  valueLine: 'Best for missed-call coverage, lead capture, and simple follow-up.',
   features: [
   'Done-for-you setup',
   'Monthly management',
@@ -21,19 +21,19 @@ const plans = [
 
   featured: false,
   directStart: false,
-  primaryCtaLabel: 'Try Live AI Receptionist',
-  primaryCtaTo: '/#live-demo',
-  secondaryCtaLabel: 'Talk To Us',
-  secondaryCtaTo: '/Contact',
-  secondaryHelper: 'Best if you want to confirm fit, scope, and next steps first.'
+  primaryCtaLabel: 'Choose Starter',
+  primaryCtaTo: '/GetStartedNow?plan=starter',
+  secondaryCtaLabel: 'Talk to AI Receptionist',
+  secondaryCtaTo: '/#live-demo',
+  secondaryHelper: 'Preselects Starter, with the option to change plan before payment.'
   },
 {
   name: 'Growth',
   slug: 'growth',
   setup: '$3,000',
   monthly: '$1,500',
-  desc: 'Best for growing businesses that want AI call handling, booking automation, CRM sync, and follow-up.',
-  valueLine: 'Setup, management, support, and optimisation for businesses ready to scale faster.',
+  desc: 'Full front-end revenue system with booking, CRM, SMS/email follow-up, and reporting.',
+  valueLine: 'Best for call handling, bookings, CRM updates, SMS/email follow-up, and reporting.',
   features: [
   'Done-for-you setup',
   'Monthly management',
@@ -44,19 +44,19 @@ const plans = [
 
   featured: true,
   directStart: true,
-  primaryCtaLabel: 'Try Live AI Receptionist',
-  primaryCtaTo: '/#live-demo',
-  secondaryCtaLabel: 'Start Your Setup',
-  secondaryCtaTo: '/GetStartedNow?plan=growth',
-  secondaryHelper: 'Best for teams ready to submit details and continue into the setup flow.'
+  primaryCtaLabel: 'Choose Growth',
+  primaryCtaTo: '/GetStartedNow?plan=growth',
+  secondaryCtaLabel: 'Talk to AI Receptionist',
+  secondaryCtaTo: '/#live-demo',
+  secondaryHelper: 'Preselects Growth, with the option to change plan before payment.'
   },
 {
   name: 'Enterprise',
   slug: 'enterprise',
   setup: '$7,500+',
   monthly: '$3,000+',
-  desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
-  valueLine: 'Custom setup, management, support, optimisation, and workflow design for larger operations.',
+  desc: 'Custom multi-location or advanced workflow system for complex operations.',
+  valueLine: 'Best for multiple locations, custom workflows, advanced integrations, or compliance needs.',
   features: [
   'Advanced setup',
   'Monthly management',
@@ -67,11 +67,11 @@ const plans = [
 
   featured: false,
   directStart: false,
-  primaryCtaLabel: 'Talk To Us',
-  primaryCtaTo: '/Contact',
-  secondaryCtaLabel: 'Try Live Demo',
+  primaryCtaLabel: 'Request Custom Review',
+  primaryCtaTo: '/BookStrategyCall',
+  secondaryCtaLabel: 'Talk to AI Receptionist',
   secondaryCtaTo: '/#live-demo',
-  secondaryHelper: 'Best for custom scoping, integrations, and rollout planning.'
+  secondaryHelper: 'Enterprise is qualified and escalated for custom review.'
   }];
 
 
@@ -125,11 +125,10 @@ export default function Pricing() {
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Done-for-You Pricing for{' '}
-              <span className="text-gradient">Premium AI Automation</span>
+              Choose the Right AI Revenue System
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              All plans include setup, support, optimisation, and ongoing management for Australian service businesses that want stronger lead capture, faster response times, CRM integration, and less admin.
+              Talk to the AI receptionist, choose Starter or Growth, review your selected plan, and proceed to secure checkout only when you are ready.
             </p>
           </motion.div>
 
@@ -227,6 +226,16 @@ export default function Pricing() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-3">Not sure which plan fits?</h2>
+            <p className="mx-auto max-w-3xl text-gray-300 leading-relaxed">Talk to the AI receptionist. It can ask a few questions, recommend the likely best fit, and help you start setup immediately if you are ready.</p>
+            <a href="/#live-demo" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 text-sm font-medium text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all">Talk to the AI Receptionist <ArrowRight className="w-4 h-4" /></a>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}>
 
             <h2 className="text-2xl font-bold text-white text-center mb-10">Frequently Asked Questions</h2>
@@ -251,12 +260,12 @@ export default function Pricing() {
             viewport={{ once: true }}
             className="mt-20 text-center">
 
-            <p className="text-gray-400 mb-4">Not sure which plan is right for your workflow?</p>
+            <p className="text-gray-400 mb-4">Ready to choose your plan and start onboarding after secure payment?</p>
             <Link
-              to="/Contact"
+              to="/GetStartedNow"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
 
-              Speak to Our Team
+              Get Started Now
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

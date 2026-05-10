@@ -9,24 +9,24 @@ export default function CTASection() {
       <div className="relative max-w-4xl mx-auto px-6 text-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-balance md:text-5xl">
-            Ready for an AI assistant and AI receptionist built for your service business?
+            Ready to Turn Enquiries Into Paid Clients?
           </h2>
           <p className="mt-6 max-w-3xl mx-auto text-base leading-8 text-gray-400 md:text-lg">
-            If missed calls, slow follow-up, and disconnected systems are costing you business, AssistantAI will show you how an AI automation system can improve lead capture, CRM integration, and service business automation while reducing admin and response delays.
+            AssistantAI answers calls, qualifies buyers, recommends the right plan, takes secure payment for standard plans, and starts onboarding automatically after payment is confirmed.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
-              to="/BookStrategyCall"
+              to="/GetStartedNow"
               className="inline-flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-center font-medium text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
             >
-              Book Free Strategy Call
+              Get Started Now
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              to="/Contact"
+              to="/#live-demo"
               className="inline-flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-4 text-center font-medium text-white transition-all hover:bg-white/[0.05] hover:border-white/30"
             >
-              Speak to Our Team
+              Talk to Our AI Receptionist
             </Link>
           </div>
         </div>

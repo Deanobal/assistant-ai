@@ -36,13 +36,13 @@ export default function UseCasesPreview() {
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Sample Use Case</p>
-            <h3 className="text-white text-xl font-semibold mb-3">Missed Calls Turn Into Booked Work</h3>
-            <p className="text-gray-400 leading-relaxed text-lg">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, and books the next step instead of letting the enquiry go cold.</p>
+            <h3 className="text-white text-xl font-semibold mb-3">Missed Calls Turn Into Paid Clients</h3>
+            <p className="text-gray-400 leading-relaxed text-lg">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, recommends a plan, and moves ready buyers toward secure signup.</p>
           </div>
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Example Outcome</p>
-            <h3 className="text-white text-xl font-semibold mb-3">Follow-Up Stops Falling Through the Cracks</h3>
-            <p className="text-gray-400 leading-relaxed text-lg">Customer details, call context, and next actions move into the workflow automatically so your team can respond faster and more consistently.</p>
+            <h3 className="text-white text-xl font-semibold mb-3">Payment Starts the Fulfilment Workflow</h3>
+            <p className="text-gray-400 leading-relaxed text-lg">After confirmed payment, client records, billing status, intake details, notes, integrations, and onboarding tasks can be created automatically.</p>
           </div>
         </div>
 

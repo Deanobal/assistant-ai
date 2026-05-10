@@ -1,12 +1,12 @@
 import { Phone, UserCheck, CalendarCheck, Database, MessageSquareText, PhoneForwarded } from 'lucide-react';
 
 const cards = [
-  { icon: Phone, title: 'Instant Call Answering', desc: 'Use an AI receptionist to answer every call instantly so your service business stops losing leads to missed calls and voicemail.' },
-  { icon: UserCheck, title: 'Lead Capture', desc: 'Capture enquiry details, qualify prospects, and pass cleaner information into your workflow from the first conversation.' },
-  { icon: CalendarCheck, title: 'Job Booking', desc: 'Turn inbound demand into booked jobs, appointments, and scheduled next steps faster with less manual coordination.' },
-  { icon: Database, title: 'CRM Sync', desc: 'Keep customer records accurate with CRM integration that updates contacts, notes, and outcomes automatically.' },
-  { icon: MessageSquareText, title: 'Follow-Up Automation', desc: 'Trigger SMS and email follow-up automatically so prospects get fast confirmations, reminders, and next steps.' },
-  { icon: PhoneForwarded, title: 'Smart Call Routing', desc: 'Send urgent or high-value calls to the right person when human input is needed without slowing down response times.' },
+  { icon: Phone, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7 so ready buyers do not get left waiting.' },
+  { icon: UserCheck, title: 'AI Sales Qualifier', desc: 'Qualifies live prospects and recommends whether Starter, Growth, or Enterprise is the right fit.' },
+  { icon: CalendarCheck, title: 'AI Booking Assistant', desc: 'Turns inbound demand into booked jobs, appointments, and scheduled next steps faster.' },
+  { icon: Database, title: 'CRM + Pipeline Sync', desc: 'Keeps lead records, contact details, notes, and pipeline status updated automatically.' },
+  { icon: MessageSquareText, title: 'Payment + Signup Flow', desc: 'Creates secure checkout for ready Starter and Growth buyers after plan review.' },
+  { icon: PhoneForwarded, title: 'Onboarding Trigger', desc: 'Starts fulfilment workflows after confirmed payment so setup can begin immediately.' },
 ];
 
 export default function ServicesPreview() {
@@ -15,7 +15,7 @@ export default function ServicesPreview() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-cyan-400 text-lg font-medium mb-3">CORE FEATURES</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Instant Call Answering, Lead Capture, Job Booking, Follow-Up Automation and CRM Sync</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">AI That Answers, Qualifies, Takes Payment, and Starts Onboarding</h2>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

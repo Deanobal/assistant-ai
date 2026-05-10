@@ -1,10 +1,10 @@
 import { Database, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
 
 const items = [
-{ icon: PhoneCall, label: '24/7 AI Call Handling' },
-{ icon: MessageSquare, label: 'Capture & Qualify Leads' },
-{ icon: CalendarDays, label: 'Book Appointments Automatically' },
-{ icon: Database, label: 'CRM & Calendar Sync' }];
+{ icon: PhoneCall, label: '24/7 Call Handling' },
+{ icon: MessageSquare, label: 'Live Lead Qualification' },
+{ icon: CalendarDays, label: 'Secure Stripe Checkout' },
+{ icon: Database, label: 'CRM + Onboarding Sync' }];
 
 export default function TrustStrip() {
   return (
