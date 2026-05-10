@@ -63,8 +63,8 @@ const plans = [
   featured: false,
   primaryCtaLabel: 'Talk To Us',
   primaryCtaTo: '/Contact',
-  secondaryCtaLabel: 'Get Started Now',
-  secondaryCtaTo: '/GetStartedNow?plan=enterprise',
+  secondaryCtaLabel: 'Talk To Us',
+  secondaryCtaTo: '/Contact',
   helper: 'Best for custom scoping, integrations, and rollout planning.'
 }];
 

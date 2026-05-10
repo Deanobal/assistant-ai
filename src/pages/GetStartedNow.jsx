@@ -1,140 +1,170 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import LeadForm from '@/components/LeadForm';
-import DirectStartPanel from '@/components/pricing/DirectStartPanel';
 import CheckoutReturnCard from '@/components/pricing/CheckoutReturnCard';
+import PlanSelectionStep from '@/components/get-started/PlanSelectionStep';
+import SignupDetailsForm from '@/components/get-started/SignupDetailsForm';
+import SignupReviewStep from '@/components/get-started/SignupReviewStep';
+import { getPlanFromUrl, getPlanByName } from '@/components/get-started/planConfig';
 
-const plans = {
-  starter: {
-    key: 'starter',
-    name: 'Starter',
-    setup: '$1,500',
-    monthly: '$497',
-    description: 'Best for businesses starting with AI call handling and lead capture.',
-  },
-  growth: {
-    key: 'growth',
-    name: 'Growth',
-    setup: '$3,000',
-    monthly: '$1,500',
-    description: 'Best for growing businesses that want voice AI, booking automation, CRM sync, and follow-up.',
-  },
+const initialForm = {
+  full_name: '',
+  business_name: '',
+  email: '',
+  mobile_number: '',
+  industry: '',
+  website: '',
+  service_needed: '',
+  current_call_handling: '',
+  monthly_enquiry_volume: '',
 };
 
 export default function GetStartedNow() {
   const urlParams = new URLSearchParams(window.location.search);
-  const planKey = (urlParams.get('plan') || 'growth').toLowerCase();
   const checkoutState = urlParams.get('checkout') || '';
   const sessionId = urlParams.get('session_id') || '';
-  const plan = plans[planKey] || plans.growth;
   const isCheckoutReturn = checkoutState === 'success' || checkoutState === 'cancelled';
-  const renderedView = isCheckoutReturn ? `checkout_${checkoutState}` : 'lead_form';
+  const [selectedPlan, setSelectedPlan] = useState(() => getPlanFromUrl());
+  const [step, setStep] = useState(() => (getPlanFromUrl() ? 'details' : 'plans'));
+  const [form, setForm] = useState(initialForm);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     console.log('GetStartedNow routing', {
       checkout: checkoutState,
       session_id: sessionId,
-      renderedView,
+      selected_plan: selectedPlan?.name || null,
+      renderedView: isCheckoutReturn ? `checkout_${checkoutState}` : step,
     });
-  }, [checkoutState, sessionId, renderedView]);
+  }, [checkoutState, sessionId, isCheckoutReturn, selectedPlan, step]);
+
+  const choosePlan = (plan) => {
+    setSelectedPlan(plan);
+    setError('');
+    setStep('details');
+  };
+
+  const changePlan = () => {
+    setError('');
+    setStep('plans');
+  };
+
+  const continueToReview = (event) => {
+    event.preventDefault();
+    if (!selectedPlan) {
+      setError('Please choose a plan before continuing.');
+      setStep('plans');
+      return;
+    }
+    setError('');
+    setStep('review');
+  };
+
+  const proceedToPayment = async () => {
+    const confirmedPlan = getPlanByName(selectedPlan?.name);
+    if (!confirmedPlan) {
+      setError('Please choose a plan before continuing.');
+      setStep('plans');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const leadResponse = await base44.functions.invoke('createAIQualifiedLead', {
+        full_name: form.full_name,
+        business_name: form.business_name,
+        email: form.email,
+        mobile_number: form.mobile_number,
+        industry: form.industry,
+        website: form.website || '',
+        service_needed: form.service_needed,
+        current_call_handling: form.current_call_handling,
+        monthly_enquiry_volume: form.monthly_enquiry_volume || '',
+        selected_plan: confirmedPlan.name,
+        likely_plan_fit: confirmedPlan.name,
+        buyer_intent: 'ready_to_proceed',
+        lead_source: 'Get Started signup flow',
+        source_page: '/GetStartedNow',
+        conversation_summary: `${form.service_needed} Current problem: ${form.current_call_handling}`,
+      });
+
+      const lead = leadResponse?.data?.lead;
+      if (!lead?.id) throw new Error('Unable to create your signup record.');
+
+      const checkoutResponse = await base44.functions.invoke('createCheckoutForQualifiedLead', {
+        lead_id: lead.id,
+        selected_plan: confirmedPlan.name,
+        buyer_confirmed_intent: true,
+        full_name: form.full_name,
+        business_name: form.business_name,
+        email: form.email,
+        payment_mode: 'subscription',
+      });
+
+      if (!checkoutResponse?.data?.checkout_url) {
+        throw new Error(checkoutResponse?.data?.error || 'Unable to start Stripe checkout.');
+      }
+
+      window.location.href = checkoutResponse.data.checkout_url;
+    } catch (checkoutError) {
+      setError(checkoutError?.response?.data?.error || checkoutError?.message || 'Unable to start secure payment.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div>
       <section className="relative py-24 md:py-28 bg-grid">
         <div className="bg-radial-glow absolute inset-0" />
         <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-14"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
             <p className="text-cyan-400 mb-3 text-base font-medium">START YOUR ASSISTANTAI SETUP</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-              Start with the {plan.name} Plan
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">
+              {isCheckoutReturn ? 'Checkout Update' : selectedPlan ? `Start with the ${selectedPlan.name} Plan` : 'Choose Your Plan First'}
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              This premium direct-start path is for teams ready to move forward now with setup, monthly management, support, and ongoing optimisation.
+              Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready.
             </p>
           </motion.div>
 
           {isCheckoutReturn ? (
             <div className="max-w-4xl mx-auto">
-              <CheckoutReturnCard planName={plan.name} checkoutState={checkoutState} sessionId={sessionId} />
+              <CheckoutReturnCard planName={selectedPlan?.name || 'selected'} checkoutState={checkoutState} sessionId={sessionId} />
             </div>
           ) : (
-            <div className="grid lg:grid-cols-5 gap-10">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
-              >
-                <LeadForm
-                submitLabel={`Start ${plan.name} Setup`}
-                successTitle="Direct Start Request Received"
-                successText={`Your ${plan.name} setup details have been saved.`}
-                matchedLeadStatus="Onboarding"
-                createStatus="Onboarding"
-                nextActionText={`${plan.name} direct-start request received. Review for checkout and onboarding handoff.`}
-                bookingSource={`direct_start_${plan.key}`}
-                onSubmitted={async ({ form }) => {
-                  const clientResponse = await base44.functions.invoke('upsertPublicStarterClient', {
-                    fullName: form.full_name,
-                    businessName: form.business_name,
-                    email: form.email,
-                    mobileNumber: form.mobile_number,
-                    industry: form.industry,
-                    website: form.website || '',
-                    monthlyEnquiryVolume: form.monthly_enquiry_volume,
-                    message: form.message,
-                    plan: plan.name,
-                  });
+            <div className="mx-auto max-w-5xl">
+              {step === 'plans' && (
+                <>
+                  {error && <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+                  <PlanSelectionStep selectedPlan={selectedPlan} onChoosePlan={choosePlan} />
+                </>
+              )}
 
-                  const clientId = clientResponse?.data?.client?.id;
-                  const fullName = form.full_name?.trim();
-                  const email = form.email?.trim();
+              {step === 'details' && selectedPlan && (
+                <SignupDetailsForm
+                  form={form}
+                  selectedPlan={selectedPlan}
+                  onChange={setForm}
+                  onBackToPlans={changePlan}
+                  onContinue={continueToReview}
+                />
+              )}
 
-                  if (!clientId || !fullName || !email) {
-                    throw new Error('Missing required checkout details.');
-                  }
-
-                  const checkoutPayload = {
-                    clientId,
-                    fullName,
-                    email,
-                    mobile: form.mobile_number,
-                    website: form.website || '',
-                    origin: window.location.origin,
-                    sourcePage: 'homepage_pricing',
-                  };
-
-                  console.log('createStripeCheckout payload', checkoutPayload);
-
-                  const response = await base44.functions.invoke('createStripeCheckout', {
-                    ...checkoutPayload,
-                    plan: plan.key,
-                  });
-
-                  if (!response?.data?.checkout_url) {
-                    throw new Error(response?.data?.error || 'Unable to start Stripe checkout.');
-                  }
-
-                  return {
-                    redirectTo: response.data.checkout_url,
-                  };
-                }}
-              />
-            </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="lg:col-span-2"
-              >
-                <DirectStartPanel plan={plan} />
-              </motion.div>
+              {step === 'review' && selectedPlan && (
+                <SignupReviewStep
+                  selectedPlan={selectedPlan}
+                  form={form}
+                  error={error}
+                  submitting={submitting}
+                  onBackToForm={() => setStep('details')}
+                  onChangePlan={changePlan}
+                  onProceed={proceedToPayment}
+                />
+              )}
             </div>
           )}
         </div>

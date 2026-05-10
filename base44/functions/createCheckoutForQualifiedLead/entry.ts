@@ -4,7 +4,6 @@ import Stripe from 'npm:stripe@18.4.0';
 const PLANS = {
   Starter: { setupFee: 1500, monthlyFee: 497 },
   Growth: { setupFee: 3000, monthlyFee: 1500 },
-  Enterprise: { setupFee: 7500, monthlyFee: 3000 },
 };
 
 function getStripeMode() {
@@ -33,8 +32,10 @@ function priceEnvName(mode, planName, type) {
   return `${prefix}${planName.toUpperCase()}${suffix}`;
 }
 
-function optionalSecret(name) {
-  return clean(Deno.env.toObject()[name]);
+function requiredSecret(name) {
+  const value = clean(Deno.env.toObject()[name]);
+  if (!value) throw new Error(`Missing ${name}`);
+  return value;
 }
 
 function clean(value) {
@@ -51,36 +52,24 @@ function absoluteUrl(envName, fallback) {
   return value || fallback;
 }
 
-function buildLineItems(planName, paymentMode, stripeMode) {
-  const plan = PLANS[planName];
-  const setupPrice = optionalSecret(priceEnvName(stripeMode, planName, 'setup'));
-  const monthlyPrice = optionalSecret(priceEnvName(stripeMode, planName, 'monthly'));
-  const wantsSubscription = paymentMode !== 'setup_only';
-  const lineItems = [];
-
-  if (setupPrice) {
-    lineItems.push({ price: setupPrice, quantity: 1 });
-  } else {
-    lineItems.push({
-      price_data: {
-        currency: 'aud',
-        unit_amount: plan.setupFee * 100,
-        product_data: { name: `${planName} setup fee`, description: 'Done-for-you AssistantAI setup, implementation, support, optimisation, and reporting.' },
-      },
-      quantity: 1,
-    });
-  }
-
-  if (wantsSubscription && monthlyPrice) {
-    lineItems.push({ price: monthlyPrice, quantity: 1 });
-    return { lineItems, mode: 'subscription', subscriptionConfigured: true, setupOnlyReason: null };
-  }
+function buildLineItems(planName, stripeMode) {
+  const setupPriceName = priceEnvName(stripeMode, planName, 'setup');
+  const monthlyPriceName = priceEnvName(stripeMode, planName, 'monthly');
+  const setupPrice = requiredSecret(setupPriceName);
+  const monthlyPrice = requiredSecret(monthlyPriceName);
 
   return {
-    lineItems,
-    mode: 'payment',
-    subscriptionConfigured: false,
-    setupOnlyReason: wantsSubscription ? 'Monthly subscription price ID missing. Setup Fee Only mode used.' : 'Setup Fee Only mode requested.',
+    lineItems: [
+      { price: setupPrice, quantity: 1 },
+      { price: monthlyPrice, quantity: 1 },
+    ],
+    mode: 'subscription',
+    subscriptionConfigured: true,
+    setupOnlyReason: null,
+    priceMapping: {
+      setup_price_secret: setupPriceName,
+      monthly_price_secret: monthlyPriceName,
+    },
   };
 }
 
@@ -100,29 +89,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Valid selected_plan is required' }, { status: 400 });
     }
 
-    if (selectedPlan === 'Enterprise' && !optionalSecret('STRIPE_ENTERPRISE_SETUP_PRICE_ID')) {
-      const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: payload.lead_id }, '-updated_date', 1);
-      const lead = leadMatches[0];
-      if (lead) {
-        await base44.asServiceRole.entities.Lead.update(lead.id, {
-          ...lead,
-          selected_plan: 'Enterprise',
-          status: 'Enterprise Review Required',
-          next_action: 'Urgent admin review before enterprise payment request',
-          last_activity_at: new Date().toISOString(),
-        });
-        await base44.asServiceRole.functions.invoke('sendAdminAlert', {
-          event_type: 'new_lead_created',
-          entity_name: 'Lead',
-          entity_id: lead.id,
-          title: 'Enterprise checkout review required',
-          message: `${lead.business_name || lead.full_name} wants to proceed with Enterprise. Configure deposit/payment request or contact urgently.`,
-          channels: ['in_app', 'email'],
-        });
-      }
-      return Response.json({ enterprise_review_required: true, message: 'Enterprise payment requires admin review before checkout.' });
-    }
-
     const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: payload.lead_id }, '-updated_date', 1);
     const lead = leadMatches[0];
     if (!lead) {
@@ -136,7 +102,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email and full name are required for checkout' }, { status: 400 });
     }
 
-    const { lineItems, mode, subscriptionConfigured, setupOnlyReason } = buildLineItems(selectedPlan, clean(payload.payment_mode), stripeMode);
+    const { lineItems, mode, subscriptionConfigured, setupOnlyReason, priceMapping } = buildLineItems(selectedPlan, stripeMode);
     const successUrl = absoluteUrl('STRIPE_SUCCESS_URL', 'https://assistantai.com.au/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}');
     const cancelUrl = absoluteUrl('STRIPE_CANCEL_URL', 'https://assistantai.com.au/GetStartedNow?payment=cancelled');
 
@@ -157,6 +123,8 @@ Deno.serve(async (req) => {
       subscription_configured: String(subscriptionConfigured),
       stripe_mode: stripeMode,
       setup_only_reason: setupOnlyReason || '',
+      setup_price_secret: priceMapping.setup_price_secret,
+      monthly_price_secret: priceMapping.monthly_price_secret,
     };
 
     const sessionParams = {
@@ -204,7 +172,7 @@ Deno.serve(async (req) => {
       // Checkout must not be blocked by notification delivery.
     }
 
-    return Response.json({ success: true, stripe_mode: stripeMode, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, setup_only_reason: setupOnlyReason, lead: updatedLead });
+    return Response.json({ success: true, stripe_mode: stripeMode, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, setup_only_reason: setupOnlyReason, price_mapping: priceMapping, lead: updatedLead });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

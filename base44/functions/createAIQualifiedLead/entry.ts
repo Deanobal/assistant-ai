@@ -107,6 +107,7 @@ Deno.serve(async (req) => {
       wants_email_followup: !!payload.wants_email_followup,
       conversation_summary: clean(payload.conversation_summary),
       likely_plan_fit: likelyPlan,
+      selected_plan: normalizePlan(payload.selected_plan, likelyPlan),
       buyer_intent: buyerIntent,
       source_page: clean(payload.source_page) || 'AI receptionist demo',
       lead_source: clean(payload.lead_source) || 'AI receptionist demo',
