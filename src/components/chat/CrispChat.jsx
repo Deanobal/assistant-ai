@@ -13,18 +13,22 @@ export default function CrispChat() {
       const existingScript = document.getElementById(CRISP_SCRIPT_ID);
       if (existingScript) return;
 
-      const response = await base44.functions.invoke('getCrispWebsiteConfig', {});
-      const websiteId = response?.data?.websiteId;
-      if (!websiteId || cancelled) return;
+      try {
+        const response = await base44.functions.invoke('getCrispWebsiteConfig', {});
+        const websiteId = response?.data?.websiteId;
+        if (!websiteId || cancelled) return;
 
-      window.$crisp = window.$crisp || [];
-      window.CRISP_WEBSITE_ID = websiteId;
+        window.$crisp = window.$crisp || [];
+        window.CRISP_WEBSITE_ID = websiteId;
 
-      const script = document.createElement('script');
-      script.id = CRISP_SCRIPT_ID;
-      script.src = 'https://client.crisp.chat/l.js';
-      script.async = true;
-      document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.id = CRISP_SCRIPT_ID;
+        script.src = 'https://client.crisp.chat/l.js';
+        script.async = true;
+        document.head.appendChild(script);
+      } catch {
+        // Crisp is optional; do not interrupt the app if chat config is unavailable.
+      }
     };
 
     loadCrisp();
