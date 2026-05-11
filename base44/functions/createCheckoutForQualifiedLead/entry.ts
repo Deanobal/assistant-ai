@@ -6,6 +6,40 @@ const PLANS = {
   Growth: { setupFee: 3000, monthlyFee: 1500 },
 };
 
+function maskHeader(value) {
+  return value ? '[present-redacted]' : '[missing]';
+}
+
+function getSafeHeaders(req) {
+  return {
+    content_type: req.headers.get('content-type') || '',
+    user_agent: req.headers.get('user-agent') || '',
+    x_webhook_secret: maskHeader(req.headers.get('x-webhook-secret')),
+  };
+}
+
+function verifyWebhookSecret(req, payload = {}) {
+  const receivedSecret = req.headers.get('x-webhook-secret') || payload.x_webhook_secret || payload.webhook_secret || '';
+  const expectedSecret = Deno.env.get('VAPI_WEBHOOK_SECRET') || '';
+  return {
+    secret_received: !!receivedSecret,
+    secret_configured: !!expectedSecret,
+    secret_valid: !!receivedSecret && !!expectedSecret && receivedSecret === expectedSecret,
+  };
+}
+
+function jsonToolResponse(body) {
+  console.log('Final response:', JSON.stringify(body));
+  return Response.json(body, {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function validationError(field) {
+  return jsonToolResponse({ success: false, error: `Missing required field: ${field}` });
+}
+
 function getStripeMode() {
   const mode = clean(Deno.env.get('STRIPE_MODE')).toLowerCase();
   return mode === 'live' ? 'live' : 'test';
@@ -74,35 +108,52 @@ function buildLineItems(planName, stripeMode) {
 }
 
 Deno.serve(async (req) => {
+  let payload = {};
   try {
+    console.log('Incoming request headers:', JSON.stringify(getSafeHeaders(req)));
+    payload = await req.json();
+    console.log('Incoming request body:', JSON.stringify(payload));
+
+    const authResult = verifyWebhookSecret(req, payload);
+    console.log('Webhook auth result:', JSON.stringify(authResult));
+
+    if (payload.debug === true) {
+      return jsonToolResponse({
+        success: true,
+        message: 'Vapi endpoint reachable',
+        secret_received: authResult.secret_received,
+        secret_valid: authResult.secret_valid,
+      });
+    }
+
+    if (!authResult.secret_valid) {
+      return jsonToolResponse({ success: false, error: 'Invalid webhook secret' });
+    }
+
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
     const stripeMode = getStripeMode();
     const stripe = getStripeClient(stripeMode);
 
-    if (!payload.buyer_confirmed_intent) {
-      return Response.json({ error: 'Buyer must confirm they want to proceed before checkout is created' }, { status: 400 });
-    }
+    if (!payload.lead_id) return validationError('lead_id');
+    if (!payload.buyer_confirmed_intent) return validationError('buyer_confirmed_intent');
 
     const selectedPlan = getPlan(payload.selected_plan);
-    if (!selectedPlan) {
-      return Response.json({ error: 'Valid selected_plan is required' }, { status: 400 });
-    }
+    if (!selectedPlan) return validationError('selected_plan');
 
     const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: payload.lead_id }, '-updated_date', 1);
     const lead = leadMatches[0];
     if (!lead) {
-      return Response.json({ error: 'Lead not found' }, { status: 404 });
+      return jsonToolResponse({ success: false, error: 'Lead not found' });
     }
 
     const email = clean(payload.email) || lead.email;
     const fullName = clean(payload.full_name) || lead.full_name;
     const businessName = clean(payload.business_name) || lead.business_name;
-    if (!email || !fullName) {
-      return Response.json({ error: 'Email and full name are required for checkout' }, { status: 400 });
-    }
+    if (!email) return validationError('email');
+    if (!fullName) return validationError('full_name');
 
     const { lineItems, mode, subscriptionConfigured, setupOnlyReason, priceMapping } = buildLineItems(selectedPlan, stripeMode);
+    console.log('Stripe checkout plan mapping:', JSON.stringify({ selectedPlan, stripeMode, priceMapping }));
     const successUrl = absoluteUrl('STRIPE_SUCCESS_URL', 'https://assistantai.com.au/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}');
     const cancelUrl = absoluteUrl('STRIPE_CANCEL_URL', 'https://assistantai.com.au/GetStartedNow?payment=cancelled');
 
@@ -144,7 +195,7 @@ Deno.serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     const now = new Date().toISOString();
-    const updatedLead = await base44.asServiceRole.entities.Lead.update(lead.id, {
+    await base44.asServiceRole.entities.Lead.update(lead.id, {
       ...lead,
       full_name: fullName,
       business_name: businessName,
@@ -172,8 +223,15 @@ Deno.serve(async (req) => {
       // Checkout must not be blocked by notification delivery.
     }
 
-    return Response.json({ success: true, stripe_mode: stripeMode, checkout_url: session.url, session_id: session.id, payment_mode: mode, subscription_configured: subscriptionConfigured, setup_only_reason: setupOnlyReason, price_mapping: priceMapping, lead: updatedLead });
+    return jsonToolResponse({
+      success: true,
+      checkout_url: session.url,
+      lead_id: lead.id,
+      selected_plan: selectedPlan,
+      next_step: 'Tell the caller the secure checkout link is ready.',
+    });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.log('Server failure:', error?.message || String(error));
+    return jsonToolResponse({ success: false, error: error?.message || 'Unknown server error' });
   }
 });

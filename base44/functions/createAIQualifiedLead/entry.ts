@@ -3,6 +3,40 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const VALID_PLANS = new Set(['Starter', 'Growth', 'Enterprise']);
 const HOT_INTENTS = new Set(['ready_to_proceed', 'urgent_ready']);
 
+function maskHeader(value) {
+  return value ? '[present-redacted]' : '[missing]';
+}
+
+function getSafeHeaders(req) {
+  return {
+    content_type: req.headers.get('content-type') || '',
+    user_agent: req.headers.get('user-agent') || '',
+    x_webhook_secret: maskHeader(req.headers.get('x-webhook-secret')),
+  };
+}
+
+function verifyWebhookSecret(req, payload = {}) {
+  const receivedSecret = req.headers.get('x-webhook-secret') || payload.x_webhook_secret || payload.webhook_secret || '';
+  const expectedSecret = Deno.env.get('VAPI_WEBHOOK_SECRET') || '';
+  return {
+    secret_received: !!receivedSecret,
+    secret_configured: !!expectedSecret,
+    secret_valid: !!receivedSecret && !!expectedSecret && receivedSecret === expectedSecret,
+  };
+}
+
+function jsonToolResponse(body) {
+  console.log('Final response:', JSON.stringify(body));
+  return Response.json(body, {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function validationError(field) {
+  return jsonToolResponse({ success: false, error: `Missing required field: ${field}` });
+}
+
 function clean(value) {
   return String(value || '').trim();
 }
@@ -55,16 +89,35 @@ async function notifyHighIntent(base44, lead) {
 }
 
 Deno.serve(async (req) => {
+  let payload = {};
   try {
+    console.log('Incoming request headers:', JSON.stringify(getSafeHeaders(req)));
+    payload = await req.json();
+    console.log('Incoming request body:', JSON.stringify(payload));
+
+    const authResult = verifyWebhookSecret(req, payload);
+    console.log('Webhook auth result:', JSON.stringify(authResult));
+
+    if (payload.debug === true) {
+      return jsonToolResponse({
+        success: true,
+        message: 'Vapi endpoint reachable',
+        secret_received: authResult.secret_received,
+        secret_valid: authResult.secret_valid,
+      });
+    }
+
+    if (!authResult.secret_valid) {
+      return jsonToolResponse({ success: false, error: 'Invalid webhook secret' });
+    }
+
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
     const now = new Date().toISOString();
 
     const email = clean(payload.email).toLowerCase();
     const phone = normalizePhone(payload.mobile_number);
-    if (!email && !phone) {
-      return Response.json({ error: 'Email or mobile number is required' }, { status: 400 });
-    }
+    if (!clean(payload.full_name)) return validationError('full_name');
+    if (!email && !phone) return validationError('email or mobile_number');
 
     const existingByEmail = email ? await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 1) : [];
     const existingByPhone = !existingByEmail[0] && phone ? await base44.asServiceRole.entities.Lead.filter({ mobile_number: phone }, '-updated_date', 1) : [];
@@ -127,8 +180,13 @@ Deno.serve(async (req) => {
     await syncGoHighLevel(base44, lead);
     await notifyHighIntent(base44, lead);
 
-    return Response.json({ success: true, lead, likely_plan_fit: likelyPlan, status });
+    return jsonToolResponse({
+      success: true,
+      lead_id: lead.id,
+      next_step: 'Lead captured.',
+    });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.log('Server failure:', error?.message || String(error));
+    return jsonToolResponse({ success: false, error: error?.message || 'Unknown server error' });
   }
 });
