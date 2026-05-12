@@ -1,4 +1,5 @@
-import { ArrowRight, CheckCircle2, Mic, Phone } from 'lucide-react';
+import { CheckCircle2, Mic, Phone } from 'lucide-react';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const ELEVENLABS_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID || 'agent_5301kpkzdmade089yktcm780dz3s';
 const ELEVENLABS_SCRIPT_ID = 'elevenlabs-convai-widget-script';
@@ -81,7 +82,7 @@ export default function LiveDemoSection() {
             Live AI Receptionist Demo
           </h2>
           <p className="mt-4 text-base text-slate-400 max-w-2xl mx-auto leading-7">
-            The live voice demo is being connected. You can still book a strategy call or view the sample call flow.
+Start a live browser voice call with the AssistantAI.com.au receptionist. It can explain pricing, recommend Starter or Growth, and escalate Enterprise for review.
           </p>
         </div>
 
@@ -94,18 +95,12 @@ export default function LiveDemoSection() {
                 <Mic className="h-5 w-5" />
               </div>
               <p className="font-semibold text-white text-base">Start the live AI voice demo</p>
-              <p id="elevenlabs-demo-status" className="mt-2 leading-6 text-slate-400 text-lg" aria-live="polite">Click Start Live Demo when you are ready. If the live widget is unavailable, this fallback stays visible.
+              <p id="elevenlabs-demo-status" className="mt-2 leading-6 text-slate-400 text-lg" aria-live="polite">Start a browser voice call with the verified AssistantAI.com.au demo receptionist. ElevenLabs remains available only as an optional backup if needed.
 
               </p>
-              <div id="elevenlabs-demo-mount" className="mt-5 flex justify-center" />
-              <button
-                type="button"
-                onClick={startElevenLabsDemo}
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
-                
-                Start Live Demo
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <div className="mt-5 flex justify-center">
+                <VapiReceptionistDemoButton showFallbackText />
+              </div>
             </div>
           </div>
 

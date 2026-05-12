@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, PhoneCall, CheckCircle2 } from 'lucide-react';
+import { Pause, Play, RotateCcw, Sparkles, Volume2, VolumeX, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 import DemoConversation, { transcript } from '@/components/demo/DemoConversation';
 import DemoAutomationPanel, { defaultWorkflowItems } from '@/components/demo/DemoAutomationPanel';
 import DemoScenarioSelector from '@/components/demo/DemoScenarioSelector';
@@ -134,8 +135,8 @@ export default function AIDemo() {
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Talk to the AI That Can Qualify and Sign Up New Clients</h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">Experience how AssistantAI handles a real enquiry — from answering the call to qualifying the buyer, recommending a plan, and moving them toward secure signup.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <a href="/#live-demo" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 font-semibold text-white">Try the AI Receptionist <ArrowRight className="h-4 w-4" /></a>
-              <Link to="/GetStartedNow" className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-8 py-3.5 font-semibold text-white">Get Started Now</Link>
+              <VapiReceptionistDemoButton className="px-8 py-3.5" showFallbackText />
+              <Link to="/GetStartedNow" className="inline-flex min-h-[3.5rem] items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-8 py-3.5 font-semibold text-white">Get Started Now</Link>
             </div>
           </motion.div>
 

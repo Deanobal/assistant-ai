@@ -2,6 +2,7 @@ import * as React from 'react';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { Mic, UserCheck, CreditCard, Database, Workflow, ArrowRight } from 'lucide-react';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const services = [
   { icon: Mic, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7.', outcomes: ['Instant call answering', 'After-hours coverage', 'Structured enquiry capture', 'Human handoff when needed'] },
@@ -46,7 +47,7 @@ export default function Services() {
               <p className="text-gray-400 mb-6 max-w-2xl mx-auto">Choose your plan, confirm your details, and proceed to secure checkout when you are ready.</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link to="/GetStartedNow" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">Get Started Now <ArrowRight className="w-4 h-4" /></Link>
-                <a href="/#live-demo" className="inline-flex items-center justify-center px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all text-sm">Talk to the AI Receptionist</a>
+                <VapiReceptionistDemoButton variant="secondary" className="min-h-0 px-8 py-3.5 text-sm" showFallbackText />
               </div>
             </div>
           </div>

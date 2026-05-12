@@ -3,6 +3,7 @@ import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle } from 'lucide-react';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const plans = [
 {
@@ -200,21 +201,7 @@ export default function Pricing() {
                     </Link>
                   )}
 
-                  {plan.secondaryCtaTo.includes('#') ? (
-                    <a
-                      href={plan.secondaryCtaTo}
-                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
-                    >
-                      {plan.secondaryCtaLabel}
-                    </a>
-                  ) : (
-                    <Link
-                      to={plan.secondaryCtaTo}
-                      className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10"
-                    >
-                      {plan.secondaryCtaLabel}
-                    </Link>
-                  )}
+                  <VapiReceptionistDemoButton variant="secondary" className="min-h-0 w-full py-3.5 text-sm" />
                   <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
                     {plan.secondaryHelper}
                   </p>
@@ -230,7 +217,7 @@ export default function Pricing() {
             className="mb-16 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-3">Not sure which plan fits?</h2>
             <p className="mx-auto max-w-3xl text-gray-300 leading-relaxed">Talk to the AI receptionist. It can ask a few questions, recommend the likely best fit, and help you start setup immediately if you are ready.</p>
-            <a href="/#live-demo" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 text-sm font-medium text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all">Talk to the AI Receptionist <ArrowRight className="w-4 h-4" /></a>
+            <div className="mt-6 flex justify-center"><VapiReceptionistDemoButton className="px-8 py-3.5 text-sm" showFallbackText /></div>
           </motion.div>
 
           <motion.div
