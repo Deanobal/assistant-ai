@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
 import { Loader2, CalendarClock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { base44 } from '@/api/base44Client';
 export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, onAvailabilityStateChange }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Mon-Fri 09:00-17:00 UTC', timezone: 'UTC' });
+  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne' });
 
   useEffect(() => {
     const loadAvailability = async () => {
@@ -21,10 +20,10 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           slotMinutes: 60,
         });
         const data = response.data;
-        setAvailability(data);
+        setAvailability({ ...data, working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne' });
         onAvailabilityStateChange?.({ isLive: true, hasSlots: (data.slots || []).length > 0, error: '' });
       } catch (loadError) {
-        setError('Live calendar availability is not ready right now, so this page will stay in request mode.');
+        setError('Submit your details and we’ll contact you to confirm the best time.');
         onAvailabilityStateChange?.({ isLive: false, hasSlots: false, error: loadError.message || 'Availability unavailable' });
       } finally {
         setLoading(false);
@@ -42,8 +41,8 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
             <CalendarClock className="w-5 h-5 text-cyan-300" />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-lg">Live Google Calendar Availability</h3>
-            <p className="text-sm text-gray-400 mt-1">Current rule: 60-minute slots, {availability.working_hours}, based on real Google Calendar availability.</p>
+            <h3 className="text-white font-semibold text-lg">Strategy Call Availability</h3>
+            <p className="text-sm text-gray-400 mt-1">Preferred availability: Monday to Friday, 9:00am–5:00pm Melbourne time.</p>
           </div>
         </div>
 
@@ -69,8 +68,8 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
                   className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
                 >
                   <div>
-                    <div className="font-medium">{format(new Date(slot.start), 'EEE d MMM')}</div>
-                    <div className="text-sm text-gray-400">{format(new Date(slot.start), 'HH:mm')} – {format(new Date(slot.end), 'HH:mm')} UTC</div>
+                    <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne' })}</div>
+                    <div className="text-sm text-gray-400">{new Date(slot.start).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} – {new Date(slot.end).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} Melbourne time</div>
                   </div>
                 </Button>
               );
@@ -78,7 +77,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           </div>
         ) : (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-gray-300">
-            Google Calendar is connected, but there are no open 60-minute slots in the next 10 days.
+            Submit your details and we’ll contact you to confirm the best time.
           </div>
         )}
       </CardContent>

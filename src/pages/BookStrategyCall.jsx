@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
@@ -12,7 +12,6 @@ import {
 } from '@/lib/booking';
 
 export default function BookStrategyCall() {
-  const [showAdminWarning, setShowAdminWarning] = useState(false);
   const [calendarAvailability, setCalendarAvailability] = useState({ isLive: false, hasSlots: false, error: '' });
   const [selectedSlot, setSelectedSlot] = useState(null);
   const hasConfiguredExternalBooking = STRATEGY_CALL_BOOKING_MODE !== 'request';
@@ -20,17 +19,6 @@ export default function BookStrategyCall() {
   const hasLiveBooking = hasGoogleCalendarLive || hasConfiguredExternalBooking;
   const isEmbeddedBooking = !hasGoogleCalendarLive && STRATEGY_CALL_BOOKING_MODE === 'embed';
   const providerLabel = hasGoogleCalendarLive ? 'Google Calendar' : STRATEGY_CALL_BOOKING_PROVIDER || 'Live Calendar';
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const authenticated = await base44.auth.isAuthenticated();
-      if (!authenticated) return;
-      const user = await base44.auth.me();
-      setShowAdminWarning(user?.role === 'admin' && !hasLiveBooking);
-    };
-
-    checkAdmin();
-  }, [hasLiveBooking]);
 
   return (
     <div>
@@ -42,17 +30,18 @@ export default function BookStrategyCall() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-14"
           >
-            <p className="text-cyan-400 mb-3 text-base font-medium">{hasLiveBooking ? 'LIVE STRATEGY CALL BOOKING' : 'STRATEGY CALL REQUEST'}</p>
+            <p className="text-cyan-400 mb-3 text-base font-medium">STRATEGY CALL</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-              {hasLiveBooking ? 'Pick a Live Strategy Call Slot' : 'Request Your Free Strategy Call'}
+              Request a Strategy Call
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              {hasGoogleCalendarLive
-                ? 'Choose a live 60-minute slot from Google Calendar, then submit your details to book it instantly.'
-                : hasLiveBooking
-                  ? 'Tell us about your business first, then continue into the live booking flow to choose an available strategy call time.'
-                  : 'Tell us about your business and request a strategy call. We’ll review your details and send the best next step.'}
+              Tell us what you want to improve and we’ll help map the right AssistantAI setup for your business.
             </p>
+            {!hasLiveBooking && (
+              <p className="mx-auto mt-4 max-w-2xl rounded-2xl border border-cyan-400/15 bg-cyan-400/5 px-4 py-3 text-sm text-cyan-100">
+                Submit your details and we’ll contact you to confirm the best time.
+              </p>
+            )}
           </motion.div>
 
           <div className="grid lg:grid-cols-5 gap-10">
@@ -69,7 +58,7 @@ export default function BookStrategyCall() {
               />
 
               <LeadForm
-                submitLabel={hasGoogleCalendarLive ? 'Book 60-Minute Strategy Call' : hasLiveBooking ? 'Save Details and Continue' : 'Request Free Strategy Call'}
+                submitLabel={hasGoogleCalendarLive ? 'Book 60-Minute Strategy Call' : hasLiveBooking ? 'Save Details and Continue' : 'Request Strategy Call'}
                 successTitle={hasGoogleCalendarLive ? 'Strategy Call Confirmed' : isEmbeddedBooking ? 'Details Saved — Continue to Booking' : hasLiveBooking ? 'Details Saved — Continue to Booking' : 'Strategy Call Request Received'}
                 successText={hasGoogleCalendarLive
                   ? 'Your strategy call is confirmed. We’ve added the booking details below and will send reminder information before the meeting.'
@@ -81,10 +70,10 @@ export default function BookStrategyCall() {
                 matchedLeadStatus="Contacted"
                 createStatus="New Lead"
                 nextActionText={hasGoogleCalendarLive
-                  ? 'Lead selected a live Google Calendar slot and booking is being created.'
+                  ? 'Lead selected a strategy call slot and booking is being created.'
                   : hasLiveBooking
-                    ? 'Lead requested a strategy call and still needs external booking confirmation.'
-                    : 'Follow up on strategy call request and send booking next step.'}
+                    ? 'Lead requested a strategy call and needs booking confirmation.'
+                    : 'Contact lead to confirm the best strategy call time.'}
                 bookingIntent={true}
                 bookingSource="strategy_call_page"
                 enquiryTypeOverride="other"
@@ -108,7 +97,7 @@ export default function BookStrategyCall() {
                     message: form.message,
                     slotStart: selectedSlot.start,
                     slotEnd: selectedSlot.end,
-                    timezone: 'UTC',
+                    timezone: 'Australia/Melbourne',
                   });
                   return response.data;
                 } : undefined}
@@ -125,17 +114,16 @@ export default function BookStrategyCall() {
                 bookingUrl={hasGoogleCalendarLive ? 'googlecalendar-live' : STRATEGY_CALL_BOOKING_URL || STRATEGY_CALL_BOOKING_EMBED_URL}
                 bookingMode={hasGoogleCalendarLive ? 'calendar' : STRATEGY_CALL_BOOKING_MODE}
                 bookingProvider={providerLabel}
-                adminWarning={showAdminWarning ? 'Admin warning: Google Calendar live booking is not available yet, so the page is staying in honest request mode.' : ''}
                 intro={hasGoogleCalendarLive
-                  ? 'Choose a live Google Calendar slot, then submit the short form to create the booking directly in your calendar.'
+                  ? 'Choose a suitable strategy call time, then submit the short form to confirm your details.'
                   : hasLiveBooking
-                    ? 'Complete the short form first so AssistantAI can save the lead properly before the live scheduling step continues.'
-                    : 'Complete the short form to send a strategy call request. No live calendar is connected yet.'}
+                    ? 'Complete the short form first, then choose a suitable time for your strategy call.'
+                    : 'Submit your details and we’ll contact you to confirm the best time.'}
                 responseText={hasGoogleCalendarLive
-                  ? 'Calendar updates are monitored for follow-up actions, and reminder emails are sent before scheduled meetings.'
+                  ? 'Monday to Friday, 9:00am–5:00pm Melbourne time.'
                   : hasLiveBooking
-                    ? 'Live scheduling is available after the form step, but calendar confirmation still happens in the external booking tool.'
-                    : 'We usually respond within one business day when a live calendar is not connected.'}
+                    ? 'We’ll confirm your booking details after you choose a suitable time.'
+                    : 'Monday to Friday, 9:00am–5:00pm Melbourne time.'}
               />
             </motion.div>
           </div>

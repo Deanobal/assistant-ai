@@ -8,13 +8,11 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
     ? [
         'Complete the short form so AssistantAI stores the lead details correctly.',
         bookingMode === 'embed'
-          ? 'Choose an available slot in the embedded booking widget.'
+          ? 'Choose an available strategy call time.'
           : bookingMode === 'calendar'
-            ? 'Choose an available slot from the live Google Calendar availability list.'
-            : `Continue to ${bookingProvider} to choose an available slot.`,
-        bookingMode === 'calendar'
-          ? 'The booking is created directly in Google Calendar once you submit the form.'
-          : 'Your meeting is only fully booked once the external calendar confirms it.',
+            ? 'Choose an available strategy call time.'
+            : `Continue to ${bookingProvider} to choose an available time.`,
+        'We’ll confirm the details and prepare for your strategy call.',
       ]
     : [
         'We review your enquiry and business needs.',
@@ -49,12 +47,12 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
                 <CalendarDays className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Live Booking Enabled</h3>
-                <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `A ${bookingProvider} widget is ready on this page after the form step.` : bookingMode === 'calendar' ? 'Live Google Calendar slots are shown on this page and bookings are created directly after form submission.' : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
+                <h3 className="text-white font-semibold">Choose a Suitable Time</h3>
+                <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `You can choose a time after the form step.` : bookingMode === 'calendar' ? 'Available strategy call times are shown on this page.' : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
-              {bookingMode === 'embed' ? `${bookingProvider} embed is configured for live slot selection.` : bookingMode === 'calendar' ? 'Google Calendar is connected for live slot selection and booking sync.' : `${bookingProvider} booking link is configured for live slot selection.`}
+              Monday to Friday, 9:00am–5:00pm Melbourne time.
             </div>
           </CardContent>
         </Card>
@@ -66,18 +64,14 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
                 <CalendarDays className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Request Flow Only</h3>
+                <h3 className="text-white font-semibold">Strategy Call Request</h3>
                 <p className="text-sm text-gray-400">Submit the form and our team will arrange the next step for your strategy call.</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
-              No live booking URL or widget is connected yet, so public users see an honest request flow instead of fake scheduling.
+              Submit your details and we’ll contact you to confirm the best time.
             </div>
-            {adminWarning && (
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                {adminWarning}
-              </div>
-            )}
+
           </CardContent>
         </Card>
       )}

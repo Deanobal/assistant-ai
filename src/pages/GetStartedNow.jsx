@@ -127,7 +127,7 @@ export default function GetStartedNow() {
               {isCheckoutReturn ? 'Checkout Update' : selectedPlan ? `Start with the ${selectedPlan.name} Plan` : 'Choose Your Plan First'}
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready.
+              Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready. Prices are in AUD and exclude GST unless stated otherwise.
             </p>
           </motion.div>
 

@@ -37,7 +37,7 @@ export async function submitLeadCapture(form, options = {}) {
     industry: form.industry || '',
     enquiry_type: options.enquiryTypeOverride || form.enquiry_type || 'other',
     monthly_enquiry_volume: form.monthly_enquiry_volume || '',
-    source_page: sourcePage,
+    source_page: options.sourcePageOverride || sourcePage,
     message: form.message?.trim() || '',
     assigned_owner: '',
     lead_score: buildLeadScore(form.monthly_enquiry_volume),

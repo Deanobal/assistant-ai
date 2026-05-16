@@ -9,8 +9,8 @@ const plans = [
 {
   name: 'Starter',
   slug: 'starter',
-  setup: '$1,500',
-  monthly: '$497',
+  setup: '$1,500 setup AUD ex. GST',
+  monthly: '$497/month AUD ex. GST',
   desc: 'For missed-call coverage, lead capture, and simple follow-up.',
   valueLine: 'Best for missed-call coverage, lead capture, and simple follow-up.',
   features: [
@@ -29,8 +29,8 @@ const plans = [
 {
   name: 'Growth',
   slug: 'growth',
-  setup: '$3,000',
-  monthly: '$1,500',
+  setup: '$3,000 setup AUD ex. GST',
+  monthly: '$1,500/month AUD ex. GST',
   desc: 'For call handling, booking support, customer updates, and SMS/email follow-up.',
   valueLine: 'Best for call handling, booking support, customer updates, and SMS/email follow-up.',
   features: [
@@ -49,8 +49,8 @@ const plans = [
 {
   name: 'Enterprise',
   slug: 'enterprise',
-  setup: 'From $7,500',
-  monthly: 'From $3,000',
+  setup: 'From $7,500 setup AUD ex. GST',
+  monthly: 'From $3,000/month AUD ex. GST',
   desc: 'For multi-location, custom workflows, advanced integrations, or complex routing.',
   valueLine: 'Best for multiple locations, custom workflows, advanced integrations, or complex routing.',
   features: [
@@ -121,7 +121,7 @@ export default function Pricing() {
               Clear Pricing. Done-For-You Setup.
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              Choose Starter or Growth to begin secure signup, or request a custom review for Enterprise and complex workflows.
+              Choose Starter or Growth to begin secure signup, or request a custom review for Enterprise and complex workflows. Prices are in AUD and exclude GST unless stated otherwise.
             </p>
           </motion.div>
 
@@ -152,10 +152,9 @@ export default function Pricing() {
 
                 <div className="mb-2 mt-2 min-h-[5.5rem]">
                   <div className="flex flex-wrap items-end gap-2">
-                    <span className="text-4xl font-bold text-white">{plan.monthly}</span>
-                    <span className="pb-1 text-sm text-gray-500">/month</span>
+                    <span className="text-3xl font-bold text-white">{plan.monthly}</span>
                   </div>
-                  <p className="mt-2 text-base text-gray-500">{plan.setup} setup fee</p>
+                  <p className="mt-2 text-base text-gray-500">{plan.setup}</p>
                 </div>
                 <p className="min-h-[4.5rem] text-sm leading-relaxed text-gray-300 mt-3 mb-8">{plan.valueLine}</p>
 

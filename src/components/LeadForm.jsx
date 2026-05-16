@@ -314,11 +314,14 @@ export default function LeadForm({
           <div className="space-y-2">
             <Label className="text-gray-400 text-sm">Preferred Meeting Date</Label>
             <Input
-              type="date"
+              type="text"
+              inputMode="numeric"
               value={form.preferred_meeting_date}
               onChange={(e) => setForm({ ...form, preferred_meeting_date: e.target.value })}
-              className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20"
+              className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+              placeholder="dd/mm/yyyy"
             />
+            <p className="text-xs text-gray-500">Preferred date, Australian format: dd/mm/yyyy</p>
           </div>
           <div className="space-y-2">
             <Label className="text-gray-400 text-sm">Preferred Meeting Time</Label>

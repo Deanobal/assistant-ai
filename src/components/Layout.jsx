@@ -25,7 +25,7 @@ function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 xl:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png"
@@ -35,8 +35,8 @@ function Navbar() {
           <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
         </Link>
 
-        <div className="hidden lg:flex items-center justify-end gap-4 flex-1 min-w-0">
-          <div className="flex items-center gap-4 min-w-0 overflow-hidden">
+        <div className="hidden min-[1101px]:flex items-center justify-end gap-3 xl:gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-3 xl:gap-4 min-w-0">
             {navLinks.map((link) =>
               link.path.includes('#') ? (
                 <a
@@ -70,7 +70,7 @@ function Navbar() {
         </div>
 
         <button
-          className="lg:hidden text-white"
+          className="min-[1101px]:hidden text-white"
           onClick={() => setMobileOpen(!mobileOpen)}>
 
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -78,7 +78,7 @@ function Navbar() {
       </div>
 
       {mobileOpen &&
-        <div className="lg:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
+        <div className="min-[1101px]:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
 
             <div className="px-6 py-4 space-y-3">
               {mobileNavLinks.map((link) =>
@@ -153,12 +153,6 @@ function Footer() {
               <p className="text-base">sales@assistantai.com.au</p>
               <Link to="/Platform" className="text-base block hover:text-cyan-400 transition-colors">Platform Preview</Link>
               <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
-              <Link to="/Dashboard" className="block hover:text-cyan-400 transition-colors">Admin Login</Link>
-              <div className="flex gap-3 pt-2">
-                <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">LinkedIn</span>
-                <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">Facebook</span>
-                <span className="text-gray-600 hover:text-cyan-400 transition-colors cursor-pointer">Instagram</span>
-              </div>
             </div>
           </div>
         </div>
