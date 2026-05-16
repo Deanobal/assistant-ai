@@ -22,7 +22,7 @@ export default function BenefitsSection() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <p className="text-cyan-400 mb-3 text-lg font-medium">WHY ASSISTANT AI</p>
+          <p className="text-cyan-400 mb-3 text-lg font-medium">WHY ASSISTANTAI</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Why It Matters for Lead Capture, Speed, and Growth</h2>
         </motion.div>
 

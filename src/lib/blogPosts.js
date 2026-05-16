@@ -9,7 +9,7 @@ export const blogPosts = [
     body: [
       'Small service businesses routinely miss incoming calls because staff are on jobs, dealing with customers or only available during business hours. Research shows that 74.1% of calls to contractors go unanswered and that 85% of callers whose calls aren’t answered don’t call back.',
       'Each missed call is expensive—studies put the average lost revenue at AU$200–3,500 per call, adding up to more than AU$100k in lost revenue each year for a typical trades business.',
-      'An AI receptionist answers every call 24/7, captures caller details and schedules appointments so you never miss a job. By ensuring that every inquiry is greeted professionally, you convert more leads and stop losing revenue to missed calls.'
+      'An AI receptionist answers every call 24/7, captures caller details and schedules appointments so you never miss a job. By ensuring that every enquiry is greeted professionally, you convert more leads and stop losing revenue to missed calls.'
     ]
   },
   {
@@ -22,7 +22,7 @@ export const blogPosts = [
     body: [
       'Staffing a front desk around the clock is expensive and often impossible for small businesses. A virtual AI receptionist provides full coverage at a fraction of the cost of hiring additional staff.',
       'Because AI works per‑minute, your costs scale predictably with call volume and there are no salaries or benefits to pay. The AI never takes a lunch break or goes on holiday, so your business is reachable 24 hours a day, 7 days a week.',
-      'This constant availability improves customer satisfaction and ensures that urgent inquiries are captured even outside of normal business hours. In addition, AI receptionists deliver consistent, professional greetings and can route calls to the right person or take messages without human error.'
+      'This constant availability improves customer satisfaction and ensures that urgent enquiries are captured even outside of normal business hours. In addition, AI receptionists deliver consistent, professional greetings and can route calls to the right person or take messages without human error.'
     ]
   },
   {
@@ -35,7 +35,7 @@ export const blogPosts = [
     body: [
       'Customers expect quick responses, and many will move on if they reach voicemail. Studies show that 80% of callers hang up rather than leave a message and that most consumers won’t call back if their initial call isn’t answered.',
       'An AI receptionist keeps your phone lines open 24/7, greeting every caller and booking appointments even after your team has gone home.',
-      'By capturing after‑hours inquiries you can convert leads that previously would have been lost, improving your reputation for responsiveness and helping you stand out from competitors who are only available during office hours.'
+      'By capturing after‑hours enquiries you can convert leads that previously would have been lost, improving your reputation for responsiveness and helping you stand out from competitors who are only available during office hours.'
     ]
   },
   {
@@ -98,7 +98,7 @@ export const blogPosts = [
     category: 'CRM Integration',
     date: 'April 4, 2026',
     body: [
-      'Modern AI receptionists integrate seamlessly with customer‑relationship management (CRM) systems like HubSpot and Zoho. Integration enables the AI to access customer data in real time, personalising interactions by retrieving purchase history or previous inquiries.',
+      'Modern AI receptionists integrate seamlessly with customer‑relationship management (CRM) systems like HubSpot and Zoho. Integration enables the AI to access customer data in real time, personalising interactions by retrieving purchase history or previous enquiries.',
       'The AI can automate lead qualification, ask preset questions and log responses directly into the CRM so sales teams receive high‑quality leads. It also updates CRM records automatically, including call details, follow‑up tasks and changes to contact information.',
       'With real‑time data sync and multi‑channel support, AI receptionists keep your customer data accurate across phone calls, chat and email. This eliminates manual data entry, reduces errors and ensures that everyone in your team has up‑to‑date information.'
     ]
@@ -138,7 +138,7 @@ export const blogPosts = [
     date: 'April 4, 2026',
     body: [
       'Tradespeople often juggle tools and phones simultaneously. It\'s no surprise that 74% of contractors\' calls go unanswered. With each missed call costing up to AU$3,500, ignoring the phone means losing significant revenue.',
-      'An AI receptionist answers calls on behalf of plumbers, electricians and other trades, collects job details and books appointments while workers stay focused on their tasks. It can handle after‑hours inquiries, collect photos or descriptions of the job and provide immediate quotes or next‑steps instructions.',
+      'An AI receptionist answers calls on behalf of plumbers, electricians and other trades, collects job details and books appointments while workers stay focused on their tasks. It can handle after‑hours enquiries, collect photos or descriptions of the job and provide immediate quotes or next‑steps instructions.',
       'By keeping your calendar full and reducing administrative overhead, AI helps trades businesses grow without hiring additional staff.'
     ]
   },
@@ -151,7 +151,7 @@ export const blogPosts = [
     date: 'April 4, 2026',
     body: [
       'Cleaning and home‑services businesses rely on consistent bookings and efficient scheduling. When owners are out in the field or working on jobs, they can miss calls and messages.',
-      'AI receptionists ensure every inquiry is answered professionally, gather the information needed to provide a quote and schedule cleaning appointments instantly. They can also send reminders to clients, reschedule when necessary and collect feedback after a job is completed.',
+      'AI receptionists ensure every enquiry is answered professionally, gather the information needed to provide a quote and schedule cleaning appointments instantly. They can also send reminders to clients, reschedule when necessary and collect feedback after a job is completed.',
       'With integration into your CRM or booking system, the AI eliminates manual data entry and prevents double‑bookings. By automating your front‑of‑house operations you can take on more clients without increasing administrative workload.'
     ]
   },
@@ -171,12 +171,12 @@ export const blogPosts = [
   {
     slug: 'ai-privacy-risks',
     title: 'Protecting Your Data: AI Privacy Risks and How to Avoid Them',
-    metaDescription: 'Growing AI use increases data privacy risks—78% of organizations use AI; 20% have breaches; choose enterprise tools and policies to stay safe.',
+    metaDescription: 'Growing AI use increases data privacy risks—78% of organisations use AI; 20% have breaches; choose enterprise tools and policies to stay safe.',
     excerpt: 'As AI adoption grows, businesses need stronger policies and safer tools to reduce privacy and security risks.',
     category: 'AI Privacy',
     date: 'April 4, 2026',
     body: [
-      'AI tools boost productivity but come with data‑privacy considerations. A 2026 privacy guide notes that 78% of organizations used AI in 2025, up from 55% in 2023. More than 27% of ChatGPT consumer messages in June 2025 were work‑related, meaning employees often paste business data into AI tools.',
+      'AI tools boost productivity but come with data‑privacy considerations. A 2026 privacy guide notes that 78% of organisations used AI in 2025, up from 55% in 2023. More than 27% of ChatGPT consumer messages in June 2025 were work‑related, meaning employees often paste business data into AI tools.',
       'Sensitive information—customer details, financial projections, HR data—may be stored and used to train AI models. Research shows that 34.8% of ChatGPT inputs contained sensitive data, up from 11% in 2023. Shadow AI (employees using unapproved tools) contributed to data breaches at 20% of organisations, and security researchers found over 225,000 stolen ChatGPT credentials for sale on dark‑web markets.',
       'To stay safe, use enterprise AI tools that don’t train on your data, implement strict data‑handling policies and educate staff about the risks of sharing sensitive information with consumer AI.'
     ]
@@ -216,21 +216,21 @@ export const blogPosts = [
     date: 'April 4, 2026',
     body: [
       'AI adoption is accelerating, and experts predict that 75% of businesses will implement AI‑driven process automation by 2026. For customer service, this means voice and chat AI will become the default way customers interact with businesses.',
-      'Expect AI assistants to handle routine inquiries, schedule appointments, and even process payments seamlessly. Advanced systems will integrate with wearables and IoT devices to provide proactive service—for example, an AI assistant might schedule HVAC maintenance when sensors detect issues.',
+      'Expect AI assistants to handle routine enquiries, schedule appointments, and even process payments seamlessly. Advanced systems will integrate with wearables and IoT devices to provide proactive service—for example, an AI assistant might schedule HVAC maintenance when sensors detect issues.',
       'As labour shortages persist, AI will help service businesses decouple revenue from headcount, lifting productivity by up to 8%. Staying ahead of these trends will ensure your business remains competitive.'
     ]
   },
   {
     slug: 'getting-started-with-ai-implementation-checklist',
     title: 'Getting Started with AI: Implementation Checklist',
-    metaDescription: 'Quick wins like chatbots and automated scheduling reduce response time by 50% and missed inquiries by 30%.',
+    metaDescription: 'Quick wins like chatbots and automated scheduling reduce response time by 50% and missed enquiries by 30%.',
     excerpt: 'A phased rollout makes AI easier to adopt, starting with quick wins that improve response time and reduce missed enquiries.',
     category: 'Implementation',
     date: 'April 4, 2026',
     body: [
       'Implementing AI can seem daunting, but breaking it into phases makes it manageable. Start with quick wins: install an AI chatbot on your website and WhatsApp to answer FAQs, capture leads and book appointments. Set up automatic email and WhatsApp responses for common questions.',
       'Implement appointment scheduling via tools like Calendly and connect it to your calendar. Once these basics are in place, move on to workflow automation—link your CRM, invoicing and marketing tools using platforms like Make.com or n8n.',
-      'The result? A 50% reduction in response time and 30% fewer missed inquiries. By following a phased approach you can adopt AI without overwhelming your team.'
+      'The result? A 50% reduction in response time and 30% fewer missed enquiries. By following a phased approach you can adopt AI without overwhelming your team.'
     ]
   },
   {
