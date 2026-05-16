@@ -47,11 +47,13 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
     };
   }, []);
 
-  const buttonLabel = !isConfigured || fallbackVisible || isBusy
-    ? 'AI Receptionist Demo Connecting'
+  const buttonLabel = isBusy
+    ? 'Connecting...'
     : isLive
       ? 'End Call'
-      : 'Talk to Our AI Receptionist';
+      : (!isConfigured || fallbackVisible)
+        ? 'Demo Temporarily Connecting'
+        : 'Talk to Our AI Receptionist';
 
   const handleClick = async () => {
     if (!isConfigured) {
@@ -120,6 +122,9 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       </Button>
       {(showFallbackText || fallbackVisible) && !isConfigured && (
         <p className="max-w-sm text-sm leading-relaxed text-slate-400">{FALLBACK_MESSAGE}</p>
+      )}
+      {isLive && (
+        <p className="max-w-sm text-sm leading-relaxed text-cyan-300">Listening...</p>
       )}
       {fallbackVisible && isConfigured && (
         <p className="max-w-sm text-sm leading-relaxed text-slate-400">{FALLBACK_MESSAGE}</p>
