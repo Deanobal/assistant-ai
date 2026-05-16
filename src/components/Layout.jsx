@@ -124,7 +124,7 @@ function Footer() {
 
               <span className="text-white font-semibold text-lg">AssistantAI</span>
             </div>
-            <p className="max-w-sm text-base leading-7 text-gray-500">Premium AI automation for Australian service businesses, designed to answer calls, capture leads, sync systems, and automate follow-up with a more productised service experience.
+            <p className="max-w-sm text-base leading-7 text-gray-500">Premium AI reception and follow-up for Australian service businesses, designed to answer calls, capture enquiries, reduce admin, and help more leads become paying clients.
 
             </p>
             <p className="mt-4 text-base leading-7 text-gray-600">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>

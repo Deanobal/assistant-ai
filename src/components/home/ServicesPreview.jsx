@@ -2,11 +2,11 @@ import { Phone, UserCheck, CalendarCheck, Database, MessageSquareText, PhoneForw
 
 const cards = [
   { icon: Phone, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7 so ready buyers do not get left waiting.' },
-  { icon: UserCheck, title: 'AI Sales Qualifier', desc: 'Qualifies live prospects and recommends whether Starter, Growth, or Enterprise is the right fit.' },
-  { icon: CalendarCheck, title: 'AI Booking Assistant', desc: 'Turns inbound demand into booked jobs, appointments, and scheduled next steps faster.' },
-  { icon: Database, title: 'CRM + Pipeline Sync', desc: 'Keeps lead records, contact details, notes, and pipeline status updated automatically.' },
-  { icon: MessageSquareText, title: 'Payment + Signup Flow', desc: 'Creates secure checkout for ready Starter and Growth buyers after plan review.' },
-  { icon: PhoneForwarded, title: 'Onboarding Trigger', desc: 'Starts fulfilment workflows after confirmed payment so setup can begin immediately.' },
+  { icon: UserCheck, title: 'Enquiry Qualification', desc: 'Asks the right questions and helps work out whether Starter, Growth, or Enterprise is the right fit.' },
+  { icon: CalendarCheck, title: 'Booking Support', desc: 'Helps turn inbound demand into booked jobs, appointments, and scheduled next steps faster.' },
+  { icon: Database, title: 'Organised Customer Details', desc: 'Keeps contact details, notes, and follow-up needs clear for your team.' },
+  { icon: MessageSquareText, title: 'Secure Signup', desc: 'Guides ready Starter and Growth buyers toward secure checkout after they confirm.' },
+  { icon: PhoneForwarded, title: 'Setup Underway', desc: 'Once payment is complete, your setup details are prepared so we can begin.' },
 ];
 
 export default function ServicesPreview() {
@@ -15,7 +15,7 @@ export default function ServicesPreview() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <p className="text-cyan-400 text-lg font-medium mb-3">CORE FEATURES</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">AI That Answers, Qualifies, Takes Payment, and Starts Onboarding</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">AI That Answers, Qualifies, Follows Up, and Helps Buyers Start</h2>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

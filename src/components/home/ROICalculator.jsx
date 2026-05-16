@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { Calculator, DollarSign, PhoneCall, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const CAPTURE_RATE = 0.95;
-const CONVERSION_RATE = 0.35;
+const CAPTURE_RATE = 0.7;
+const CONVERSION_RATE = 0.2;
 
 export default function ROICalculator() {
   const [missedCalls, setMissedCalls] = React.useState(40);
@@ -16,10 +16,10 @@ export default function ROICalculator() {
   const yearlyRevenue = monthlyRevenue * 12;
 
   const resultCards = [
-  { label: 'Captured leads', value: captured, helper: '95% answer rate' },
-  { label: 'New jobs', value: newJobs, helper: '35% conversion' },
-  { label: 'Monthly revenue', value: `$${monthlyRevenue.toLocaleString()}`, helper: 'Potential revenue captured' },
-  { label: 'Yearly revenue', value: `$${yearlyRevenue.toLocaleString()}`, helper: 'Projected over 12 months' }];
+  { label: 'Example enquiries captured', value: captured, helper: 'Adjustable estimate' },
+  { label: 'Example new jobs', value: newJobs, helper: 'Adjustable estimate' },
+  { label: 'Example monthly value', value: `$${monthlyRevenue.toLocaleString()}`, helper: 'Based on your inputs' },
+  { label: 'Example yearly value', value: `$${yearlyRevenue.toLocaleString()}`, helper: 'Based on your inputs' }];
 
 
   return (
@@ -39,7 +39,7 @@ export default function ROICalculator() {
             <span className="text-sm font-medium text-cyan-300">Revenue Calculator</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Reveal The Revenue Your Missed Calls Could Capture
+            Estimate What Missed Calls Could Be Worth
           </h2>
           <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-400 text-lg text-center">Move the sliders to estimate how much potential revenue AssistantAI.com.au could help capture by answering missed calls, qualifying leads, and moving customers to the next step.
 
@@ -120,14 +120,14 @@ export default function ROICalculator() {
               </div>
 
               <div className="mt-5 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-5">
-                <p className="text-white/70 text-base">Revenue you could be capturing</p>
+                <p className="text-white/70 text-base">Example value of captured enquiries</p>
                 <p className="mt-1 text-3xl font-bold text-white">${monthlyRevenue.toLocaleString()}<span className="text-lg font-normal text-white/70">/mo</span></p>
                 <p className="mt-1 text-white/60 text-sm">${yearlyRevenue.toLocaleString()} per year</p>
               </div>
 
               <Link
-                to="/BookStrategyCall"
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-white transition-colors hover:bg-white/[0.08] font-medium text-base">Book a free strategy call
+                to="/GetStartedNow"
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-white transition-colors hover:bg-white/[0.08] font-medium text-base">Get Started Now
 
 
 
@@ -136,7 +136,7 @@ export default function ROICalculator() {
           </div>
         </motion.div>
 
-        <p className="mt-4 text-center leading-6 text-slate-600 text-sm">Assumptions: 95% of missed calls are answered by the AI receptionist, 35% of captured leads convert into jobs, and revenue is calculated from the selected average job value.
+        <p className="mt-4 text-center leading-6 text-slate-600 text-sm">This calculator is an example only. Results depend on call volume, job value, follow-up speed, and your sales process.
 
         </p>
       </div>

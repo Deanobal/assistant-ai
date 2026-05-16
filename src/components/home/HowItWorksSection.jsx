@@ -1,29 +1,29 @@
-import { PhoneCall, ClipboardList, CalendarCheck, RefreshCw } from 'lucide-react';
+import { PhoneCall, ClipboardList, CreditCard, Rocket } from 'lucide-react';
 
 const steps = [
   {
     icon: PhoneCall,
     number: '01',
-    heading: 'Answers Instantly',
-    description: 'The AI receptionist picks up every call immediately — no hold music, no missed enquiries, 24/7.',
+    heading: 'Your customer calls',
+    description: 'AssistantAI answers instantly, even after hours, so the enquiry is not lost.',
   },
   {
     icon: ClipboardList,
     number: '02',
-    heading: 'Qualifies the Enquiry',
-    description: 'Asks the right questions to capture name, contact details, urgency level, and job type before anything else.',
+    heading: 'The AI qualifies the enquiry',
+    description: 'It asks the right questions, captures the details, and works out whether the buyer fits Starter, Growth, or Enterprise.',
   },
   {
-    icon: CalendarCheck,
+    icon: CreditCard,
     number: '03',
-    heading: 'Recommends the Plan',
-    description: 'Identifies whether the buyer likely fits Starter, Growth, or Enterprise and keeps Enterprise deals on a custom review path.',
+    heading: 'Ready buyers can start now',
+    description: 'Starter and Growth buyers can choose a plan and move to secure checkout without waiting for a callback.',
   },
   {
-    icon: RefreshCw,
+    icon: Rocket,
     number: '04',
-    heading: 'Payment and Onboarding',
-    description: 'For ready Starter and Growth buyers, secure checkout is created and onboarding begins after Stripe confirms payment.',
+    heading: 'Setup begins after payment',
+    description: 'Once payment is complete, your setup begins.',
   },
 ];
 
@@ -37,10 +37,10 @@ export default function HowItWorksSection() {
             <span className="text-sm font-medium text-cyan-300">How it works</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            From First Ring to Paid Onboarding
+            From Missed Call to New Client
           </h2>
           <p className="mt-4 text-base text-slate-400 max-w-xl mx-auto leading-7">
-            Answers, qualifies, recommends, and starts onboarding when payment is confirmed.
+            A faster path from first enquiry to booked work, secure signup, and setup.
           </p>
         </div>
 

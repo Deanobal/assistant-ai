@@ -11,68 +11,60 @@ const plans = [
   slug: 'starter',
   setup: '$1,500',
   monthly: '$497',
-  desc: 'Simple call capture and follow-up for missed-call coverage.',
+  desc: 'For missed-call coverage, lead capture, and simple follow-up.',
   valueLine: 'Best for missed-call coverage, lead capture, and simple follow-up.',
   features: [
   'Done-for-you setup',
-  'Monthly management',
-  'Support included',
-  'Reporting included',
-  'AI call handling and lead capture'],
+  'Missed-call coverage',
+  'Lead capture',
+  'Simple follow-up',
+  'Support included'],
 
   featured: false,
   directStart: false,
   primaryCtaLabel: 'Choose Starter',
   primaryCtaTo: '/GetStartedNow?plan=starter',
-  secondaryCtaLabel: 'Talk to AI Receptionist',
-  secondaryCtaTo: '/#live-demo',
-  secondaryHelper: 'Preselects Starter, with the option to change plan before payment.'
+  secondaryHelper: 'Choose Starter and review your details before payment.'
   },
 {
   name: 'Growth',
   slug: 'growth',
   setup: '$3,000',
   monthly: '$1,500',
-  desc: 'Full front-end revenue system with booking, CRM, SMS/email follow-up, and reporting.',
-  valueLine: 'Best for call handling, bookings, CRM updates, SMS/email follow-up, and reporting.',
+  desc: 'For call handling, booking support, customer updates, and SMS/email follow-up.',
+  valueLine: 'Best for call handling, booking support, customer updates, and SMS/email follow-up.',
   features: [
   'Done-for-you setup',
-  'Monthly management',
-  'Optimisation included',
-  'Support included',
-  'Reporting included',
-  'CRM, calendar, and follow-up automation'],
+  'AI call handling',
+  'Booking support',
+  'Customer details stay organised',
+  'SMS/email follow-up'],
 
   featured: true,
   directStart: true,
   primaryCtaLabel: 'Choose Growth',
   primaryCtaTo: '/GetStartedNow?plan=growth',
-  secondaryCtaLabel: 'Talk to AI Receptionist',
-  secondaryCtaTo: '/#live-demo',
-  secondaryHelper: 'Preselects Growth, with the option to change plan before payment.'
+  secondaryHelper: 'Choose Growth and review your details before payment.'
   },
 {
   name: 'Enterprise',
   slug: 'enterprise',
-  setup: '$7,500+',
-  monthly: '$3,000+',
-  desc: 'Custom multi-location or advanced workflow system for complex operations.',
-  valueLine: 'Best for multiple locations, custom workflows, advanced integrations, or compliance needs.',
+  setup: 'From $7,500',
+  monthly: 'From $3,000',
+  desc: 'For multi-location, custom workflows, advanced integrations, or complex routing.',
+  valueLine: 'Best for multiple locations, custom workflows, advanced integrations, or complex routing.',
   features: [
-  'Advanced setup',
-  'Monthly management',
-  'Optimisation included',
-  'Support included',
-  'Reporting included',
-  'Custom integrations and workflow design'],
+  'Custom setup',
+  'Multi-location support',
+  'Advanced integrations',
+  'Complex routing',
+  'Custom review'],
 
   featured: false,
   directStart: false,
   primaryCtaLabel: 'Request Custom Review',
-  primaryCtaTo: '/BookStrategyCall',
-  secondaryCtaLabel: 'Talk to AI Receptionist',
-  secondaryCtaTo: '/#live-demo',
-  secondaryHelper: 'Enterprise is qualified and escalated for custom review.'
+  primaryCtaTo: '/Contact',
+  secondaryHelper: 'Enterprise and complex builds are reviewed before setup.'
   }];
 
 
@@ -94,8 +86,8 @@ const faqs = [
   a: 'Yes. We can connect appointment workflows to your calendar and booking process.'
 },
 {
-  q: 'What tools does it integrate with?',
-  a: 'Common setups include CRM systems, Google or Outlook Calendar, and SMS follow-up tools.'
+q: 'What tools can it work with?',
+a: 'Common setups include customer management tools, Google or Outlook Calendar, and SMS follow-up tools.'
 },
 {
   q: 'Can I upgrade later?',
@@ -111,8 +103,8 @@ export default function Pricing() {
   return (
     <>
       <SEO
-        title="Pricing | AI Automation System for Service Businesses | AssistantAI"
-        description="Review AssistantAI pricing for an AI assistant and AI receptionist with lead capture, job booking, follow-up automation, CRM integration, and service business automation."
+        title="Pricing | AI Receptionist Plans for Service Businesses | AssistantAI"
+        description="Review AssistantAI pricing for missed-call coverage, lead capture, booking support, follow-up, and secure signup."
         canonicalPath="/Pricing"
       />
       <div>
@@ -126,10 +118,10 @@ export default function Pricing() {
 
             <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING</p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Choose the Right AI Revenue System
+              Clear Pricing. Done-For-You Setup.
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              Talk to the AI receptionist, choose Starter or Growth, review your selected plan, and proceed to secure checkout only when you are ready.
+              Choose Starter or Growth to begin secure signup, or request a custom review for Enterprise and complex workflows.
             </p>
           </motion.div>
 
@@ -247,7 +239,7 @@ export default function Pricing() {
             viewport={{ once: true }}
             className="mt-20 text-center">
 
-            <p className="text-gray-400 mb-4">Ready to choose your plan and start onboarding after secure payment?</p>
+            <p className="text-gray-400 mb-4">Ready to choose your plan and begin secure signup?</p>
             <Link
               to="/GetStartedNow"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">

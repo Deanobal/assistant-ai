@@ -3,10 +3,10 @@ import { TimerReset, TrendingUp, ClipboardMinus, Smile, Users2, Database } from 
 const outcomes = [
   { icon: TimerReset, title: 'Qualify Leads While They Are Live', desc: 'Ask the right questions while buyer intent is still fresh.' },
   { icon: TrendingUp, title: 'Turn Enquiries Into Paid Clients', desc: 'Guide standard Starter and Growth buyers from enquiry to secure checkout.' },
-  { icon: ClipboardMinus, title: 'Reduce Admin Workload', desc: 'Remove repetitive call handling, data entry, payment handoff, and follow-up tasks.' },
+  { icon: ClipboardMinus, title: 'Reduce Admin Workload', desc: 'Remove repetitive call handling, manual follow-up, and customer chasing.' },
   { icon: Smile, title: 'Improve Customer Experience', desc: 'Give ready customers a clear next step instead of leaving them waiting.' },
   { icon: Users2, title: 'Do Not Let Hot Buyers Cool Down', desc: 'Move qualified prospects toward signup while they are ready to proceed.' },
-  { icon: Database, title: 'Start Onboarding Automatically', desc: 'After payment, create the records and tasks your team needs to begin setup.' },
+  { icon: Database, title: 'Start Setup Faster', desc: 'Once payment is complete, your setup details are prepared so work can begin.' },
 ];
 
 export default function EverythingWorksTogether() {

@@ -3,12 +3,30 @@ import { Link } from 'react-router-dom';
 import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const flowCards = [
-  'Answer the enquiry',
-  'Qualify the business',
-  'Recommend Starter or Growth',
-  'Capture contact details',
-  'Create secure checkout if the buyer is ready',
-  'Escalate Enterprise/custom builds for review',
+  {
+    title: 'Answers naturally',
+    description: 'Handles the enquiry without sounding like a script.',
+  },
+  {
+    title: 'Finds the real need',
+    description: 'Identifies missed calls, booking issues, slow follow-up, or admin overload.',
+  },
+  {
+    title: 'Recommends the right plan',
+    description: 'Guides simple buyers to Starter and automation-heavy buyers to Growth.',
+  },
+  {
+    title: 'Captures the details',
+    description: 'Collects name, business, phone, email, and key requirements.',
+  },
+  {
+    title: 'Creates checkout when ready',
+    description: 'Sends Starter or Growth buyers to secure payment after confirmation.',
+  },
+  {
+    title: 'Escalates complex builds',
+    description: 'Routes Enterprise or custom workflows for review.',
+  },
 ];
 
 export default function LiveDemoSection() {
@@ -25,10 +43,10 @@ export default function LiveDemoSection() {
           </div>
 
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-            Talk to the AI That Can Turn Enquiries Into Clients
+            See How AssistantAI Handles a Real Buyer
           </h2>
           <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-slate-400 md:text-lg md:leading-8">
-            Start a live browser voice call with the AssistantAI receptionist. It can answer questions, qualify your business, recommend Starter or Growth, and help ready buyers move to secure checkout.
+            Start a live voice demo and hear how the AI answers questions, qualifies the caller, recommends the right plan, and moves ready buyers toward secure signup.
           </p>
         </div>
 
@@ -38,9 +56,9 @@ export default function LiveDemoSection() {
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300">
               <Mic className="h-5 w-5" />
             </div>
-            <h3 className="text-2xl font-bold text-white">Try the AssistantAI Receptionist</h3>
+            <h3 className="text-2xl font-bold text-white">Try the Live AI Receptionist</h3>
             <p className="mt-3 text-base leading-7 text-slate-400">
-              See how your business could handle missed calls, qualify new enquiries, and follow up instantly — even after hours.
+              Test the exact flow your customers would experience — call answered, details captured, plan recommended, and next step handled instantly.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -57,13 +75,14 @@ export default function LiveDemoSection() {
           <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 md:p-8">
             <div className="mb-5 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-cyan-300">
               <CheckCircle2 className="h-4 w-4" />
-              What the AI Can Do
+              What Happens During the Demo
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {flowCards.map((item, index) => (
-                <div key={item} className="rounded-2xl border border-white/8 bg-[#0b0f18] p-4">
+                <div key={item.title} className="rounded-2xl border border-white/8 bg-[#0b0f18] p-4">
                   <p className="text-xs font-medium text-cyan-300">{index + 1}</p>
-                  <p className="mt-2 text-sm font-medium leading-6 text-white">{item}</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white">{item.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-400">{item.description}</p>
                 </div>
               ))}
             </div>

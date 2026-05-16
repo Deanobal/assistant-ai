@@ -7,65 +7,57 @@ const plans = [
   slug: 'starter',
   setup: '$1,500',
   monthly: '$497',
-  desc: 'Best for businesses starting with AI call handling and lead capture.',
-  valueLine: 'Setup, monthly management, support, and reporting in one premium service path.',
+  desc: 'For missed-call coverage, lead capture, and simple follow-up.',
+  valueLine: 'A clear starting point for businesses that need every enquiry answered faster.',
   features: [
+  'Missed-call coverage',
+  'Lead capture',
+  'Simple follow-up',
   'Done-for-you setup',
-  'Monthly management',
-  'Support included',
-  'Reporting included',
-  'AI call handling and lead capture'],
+  'Ongoing support'],
 
   featured: false,
-  primaryCtaLabel: 'Book A Demo',
-  primaryCtaTo: '/BookStrategyCall',
-  secondaryCtaLabel: 'Get Started Now',
-  secondaryCtaTo: '/GetStartedNow?plan=starter',
-  helper: 'Best if you want to confirm fit, scope, and next steps first.'
+  primaryCtaLabel: 'Choose Starter',
+  primaryCtaTo: '/GetStartedNow?plan=starter',
+  helper: 'Choose Starter and begin secure signup when ready.'
 },
 {
   name: 'Growth',
   slug: 'growth',
   setup: '$3,000',
   monthly: '$1,500',
-  desc: 'Best for growing businesses that want AI call handling, booking automation, CRM sync, and follow-up.',
-  valueLine: 'Setup, management, support, and optimisation for businesses ready to scale faster.',
+  desc: 'For call handling, booking support, customer updates, and SMS/email follow-up.',
+  valueLine: 'For growing businesses that need faster response and stronger follow-up.',
   features: [
-  'Done-for-you setup',
-  'Monthly management',
-  'Optimisation included',
-  'Support included',
-  'Reporting included',
-  'CRM, calendar, and follow-up automation'],
+  'AI call handling',
+  'Booking support',
+  'Customer details stay organised',
+  'SMS and email follow-up',
+  'Ongoing optimisation'],
 
   featured: true,
-  primaryCtaLabel: 'Book A Demo',
-  primaryCtaTo: '/BookStrategyCall',
-  secondaryCtaLabel: 'Get Started Now',
-  secondaryCtaTo: '/GetStartedNow?plan=growth',
-  helper: 'Submit your details and continue into the setup flow.'
+  primaryCtaLabel: 'Choose Growth',
+  primaryCtaTo: '/GetStartedNow?plan=growth',
+  helper: 'Choose Growth and begin secure signup when ready.'
 },
 {
   name: 'Enterprise',
   slug: 'enterprise',
-  setup: '$7,500+',
-  monthly: '$3,000+',
-  desc: 'Best for more advanced workflows, multiple teams, or more complex integration requirements.',
-  valueLine: 'Custom setup, management, support, optimisation, and workflow design for larger operations.',
+  setup: 'From $7,500',
+  monthly: 'From $3,000',
+  desc: 'For multi-location, custom workflows, advanced integrations, or complex routing.',
+  valueLine: 'Custom review for larger teams and more complex customer journeys.',
   features: [
-  'Advanced setup',
-  'Monthly management',
-  'Optimisation included',
-  'Support included',
-  'Reporting included',
-  'Custom integrations and workflow design'],
+  'Multi-location support',
+  'Custom workflows',
+  'Advanced integrations',
+  'Complex routing',
+  'Custom review'],
 
   featured: false,
-  primaryCtaLabel: 'Talk To Us',
+  primaryCtaLabel: 'Request Custom Review',
   primaryCtaTo: '/Contact',
-  secondaryCtaLabel: 'Talk To Us',
-  secondaryCtaTo: '/Contact',
-  helper: 'Best for custom scoping, integrations, and rollout planning.'
+  helper: 'Enterprise and complex builds are reviewed before setup.'
 }];
 
 
@@ -76,9 +68,9 @@ export default function PricingPreview() {
       <div className="relative max-w-7xl mx-auto px-6">
         <div className="text-center mb-12 md:mb-14">
           <p className="text-cyan-400 mb-3 text-base font-medium tracking-[0.16em]">PRICING SNAPSHOT</p>
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Simple Pricing for a Productised Service</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Clear Pricing. Done-For-You Setup.</h2>
           <p className="mt-4 max-w-2xl mx-auto text-base leading-7 text-gray-400 md:text-lg">
-            All plans include setup, support, optimisation, and ongoing management.
+            Choose the plan that fits your enquiry volume, follow-up needs, and setup complexity.
           </p>
         </div>
 
@@ -132,12 +124,6 @@ export default function PricingPreview() {
                 }>
                 
                   {plan.primaryCtaLabel}
-                </Link>
-                <Link
-                to={plan.secondaryCtaTo}
-                className="block w-full rounded-full border border-cyan-500/20 bg-cyan-500/5 py-3.5 text-center text-sm font-medium text-white transition-all hover:bg-cyan-500/10">
-                
-                  {plan.secondaryCtaLabel}
                 </Link>
                 <p className="px-2 text-center leading-relaxed text-gray-500 text-sm">
                   {plan.helper}

@@ -15,8 +15,8 @@ export default function Platform() {
   return (
     <>
       <SEO
-        title="Platform | AI Automation System Dashboard for Service Businesses | AssistantAI"
-        description="Preview the AssistantAI platform for Australian service businesses including lead capture, job booking, CRM integration, analytics, billing, and support workflows."
+        title="Platform Preview | Enquiry Handling for Service Businesses | AssistantAI"
+        description="Preview how AssistantAI helps Australian service businesses see calls, enquiries, bookings, follow-up, setup progress, and support in one place."
         canonicalPath="/Platform"
       />
       <div>
@@ -33,17 +33,17 @@ export default function Platform() {
               <span className="text-cyan-400 text-xs font-medium">Platform Preview</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
-              Public Preview of the <span className="text-gradient">AssistantAI AI Automation System</span>
+              Example Preview of the <span className="text-gradient">AssistantAI Enquiry Experience</span>
             </h1>
             <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              See what the client experience looks like across instant call answering, lead capture, job booking, CRM integration, analytics, billing, and support for Australian service businesses.
+              See what the client experience can look like across instant call answering, enquiry capture, booking support, follow-up, setup progress, and support for Australian service businesses.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/BookStrategyCall"
+                to="/GetStartedNow"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
               >
-                Book Free Strategy Call
+                Get Started Now
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -61,7 +61,7 @@ export default function Platform() {
               <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                   <p className="text-white font-semibold">Portal Preview</p>
-                  <p className="text-sm text-gray-400 mt-1">All sections below are sample previews only, designed to show the software and client experience clearly.</p>
+                  <p className="text-sm text-gray-400 mt-1">All sections below are sample previews only, designed to show how enquiries and follow-up can stay organised.</p>
                 </div>
                 <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 w-fit">
                   Sample Data Preview
@@ -87,13 +87,13 @@ export default function Platform() {
           >
             <h3 className="text-2xl font-bold text-white mb-3">Want This Experience for Your Business?</h3>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Book a free strategy call and we’ll show you how AssistantAI can help your business answer more calls, capture more leads, and reduce admin.
+              Choose a plan or talk to the AI receptionist to see how AssistantAI can help your business answer more calls, capture more enquiries, and reduce admin.
             </p>
             <Link
-              to="/BookStrategyCall"
+              to="/GetStartedNow"
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
             >
-              Book Free Strategy Call
+              Get Started Now
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

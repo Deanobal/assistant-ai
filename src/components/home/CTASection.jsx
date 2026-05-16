@@ -12,7 +12,7 @@ export default function CTASection() {
             Ready to Turn Enquiries Into Paid Clients?
           </h2>
           <p className="mt-6 max-w-3xl mx-auto text-base leading-8 text-gray-400 md:text-lg">
-            AssistantAI answers calls, qualifies buyers, recommends the right plan, takes secure payment for standard plans, and starts onboarding automatically after payment is confirmed.
+            Ready to stop missing enquiries? Choose a plan or talk to the AI receptionist and see how fast your business can respond.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link

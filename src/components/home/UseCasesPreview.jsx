@@ -41,8 +41,8 @@ export default function UseCasesPreview() {
           </div>
           <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
             <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Example Outcome</p>
-            <h3 className="text-white text-xl font-semibold mb-3">Payment Starts the Fulfilment Workflow</h3>
-            <p className="text-gray-400 leading-relaxed text-lg">After confirmed payment, client records, billing status, intake details, notes, integrations, and onboarding tasks can be created automatically.</p>
+            <h3 className="text-white text-xl font-semibold mb-3">Secure Signup Starts Setup</h3>
+            <p className="text-gray-400 leading-relaxed text-lg">Once payment is complete, your setup details are prepared so we can start building your AI receptionist.</p>
           </div>
         </div>
 

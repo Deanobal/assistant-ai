@@ -3,18 +3,18 @@ import { Plug, TrendingUp, HeadphonesIcon } from 'lucide-react';
 const points = [
 {
   icon: Plug,
-  heading: 'Stable Integrations',
-  description: 'Built on proven platforms — Google Calendar, Stripe, Twilio, and leading CRMs — so your workflows run reliably from day one.'
+  heading: 'Designed to Fit Your Tools',
+  description: 'Built to work with calendars, customer systems, and follow-up channels your team already uses.'
 },
 {
   icon: TrendingUp,
-  heading: 'Proven Early Results',
-  description: 'Early customers are seeing faster response times, higher lead capture rates, and more booked appointments with less admin overhead.'
+  heading: 'Designed for Fast Results',
+  description: 'Focused on faster response, clearer enquiry capture, and fewer missed opportunities.'
 },
 {
   icon: HeadphonesIcon,
   heading: 'Hands-On Support',
-  description: 'Our team handles setup, onboarding, and ongoing optimisation — so you\'re never left figuring things out on your own.'
+  description: 'Our team helps with setup, launch, and ongoing improvements so you are not left figuring things out alone.'
 }];
 
 
@@ -25,7 +25,7 @@ export default function CredibilitySection() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Trusted by Service Businesses
+            Built for Australian Service Businesses
           </h2>
           <p className="mt-4 text-base text-slate-400 max-w-lg mx-auto leading-7">
             Built to be reliable, not experimental. Here's what backs that up.

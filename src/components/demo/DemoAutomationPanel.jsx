@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, CreditCard, Database, PhoneCall, Sparkles, UserCheck } from 'lucide-react';
+import { CheckCircle2, Clock3, CreditCard, ClipboardList, PhoneCall, Sparkles, UserCheck } from 'lucide-react';
 
 export const defaultWorkflowItems = [
   {
@@ -9,29 +9,29 @@ export const defaultWorkflowItems = [
   {
     icon: Sparkles,
     title: 'Plan Recommended',
-    desc: 'The AI recommends Starter, Growth, or Enterprise based on volume, booking, CRM, follow-up, and complexity.',
+    desc: 'The AI recommends Starter, Growth, or Enterprise based on volume, booking needs, follow-up needs, and complexity.'
   },
   {
-    icon: Database,
-    title: 'Lead Created / Updated',
-    desc: 'Contact details, business details, summary, intent, and likely plan fit are saved to the lead system.',
+    icon: ClipboardList,
+    title: 'Details Captured',
+    desc: 'Name, business, phone, email, and key requirements are captured for clear follow-up.',
   },
   {
     icon: CreditCard,
-    title: 'Checkout Offered',
-    desc: 'Ready buyers can receive an instant Stripe checkout link instead of waiting for a strategy call.',
+    title: 'Secure Signup Offered',
+    desc: 'Ready Starter and Growth buyers can move to secure checkout instead of waiting for a callback.',
   },
   {
     icon: UserCheck,
-    title: 'Onboarding Starts',
-    desc: 'Once Stripe confirms payment, the client, billing, intake, integrations, tasks, and admin alerts are created.',
+    title: 'Setup Begins',
+    desc: 'Once payment is complete, your setup details are prepared so work can begin.',
   },
 ];
 
 export default function DemoAutomationPanel({ currentStep, items = defaultWorkflowItems }) {
   return (
     <div className="rounded-[28px] border border-white/8 bg-[#11111a] p-5 md:p-6">
-      <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Workflow</p>
+      <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Demo flow</p>
       <h3 className="mt-2 text-lg font-semibold text-white">What the AI is doing</h3>
       <div className="mt-6 space-y-4">
         {items.map((item, index) => {

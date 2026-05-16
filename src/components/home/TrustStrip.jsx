@@ -1,10 +1,10 @@
-import { Database, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
+import { ClipboardCheck, CalendarDays, MessageSquare, PhoneCall } from 'lucide-react';
 
 const items = [
 { icon: PhoneCall, label: '24/7 Call Handling' },
-{ icon: MessageSquare, label: 'Live Lead Qualification' },
-{ icon: CalendarDays, label: 'Secure Stripe Checkout' },
-{ icon: Database, label: 'CRM + Onboarding Sync' }];
+{ icon: MessageSquare, label: 'Live Enquiry Qualification' },
+{ icon: CalendarDays, label: 'Secure Signup' },
+{ icon: ClipboardCheck, label: 'Setup Underway' }];
 
 export default function TrustStrip() {
   return (

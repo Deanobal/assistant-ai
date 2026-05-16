@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, PhoneCall, Users, CalendarCheck2, Send, PlugZap } from 'lucide-react';
+import { ArrowRight, PhoneCall, Users, CalendarCheck2, Send, ClipboardCheck } from 'lucide-react';
 
 const previewItems = [
-{ icon: PhoneCall, label: 'Calls Handled', value: 'Live', helper: 'Every call tracked in one place' },
-{ icon: Users, label: 'Buyers Qualified', value: 'Scored', helper: 'Plan fit and intent captured automatically' },
-{ icon: CalendarCheck2, label: 'Checkout Status', value: 'Secure', helper: 'Starter and Growth payment flow visibility' },
-{ icon: Send, label: 'Follow-Up Status', value: 'Automated', helper: 'SMS and email actions triggered fast' },
-{ icon: PlugZap, label: 'Onboarding Sync', value: 'Active', helper: 'CRM, billing, intake, notes, and tasks aligned' }];
+{ icon: PhoneCall, label: 'Calls Handled', value: 'Tracked', helper: 'Every call tracked in one place' },
+{ icon: Users, label: 'Enquiries Qualified', value: 'Clear', helper: 'See which leads are ready to move forward' },
+{ icon: CalendarCheck2, label: 'Secure Signup', value: 'Ready', helper: 'Starter and Growth buyers can start through secure checkout' },
+{ icon: Send, label: 'Follow-Up', value: 'Fast', helper: 'SMS and email actions help keep leads warm' },
+{ icon: ClipboardCheck, label: 'Setup Progress', value: 'Visible', helper: 'Track what is happening after a client signs up' }];
 
 
 export default function PlatformPreviewSection() {
@@ -14,9 +14,9 @@ export default function PlatformPreviewSection() {
     <section className="relative py-18 md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <p className="text-cyan-400 mb-3 text-lg font-medium">PLATFORM PREVIEW</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">See the Operating Layer Behind Calls, Payments, and Onboarding</h2>
-          <p className="mt-4 text-gray-400 max-w-3xl mx-auto text-lg">AssistantAI gives you a cleaner view of calls handled, buyers qualified, checkout status, follow-up, and onboarding sync.
+          <p className="text-cyan-400 mb-3 text-lg font-medium">EXAMPLE PLATFORM PREVIEW</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">See How Every Enquiry Is Handled</h2>
+          <p className="mt-4 text-gray-400 max-w-3xl mx-auto text-lg">AssistantAI gives you visibility over calls, enquiries, follow-up, and setup progress.
 
           </p>
         </div>
@@ -24,11 +24,11 @@ export default function PlatformPreviewSection() {
         <div className="rounded-[32px] border border-white/5 bg-[#12121a] p-6 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
           <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
             <div>
-              <p className="text-white font-semibold text-lg">AssistantAI Platform Preview</p>
-              <p className="text-gray-500 mt-1 text-base">A premium internal view across enquiries, bookings, and connected systems.</p>
+              <p className="text-white font-semibold text-lg">AssistantAI Example Platform Preview</p>
+              <p className="text-gray-500 mt-1 text-base">A simple view of how calls, enquiries, follow-up, and setup progress can stay organised.</p>
             </div>
             <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-              Sample Preview
+              Example Platform Preview
             </div>
           </div>
 

@@ -12,9 +12,9 @@ import DemoScenarioSelector from '@/components/demo/DemoScenarioSelector';
 const steps = [
   'AI answers and qualifies the buyer',
   'Likely plan fit is recommended',
-  'Lead record is created or updated',
-  'Checkout link is offered to ready buyers',
-  'Payment starts onboarding automatically',
+  'Customer details are captured',
+  'Secure signup is offered to ready buyers',
+  'Setup begins after payment',
 ];
 
 const capabilities = [
@@ -23,8 +23,8 @@ const capabilities = [
   'Identify pain points',
   'Recommend Starter, Growth, or Enterprise',
   'Capture contact details',
-  'Create payment link for ready buyers',
-  'Trigger onboarding after payment',
+  'Offer secure signup to ready buyers',
+  'Escalate Enterprise for review',
 ];
 
 const salesFlow = [
@@ -32,9 +32,9 @@ const salesFlow = [
   'AI qualifies business',
   'AI recommends Starter or Growth',
   'Customer confirms they want to proceed',
-  'AI creates secure checkout',
-  'Payment confirmed',
-  'Onboarding starts automatically',
+  'AI offers secure checkout',
+  'Payment is completed',
+  'Setup begins',
 ];
 
 const MESSAGE_DELAY = 2600;
@@ -42,7 +42,7 @@ const MESSAGE_DELAY = 2600;
 const scenarios = [
   { id: 'trades', label: 'Trades', title: 'Missed-call revenue enquiry', description: 'A trade business asks how to stop losing urgent calls.', context: 'Australian trade business, missed-call problem, goal is qualification, plan recommendation, and signup readiness.' },
   { id: 'clinic', label: 'Clinic', title: 'Front desk overflow enquiry', description: 'A clinic needs help answering calls and booking appointments.', context: 'Australian clinic, appointment overflow, goal is qualification, booking automation, and plan recommendation.' },
-  { id: 'realestate', label: 'Real Estate', title: 'High-intent appraisal enquiry', description: 'A real estate office wants faster qualification and follow-up.', context: 'Australian real estate business, appraisal enquiry, goal is lead qualification, CRM sync, and signup readiness.' },
+  { id: 'realestate', label: 'Real Estate', title: 'High-intent appraisal enquiry', description: 'A real estate office wants faster qualification and follow-up.', context: 'Australian real estate business, appraisal enquiry, goal is lead qualification, organised customer details, and signup readiness.' },
 ];
 
 export default function AIDemo() {
@@ -130,9 +130,9 @@ export default function AIDemo() {
         <div className="relative max-w-7xl mx-auto px-6 md:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-cyan-300 text-xs font-medium mb-5">
-              <Sparkles className="h-3.5 w-3.5" /> AI selling demo
+              <Sparkles className="h-3.5 w-3.5" /> Live AI Receptionist Demo
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">Talk to the AI That Can Qualify and Sign Up New Clients</h1>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-4xl mx-auto">See How AssistantAI Handles a Real Buyer</h1>
             <p className="mt-5 text-lg text-gray-400 max-w-3xl mx-auto">Experience how AssistantAI handles a real enquiry — from answering the call to qualifying the buyer, recommending a plan, and moving them toward secure signup.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <VapiReceptionistDemoButton className="px-8 py-3.5" showFallbackText />
@@ -161,7 +161,7 @@ export default function AIDemo() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-cyan-400">Honest Limits</p>
-                <p className="mt-2 text-white font-medium text-lg">The AI can take payment for standard Starter and Growth plans. Enterprise or complex builds are escalated for human review.</p>
+                <p className="mt-2 text-white font-medium text-lg">Starter and Growth buyers can be guided toward secure checkout. Enterprise or complex workflows are escalated for review.</p>
                 <p className="mt-2 text-sm text-gray-500">{isSpeaking ? 'AI speaking live' : workflowItems[currentStep]?.title || steps[currentStep]}</p>
               </div>
               <div className="flex flex-wrap gap-3">

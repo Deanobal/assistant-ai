@@ -1,21 +1,21 @@
 import * as React from 'react';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
-import { Mic, UserCheck, CreditCard, Database, Workflow, ArrowRight } from 'lucide-react';
+import { Mic, UserCheck, CreditCard, ClipboardList, Rocket, ArrowRight } from 'lucide-react';
 import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const services = [
-  { icon: Mic, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7.', outcomes: ['Instant call answering', 'After-hours coverage', 'Structured enquiry capture', 'Human handoff when needed'] },
-  { icon: UserCheck, title: 'AI Sales Qualifier', desc: 'Asks the right questions and identifies whether the buyer fits Starter, Growth, or Enterprise.', outcomes: ['Qualifies live enquiries', 'Identifies buying intent', 'Recommends plan fit', 'Escalates Enterprise for review'] },
-  { icon: CreditCard, title: 'Secure Payment Flow', desc: 'Creates Stripe checkout for ready Starter and Growth buyers and starts onboarding after confirmed payment.', outcomes: ['Secure checkout links', 'Selected-plan pricing', 'No forced Growth default', 'Payment confirmed by Stripe'] },
-  { icon: Database, title: 'CRM + Follow-Up Automation', desc: 'Syncs lead data, triggers SMS/email follow-up, and updates the sales pipeline.', outcomes: ['GoHighLevel sync', 'Pipeline updates', 'SMS/email follow-up', 'Cleaner team visibility'] },
-  { icon: Workflow, title: 'Onboarding Automation', desc: 'After payment, creates the client record, billing status, intake form, integrations, notes, and onboarding tasks.', outcomes: ['Client record created', 'Billing activated', 'Intake form prepared', 'Tasks generated automatically'] },
+  { icon: Mic, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7.', outcomes: ['Instant call answering', 'After-hours coverage', 'Clear enquiry capture', 'Human handoff when needed'] },
+  { icon: UserCheck, title: 'Enquiry Qualification', desc: 'Asks the right questions and identifies whether the buyer fits Starter, Growth, or Enterprise.', outcomes: ['Qualifies live enquiries', 'Identifies buying intent', 'Recommends plan fit', 'Escalates Enterprise for review'] },
+  { icon: CreditCard, title: 'Secure Signup', desc: 'Guides ready Starter and Growth buyers toward secure checkout after confirmation.', outcomes: ['Secure checkout', 'Selected-plan pricing', 'No forced Growth default', 'Setup can begin after payment'] },
+  { icon: ClipboardList, title: 'Follow-Up Support', desc: 'Helps keep customer details organised and supports fast SMS/email follow-up.', outcomes: ['Customer details stay organised', 'Clear next steps', 'SMS/email follow-up', 'Cleaner team visibility'] },
+  { icon: Rocket, title: 'Setup Support', desc: 'Once payment is complete, your setup details are prepared so we can start building your AI receptionist.', outcomes: ['Setup details prepared', 'Build can begin', 'Team has the right information', 'Clear setup path'] },
 ];
 
 export default function Services() {
   return (
     <>
-      <SEO title="Services | AI Receptionist, Sales Qualification & Payment Automation | AssistantAI" description="AssistantAI answers calls, qualifies buyers, creates secure checkout for ready customers, syncs CRM data, and starts onboarding after payment." canonicalPath="/Services" />
+      <SEO title="Services | AI Receptionist, Enquiry Qualification & Follow-Up | AssistantAI" description="AssistantAI answers calls, qualifies enquiries, supports fast follow-up, and helps ready customers begin secure signup." canonicalPath="/Services" />
       <div>
         <section className="relative py-24 md:py-32 bg-grid">
           <div className="bg-radial-glow absolute inset-0" />
@@ -23,7 +23,7 @@ export default function Services() {
             <div className="text-center mb-16">
               <p className="text-cyan-400 mb-3 text-lg font-medium">SERVICES</p>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">A Revenue System, Not Just a Receptionist</h1>
-              <p className="mt-5 text-gray-400 text-lg max-w-4xl mx-auto leading-relaxed">AssistantAI does more than answer the phone. It can qualify prospects, capture structured lead data, update your CRM, send follow-up, take payment for standard plans, and trigger onboarding workflows.</p>
+              <p className="mt-5 text-gray-400 text-lg max-w-4xl mx-auto leading-relaxed">AssistantAI does more than answer the phone. It can qualify new enquiries, capture the details your team needs, support fast follow-up, and help ready Starter or Growth buyers start securely.</p>
             </div>
 
             <div className="space-y-8">

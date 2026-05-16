@@ -16,7 +16,7 @@ import CTASection from '../components/home/CTASection';
 import ROICalculator from '../components/home/ROICalculator';
 
 const HERO_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/9541496d0_generated_bc3bb2a9.png';
-const HERO_IMAGE_ALT = 'AssistantAI AI receptionist and lead capture system for Australian service businesses';
+const HERO_IMAGE_ALT = 'AssistantAI AI receptionist for Australian service businesses';
 
 const structuredData = [
   {
@@ -25,7 +25,7 @@ const structuredData = [
     name: 'AssistantAI',
     url: 'https://assistantai.com.au/',
     logo: 'https://assistantai.com.au/icons/admin-inbox-icon.svg',
-    description: 'AssistantAI is an AI automation system for Australian service businesses focused on call handling, lead capture, job booking, follow-up automation, and CRM integration.',
+    description: 'AssistantAI helps Australian service businesses answer missed calls, capture new enquiries, support bookings, and follow up faster.',
     areaServed: {
       '@type': 'Country',
       name: 'Australia',
@@ -34,13 +34,13 @@ const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'AssistantAI AI Automation System',
+    name: 'AssistantAI AI Receptionist',
     provider: {
       '@type': 'Organization',
       name: 'AssistantAI',
       url: 'https://assistantai.com.au/',
     },
-    serviceType: 'AI assistant, AI receptionist, lead capture, CRM integration, and service business automation',
+    serviceType: 'AI receptionist, enquiry capture, booking support, and follow-up for service businesses',
     areaServed: {
       '@type': 'Country',
       name: 'Australia',
@@ -50,14 +50,14 @@ const structuredData = [
       audienceType: 'Australian service businesses',
     },
     url: 'https://assistantai.com.au/',
-    description: 'AssistantAI helps Australian cleaning, trades, property, and other service businesses reduce admin by 65%, save up to $30,000 per year, and cut response times by 80% with an AI assistant and AI receptionist.',
+    description: 'AssistantAI helps Australian cleaning, trades, property, and other service businesses answer calls, capture enquiries, reduce admin, and follow up faster with an AI receptionist.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'AssistantAI',
     url: 'https://assistantai.com.au/',
-    description: 'AI assistant, AI receptionist, and AI automation system for Australian service businesses.',
+    description: 'AI receptionist and enquiry follow-up support for Australian service businesses.',
   },
   {
     '@context': 'https://schema.org',
@@ -68,7 +68,7 @@ const structuredData = [
         name: 'What does AssistantAI do for service businesses?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'AssistantAI provides an AI assistant and AI receptionist that answer calls, capture leads, book jobs, automate follow-up, and sync information into CRM systems for Australian service businesses.',
+          text: 'AssistantAI provides an AI receptionist that answers calls, captures enquiries, supports bookings, and helps Australian service businesses follow up faster.',
         },
       },
       {
@@ -87,8 +87,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="AI Automation System for Australian Service Businesses | AI Assistant & AI Receptionist | AssistantAI"
-        description="AssistantAI is an AI automation system for Australian service businesses that reduces admin by 65%, saves up to $30,000 per year, cuts response times by 80%, and improves lead capture, job booking, follow-up automation, and CRM integration."
+        title="AI Receptionist for Australian Service Businesses | AssistantAI"
+        description="AssistantAI helps Australian service businesses answer missed calls, capture new enquiries, support bookings, follow up faster, and turn more leads into paying clients."
         canonicalPath="/"
         structuredData={structuredData}
         image={HERO_IMAGE}

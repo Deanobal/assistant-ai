@@ -46,7 +46,7 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-sm text-slate-300">
-              {['Call answered', 'Lead qualified', 'Plan selected', 'Payment secured', 'Onboarding started'].map((step) => (
+              {['Call answered', 'Enquiry qualified', 'Plan selected', 'Secure signup', 'Setup underway'].map((step) => (
                 <span key={step} className="rounded-full border border-cyan-400/15 bg-cyan-400/5 px-3 py-1.5">{step}</span>
               ))}
             </div>
