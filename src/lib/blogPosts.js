@@ -5,7 +5,7 @@ export const blogPosts = [
     metaDescription: 'Many service businesses miss 74% of calls and lose up to AU$100k in revenue; AI receptionists ensure no call goes unanswered.',
     excerpt: 'Many service businesses miss 74% of calls and lose major revenue when enquiries go unanswered.',
     category: 'AI Receptionist',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Small service businesses routinely miss incoming calls because staff are on jobs, dealing with customers or only available during business hours. Research shows that 74.1% of calls to contractors go unanswered and that 85% of callers whose calls aren’t answered don’t call back.',
       'Each missed call is expensive—studies put the average lost revenue at AU$200–3,500 per call, adding up to more than AU$100k in lost revenue each year for a typical trades business.',
@@ -18,7 +18,7 @@ export const blogPosts = [
     metaDescription: 'A virtual AI receptionist offers round-the-clock coverage at a fraction of staffing costs and delivers consistent, professional call handling.',
     excerpt: 'A virtual AI receptionist gives your business round-the-clock coverage without the cost of full-time staffing.',
     category: 'Virtual Receptionist',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Staffing a front desk around the clock is expensive and often impossible for small businesses. A virtual AI receptionist provides full coverage at a fraction of the cost of hiring additional staff.',
       'Because AI works per‑minute, your costs scale predictably with call volume and there are no salaries or benefits to pay. The AI never takes a lunch break or goes on holiday, so your business is reachable 24 hours a day, 7 days a week.',
@@ -31,7 +31,7 @@ export const blogPosts = [
     metaDescription: '80% of callers hang up rather than leave a message; AI receptionists keep lines open after hours to capture every lead.',
     excerpt: 'After-hours calls are often lost forever, but AI receptionists keep your lines open and responsive 24/7.',
     category: 'Lead Capture',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Customers expect quick responses, and many will move on if they reach voicemail. Studies show that 80% of callers hang up rather than leave a message and that most consumers won’t call back if their initial call isn’t answered.',
       'An AI receptionist keeps your phone lines open 24/7, greeting every caller and booking appointments even after your team has gone home.',
@@ -44,7 +44,7 @@ export const blogPosts = [
     metaDescription: 'AI-driven process automation can cut operational costs by 20–30% and improve efficiency by 40%.',
     excerpt: 'AI process automation helps reduce costs, improve efficiency, and remove repetitive admin work from your team.',
     category: 'Automation',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'AI‑powered process automation doesn’t just answer calls—it can automate repetitive administrative tasks like data entry, invoice processing and appointment scheduling.',
       'A McKinsey and Forrester analysis found that companies adopting AI and automation solutions reduce operational costs by 20–30% and improve efficiency by over 40%. Gartner predicts that 75% of businesses will use AI‑driven process automation by 2026.',
@@ -57,7 +57,7 @@ export const blogPosts = [
     metaDescription: 'Australian SMBs using AI see profitability increases of 45% to 111%; adoption is essential to stay competitive.',
     excerpt: 'Australian SMBs adopting AI are seeing major profitability gains, making AI a competitive necessity.',
     category: 'AI Strategy',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'AI adoption is rapidly increasing among Australian small and medium‑sized businesses (SMBs). According to AI Lab Australia’s 2026 report, 64% of SMBs regularly use AI and 84% use AI at least sporadically, but only 5% are fully enabled.',
       'Moving from basic AI usage (ad‑hoc tools) to intermediate integration boosts profitability by 45%, and businesses that fully enable AI see a remarkable 111% increase in profitability. The report estimates that closing the AI maturity gap could contribute AU$44–50 billion to Australia’s GDP.',
@@ -70,7 +70,7 @@ export const blogPosts = [
     metaDescription: 'Claim up to 43.5% cash rebate on eligible AI R&D expenses; 12,000 businesses already claim the R&D incentive.',
     excerpt: 'The Australian R&D Tax Incentive can significantly reduce the cost of building AI solutions for your business.',
     category: 'AI Funding',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'The Australian Government’s R&D Tax Incentive supports innovation by providing refundable tax offsets for eligible projects. Businesses developing AI solutions can claim a cash rebate of up to 43.5% on eligible R&D expenses.',
       'About 12,000 businesses claim the R&D Tax Incentive annually, and almost half of claimants are small businesses. Professional, scientific and technical services account for 43% of claimants.',
@@ -83,7 +83,7 @@ export const blogPosts = [
     metaDescription: 'AI receptionists answer phones, qualify leads, book appointments and update your CRM automatically.',
     excerpt: 'AI receptionists do far more than answer calls—they qualify leads, book work, and update systems automatically.',
     category: 'AI Receptionist',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'An AI receptionist is a voice assistant powered by artificial intelligence that can answer phones, qualify leads, book appointments and update your CRM automatically. Unlike a simple voicemail, an AI receptionist engages callers in natural conversation, asks clarifying questions and collects the information you need.',
       'It can check your calendar, schedule jobs, send reminders and route urgent calls to the right person. By automating these routine tasks, you reduce manual admin, shorten response times and provide a professional experience for every caller.',
@@ -96,7 +96,7 @@ export const blogPosts = [
     metaDescription: 'Integration with CRMs like HubSpot or Zoho allows AI receptionists to access data, qualify leads and update records automatically.',
     excerpt: 'When connected to your CRM, AI receptionists can personalise conversations and keep records updated automatically.',
     category: 'CRM Integration',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Modern AI receptionists integrate seamlessly with customer‑relationship management (CRM) systems like HubSpot and Zoho. Integration enables the AI to access customer data in real time, personalising interactions by retrieving purchase history or previous enquiries.',
       'The AI can automate lead qualification, ask preset questions and log responses directly into the CRM so sales teams receive high‑quality leads. It also updates CRM records automatically, including call details, follow‑up tasks and changes to contact information.',
@@ -109,7 +109,7 @@ export const blogPosts = [
     metaDescription: 'AI‑powered scheduling tools save time, increase bookings and reduce no‑shows.',
     excerpt: 'AI scheduling tools save admin time, increase bookings, and make it easier for customers to lock in appointments.',
     category: 'Scheduling',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Manual appointment scheduling costs time and money. Sayl Solutions’ guide to AI automation notes that small businesses spend 5 hours per week on appointment scheduling alone—around AU$6,500 per year in labour costs at $25/hour. Implementing AI‑powered scheduling tools can save those hours and more.',
       'In one case study, a salon using an AI chatbot captured 95% of leads and booked 30% more appointments, increasing monthly revenue by AU$2,400 and achieving a 2,400% ROI in the first month.',
@@ -122,7 +122,7 @@ export const blogPosts = [
     metaDescription: 'AI automates lead capture and follow‑up, eliminates missed calls and increases revenue.',
     excerpt: 'AI-powered lead capture helps you collect, qualify, and follow up with every lead without manual effort.',
     category: 'Lead Capture',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Following up with leads manually is time‑consuming and inconsistent. AI receptionists can ask qualifying questions during calls or chats, capture lead details and trigger automated follow‑ups via email or text.',
       'They can integrate with your CRM or marketing tools to send personalised messages, schedule callbacks and nurture prospects until they’re ready to buy. According to Sayl Solutions’ ROI examples, AI voice agents can eliminate missed calls entirely and increase monthly revenue by AU$5,250 for a dental practice.',
@@ -135,7 +135,7 @@ export const blogPosts = [
     metaDescription: 'Contractors miss 74% of calls, each worth up to AU$3,500; AI receptionists handle calls so tradespeople can focus on work.',
     excerpt: 'AI receptionists help plumbers, electricians, and other trades stay focused on jobs while every call is answered.',
     category: 'Trades',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Tradespeople often juggle tools and phones simultaneously. It\'s no surprise that 74% of contractors\' calls go unanswered. With each missed call costing up to AU$3,500, ignoring the phone means losing significant revenue.',
       'An AI receptionist answers calls on behalf of plumbers, electricians and other trades, collects job details and books appointments while workers stay focused on their tasks. It can handle after‑hours enquiries, collect photos or descriptions of the job and provide immediate quotes or next‑steps instructions.',
@@ -148,7 +148,7 @@ export const blogPosts = [
     metaDescription: 'AI receptionists for cleaning businesses answer calls, provide quotes, and schedule appointments to boost bookings.',
     excerpt: 'Cleaning businesses can use AI to answer enquiries faster, quote jobs, and keep schedules full with less admin.',
     category: 'Cleaning',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Cleaning and home‑services businesses rely on consistent bookings and efficient scheduling. When owners are out in the field or working on jobs, they can miss calls and messages.',
       'AI receptionists ensure every enquiry is answered professionally, gather the information needed to provide a quote and schedule cleaning appointments instantly. They can also send reminders to clients, reschedule when necessary and collect feedback after a job is completed.',
@@ -161,7 +161,7 @@ export const blogPosts = [
     metaDescription: 'AI receptionists triage maintenance requests, dispatch technicians and keep tenants informed.',
     excerpt: 'AI helps property maintenance and field-service teams triage requests, dispatch faster, and keep everyone updated.',
     category: 'Field Services',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Property managers and field‑service providers juggle multiple properties and urgent maintenance issues. AI receptionists triage incoming requests, prioritising emergencies and dispatching the right technician.',
       'They can sync with your work‑order system to create tickets, schedule repairs and update tenants automatically. For maintenance providers, AI receptionists handle overflow calls, gather details about the problem (e.g., location, urgency, photos) and ensure that nothing falls through the cracks.',
@@ -174,7 +174,7 @@ export const blogPosts = [
     metaDescription: 'Growing AI use increases data privacy risks—78% of organisations use AI; 20% have breaches; choose enterprise tools and policies to stay safe.',
     excerpt: 'As AI adoption grows, businesses need stronger policies and safer tools to reduce privacy and security risks.',
     category: 'AI Privacy',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'AI tools boost productivity but come with data‑privacy considerations. A 2026 privacy guide notes that 78% of organisations used AI in 2025, up from 55% in 2023. More than 27% of ChatGPT consumer messages in June 2025 were work‑related, meaning employees often paste business data into AI tools.',
       'Sensitive information—customer details, financial projections, HR data—may be stored and used to train AI models. Research shows that 34.8% of ChatGPT inputs contained sensitive data, up from 11% in 2023. Shadow AI (employees using unapproved tools) contributed to data breaches at 20% of organisations, and security researchers found over 225,000 stolen ChatGPT credentials for sale on dark‑web markets.',
@@ -187,7 +187,7 @@ export const blogPosts = [
     metaDescription: 'Evaluate features, industry fit, privacy and scalability when selecting an AI assistant.',
     excerpt: 'The right AI assistant should match your workflows, protect your data, and scale as your business grows.',
     category: 'AI Strategy',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Selecting an AI assistant isn’t just about price; it’s about fit. Look for solutions that offer 24/7 availability, seamless CRM integration, appointment scheduling, follow‑up automation and a professional voice.',
       'Ensure that the AI supports your industry—does it handle trade‑specific jargon, property‑maintenance workflows or cleaning‑service requests? Verify the provider’s data‑privacy practices; enterprise AI versions offer data encryption and do not use your data to train models.',
@@ -200,7 +200,7 @@ export const blogPosts = [
     metaDescription: 'Generative AI users save 5.4% of work hours (2.2 hours per week) and are 33% more productive; adoption remains low.',
     excerpt: 'AI can save hours each week across scheduling, email, and admin tasks while helping teams focus on higher-value work.',
     category: 'Productivity',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Generative AI doesn’t just help with calls—it can save time across your entire workflow. A St. Louis Federal Reserve survey found that generative AI users saved an average of 5.4% of their work hours, equivalent to 2.2 hours per week for a 40‑hour worker. Across all workers, generative AI saved 1.4% of total hours.',
       'The survey estimated that when employees use generative AI, they are 33% more productive in each hour of work. Yet adoption remains low—only 5.4% of firms formally adopted generative AI by early 2024.',
@@ -213,7 +213,7 @@ export const blogPosts = [
     metaDescription: '75% of businesses will implement AI-driven process automation by 2026; AI will decouple revenue from headcount and boost productivity by up to 8%.',
     excerpt: 'AI is set to become the default layer for customer service, helping businesses scale without matching headcount growth.',
     category: 'AI Trends',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'AI adoption is accelerating, and experts predict that 75% of businesses will implement AI‑driven process automation by 2026. For customer service, this means voice and chat AI will become the default way customers interact with businesses.',
       'Expect AI assistants to handle routine enquiries, schedule appointments, and even process payments seamlessly. Advanced systems will integrate with wearables and IoT devices to provide proactive service—for example, an AI assistant might schedule HVAC maintenance when sensors detect issues.',
@@ -226,7 +226,7 @@ export const blogPosts = [
     metaDescription: 'Quick wins like chatbots and automated scheduling reduce response time by 50% and missed enquiries by 30%.',
     excerpt: 'A phased rollout makes AI easier to adopt, starting with quick wins that improve response time and reduce missed enquiries.',
     category: 'Implementation',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Implementing AI can seem daunting, but breaking it into phases makes it manageable. Start with quick wins: install an AI chatbot on your website and WhatsApp to answer FAQs, capture leads and book appointments. Set up automatic email and WhatsApp responses for common questions.',
       'Implement appointment scheduling via tools like Calendly and connect it to your calendar. Once these basics are in place, move on to workflow automation—link your CRM, invoicing and marketing tools using platforms like Make.com or n8n.',
@@ -239,7 +239,7 @@ export const blogPosts = [
     metaDescription: 'Evaluate the cost of missed calls and manual labour versus AI service; ROI examples show strong financial benefits and tax rebates.',
     excerpt: 'Comparing missed revenue and admin costs against AI service costs makes the financial value of AI receptionists clear.',
     category: 'ROI',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'To understand the return on investment from AI receptionists, compare the cost of missed opportunities and manual labour with the cost of your AI service. Each missed call can cost AU$200–3,500, leading to more than AU$100k in lost revenue annually.',
       'Manual tasks like appointment scheduling, email responses and data entry cost around AU$42,900 per year for a small business. AI receptionists capture calls, book appointments and update your CRM for a fraction of that cost.',
@@ -252,7 +252,7 @@ export const blogPosts = [
     metaDescription: 'Answers to common questions about AI receptionists regarding staffing, pricing, after‑hours coverage, data safety and integrations.',
     excerpt: 'Common questions about AI receptionists, including staffing impact, pricing, after-hours coverage, privacy, and integrations.',
     category: 'FAQ',
-    date: 'April 4, 2026',
+    date: '4 April 2026',
     body: [
       'Will AI receptionists replace my staff? No. AI handles routine tasks like answering calls, booking appointments and capturing leads, freeing your staff to focus on complex, high‑touch work.',
       'Are AI receptionists expensive? No. AI receptionists operate on predictable per‑minute or monthly pricing. They cost far less than hiring additional staff and scale up or down with demand. Can AI handle after‑hours calls? Yes. AI is available 24/7. It answers after‑hours calls, books appointments and takes messages, ensuring you never miss an opportunity.',

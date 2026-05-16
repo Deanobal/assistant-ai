@@ -3,7 +3,6 @@ import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle } from 'lucide-react';
-import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 const plans = [
 {
@@ -192,7 +191,6 @@ export default function Pricing() {
                     </Link>
                   )}
 
-                  <VapiReceptionistDemoButton variant="secondary" className="min-h-0 w-full py-3.5 text-sm" />
                   <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
                     {plan.secondaryHelper}
                   </p>
@@ -207,8 +205,8 @@ export default function Pricing() {
             viewport={{ once: true }}
             className="mb-16 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-3">Not sure which plan fits?</h2>
-            <p className="mx-auto max-w-3xl text-gray-300 leading-relaxed">Talk to the AI receptionist. It can ask a few questions, recommend the likely best fit, and help you start setup immediately if you are ready.</p>
-            <div className="mt-6 flex justify-center"><VapiReceptionistDemoButton className="px-8 py-3.5 text-sm" showFallbackText /></div>
+            <p className="mx-auto max-w-3xl text-gray-300 leading-relaxed">Send us a few details and we’ll help confirm the right plan for your business.</p>
+            <div className="mt-6 flex justify-center"><Link to="/Contact" className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 text-sm font-medium text-white">Contact Us</Link></div>
           </motion.div>
 
           <motion.div

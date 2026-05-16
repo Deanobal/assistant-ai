@@ -2,7 +2,6 @@ import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
 import ProblemSection from '../components/home/ProblemSection';
-import LiveDemoSection from '../components/home/LiveDemoSection';
 import HowItWorksSection from '../components/home/HowItWorksSection';
 import CredibilitySection from '../components/home/CredibilitySection';
 import ServicesPreview from '../components/home/ServicesPreview';
@@ -99,7 +98,6 @@ export default function Home() {
       <TrustStrip />
       <ProblemSection />
       <ROICalculator />
-      <LiveDemoSection />
       <HowItWorksSection />
       <CredibilitySection />
       <ServicesPreview />

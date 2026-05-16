@@ -61,24 +61,5 @@ export default function Dashboard() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <Card className="bg-[#12121a] border-white/5 shadow-2xl shadow-cyan-500/5">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mx-auto">
-              <Lock className="w-8 h-8 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2">Admin Team Login</h1>
-              <p className="text-gray-400 leading-relaxed">Sign in with your admin account to access the internal AssistantAI Client Manager.</p>
-            </div>
-            <Button onClick={() => base44.auth.redirectToLogin('/ActionInbox')} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25">
-              Continue to Login
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
-  );
+  return <Navigate to="/ClientLogin" replace />;
 }

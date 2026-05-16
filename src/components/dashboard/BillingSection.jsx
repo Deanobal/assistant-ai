@@ -9,29 +9,29 @@ import { Badge } from '@/components/ui/badge';
 const plans = [
   {
     name: 'Starter',
-    setup: '$1,500',
-    monthly: '$497',
+    setup: '$1,500 setup AUD ex. GST',
+    monthly: '$497/month AUD ex. GST',
     features: ['Setup fee', 'Monthly management', 'Support included', 'Reporting included'],
   },
   {
     name: 'Growth',
-    setup: '$3,000',
-    monthly: '$1,500',
+    setup: '$3,000 setup AUD ex. GST',
+    monthly: '$1,500/month AUD ex. GST',
     features: ['Setup fee', 'Monthly management', 'Optimisation included', 'Support included', 'Reporting included'],
     recommended: true,
   },
   {
     name: 'Enterprise',
-    setup: '$7,500+',
-    monthly: '$3,000+',
+    setup: 'From $7,500 setup AUD ex. GST',
+    monthly: 'From $3,000/month AUD ex. GST',
     features: ['Advanced setup', 'Monthly management', 'Optimisation included', 'Support included', 'Reporting included'],
   },
 ];
 
 const sampleInvoices = [
-  { id: 'INV-001', date: 'Mar 1, 2026', amount: '$1,500', status: 'Paid' },
-  { id: 'INV-002', date: 'Feb 1, 2026', amount: '$1,500', status: 'Paid' },
-  { id: 'INV-003', date: 'Jan 3, 2026', amount: '$3,000', status: 'Paid' },
+  { id: 'INV-001', date: '1 March 2026', amount: '$1,500 AUD ex. GST', status: 'Paid' },
+  { id: 'INV-002', date: '1 February 2026', amount: '$1,500 AUD ex. GST', status: 'Paid' },
+  { id: 'INV-003', date: '3 January 2026', amount: '$3,000 AUD ex. GST', status: 'Paid' },
 ];
 
 const statusBadgeClass = {
@@ -123,7 +123,7 @@ export default function BillingSection({ mode = 'live', clientId = null }) {
               <div>
                 <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 mb-3">Sample Billing Preview</Badge>
                 <h3 className="text-3xl font-bold text-white mb-1">Growth</h3>
-                <p className="text-gray-300">$1,500/month • Renews Apr 1, 2026</p>
+                <p className="text-gray-300">$1,500/month AUD ex. GST • Renews 1 April 2026</p>
                 <p className="text-gray-500 text-sm mt-2">Setup fee status: Example only</p>
               </div>
               <div className="text-left lg:text-right">

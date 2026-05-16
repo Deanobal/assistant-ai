@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
 import HeroBrainCard from './HeroBrainCard';
-import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 export default function HeroSection() {
   return (
@@ -39,7 +38,11 @@ export default function HeroSection() {
                 <span>Get Started Now</span>
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
-              <VapiReceptionistDemoButton variant="secondary" className="sm:min-w-[14rem]" showFallbackText />
+              <a
+                href="/Contact"
+                className="inline-flex min-h-[3.5rem] w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]">
+                Contact Us
+              </a>
             </div>
 
             <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Choose a plan, complete secure checkout, and start setup without waiting days for a callback.
