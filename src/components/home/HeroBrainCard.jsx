@@ -11,7 +11,7 @@ export default function HeroBrainCard() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#06080d]/92 via-transparent to-transparent" />
         <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-[#080c14]/88 p-4 backdrop-blur-md">
           <p className="font-bold uppercase tracking-[0.22em] text-cyan-300 text-lg">WORKFLOW</p>
-          <p className="mt-1 font-medium leading-6 text-white text-base">Call answered → lead captured → follow-up queued
+          <p className="mt-1 font-medium leading-6 text-white text-base">Call answered → lead qualified → payment secured
 
           </p>
         </div>

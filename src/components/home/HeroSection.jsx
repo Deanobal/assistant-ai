@@ -28,7 +28,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-[1.05rem] leading-8 text-slate-300 md:text-xl md:leading-8">
-              AssistantAI answers calls, qualifies enquiries, recommends the right plan, creates a secure checkout, and starts onboarding automatically when a client is ready to move.
+              AssistantAI answers calls, qualifies enquiries, recommends the right plan, and helps ready clients get started instantly — without waiting for a callback.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -42,7 +42,7 @@ export default function HeroSection() {
               <VapiReceptionistDemoButton variant="secondary" className="sm:min-w-[14rem]" showFallbackText />
             </div>
 
-            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Choose Starter or Growth, complete secure checkout, and start onboarding instantly.
+            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Choose Starter or Growth, complete secure checkout, and begin onboarding when payment is confirmed.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-sm text-slate-300">

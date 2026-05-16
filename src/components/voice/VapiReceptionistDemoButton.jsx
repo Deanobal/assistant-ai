@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const VAPI_ASSISTANT_ID = 'cbd73d14-2515-4633-a01c-928b3ccdbadb';
 const VAPI_SDK_SRC = 'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js';
-const FALLBACK_MESSAGE = 'Our live AI receptionist demo is being connected. Leave your details and we’ll send you access.';
+const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 
 let sdkLoadPromise;
 
@@ -47,13 +47,11 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
     };
   }, []);
 
-  const buttonLabel = !isConfigured || fallbackVisible
-    ? 'Demo unavailable'
-    : isBusy
-      ? 'Connecting...'
-      : isLive
-        ? 'End Call'
-        : 'Talk to Our AI Receptionist';
+  const buttonLabel = !isConfigured || fallbackVisible || isBusy
+    ? 'AI Receptionist Demo Connecting'
+    : isLive
+      ? 'End Call'
+      : 'Talk to Our AI Receptionist';
 
   const handleClick = async () => {
     if (!isConfigured) {
@@ -114,7 +112,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       <Button
         type="button"
         onClick={handleClick}
-        disabled={isBusy || fallbackVisible}
+        disabled={isBusy || fallbackVisible || !isConfigured}
         className={`inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-center text-base font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto ${baseClass} ${className}`}
       >
         <Icon className="h-4 w-4" />
