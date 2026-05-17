@@ -9,16 +9,27 @@ function mask(value) {
   return value ? '[present-redacted]' : '[missing]';
 }
 
-function jsonResponse(body) {
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, x-webhook-secret, authorization',
+  };
+}
+
+function jsonResponse(body, status = 200) {
   console.log('Final response shape:', JSON.stringify({
+    status,
     has_results: Array.isArray(body?.results),
     result_count: body?.results?.length || 0,
     success: body?.success,
     message: body?.message,
   }));
-  return Response.json(body, {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
+
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: corsHeaders(),
   });
 }
 
@@ -89,7 +100,21 @@ function getToolArguments(call, body) {
   const parsed = parseArguments(extracted);
   if (Object.keys(parsed).length > 0) return parsed;
 
-  const ignored = new Set(['message', 'toolCalls', 'functionCall', 'function_call', 'function', 'name', 'toolName', 'tool_name', 'debug', 'webhook_secret', 'x_webhook_secret']);
+  const ignored = new Set([
+    'message',
+    'toolCalls',
+    'toolCallList',
+    'functionCall',
+    'function_call',
+    'function',
+    'name',
+    'toolName',
+    'tool_name',
+    'debug',
+    'webhook_secret',
+    'x_webhook_secret',
+  ]);
+
   const flat = {};
   Object.entries(body || {}).forEach(([key, value]) => {
     if (!ignored.has(key)) flat[key] = value;
@@ -98,23 +123,37 @@ function getToolArguments(call, body) {
 }
 
 function extractToolCalls(body) {
-  const source = Array.isArray(body?.message?.toolCalls)
-    ? body.message.toolCalls
-    : Array.isArray(body?.toolCalls)
-      ? body.toolCalls
-      : body?.functionCall
-        ? [body.functionCall]
-        : body?.function_call
-          ? [body.function_call]
-          : getToolName(body, body)
-            ? [body]
-            : [];
+  const source = Array.isArray(body?.message?.toolCallList)
+    ? body.message.toolCallList
+    : Array.isArray(body?.message?.toolCalls)
+      ? body.message.toolCalls
+      : Array.isArray(body?.toolCallList)
+        ? body.toolCallList
+        : Array.isArray(body?.toolCalls)
+          ? body.toolCalls
+          : body?.functionCall
+            ? [body.functionCall]
+            : body?.function_call
+              ? [body.function_call]
+              : getToolName(body, body)
+                ? [body]
+                : [];
 
   return source.map((call, index) => ({
     toolCallId: getToolCallId(call, index),
     name: getToolName(call, body),
     arguments: getToolArguments(call, body),
   }));
+}
+
+function getReceivedSecret(req) {
+  const url = new URL(req.url);
+  return (
+    req.headers.get('x-webhook-secret') ||
+    url.searchParams.get('vapi_token') ||
+    url.searchParams.get('webhook_secret') ||
+    ''
+  );
 }
 
 async function invokeInternalFunction(base44, toolName, args, secret) {
@@ -132,16 +171,44 @@ async function invokeInternalFunction(base44, toolName, args, secret) {
 
 Deno.serve(async (req) => {
   let body = {};
+
   try {
+    console.log('Incoming request method/path:', JSON.stringify({
+      method: req.method,
+      url: req.url,
+    }));
+
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
     const expectedSecret = Deno.env.get('VAPI_WEBHOOK_SECRET') || '';
-    const receivedSecret = req.headers.get('x-webhook-secret') || '';
+    const receivedSecret = getReceivedSecret(req);
     const secretValid = !!receivedSecret && !!expectedSecret && receivedSecret === expectedSecret;
 
-    console.log('Incoming headers present:', JSON.stringify({
+    console.log('Incoming headers/auth present:', JSON.stringify({
       content_type: req.headers.get('content-type') || '',
       user_agent: req.headers.get('user-agent') || '',
-      x_webhook_secret: mask(receivedSecret),
+      x_webhook_secret: mask(req.headers.get('x-webhook-secret') || ''),
+      query_token: mask(new URL(req.url).searchParams.get('vapi_token') || ''),
     }));
+
+    if (req.method === 'GET') {
+      return jsonResponse({
+        success: true,
+        message: 'Vapi tool-call handler reachable. Use POST for tool-calls.',
+        method: req.method,
+        secret_received: !!receivedSecret,
+        secret_valid: secretValid,
+      });
+    }
+
+    if (req.method !== 'POST') {
+      return jsonResponse({
+        success: false,
+        error: `Unsupported method: ${req.method}. Vapi tool-calls must use POST.`,
+      });
+    }
 
     try {
       body = await req.json();
@@ -151,7 +218,10 @@ Deno.serve(async (req) => {
 
     console.log('Request body shape:', JSON.stringify({
       keys: Object.keys(body || {}),
+      message_type: body?.message?.type || '',
+      has_message_toolCallList: Array.isArray(body?.message?.toolCallList),
       has_message_toolCalls: Array.isArray(body?.message?.toolCalls),
+      has_toolCallList: Array.isArray(body?.toolCallList),
       has_toolCalls: Array.isArray(body?.toolCalls),
       has_functionCall: !!body?.functionCall,
       has_function_call: !!body?.function_call,
@@ -162,6 +232,7 @@ Deno.serve(async (req) => {
       return jsonResponse({
         success: true,
         message: 'Vapi tool-call handler reachable',
+        method: req.method,
         secret_received: !!receivedSecret,
         secret_valid: secretValid,
       });
