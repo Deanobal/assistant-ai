@@ -131,13 +131,17 @@ function extractToolCalls(body) {
         ? body.toolCallList
         : Array.isArray(body?.toolCalls)
           ? body.toolCalls
-          : body?.functionCall
-            ? [body.functionCall]
-            : body?.function_call
-              ? [body.function_call]
-              : getToolName(body, body)
-                ? [body]
-                : [];
+          : body?.message?.functionCall
+            ? [body.message.functionCall]
+            : body?.message?.function_call
+              ? [body.message.function_call]
+              : body?.functionCall
+                ? [body.functionCall]
+                : body?.function_call
+                  ? [body.function_call]
+                  : getToolName(body, body)
+                    ? [body]
+                    : [];
 
   return source.map((call, index) => ({
     toolCallId: getToolCallId(call, index),
@@ -173,9 +177,11 @@ Deno.serve(async (req) => {
   let body = {};
 
   try {
+    const requestUrl = new URL(req.url);
     console.log('Incoming request method/path:', JSON.stringify({
       method: req.method,
-      url: req.url,
+      pathname: requestUrl.pathname,
+      has_vapi_token_query: requestUrl.searchParams.has('vapi_token'),
     }));
 
     if (req.method === 'OPTIONS') {
@@ -205,8 +211,7 @@ Deno.serve(async (req) => {
 
     if (req.method !== 'POST') {
       return jsonResponse({
-        success: false,
-        error: `Unsupported method: ${req.method}. Vapi tool-calls must use POST.`,
+        results: [errorResult('unknown_tool_call', `Unsupported method: ${req.method}. Vapi tool-calls must use POST.`)],
       });
     }
 
@@ -223,8 +228,8 @@ Deno.serve(async (req) => {
       has_message_toolCalls: Array.isArray(body?.message?.toolCalls),
       has_toolCallList: Array.isArray(body?.toolCallList),
       has_toolCalls: Array.isArray(body?.toolCalls),
-      has_functionCall: !!body?.functionCall,
-      has_function_call: !!body?.function_call,
+      has_functionCall: !!body?.functionCall || !!body?.message?.functionCall,
+      has_function_call: !!body?.function_call || !!body?.message?.function_call,
       debug: body?.debug === true,
     }));
 
@@ -239,8 +244,11 @@ Deno.serve(async (req) => {
     }
 
     const toolCalls = extractToolCalls(body);
-    console.log('Detected tool names:', JSON.stringify(toolCalls.map((call) => call.name)));
-    console.log('Extracted arguments:', JSON.stringify(toolCalls.map((call) => ({ toolCallId: call.toolCallId, name: call.name, arguments: call.arguments }))));
+    console.log('Detected tool calls:', JSON.stringify(toolCalls.map((call) => ({
+      toolCallId: call.toolCallId,
+      name: call.name,
+      argument_keys: Object.keys(call.arguments || {}).filter((key) => !/secret|token|key/i.test(key)),
+    }))));
 
     if (!secretValid) {
       const fallbackToolCallId = toolCalls[0]?.toolCallId || 'unknown_tool_call';
@@ -262,7 +270,12 @@ Deno.serve(async (req) => {
 
       try {
         const internalResult = await invokeInternalFunction(base44, toolCall.name, toolCall.arguments, expectedSecret);
-        console.log('Internal function result:', JSON.stringify({ toolCallId: toolCall.toolCallId, name: toolCall.name, result: internalResult }));
+        console.log('Internal function result:', JSON.stringify({
+          toolCallId: toolCall.toolCallId,
+          name: toolCall.name,
+          success: internalResult?.success === true,
+          result_keys: Object.keys(internalResult || {}).filter((key) => !/secret|token|key/i.test(key)),
+        }));
         results.push({
           toolCallId: toolCall.toolCallId,
           result: internalResult,
