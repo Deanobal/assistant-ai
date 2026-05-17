@@ -16,10 +16,6 @@ import PortalIntegrations from '../components/dashboard/PortalIntegrations';
 import SupportSection from '../components/dashboard/SupportSection';
 import PortalFilesSection from '../components/portal/PortalFilesSection';
 
-function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
 function getLinkedClientId(user) {
   return (
     user?.client_account_id ||
@@ -32,45 +28,25 @@ function getLinkedClientId(user) {
 async function resolveClientAccess(user) {
   const linkedClientId = getLinkedClientId(user);
 
-  if (linkedClientId) {
-    return {
-      status: 'linked',
-      clientAccountId: linkedClientId,
-      matchedClient: null,
-      message: null,
-    };
-  }
-
-  const userEmail = normalizeEmail(user?.email);
-
-  if (!userEmail) {
-    return {
-      status: 'not_linked',
-      clientAccountId: null,
-      matchedClient: null,
-      message: 'Portal access is not linked to a client record yet. If you are an active client, contact support at sales@assistantai.com.au.',
-    };
-  }
-
   try {
-    const clients = await base44.entities.Client.list('-updated_date', 500);
-    const matches = (clients || []).filter((client) => normalizeEmail(client.email) === userEmail);
+    const result = await base44.functions.invoke('resolveClientPortalAccess', {});
+    const data = result?.data || result;
 
-    if (matches.length === 1) {
+    if (data?.success && data?.client_id) {
       return {
-        status: 'linked_by_email',
-        clientAccountId: matches[0].id,
-        matchedClient: matches[0],
+        status: data.access_method || 'resolved',
+        clientAccountId: data.client_id,
+        matchedClient: data.client || null,
         message: null,
       };
     }
 
-    if (matches.length > 1) {
+    if (linkedClientId) {
       return {
-        status: 'multiple_matches',
-        clientAccountId: null,
+        status: 'linked_unverified',
+        clientAccountId: linkedClientId,
         matchedClient: null,
-        message: 'Multiple client records were found for this email. Please contact support so we can link your account.',
+        message: null,
       };
     }
 
@@ -78,10 +54,20 @@ async function resolveClientAccess(user) {
       status: 'not_linked',
       clientAccountId: null,
       matchedClient: null,
-      message: 'Portal access is not linked to a client record yet. If you are an active client, contact support at sales@assistantai.com.au.',
+      message: data?.error || 'Portal access is not linked to a client record yet. If you are an active client, contact support at sales@assistantai.com.au.',
     };
   } catch (error) {
-    console.error('Client portal access resolution failed:', error);
+    console.error('Client portal backend access resolution failed:', error);
+
+    if (linkedClientId) {
+      return {
+        status: 'linked_fallback',
+        clientAccountId: linkedClientId,
+        matchedClient: null,
+        message: null,
+      };
+    }
+
     return {
       status: 'lookup_failed',
       clientAccountId: null,
@@ -182,7 +168,7 @@ export default function ClientPortal() {
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
               <Badge className="bg-white/5 text-gray-300 border-white/10">Private access</Badge>
-              {portalAccess.status === 'linked_by_email' && (
+              {portalAccess.status === 'email_match' && (
                 <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20">Matched by email</Badge>
               )}
             </div>
