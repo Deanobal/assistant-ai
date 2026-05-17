@@ -21,6 +21,19 @@ function safeClient(client: any) {
   };
 }
 
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, authorization',
+  };
+}
+
+function jsonResponse(body: any, status = 200) {
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
 async function persistUserClientLink(base44: any, user: any, clientId: string) {
   if (!user?.id || !clientId) return;
 
@@ -64,11 +77,15 @@ async function createClientForUser(base44: any, user: any) {
 
 Deno.serve(async (req) => {
   try {
+    if (req.method === 'OPTIONS') return jsonResponse({ success: true, method: 'OPTIONS' });
+    if (req.method === 'GET') return jsonResponse({ success: true, message: 'resolveClientPortalAccess reachable. Use POST while authenticated.' });
+    if (req.method !== 'POST') return jsonResponse({ success: false, error: `Unsupported method: ${req.method}` }, 405);
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user?.email) {
-      return Response.json({ success: false, error: 'You must be logged in to access the client portal.' }, { status: 200 });
+      return jsonResponse({ success: false, error: 'You must be logged in to access the client portal.' }, 401);
     }
 
     const linkedClientId = getLinkedClientId(user);
@@ -78,7 +95,7 @@ Deno.serve(async (req) => {
       const linkedClient = linkedClients?.[0] || null;
 
       if (linkedClient) {
-        return Response.json({
+        return jsonResponse({
           success: true,
           client_id: linkedClient.id,
           access_method: 'direct_link',
@@ -102,7 +119,7 @@ Deno.serve(async (req) => {
       const matchedClient = uniqueMatches[0];
       await persistUserClientLink(base44, user, matchedClient.id);
 
-      return Response.json({
+      return jsonResponse({
         success: true,
         client_id: matchedClient.id,
         access_method: uniqueMatches.length > 1 ? 'latest_email_match' : 'email_match',
@@ -114,7 +131,7 @@ Deno.serve(async (req) => {
     const createdClient = await createClientForUser(base44, user);
     await persistUserClientLink(base44, user, createdClient.id);
 
-    return Response.json({
+    return jsonResponse({
       success: true,
       client_id: createdClient.id,
       access_method: 'created_from_login',
@@ -123,9 +140,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('resolveClientPortalAccess failed:', error);
-    return Response.json({
+    return jsonResponse({
       success: false,
       error: 'We could not verify your client portal access right now. Please contact support at sales@assistantai.com.au.',
-    }, { status: 200 });
+    }, 500);
   }
 });

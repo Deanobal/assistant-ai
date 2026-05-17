@@ -49,6 +49,19 @@ function integrationRecords(clientId, plan) {
   return records;
 }
 
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, authorization',
+  };
+}
+
+function jsonResponse(body, status = 200) {
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
 async function upsertClient(base44, lead, plan) {
   const existingByLead = await base44.asServiceRole.entities.Client.filter({ source_lead_id: lead.id }, '-updated_date', 1);
   const existingByEmail = !existingByLead[0] && lead.email ? await base44.asServiceRole.entities.Client.filter({ email: lead.email }, '-updated_date', 1) : [];
@@ -204,14 +217,18 @@ async function notify(base44, client, lead, plan) {
 
 Deno.serve(async (req) => {
   try {
+    if (req.method === 'OPTIONS') return jsonResponse({ success: true, method: 'OPTIONS' });
+    if (req.method === 'GET') return jsonResponse({ success: true, message: 'startClientOnboardingFromPaidLead reachable. Use POST from trusted backend flows.' });
+    if (req.method !== 'POST') return jsonResponse({ error: `Unsupported method: ${req.method}` }, 405);
+
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
     const leadId = clean(payload.lead_id);
-    if (!leadId) return Response.json({ error: 'lead_id is required' }, { status: 400 });
+    if (!leadId) return jsonResponse({ error: 'lead_id is required' }, 400);
 
     const leads = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
     const lead = leads[0];
-    if (!lead) return Response.json({ error: 'Lead not found' }, { status: 404 });
+    if (!lead) return jsonResponse({ error: 'Lead not found' }, 404);
 
     const plan = normalizePlan(payload.plan || lead.selected_plan || lead.likely_plan_fit);
     const client = await upsertClient(base44, lead, plan);
@@ -255,8 +272,8 @@ Deno.serve(async (req) => {
       // GoHighLevel sync is optional and should not block onboarding.
     }
 
-    return Response.json({ success: true, client_id: client.id, lead_id: lead.id, plan });
+    return jsonResponse({ success: true, client_id: client.id, lead_id: lead.id, plan });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return jsonResponse({ error: error.message }, 500);
   }
 });

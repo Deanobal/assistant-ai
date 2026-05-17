@@ -29,6 +29,19 @@ function buildEnquiryLog({ timestamp, helpType, message }) {
   return `[${timestamp}] Contact • ${helpType || 'general'}\n${message || 'No message provided.'}`;
 }
 
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, authorization',
+  };
+}
+
+function jsonResponse(body, status = 200) {
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
 async function notifyAdmin(base44, lead, payload, reqUrl) {
   try {
     const result = await base44.asServiceRole.functions.invoke('sendAdminAlert', {
@@ -57,6 +70,10 @@ async function notifyAdmin(base44, lead, payload, reqUrl) {
 
 Deno.serve(async (req) => {
   try {
+    if (req.method === 'OPTIONS') return jsonResponse({ success: true, method: 'OPTIONS' });
+    if (req.method === 'GET') return jsonResponse({ success: true, message: 'submitContactLead reachable. Use POST to submit contact enquiries.' });
+    if (req.method !== 'POST') return jsonResponse({ error: `Unsupported method: ${req.method}` }, 405);
+
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
     const now = new Date().toISOString();
@@ -67,9 +84,9 @@ Deno.serve(async (req) => {
     const helpType = clean(payload.help_type || payload.enquiry_type || 'other');
     const message = clean(payload.message);
 
-    if (!fullName) return Response.json({ error: 'Full name is required.' }, { status: 400 });
-    if (!email) return Response.json({ error: 'Email is required.' }, { status: 400 });
-    if (!message) return Response.json({ error: 'Message is required.' }, { status: 400 });
+    if (!fullName) return jsonResponse({ error: 'Full name is required.' }, 400);
+    if (!email) return jsonResponse({ error: 'Email is required.' }, 400);
+    if (!message) return jsonResponse({ error: 'Message is required.' }, 400);
 
     const byEmail = await base44.asServiceRole.entities.Lead.filter({ email }, '-updated_date', 1);
     const existing = byEmail[0] || null;
@@ -107,8 +124,8 @@ Deno.serve(async (req) => {
 
     const notification = await notifyAdmin(base44, lead, { ...payload, full_name: fullName, email, mobile_number: mobileNumber, help_type: helpType, message }, req.url);
 
-    return Response.json({ success: true, lead, notification });
+    return jsonResponse({ success: true, lead, notification });
   } catch (error) {
-    return Response.json({ error: error.message || 'Unable to send your message.' }, { status: 500 });
+    return jsonResponse({ error: error.message || 'Unable to send your message.' }, 500);
   }
 });

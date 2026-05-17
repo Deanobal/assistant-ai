@@ -26,6 +26,19 @@ function getErrorMessage(error) {
   return 'Unknown error';
 }
 
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, authorization',
+  };
+}
+
+function jsonResponse(body, status = 200) {
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
 function normalizeEventType(eventType) {
   return EVENT_TYPE_ALIASES[eventType] || eventType;
 }
@@ -73,6 +86,22 @@ function buildAlertMetadata(metadata, normalizedEventType, uniqueKey, priority) 
     entity_event_type: normalizedEventType,
     unique_key: uniqueKey,
     priority,
+  };
+}
+
+function normalizeAlertPayload(payload) {
+  const eventType = payload.eventType || payload.event_type;
+  const entityName = payload.entityName || payload.entity_name;
+  const entityId = payload.entityId || payload.entity_id;
+  const uniqueKey = payload.uniqueKey || [eventType, entityName, entityId, Date.now()].filter(Boolean).join(':');
+  return {
+    ...payload,
+    eventType,
+    entityName,
+    entityId,
+    clientAccountId: payload.clientAccountId || payload.client_account_id || null,
+    actorEmail: payload.actorEmail || payload.actor_email || null,
+    uniqueKey,
   };
 }
 
@@ -608,14 +637,19 @@ async function runAdminAlert(base44, requestUrl, payload) {
 
 Deno.serve(async (req) => {
   try {
+    if (req.method === 'OPTIONS') return jsonResponse({ success: true, method: 'OPTIONS' });
+    if (req.method === 'GET') return jsonResponse({ success: true, message: 'sendAdminAlert reachable. Use POST from trusted backend flows.' });
+    if (req.method !== 'POST') return jsonResponse({ error: `Unsupported method: ${req.method}` }, 405);
+
     const base44 = createClientFromRequest(req).asServiceRole;
-    const payload = await req.json();
+    const rawPayload = await req.json();
+    const payload = normalizeAlertPayload(rawPayload);
     const result = await runAdminAlert(base44, req.url, payload);
     if (result?.error) {
-      return Response.json({ error: result.error }, { status: result.status || 400 });
+      return jsonResponse({ error: result.error }, result.status || 400);
     }
-    return Response.json(result);
+    return jsonResponse(result);
   } catch (error) {
-    return Response.json({ error: getErrorMessage(error) }, { status: 500 });
+    return jsonResponse({ error: getErrorMessage(error) }, 500);
   }
 });

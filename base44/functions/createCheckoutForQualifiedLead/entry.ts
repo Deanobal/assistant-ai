@@ -28,12 +28,24 @@ function verifyWebhookSecret(req, payload = {}) {
   };
 }
 
-function jsonToolResponse(body) {
-  console.log('Final response:', JSON.stringify(body));
-  return Response.json(body, {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, x-webhook-secret, authorization',
+  };
+}
+
+function jsonToolResponse(body, status = 200) {
+  console.log('Final response:', JSON.stringify({ success: body?.success, error: body?.error, lead_id: body?.lead_id, selected_plan: body?.selected_plan }));
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
+function isAllowedPublicRequest(req) {
+  const origin = req.headers.get('origin') || '';
+  if (!origin) return true;
+  return /^https:\/\/(www\.)?assistantai\.com\.au$/i.test(origin) || /\.vercel\.app$/i.test(origin);
 }
 
 function validationError(field) {
@@ -111,11 +123,24 @@ Deno.serve(async (req) => {
   let payload = {};
   try {
     console.log('Incoming request headers:', JSON.stringify(getSafeHeaders(req)));
+
+    if (req.method === 'OPTIONS') {
+      return jsonToolResponse({ success: true, method: 'OPTIONS' });
+    }
+
+    if (req.method === 'GET') {
+      return jsonToolResponse({ success: true, message: 'createCheckoutForQualifiedLead reachable. Use POST to create checkout.' });
+    }
+
+    if (req.method !== 'POST') {
+      return jsonToolResponse({ success: false, error: `Unsupported method: ${req.method}` }, 405);
+    }
+
     payload = await req.json();
-    console.log('Incoming request body:', JSON.stringify(payload));
 
     const authResult = verifyWebhookSecret(req, payload);
-    console.log('Webhook auth result:', JSON.stringify(authResult));
+    const publicRequestAllowed = isAllowedPublicRequest(req);
+    console.log('Request auth result:', JSON.stringify({ ...authResult, public_request_allowed: publicRequestAllowed }));
 
     if (payload.debug === true) {
       return jsonToolResponse({
@@ -126,8 +151,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!authResult.secret_valid) {
-      return jsonToolResponse({ success: false, error: 'Invalid webhook secret' });
+    if (!authResult.secret_valid && !publicRequestAllowed) {
+      return jsonToolResponse({ success: false, error: 'Request origin is not allowed' }, 403);
     }
 
     const base44 = createClientFromRequest(req);

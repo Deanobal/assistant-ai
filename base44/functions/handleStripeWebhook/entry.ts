@@ -30,6 +30,19 @@ function clean(value) {
   return String(value || '').trim();
 }
 
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, stripe-signature',
+  };
+}
+
+function jsonResponse(body, status = 200) {
+  return Response.json(body, { status, headers: corsHeaders() });
+}
+
 function getObjectId(event) {
   const object = event.data?.object || {};
   return object.id || null;
@@ -130,6 +143,10 @@ async function notifyFollowUp(base44, leadId, title, message) {
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   try {
+    if (req.method === 'OPTIONS') return jsonResponse({ success: true, method: 'OPTIONS' });
+    if (req.method === 'GET') return jsonResponse({ success: true, message: 'handleStripeWebhook reachable. Stripe must POST signed webhook events.' });
+    if (req.method !== 'POST') return jsonResponse({ error: `Unsupported method: ${req.method}` }, 405);
+
     const stripeMode = getStripeMode();
     const stripe = getStripeClient(stripeMode);
     const signature = req.headers.get('stripe-signature');
@@ -138,7 +155,7 @@ Deno.serve(async (req) => {
 
     const { logRecord, shouldSkip } = await prepareEventLog(base44, event);
     if (shouldSkip) {
-      return Response.json({ received: true, skipped: true, reason: 'already_processed_successfully' });
+      return jsonResponse({ received: true, skipped: true, reason: 'already_processed_successfully' });
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -165,7 +182,7 @@ Deno.serve(async (req) => {
       });
 
       await markEventLogSuccess(base44, logRecord, event, result?.data, result?.data?.client_id || null);
-      return Response.json({ received: true, event_type: event.type, result: result?.data });
+      return jsonResponse({ received: true, event_type: event.type, result: result?.data });
     }
 
     if (event.type === 'checkout.session.expired') {
@@ -174,12 +191,12 @@ Deno.serve(async (req) => {
       await updateLeadPayment(base44, leadId, 'cancelled', 'Follow up after abandoned checkout');
       await notifyFollowUp(base44, leadId, 'Checkout expired', 'A qualified buyer did not complete checkout. Follow up quickly.');
       await markEventLogSuccess(base44, logRecord, event, { cancelled: true });
-      return Response.json({ received: true, event_type: event.type });
+      return jsonResponse({ received: true, event_type: event.type });
     }
 
     if (event.type === 'payment_intent.succeeded' || event.type === 'invoice.payment_succeeded') {
       await markEventLogSuccess(base44, logRecord, event, { acknowledged: true });
-      return Response.json({ received: true, event_type: event.type });
+      return jsonResponse({ received: true, event_type: event.type });
     }
 
     if (event.type === 'payment_intent.payment_failed' || event.type === 'invoice.payment_failed') {
@@ -188,11 +205,11 @@ Deno.serve(async (req) => {
       await updateLeadPayment(base44, leadId, 'failed', 'Follow up after failed payment');
       await notifyFollowUp(base44, leadId, 'Payment failed', 'A qualified buyer payment failed. Follow up and help them complete signup.');
       await markEventLogSuccess(base44, logRecord, event, { payment_failed: true });
-      return Response.json({ received: true, event_type: event.type });
+      return jsonResponse({ received: true, event_type: event.type });
     }
 
     await markEventLogSuccess(base44, logRecord, event, { ignored: true });
-    return Response.json({ received: true, event_type: event.type, ignored: true });
+    return jsonResponse({ received: true, event_type: event.type, ignored: true });
   } catch (error) {
     console.error('handleStripeWebhook failed', error);
     try {
@@ -206,6 +223,6 @@ Deno.serve(async (req) => {
     } catch {
       // Signature or body may already be consumed; return original error.
     }
-    return Response.json({ error: error.message }, { status: 400 });
+    return jsonResponse({ error: error.message }, 400);
   }
 });

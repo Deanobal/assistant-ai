@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     }));
 
     if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      return jsonResponse({ success: true, method: 'OPTIONS' });
     }
 
     const expectedSecret = Deno.env.get('VAPI_WEBHOOK_SECRET') || '';
