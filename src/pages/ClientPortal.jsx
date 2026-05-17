@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, Lock, FolderOpen, ClipboardList } from 'lucide-react';
+import { LogOut, Headphones, CreditCard, Link2, BarChart3, LifeBuoy, FolderOpen, ClipboardList, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,234 +15,106 @@ import PortalIntegrations from '../components/dashboard/PortalIntegrations';
 import SupportSection from '../components/dashboard/SupportSection';
 import PortalFilesSection from '../components/portal/PortalFilesSection';
 
-function getLinkedClientId(user) {
-  return (
-    user?.client_account_id ||
-    user?.client_record_id ||
-    user?.client_id ||
-    null
-  );
+const supportMessage = 'Your portal is open. Your live client record is still being linked, so some sections may show no data until onboarding is connected.';
+
+function getClientId(user) {
+  return user?.client_account_id || user?.client_record_id || user?.client_id || `portal-${String(user?.email || user?.id || 'client').toLowerCase()}`;
 }
 
-async function resolveClientAccess(user) {
-  const linkedClientId = getLinkedClientId(user);
-
+async function getPortalAccess(user) {
   try {
     const result = await base44.functions.invoke('resolveClientPortalAccess', {});
     const data = result?.data || result;
-
     if (data?.success && data?.client_id) {
-      return {
-        status: data.access_method || 'resolved',
-        clientAccountId: data.client_id,
-        matchedClient: data.client || null,
-        message: null,
-      };
+      return { clientId: data.client_id, client: data.client || null, status: data.access_method || 'linked', provisional: false };
     }
-
-    if (linkedClientId) {
-      return {
-        status: 'linked_unverified',
-        clientAccountId: linkedClientId,
-        matchedClient: null,
-        message: null,
-      };
-    }
-
-    return {
-      status: 'not_linked',
-      clientAccountId: null,
-      matchedClient: null,
-      message: data?.error || 'Portal access is not linked to a client record yet. If you are an active client, contact support at sales@assistantai.com.au.',
-    };
   } catch (error) {
-    console.error('Client portal backend access resolution failed:', error);
-
-    if (linkedClientId) {
-      return {
-        status: 'linked_fallback',
-        clientAccountId: linkedClientId,
-        matchedClient: null,
-        message: null,
-      };
-    }
-
-    return {
-      status: 'lookup_failed',
-      clientAccountId: null,
-      matchedClient: null,
-      message: 'We could not verify your client portal access right now. Please contact support at sales@assistantai.com.au.',
-    };
+    console.warn('Portal resolver unavailable; opening authenticated portal shell.', error);
   }
+  return {
+    clientId: getClientId(user),
+    client: { email: user?.email || '', full_name: user?.full_name || user?.name || '', business_name: user?.business_name || 'Your business' },
+    status: 'provisional',
+    provisional: true,
+  };
 }
 
 export default function ClientPortal() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [portalAccess, setPortalAccess] = useState({
-    status: 'checking',
-    clientAccountId: null,
-    matchedClient: null,
-    message: null,
-  });
+  const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [access, setAccess] = useState(null);
 
   useEffect(() => {
-    const checkAccess = async () => {
+    async function loadPortal() {
       try {
-        const authenticated = await base44.auth.isAuthenticated();
-        setIsAuthenticated(authenticated);
-
-        if (authenticated) {
-          const user = await base44.auth.me();
-          const access = await resolveClientAccess(user);
-
-          setPortalAccess(access);
-          setCurrentUser({
-            ...user,
-            client_account_id: access.clientAccountId || getLinkedClientId(user),
-          });
+        const ok = await base44.auth.isAuthenticated();
+        setAuthenticated(ok);
+        if (ok) {
+          const me = await base44.auth.me();
+          const resolved = await getPortalAccess(me);
+          setUser({ ...me, client_account_id: resolved.clientId });
+          setAccess(resolved);
         }
       } catch (error) {
-        console.error('Client portal auth check failed:', error);
+        console.error('Client portal load failed:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    };
-
-    checkAccess();
+    }
+    loadPortal();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
-        <div className="w-8 h-8 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin" />
-      </div>
-    );
+  if (loading) {
+    return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6"><div className="w-8 h-8 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin" /></div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/ClientLogin" replace />;
-  }
+  if (!authenticated) return <Navigate to="/ClientLogin" replace />;
 
-  if (!portalAccess.clientAccountId) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6 py-24">
-        <Card className="bg-[#12121a] border-white/5 max-w-md w-full">
-          <CardContent className="p-8 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-              <Lock className="w-7 h-7 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2">Portal Access Not Linked Yet</h1>
-              <p className="text-gray-400">
-                {portalAccess.message || 'Your login is protected, but it has not been linked to a client business record yet.'}
-              </p>
-            </div>
-            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
-              Return to Website
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const handleLogout = () => {
-    base44.auth.logout('/');
-  };
-
-  const clientAccountId = portalAccess.clientAccountId;
-  const matchedClient = portalAccess.matchedClient;
+  const clientId = access?.clientId || getClientId(user);
+  const client = access?.client || {};
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] py-24 px-6">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"
-        >
+        <div className="mb-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
               <Badge className="bg-white/5 text-gray-300 border-white/10">Private access</Badge>
-              {portalAccess.status === 'email_match' && (
-                <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20">Matched by email</Badge>
-              )}
+              {access?.provisional && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Linking in progress</Badge>}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI Client Portal</h1>
-            <p className="text-gray-400">
-              {matchedClient?.business_name
-                ? `Review call activity, billing, integrations, and support for ${matchedClient.business_name}.`
-                : 'Review call activity, billing, integrations, and support from one private client workspace.'}
-            </p>
+            <p className="text-gray-400">Review call activity, billing, integrations, and support{client.business_name ? ` for ${client.business_name}` : ''}.</p>
           </div>
-          <Button variant="outline" onClick={handleLogout} className="border-white/10 bg-transparent text-white hover:bg-white/5 w-fit">
-            <LogOut className="w-4 h-4 mr-2" />
-            Log Out
-          </Button>
-        </motion.div>
+          <Button variant="outline" onClick={() => base44.auth.logout('/')} className="border-white/10 bg-transparent text-white hover:bg-white/5 w-fit"><LogOut className="w-4 h-4 mr-2" />Log Out</Button>
+        </div>
+
+        {access?.provisional && (
+          <Card className="bg-amber-500/10 border-amber-500/20 mb-8">
+            <CardContent className="p-5 flex gap-3 text-sm text-amber-100"><AlertCircle className="w-5 h-5 mt-0.5 shrink-0 text-amber-300" /><p>{supportMessage}</p></CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="overview" className="space-y-8">
           <TabsList className="bg-[#12121a] border border-white/5 flex flex-wrap h-auto gap-2 p-2 justify-start">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="leads" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <ClipboardList className="w-4 h-4 mr-2" />
-              Leads
-            </TabsTrigger>
-            <TabsTrigger value="calls" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <Headphones className="w-4 h-4 mr-2" />
-              Call Recordings
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Billing
-            </TabsTrigger>
-            <TabsTrigger value="integrations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <Link2 className="w-4 h-4 mr-2" />
-              Integrations
-            </TabsTrigger>
-            <TabsTrigger value="support" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <LifeBuoy className="w-4 h-4 mr-2" />
-              Support
-            </TabsTrigger>
-            <TabsTrigger value="files" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Files
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="leads"><ClipboardList className="w-4 h-4 mr-2" />Leads</TabsTrigger>
+            <TabsTrigger value="calls"><Headphones className="w-4 h-4 mr-2" />Call Recordings</TabsTrigger>
+            <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
+            <TabsTrigger value="billing"><CreditCard className="w-4 h-4 mr-2" />Billing</TabsTrigger>
+            <TabsTrigger value="integrations"><Link2 className="w-4 h-4 mr-2" />Integrations</TabsTrigger>
+            <TabsTrigger value="support"><LifeBuoy className="w-4 h-4 mr-2" />Support</TabsTrigger>
+            <TabsTrigger value="files"><FolderOpen className="w-4 h-4 mr-2" />Files</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview">
-            <ClientOverviewSection clientAccountId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="leads">
-            <ClientLeadsSection clientAccountId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="calls">
-            <CallRecordings clientAccountId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="analytics">
-            <AnalyticsSection clientAccountId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="billing">
-            <BillingSection clientId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="integrations">
-            <PortalIntegrations clientAccountId={clientAccountId} />
-          </TabsContent>
-          <TabsContent value="support">
-            <SupportSection clientAccountId={clientAccountId} currentUser={currentUser} />
-          </TabsContent>
-          <TabsContent value="files">
-            <PortalFilesSection clientAccountId={clientAccountId} />
-          </TabsContent>
+          <TabsContent value="overview"><ClientOverviewSection clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="leads"><ClientLeadsSection clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="calls"><CallRecordings clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="analytics"><AnalyticsSection clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="billing"><BillingSection clientId={clientId} /></TabsContent>
+          <TabsContent value="integrations"><PortalIntegrations clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="support"><SupportSection clientAccountId={clientId} currentUser={user} /></TabsContent>
+          <TabsContent value="files"><PortalFilesSection clientAccountId={clientId} /></TabsContent>
         </Tabs>
       </div>
     </div>
