@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 export default function CTASection() {
   return (
-    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
+    <section className="relative py-18 md:py-24 bg-[#0c0c14]" id="live-demo">
       <div className="absolute inset-0 bg-radial-glow" />
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px]" />
       <div className="relative max-w-4xl mx-auto px-6 text-center">
@@ -12,9 +13,9 @@ export default function CTASection() {
             Ready to Turn Enquiries Into Paid Clients?
           </h2>
           <p className="mt-6 max-w-3xl mx-auto text-base leading-8 text-gray-400 md:text-lg">
-            Ready to stop missing enquiries? Choose a plan or talk to the AI receptionist and see how fast your business can respond.
+            Ready to stop missing enquiries? Choose a plan or test the AI receptionist and see how fast your business can respond.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
               to="/GetStartedNow"
               className="inline-flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-center font-medium text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25"
@@ -22,12 +23,7 @@ export default function CTASection() {
               Get Started Now
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link
-              to="/#live-demo"
-              className="inline-flex min-h-[3.5rem] items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-4 text-center font-medium text-white transition-all hover:bg-white/[0.05] hover:border-white/30"
-            >
-              Talk to Our AI Receptionist
-            </Link>
+            <VapiReceptionistDemoButton variant="secondary" showFallbackText />
           </div>
         </div>
       </div>
