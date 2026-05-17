@@ -5,12 +5,7 @@ function normalizeEmail(value: unknown): string {
 }
 
 function getLinkedClientId(user: any): string | null {
-  return (
-    user?.client_account_id ||
-    user?.client_record_id ||
-    user?.client_id ||
-    null
-  );
+  return user?.client_account_id || user?.client_record_id || user?.client_id || null;
 }
 
 function safeClient(client: any) {
@@ -26,16 +21,54 @@ function safeClient(client: any) {
   };
 }
 
+async function persistUserClientLink(base44: any, user: any, clientId: string) {
+  if (!user?.id || !clientId) return;
+
+  try {
+    const targetUsers = await base44.asServiceRole.entities.User.filter({ id: user.id }, '-created_date', 1);
+    const targetUser = targetUsers?.[0];
+
+    if (targetUser && targetUser.client_account_id !== clientId) {
+      await base44.asServiceRole.entities.User.update(targetUser.id, {
+        ...targetUser,
+        client_account_id: clientId,
+      });
+    }
+  } catch (error) {
+    console.warn('Could not persist client_account_id:', error?.message || error);
+  }
+}
+
+async function createClientForUser(base44: any, user: any) {
+  const email = normalizeEmail(user.email);
+  const fullName = user.full_name || user.name || email.split('@')[0] || 'Client';
+  const businessName = user.business_name || user.company_name || fullName || 'New Client';
+
+  return base44.asServiceRole.entities.Client.create({
+    email,
+    full_name: fullName,
+    business_name: businessName,
+    plan: user.plan || 'Starter',
+    status: 'Portal Access Created',
+    lifecycle_state: 'pre_live',
+    progress_percentage: 0,
+    last_activity: 'Client portal access created from authenticated login.',
+    next_action: 'Complete onboarding and connect live systems.',
+    workflow_phase: 'Portal Access',
+    assets_status: 'not_started',
+    onboarding_archived: false,
+    go_live_ready: false,
+    shared_files: [],
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user?.email) {
-      return Response.json({
-        success: false,
-        error: 'You must be logged in to access the client portal.',
-      }, { status: 200 });
+      return Response.json({ success: false, error: 'You must be logged in to access the client portal.' }, { status: 200 });
     }
 
     const linkedClientId = getLinkedClientId(user);
@@ -63,46 +96,30 @@ Deno.serve(async (req) => {
       matches = (allClients || []).filter((client: any) => normalizeEmail(client.email) === userEmail);
     }
 
-    const uniqueMatches = Array.from(new Map(matches.map((client: any) => [client.id, client])).values());
+    const uniqueMatches: any[] = Array.from(new Map(matches.map((client: any) => [client.id, client])).values());
 
-    if (uniqueMatches.length === 1) {
-      const matchedClient: any = uniqueMatches[0];
-
-      if (user?.id) {
-        try {
-          const targetUsers = await base44.asServiceRole.entities.User.filter({ id: user.id }, '-created_date', 1);
-          const targetUser = targetUsers?.[0];
-          if (targetUser && !targetUser.client_account_id) {
-            await base44.asServiceRole.entities.User.update(targetUser.id, {
-              ...targetUser,
-              client_account_id: matchedClient.id,
-            });
-          }
-        } catch (linkError) {
-          console.warn('Could not persist client_account_id during portal email match:', linkError?.message || linkError);
-        }
-      }
+    if (uniqueMatches.length >= 1) {
+      const matchedClient = uniqueMatches[0];
+      await persistUserClientLink(base44, user, matchedClient.id);
 
       return Response.json({
         success: true,
         client_id: matchedClient.id,
-        access_method: 'email_match',
+        access_method: uniqueMatches.length > 1 ? 'latest_email_match' : 'email_match',
+        match_count: uniqueMatches.length,
         client: safeClient(matchedClient),
       });
     }
 
-    if (uniqueMatches.length > 1) {
-      return Response.json({
-        success: false,
-        error: 'Multiple client records were found for this email. Please contact support so we can link your account.',
-        match_count: uniqueMatches.length,
-      });
-    }
+    const createdClient = await createClientForUser(base44, user);
+    await persistUserClientLink(base44, user, createdClient.id);
 
     return Response.json({
-      success: false,
-      error: 'Portal access is not linked to a client record yet. If you are an active client, contact support at sales@assistantai.com.au.',
+      success: true,
+      client_id: createdClient.id,
+      access_method: 'created_from_login',
       match_count: 0,
+      client: safeClient(createdClient),
     });
   } catch (error) {
     console.error('resolveClientPortalAccess failed:', error);
