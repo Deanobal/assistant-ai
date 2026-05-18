@@ -189,8 +189,6 @@ Deno.serve(async (req) => {
     }
 
     const expectedSecret = Deno.env.get('VAPI_WEBHOOK_SECRET') || '';
-    const receivedSecret = getReceivedSecret(req);
-    const secretValid = !!receivedSecret && !!expectedSecret && receivedSecret === expectedSecret;
 
     console.log('Incoming headers/auth present:', JSON.stringify({
       content_type: req.headers.get('content-type') || '',
@@ -200,12 +198,14 @@ Deno.serve(async (req) => {
     }));
 
     if (req.method === 'GET') {
+      const healthReceivedSecret = getReceivedSecret(req);
+      const healthSecretValid = !!healthReceivedSecret && !!expectedSecret && healthReceivedSecret === expectedSecret;
       return jsonResponse({
         success: true,
         message: 'Vapi tool-call handler reachable. Use POST for tool-calls.',
         method: req.method,
-        secret_received: !!receivedSecret,
-        secret_valid: secretValid,
+        secret_received: !!healthReceivedSecret,
+        secret_valid: healthSecretValid,
       });
     }
 
@@ -221,8 +221,11 @@ Deno.serve(async (req) => {
       body = {};
     }
 
+    const receivedSecret = getReceivedSecret(req);
+    const secretValid = !!receivedSecret && !!expectedSecret && receivedSecret === expectedSecret;
+
     console.log('Request body shape:', JSON.stringify({
-      keys: Object.keys(body || {}),
+      keys: Object.keys(body || {}).filter((key) => !/secret|token|key/i.test(key)),
       message_type: body?.message?.type || '',
       has_message_toolCallList: Array.isArray(body?.message?.toolCallList),
       has_message_toolCalls: Array.isArray(body?.message?.toolCalls),
