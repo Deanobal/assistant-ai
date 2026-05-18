@@ -1,11 +1,18 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 
+const configuredBackendUrl = (
+  import.meta.env.VITE_BASE44_FUNCTION_BASE_URL ||
+  import.meta.env.VITE_BASE44_APP_BASE_URL ||
+  ''
+).replace(/\/$/, '').replace(/\/functions$/, '');
+
 const serverUrl =
   typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('server_url') ||
+      configuredBackendUrl ||
       window.location.origin
-    : '';
+    : configuredBackendUrl;
 
 export const base44 = createClient({
   appId: appParams.appId,

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, Phone, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const VAPI_ASSISTANT_ID = 'cbd73d14-2515-4633-a01c-928b3ccdbadb';
+const VAPI_ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID || '';
 const VAPI_SDK_SRC = 'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js';
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 
@@ -36,7 +36,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
   const [status, setStatus] = useState('idle');
   const [fallbackVisible, setFallbackVisible] = useState(false);
 
-  const publicKey = useMemo(() => import.meta.env.VITE_VAPI_PUBLIC_KEY || import.meta.env.VAPI_PUBLIC_KEY || '', []);
+  const publicKey = useMemo(() => import.meta.env.VITE_VAPI_PUBLIC_KEY || '', []);
   const isConfigured = Boolean(publicKey && VAPI_ASSISTANT_ID);
   const isLive = status === 'listening';
   const isBusy = status === 'connecting';
