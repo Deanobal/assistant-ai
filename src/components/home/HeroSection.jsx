@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, PhoneCall } from 'lucide-react';
 import HeroBrainCard from './HeroBrainCard';
 
 export default function HeroSection() {
@@ -31,10 +31,16 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-vapi-demo'))}
+                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[16rem]">
+                <PhoneCall className="h-4.5 w-4.5" />
+                <span>Talk to Our AI Receptionist</span>
+              </button>
               <a
                 href="/GetStartedNow"
-                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[15.5rem]">
-                
+                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-6 py-4 text-center text-base font-semibold text-cyan-100 transition-all hover:border-cyan-300/60 hover:bg-cyan-400/15 sm:w-auto sm:min-w-[15.5rem]">
                 <span>Get Started Now</span>
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
@@ -45,7 +51,7 @@ export default function HeroSection() {
               </a>
             </div>
 
-            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Choose a plan, complete secure checkout, and start setup without waiting days for a callback.
+            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Talk to the AI first, choose a plan, complete secure checkout, and start setup without waiting days for a callback.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-sm text-slate-300">
