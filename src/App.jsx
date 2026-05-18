@@ -2,6 +2,7 @@ import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -88,6 +89,7 @@ function App() {
             <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>
+      <Analytics />
     </QueryClientProvider>
   )
 }
