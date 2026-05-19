@@ -1,5 +1,6 @@
-import { ArrowRight, PhoneCall } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import HeroBrainCard from './HeroBrainCard';
+import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
 
 export default function HeroSection() {
   return (
@@ -9,7 +10,7 @@ export default function HeroSection() {
           src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
           alt="AssistantAI background"
           className="h-full w-full object-cover opacity-20" />
-        
+
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_24%,rgba(34,211,238,0.14),transparent_28%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#06080d] via-[#070a12]/96 to-[#06080d]" />
       </div>
@@ -31,19 +32,15 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-vapi-demo'))}
-                className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-4 text-center text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25 sm:w-auto sm:min-w-[16rem]">
-                <PhoneCall className="h-4.5 w-4.5" />
-                <span>Talk to Our AI Receptionist</span>
-              </button>
+              <VapiReceptionistDemoButton className="sm:min-w-[16rem]" />
+
               <a
                 href="/GetStartedNow"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-6 py-4 text-center text-base font-semibold text-cyan-100 transition-all hover:border-cyan-300/60 hover:bg-cyan-400/15 sm:w-auto sm:min-w-[15.5rem]">
                 <span>Get Started Now</span>
                 <ArrowRight className="h-4.5 w-4.5" />
               </a>
+
               <a
                 href="/Contact"
                 className="inline-flex min-h-[3.5rem] w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 py-4 text-center text-base font-semibold text-white transition-all hover:border-white/30 hover:bg-white/[0.08] sm:w-auto sm:min-w-[14rem]">
@@ -51,7 +48,8 @@ export default function HeroSection() {
               </a>
             </div>
 
-            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">Talk to the AI first, choose a plan, complete secure checkout, and start setup without waiting days for a callback.
+            <p className="mt-5 max-w-2xl leading-7 text-slate-400 md:text-base text-base">
+              Talk to the AI first, choose a plan, complete secure checkout, and start setup without waiting days for a callback.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-sm text-slate-300">
@@ -66,6 +64,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
