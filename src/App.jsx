@@ -15,6 +15,7 @@ import GetStartedNow from './pages/GetStartedNow';
 import CaseStudies from './pages/CaseStudies';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
+import LandingPage from './pages/LandingPage';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
 import AIDemo from './pages/AIDemo';
@@ -39,6 +40,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import MarketingLayout from './components/admin/MarketingLayout';
 import SeoDashboard from './pages/admin/marketing/SeoDashboard';
 import ContentStudio from './pages/admin/marketing/ContentStudio';
+import LandingPageBuilder from './pages/admin/marketing/LandingPageBuilder';
 import BlogManager from './pages/admin/marketing/BlogManager';
 import ContentManager from './pages/admin/marketing/ContentManager';
 import MediaLibrary from './pages/admin/marketing/MediaLibrary';
@@ -64,6 +66,7 @@ function App() {
               <Route path="/CaseStudies" element={<CaseStudies />} />
               <Route path="/Blog" element={<Blog />} />
               <Route path="/Blog/:slug" element={<BlogPost />} />
+              <Route path="/lp/:slug" element={<LandingPage />} />
               <Route path="/Integrations" element={<Integrations />} />
               <Route path="/Platform" element={<Platform />} />
               <Route path="/AIDemo" element={<AIDemo />} />
@@ -90,6 +93,7 @@ function App() {
             <Route element={<MarketingLayout />}>
               <Route path="/admin/marketing/seo-dashboard" element={<SeoDashboard />} />
               <Route path="/admin/marketing/content-studio" element={<ContentStudio />} />
+              <Route path="/admin/marketing/landing-pages" element={<LandingPageBuilder />} />
               <Route path="/admin/marketing/blog" element={<BlogManager />} />
               <Route path="/admin/marketing/content" element={<ContentManager />} />
               <Route path="/admin/marketing/media" element={<MediaLibrary />} />
