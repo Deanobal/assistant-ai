@@ -5,9 +5,16 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart3, BriefcaseBusiness, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck, TrendingUp } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, Home, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck, TrendingUp } from 'lucide-react';
 
 const navItems = [
+  {
+    label: 'Home',
+    path: '/admin',
+    icon: Home,
+    subtitle: 'Control centre',
+    match: ['/admin'],
+  },
   {
     label: 'Action Inbox',
     path: '/ActionInbox',
@@ -141,7 +148,7 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-[#06070b] text-white">
       <div className="flex min-h-screen">
         <aside className="hidden w-72 flex-col border-r border-white/10 bg-[#0b0f18] p-6 lg:flex">
-          <Link to="/ActionInbox" className="mb-10 flex items-center gap-3">
+          <Link to="/admin" className="mb-10 flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500">
               <BriefcaseBusiness className="h-5 w-5 text-white" />
             </div>
@@ -204,7 +211,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f18]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-7 gap-2">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));
             const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
@@ -212,7 +219,7 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex min-h-[56px] flex-col items-center justify-center rounded-2xl px-2 text-center text-xs ${isActive ? 'bg-cyan-500/10 text-cyan-200' : 'text-slate-400'}`}
+                className={`relative flex min-h-[56px] flex-col items-center justify-center rounded-2xl px-2 text-center text-[10px] ${isActive ? 'bg-cyan-500/10 text-cyan-200' : 'text-slate-400'}`}
               >
                 <item.icon className="mb-1 h-4 w-4" />
                 <span>{item.label}</span>
