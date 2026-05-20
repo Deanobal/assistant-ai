@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Image, Inbox, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Image, Inbox, Layers, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const modules = [
@@ -9,6 +9,7 @@ const modules = [
   { title: 'Onboarding', desc: 'Build progress, intake and go-live readiness.', href: '/Onboarding', icon: Rocket },
   { title: 'Support', desc: 'Client and website support threads.', href: '/SupportInbox', icon: LifeBuoy },
   { title: 'Content Studio', desc: 'Generate drafts for blogs, ads, emails and social posts.', href: '/admin/marketing/content-studio', icon: Sparkles },
+  { title: 'Landing Pages', desc: 'Build campaign and offer pages with public URLs.', href: '/admin/marketing/landing-pages', icon: Layers },
   { title: 'Blog Manager', desc: 'Create, edit and publish SEO blog posts.', href: '/admin/marketing/blog', icon: BookOpen },
   { title: 'Content Manager', desc: 'Manage editable website copy blocks.', href: '/admin/marketing/content', icon: FileText },
   { title: 'Media Library', desc: 'Manage image and file URLs for content and campaigns.', href: '/admin/marketing/media', icon: Image },
@@ -24,7 +25,7 @@ export default function AdminHome() {
       <div className="rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-8">
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-300">AssistantAI Backend</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Control Centre</h1>
-        <p className="mt-4 max-w-3xl text-slate-300">Manage leads, clients, onboarding, content, media, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
+        <p className="mt-4 max-w-3xl text-slate-300">Manage leads, clients, onboarding, content, media, landing pages, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
