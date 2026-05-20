@@ -16,6 +16,31 @@ const helpOptions = [
   { value: 'other', label: 'Other' },
 ];
 
+async function submitToSupabaseApi(payload) {
+  const response = await fetch('/api/contact-submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || 'Supabase contact API failed');
+  }
+  return data;
+}
+
+async function submitToBase44Fallback(payload) {
+  return base44.functions.invoke('submitContactLead', {
+    full_name: payload.full_name,
+    business_name: payload.business_name,
+    email: payload.email,
+    mobile_number: payload.mobile_number,
+    help_type: payload.enquiry_type,
+    message: payload.message,
+  });
+}
+
 export default function ContactForm() {
   const [form, setForm] = useState({
     full_name: '',
@@ -36,15 +61,26 @@ export default function ContactForm() {
     setSubmitting(true);
     setError('');
 
+    const payload = {
+      full_name: form.full_name,
+      business_name: form.business_name,
+      email: form.email,
+      mobile_number: form.mobile_number,
+      enquiry_type: form.enquiry_type || 'contact_form',
+      service_needed: form.enquiry_type || 'general_enquiry',
+      message: form.message,
+      lead_source: 'website',
+      source_page: '/contact',
+      buyer_intent: form.enquiry_type === 'pricing' ? 'pricing_interest' : 'researching',
+    };
+
     try {
-      await base44.functions.invoke('submitContactLead', {
-        full_name: form.full_name,
-        business_name: form.business_name,
-        email: form.email,
-        mobile_number: form.mobile_number,
-        help_type: form.enquiry_type,
-        message: form.message,
-      });
+      try {
+        await submitToSupabaseApi(payload);
+      } catch (primaryError) {
+        console.warn('Supabase contact route failed, using Base44 fallback:', primaryError?.message || primaryError);
+        await submitToBase44Fallback(payload);
+      }
 
       setSuccess(true);
     } catch (submitError) {
