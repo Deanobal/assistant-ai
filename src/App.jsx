@@ -44,6 +44,7 @@ import LandingPageBuilder from './pages/admin/marketing/LandingPageBuilder';
 import PricingManager from './pages/admin/marketing/PricingManager';
 import SocialProofManager from './pages/admin/marketing/SocialProofManager';
 import FaqManager from './pages/admin/marketing/FaqManager';
+import NavigationManager from './pages/admin/marketing/NavigationManager';
 import BlogManager from './pages/admin/marketing/BlogManager';
 import ContentManager from './pages/admin/marketing/ContentManager';
 import MediaLibrary from './pages/admin/marketing/MediaLibrary';
@@ -100,6 +101,7 @@ function App() {
               <Route path="/admin/marketing/pricing" element={<PricingManager />} />
               <Route path="/admin/marketing/social-proof" element={<SocialProofManager />} />
               <Route path="/admin/marketing/faqs" element={<FaqManager />} />
+              <Route path="/admin/marketing/navigation" element={<NavigationManager />} />
               <Route path="/admin/marketing/blog" element={<BlogManager />} />
               <Route path="/admin/marketing/content" element={<ContentManager />} />
               <Route path="/admin/marketing/media" element={<MediaLibrary />} />
