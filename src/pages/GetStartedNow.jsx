@@ -19,6 +19,27 @@ const initialForm = {
   monthly_enquiry_volume: '',
 };
 
+async function createSupabaseSignupLead(payload) {
+  const response = await fetch('/api/leads-create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || 'Supabase signup lead API failed');
+  }
+  return data?.lead;
+}
+
+async function createBase44SignupLead(payload) {
+  const leadResponse = await base44.functions.invoke('createAIQualifiedLead', payload);
+  const lead = leadResponse?.data?.lead;
+  if (!lead?.id) throw new Error('Unable to create your signup record.');
+  return lead;
+}
+
 export default function GetStartedNow() {
   const urlParams = new URLSearchParams(window.location.search);
   const checkoutState = urlParams.get('checkout') || '';
@@ -72,26 +93,33 @@ export default function GetStartedNow() {
     setSubmitting(true);
     setError('');
 
-    try {
-      const leadResponse = await base44.functions.invoke('createAIQualifiedLead', {
-        full_name: form.full_name,
-        business_name: form.business_name,
-        email: form.email,
-        mobile_number: form.mobile_number,
-        industry: form.industry,
-        website: form.website || '',
-        service_needed: form.service_needed,
-        current_call_handling: form.current_call_handling,
-        monthly_enquiry_volume: form.monthly_enquiry_volume || '',
-        selected_plan: confirmedPlan.name,
-        likely_plan_fit: confirmedPlan.name,
-        buyer_intent: 'ready_to_proceed',
-        lead_source: 'Get Started signup flow',
-        source_page: '/GetStartedNow',
-        conversation_summary: `${form.service_needed} Current problem: ${form.current_call_handling}`,
-      });
+    const leadPayload = {
+      full_name: form.full_name,
+      business_name: form.business_name,
+      email: form.email,
+      mobile_number: form.mobile_number,
+      industry: form.industry,
+      website: form.website || '',
+      service_needed: form.service_needed,
+      current_call_handling: form.current_call_handling,
+      monthly_enquiry_volume: form.monthly_enquiry_volume || '',
+      selected_plan: confirmedPlan.name,
+      likely_plan_fit: confirmedPlan.name,
+      buyer_intent: 'ready_to_proceed',
+      lead_source: 'Get Started signup flow',
+      source_page: '/GetStartedNow',
+      conversation_summary: `${form.service_needed} Current problem: ${form.current_call_handling}`,
+    };
 
-      const lead = leadResponse?.data?.lead;
+    try {
+      let lead;
+      try {
+        lead = await createSupabaseSignupLead(leadPayload);
+      } catch (primaryError) {
+        console.warn('Supabase signup lead route failed, using Base44 fallback:', primaryError?.message || primaryError);
+        lead = await createBase44SignupLead(leadPayload);
+      }
+
       if (!lead?.id) throw new Error('Unable to create your signup record.');
 
       const checkoutResponse = await base44.functions.invoke('createCheckoutForQualifiedLead', {
