@@ -8,6 +8,16 @@ function parseArgs(raw) {
   }
 }
 
+function siteBaseUrl(req) {
+  const configured = process.env.SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (configured) {
+    return configured.startsWith('http') ? configured : `https://${configured}`;
+  }
+  const host = req?.headers?.['x-forwarded-host'] || req?.headers?.host || 'www.assistantai.com.au';
+  const proto = req?.headers?.['x-forwarded-proto'] || 'https';
+  return `${proto}://${host}`;
+}
+
 async function createLead(args) {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -73,7 +83,60 @@ async function createLead(args) {
   return Array.isArray(data) ? data[0] : data;
 }
 
-async function handleToolCall(toolCall) {
+async function createCheckout(args, req) {
+  const plan = String(args.selected_plan || args.plan || '').trim();
+  if (!['Starter', 'Growth'].includes(plan)) {
+    return {
+      success: false,
+      checkout_available: false,
+      status: 'review_required',
+      next_step: 'Enterprise or custom setups require review. Capture the details and tell the caller the team will follow up.'
+    };
+  }
+
+  let leadId = String(args.lead_id || '').trim();
+  let lead = null;
+
+  if (!leadId) {
+    lead = await createLead({
+      ...args,
+      selected_plan: plan,
+      likely_plan_fit: plan,
+      buyer_intent: args.buyer_intent || 'ready_to_proceed',
+      status: 'Payment Pending'
+    });
+    leadId = lead.id;
+  }
+
+  const checkoutResponse = await fetch(`${siteBaseUrl(req)}/api/stripe-checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lead_id: leadId,
+      selected_plan: plan,
+      full_name: args.full_name || args.name,
+      business_name: args.business_name,
+      email: args.email
+    })
+  });
+
+  const checkout = await checkoutResponse.json();
+  if (!checkoutResponse.ok || !checkout.success) {
+    throw new Error(checkout?.error || checkout?.message || 'Checkout creation failed');
+  }
+
+  return {
+    success: true,
+    checkout_available: true,
+    lead_id: leadId,
+    checkout_url: checkout.checkout_url,
+    session_id: checkout.session_id,
+    selected_plan: checkout.selected_plan,
+    next_step: 'Secure checkout link created. Give the caller the link or tell them it has been sent/created, depending on channel capability.'
+  };
+}
+
+async function handleToolCall(toolCall, req) {
   const name = toolCall?.function?.name || '';
   const args = parseArgs(toolCall?.function?.arguments);
 
@@ -88,12 +151,7 @@ async function handleToolCall(toolCall) {
   }
 
   if (name === 'create_checkout_for_qualified_lead') {
-    return {
-      success: false,
-      checkout_available: false,
-      status: 'not_migrated_yet',
-      next_step: 'Checkout is still handled by the existing live payment path. Capture the lead and escalate to admin for secure payment.'
-    };
+    return await createCheckout(args, req);
   }
 
   return {
@@ -128,7 +186,7 @@ export default async function handler(req, res) {
     const results = [];
     for (const toolCall of calls) {
       try {
-        const result = await handleToolCall(toolCall);
+        const result = await handleToolCall(toolCall, req);
         results.push({ toolCallId: toolCall.id, result });
       } catch (error) {
         results.push({
