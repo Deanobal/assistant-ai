@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, FileText, Mail, Settings, Menu, X } from 'lucide-react';
+import { BarChart3, FileText, Mail, PencilRuler, Settings, Menu, X } from 'lucide-react';
 
 export default function MarketingLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -9,6 +9,7 @@ export default function MarketingLayout() {
   const navItems = [
     { label: 'SEO Dashboard', path: '/admin/marketing/seo-dashboard', icon: BarChart3 },
     { label: 'Blog Manager', path: '/admin/marketing/blog', icon: FileText },
+    { label: 'Content Manager', path: '/admin/marketing/content', icon: PencilRuler },
     { label: 'Campaigns', path: '/admin/marketing/campaigns', icon: Mail },
     { label: 'Settings', path: '/admin/marketing/settings', icon: Settings },
   ];
@@ -34,7 +35,7 @@ export default function MarketingLayout() {
         <div className="flex flex-col h-full p-6">
           <div className="mb-8">
             <h2 className="text-lg font-bold text-white">Marketing Hub</h2>
-            <p className="text-xs text-slate-500 mt-1">SEO, Blog & Campaigns</p>
+            <p className="text-xs text-slate-500 mt-1">SEO, Blog, Content & Campaigns</p>
           </div>
 
           <nav className="flex-1 space-y-1">
@@ -74,7 +75,7 @@ export default function MarketingLayout() {
         <div className="border-b border-white/10 bg-[#070a12]/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-6 py-4 lg:px-8">
             <h1 className="text-xl font-bold text-white">Marketing Hub</h1>
-            <p className="text-sm text-slate-400 mt-1">Manage your SEO strategy, blog content and campaigns</p>
+            <p className="text-sm text-slate-400 mt-1">Manage your SEO strategy, blog content, website copy and campaigns</p>
           </div>
         </div>
 
