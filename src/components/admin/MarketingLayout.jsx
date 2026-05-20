@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, Mail, Settings, Menu, X } from 'lucide-react';
+import { BarChart3, FileText, Mail, Settings, Menu, X } from 'lucide-react';
 
 export default function MarketingLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -8,6 +8,7 @@ export default function MarketingLayout() {
 
   const navItems = [
     { label: 'SEO Dashboard', path: '/admin/marketing/seo-dashboard', icon: BarChart3 },
+    { label: 'Blog Manager', path: '/admin/marketing/blog', icon: FileText },
     { label: 'Campaigns', path: '/admin/marketing/campaigns', icon: Mail },
     { label: 'Settings', path: '/admin/marketing/settings', icon: Settings },
   ];
@@ -16,7 +17,6 @@ export default function MarketingLayout() {
 
   return (
     <div className="min-h-screen bg-[#06080d]">
-      {/* Mobile Menu Button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -26,7 +26,6 @@ export default function MarketingLayout() {
         </button>
       </div>
 
-      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-screen w-64 border-r border-white/10 bg-[#070a12] transition-transform duration-300 lg:translate-x-0 z-40 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -35,7 +34,7 @@ export default function MarketingLayout() {
         <div className="flex flex-col h-full p-6">
           <div className="mb-8">
             <h2 className="text-lg font-bold text-white">Marketing Hub</h2>
-            <p className="text-xs text-slate-500 mt-1">SEO & Campaigns</p>
+            <p className="text-xs text-slate-500 mt-1">SEO, Blog & Campaigns</p>
           </div>
 
           <nav className="flex-1 space-y-1">
@@ -71,23 +70,19 @@ export default function MarketingLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="lg:ml-64 min-h-screen">
-        {/* Header */}
         <div className="border-b border-white/10 bg-[#070a12]/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-6 py-4 lg:px-8">
             <h1 className="text-xl font-bold text-white">Marketing Hub</h1>
-            <p className="text-sm text-slate-400 mt-1">Manage your SEO strategy and marketing campaigns</p>
+            <p className="text-sm text-slate-400 mt-1">Manage your SEO strategy, blog content and campaigns</p>
           </div>
         </div>
 
-        {/* Page Content */}
         <div className="p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
 
-      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 lg:hidden z-30"
