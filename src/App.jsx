@@ -40,6 +40,7 @@ import MarketingLayout from './components/admin/MarketingLayout';
 import SeoDashboard from './pages/admin/marketing/SeoDashboard';
 import BlogManager from './pages/admin/marketing/BlogManager';
 import ContentManager from './pages/admin/marketing/ContentManager';
+import MediaLibrary from './pages/admin/marketing/MediaLibrary';
 import SiteSettings from './pages/admin/marketing/SiteSettings';
 import Campaigns from './pages/admin/marketing/Campaigns';
 import MarketingSettings from './pages/admin/marketing/Settings';
@@ -89,6 +90,7 @@ function App() {
               <Route path="/admin/marketing/seo-dashboard" element={<SeoDashboard />} />
               <Route path="/admin/marketing/blog" element={<BlogManager />} />
               <Route path="/admin/marketing/content" element={<ContentManager />} />
+              <Route path="/admin/marketing/media" element={<MediaLibrary />} />
               <Route path="/admin/marketing/site-settings" element={<SiteSettings />} />
               <Route path="/admin/marketing/campaigns" element={<Campaigns />} />
               <Route path="/admin/marketing/settings" element={<MarketingSettings />} />
