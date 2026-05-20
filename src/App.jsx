@@ -22,6 +22,7 @@ import ClientLogin from './pages/ClientLogin';
 import ClientPortal from './pages/ClientPortal';
 import ThankYou from './pages/ThankYou';
 import Dashboard from './pages/Dashboard';
+import AdminHome from './pages/AdminHome';
 import ClientManager from './pages/ClientManager';
 import ClientWorkspace from './pages/ClientWorkspace';
 import LeadDashboard from './pages/LeadDashboard';
@@ -70,6 +71,7 @@ function App() {
             </Route>
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminHome />} />
               <Route path="/ActionInbox" element={<ActionInbox />} />
               <Route path="/LeadDashboard" element={<LeadDashboard />} />
               <Route path="/LeadDetail" element={<LeadDetail />} />
