@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Image, Inbox, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal } from 'lucide-react';
+import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Image, Inbox, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const modules = [
@@ -8,6 +8,7 @@ const modules = [
   { title: 'Clients', desc: 'Client records, workspaces and account status.', href: '/ClientManager', icon: BriefcaseBusiness },
   { title: 'Onboarding', desc: 'Build progress, intake and go-live readiness.', href: '/Onboarding', icon: Rocket },
   { title: 'Support', desc: 'Client and website support threads.', href: '/SupportInbox', icon: LifeBuoy },
+  { title: 'Content Studio', desc: 'Generate drafts for blogs, ads, emails and social posts.', href: '/admin/marketing/content-studio', icon: Sparkles },
   { title: 'Blog Manager', desc: 'Create, edit and publish SEO blog posts.', href: '/admin/marketing/blog', icon: BookOpen },
   { title: 'Content Manager', desc: 'Manage editable website copy blocks.', href: '/admin/marketing/content', icon: FileText },
   { title: 'Media Library', desc: 'Manage image and file URLs for content and campaigns.', href: '/admin/marketing/media', icon: Image },
