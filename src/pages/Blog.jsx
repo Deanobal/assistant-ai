@@ -2,9 +2,40 @@ import * as React from 'react';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import BlogPostCard from '@/components/blog/BlogPostCard';
-import { blogPosts } from '@/lib/blogPosts';
+import { blogPosts as staticBlogPosts } from '@/lib/blogPosts';
+
+function mapApiPost(post) {
+  return {
+    slug: post.slug,
+    title: post.title,
+    metaDescription: post.meta_description,
+    excerpt: post.excerpt,
+    category: post.category,
+    date: post.published_at ? new Date(post.published_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Recently published',
+    body: Array.isArray(post.body) ? post.body : []
+  };
+}
 
 export default function Blog() {
+  const [posts, setPosts] = React.useState(staticBlogPosts);
+
+  React.useEffect(() => {
+    let active = true;
+    async function loadPosts() {
+      try {
+        const response = await fetch('/api/blog-posts');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase posts');
+        const apiPosts = (data.posts || []).map(mapApiPost);
+        if (active && apiPosts.length > 0) setPosts(apiPosts);
+      } catch (error) {
+        console.warn('Using static blog fallback:', error?.message || error);
+      }
+    }
+    loadPosts();
+    return () => { active = false; };
+  }, []);
+
   return (
     <>
       <SEO
@@ -27,7 +58,7 @@ export default function Blog() {
           </motion.div>
 
           <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {blogPosts.map((post, index) => (
+            {posts.map((post, index) => (
               <BlogPostCard key={post.slug} post={post} index={index} />
             ))}
           </div>
