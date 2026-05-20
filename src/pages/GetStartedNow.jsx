@@ -40,6 +40,44 @@ async function createBase44SignupLead(payload) {
   return lead;
 }
 
+async function createVercelCheckout({ lead, confirmedPlan, form }) {
+  const response = await fetch('/api/stripe-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lead_id: lead.id,
+      selected_plan: confirmedPlan.name,
+      full_name: form.full_name,
+      business_name: form.business_name,
+      email: form.email,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data?.checkout_url) {
+    throw new Error(data?.error || data?.message || 'Vercel checkout route failed');
+  }
+  return data.checkout_url;
+}
+
+async function createBase44Checkout({ lead, confirmedPlan, form }) {
+  const checkoutResponse = await base44.functions.invoke('createCheckoutForQualifiedLead', {
+    lead_id: lead.id,
+    selected_plan: confirmedPlan.name,
+    buyer_confirmed_intent: true,
+    full_name: form.full_name,
+    business_name: form.business_name,
+    email: form.email,
+    payment_mode: 'subscription',
+  });
+
+  if (!checkoutResponse?.data?.checkout_url) {
+    throw new Error(checkoutResponse?.data?.error || 'Unable to start Stripe checkout.');
+  }
+
+  return checkoutResponse.data.checkout_url;
+}
+
 export default function GetStartedNow() {
   const urlParams = new URLSearchParams(window.location.search);
   const checkoutState = urlParams.get('checkout') || '';
@@ -122,21 +160,15 @@ export default function GetStartedNow() {
 
       if (!lead?.id) throw new Error('Unable to create your signup record.');
 
-      const checkoutResponse = await base44.functions.invoke('createCheckoutForQualifiedLead', {
-        lead_id: lead.id,
-        selected_plan: confirmedPlan.name,
-        buyer_confirmed_intent: true,
-        full_name: form.full_name,
-        business_name: form.business_name,
-        email: form.email,
-        payment_mode: 'subscription',
-      });
-
-      if (!checkoutResponse?.data?.checkout_url) {
-        throw new Error(checkoutResponse?.data?.error || 'Unable to start Stripe checkout.');
+      let checkoutUrl;
+      try {
+        checkoutUrl = await createVercelCheckout({ lead, confirmedPlan, form });
+      } catch (primaryCheckoutError) {
+        console.warn('Vercel checkout route failed, using Base44 checkout fallback:', primaryCheckoutError?.message || primaryCheckoutError);
+        checkoutUrl = await createBase44Checkout({ lead, confirmedPlan, form });
       }
 
-      window.location.href = checkoutResponse.data.checkout_url;
+      window.location.href = checkoutUrl;
     } catch (checkoutError) {
       setError(checkoutError?.response?.data?.error || checkoutError?.message || 'Unable to start secure payment.');
     } finally {
