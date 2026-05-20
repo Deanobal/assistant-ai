@@ -5,11 +5,45 @@ import SEO from '@/components/SEO';
 import { blogPosts } from '@/lib/blogPosts';
 import { Button } from '@/components/ui/button';
 
+function mapApiPost(post) {
+  return {
+    slug: post.slug,
+    title: post.title,
+    metaDescription: post.meta_description,
+    excerpt: post.excerpt,
+    category: post.category,
+    date: post.published_at ? new Date(post.published_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Recently published',
+    body: Array.isArray(post.body) ? post.body : []
+  };
+}
+
 export default function BlogPost() {
   const { slug } = useParams();
-  const post = blogPosts.find((item) => item.slug === slug);
+  const staticPost = blogPosts.find((item) => item.slug === slug);
+  const [post, setPost] = React.useState(staticPost || null);
+  const [loading, setLoading] = React.useState(true);
 
-  if (!post) {
+  React.useEffect(() => {
+    let active = true;
+    async function loadPost() {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/blog-posts?slug=${encodeURIComponent(slug)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase post');
+        const apiPost = data.posts?.[0] ? mapApiPost(data.posts[0]) : null;
+        if (active && apiPost) setPost(apiPost);
+      } catch (error) {
+        console.warn('Using static blog post fallback:', error?.message || error);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadPost();
+    return () => { active = false; };
+  }, [slug]);
+
+  if (!post && !loading) {
     return (
       <section className="bg-[#0a0a0f] py-24 md:py-28">
         <div className="mx-auto max-w-3xl px-6 text-center">
@@ -23,6 +57,10 @@ export default function BlogPost() {
         </div>
       </section>
     );
+  }
+
+  if (!post) {
+    return <section className="bg-[#0a0a0f] py-24 md:py-28"><div className="mx-auto max-w-3xl px-6 text-center text-gray-300">Loading article...</div></section>;
   }
 
   return (
