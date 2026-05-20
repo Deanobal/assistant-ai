@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Image, Plus, Save, Trash2 } from 'lucide-react';
+import { Copy, Image, Plus, Save, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,10 +20,20 @@ function toForm(asset) {
   };
 }
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function MediaLibrary() {
   const [assets, setAssets] = useState([]);
   const [form, setForm] = useState(blank);
   const [message, setMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   async function loadAssets() {
     try {
@@ -40,6 +50,37 @@ export default function MediaLibrary() {
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function uploadFile(file) {
+    if (!file) return;
+    setUploading(true);
+    setMessage('');
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await fetch('/api/media-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title || file.name,
+          file_name: file.name,
+          content_type: file.type,
+          base64,
+          folder: form.folder || 'general',
+          alt_text: form.alt_text || form.title || file.name,
+          tags: form.tags.split(',').map((x) => x.trim()).filter(Boolean),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.details || data.error || 'Upload failed');
+      setForm(toForm(data.asset));
+      setMessage('File uploaded.');
+      await loadAssets();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function saveAsset() {
@@ -83,7 +124,7 @@ export default function MediaLibrary() {
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-400">Asset Library</p>
           <h1 className="mt-2 text-3xl font-bold text-white">Media Library</h1>
-          <p className="mt-2 text-sm text-slate-400">Store reusable image and file URLs for blogs, content blocks and campaigns.</p>
+          <p className="mt-2 text-sm text-slate-400">Upload or store reusable media for blogs, content blocks and campaigns.</p>
         </div>
         <Button onClick={() => setForm(blank)} className="bg-cyan-500 text-white hover:bg-cyan-400"><Plus className="mr-2 h-4 w-4" />New Asset</Button>
       </div>
@@ -110,6 +151,13 @@ export default function MediaLibrary() {
         <Card className="border-white/10 bg-[#0b0f18]">
           <CardHeader><CardTitle className="text-white">{form.id ? 'Edit Asset' : 'Create Asset'}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/5 p-5">
+              <Label className="mb-3 block text-slate-300">Upload File</Label>
+              <Input type="file" onChange={(e) => uploadFile(e.target.files?.[0])} className="border-white/10 bg-white/5 text-white" />
+              <p className="mt-2 text-xs text-slate-500">Uploads to Supabase Storage bucket set by SUPABASE_MEDIA_BUCKET, default assistantai-media.</p>
+              {uploading && <p className="mt-2 text-sm text-cyan-300"><Upload className="mr-2 inline h-4 w-4 animate-pulse" />Uploading...</p>}
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2"><Label className="text-slate-300">Title</Label><Input value={form.title} onChange={(e) => update('title', e.target.value)} className="border-white/10 bg-white/5 text-white" /></div>
               <div className="space-y-2"><Label className="text-slate-300">Folder</Label><Input value={form.folder} onChange={(e) => update('folder', e.target.value)} className="border-white/10 bg-white/5 text-white" /></div>
