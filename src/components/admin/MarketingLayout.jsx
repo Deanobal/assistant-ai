@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, FileText, Mail, PencilRuler, Settings, Menu, X } from 'lucide-react';
+import { BarChart3, FileText, Mail, PencilRuler, Settings, SlidersHorizontal, Menu, X } from 'lucide-react';
 
 export default function MarketingLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -10,6 +10,7 @@ export default function MarketingLayout() {
     { label: 'SEO Dashboard', path: '/admin/marketing/seo-dashboard', icon: BarChart3 },
     { label: 'Blog Manager', path: '/admin/marketing/blog', icon: FileText },
     { label: 'Content Manager', path: '/admin/marketing/content', icon: PencilRuler },
+    { label: 'Site Settings', path: '/admin/marketing/site-settings', icon: SlidersHorizontal },
     { label: 'Campaigns', path: '/admin/marketing/campaigns', icon: Mail },
     { label: 'Settings', path: '/admin/marketing/settings', icon: Settings },
   ];
