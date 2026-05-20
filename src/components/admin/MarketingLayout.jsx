@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, DollarSign, FileText, Image, Layers, Mail, MessageSquareQuote, PencilRuler, Settings, SlidersHorizontal, Sparkles, Menu, X } from 'lucide-react';
+import { BarChart3, DollarSign, FileText, HelpCircle, Image, Layers, Mail, MessageSquareQuote, PencilRuler, Settings, SlidersHorizontal, Sparkles, Menu, X } from 'lucide-react';
 
 export default function MarketingLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,6 +12,7 @@ export default function MarketingLayout() {
     { label: 'Landing Pages', path: '/admin/marketing/landing-pages', icon: Layers },
     { label: 'Pricing Manager', path: '/admin/marketing/pricing', icon: DollarSign },
     { label: 'Social Proof', path: '/admin/marketing/social-proof', icon: MessageSquareQuote },
+    { label: 'FAQ Manager', path: '/admin/marketing/faqs', icon: HelpCircle },
     { label: 'Blog Manager', path: '/admin/marketing/blog', icon: FileText },
     { label: 'Content Manager', path: '/admin/marketing/content', icon: PencilRuler },
     { label: 'Media Library', path: '/admin/marketing/media', icon: Image },
@@ -81,7 +82,7 @@ export default function MarketingLayout() {
         <div className="border-b border-white/10 bg-[#070a12]/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-6 py-4 lg:px-8">
             <h1 className="text-xl font-bold text-white">Marketing Hub</h1>
-            <p className="text-sm text-slate-400 mt-1">Manage AI content, offers, social proof, SEO, landing pages, blog, website copy, media and campaigns</p>
+            <p className="text-sm text-slate-400 mt-1">Manage AI content, offers, FAQs, social proof, SEO, landing pages, blog, website copy, media and campaigns</p>
           </div>
         </div>
 
