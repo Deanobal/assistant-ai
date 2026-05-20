@@ -42,6 +42,7 @@ import SeoDashboard from './pages/admin/marketing/SeoDashboard';
 import ContentStudio from './pages/admin/marketing/ContentStudio';
 import LandingPageBuilder from './pages/admin/marketing/LandingPageBuilder';
 import PricingManager from './pages/admin/marketing/PricingManager';
+import SocialProofManager from './pages/admin/marketing/SocialProofManager';
 import BlogManager from './pages/admin/marketing/BlogManager';
 import ContentManager from './pages/admin/marketing/ContentManager';
 import MediaLibrary from './pages/admin/marketing/MediaLibrary';
@@ -96,6 +97,7 @@ function App() {
               <Route path="/admin/marketing/content-studio" element={<ContentStudio />} />
               <Route path="/admin/marketing/landing-pages" element={<LandingPageBuilder />} />
               <Route path="/admin/marketing/pricing" element={<PricingManager />} />
+              <Route path="/admin/marketing/social-proof" element={<SocialProofManager />} />
               <Route path="/admin/marketing/blog" element={<BlogManager />} />
               <Route path="/admin/marketing/content" element={<ContentManager />} />
               <Route path="/admin/marketing/media" element={<MediaLibrary />} />
