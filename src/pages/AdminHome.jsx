@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Inbox, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal } from 'lucide-react';
+import { BarChart3, BookOpen, BriefcaseBusiness, ClipboardList, FileText, Image, Inbox, LifeBuoy, Rocket, Search, Settings, SlidersHorizontal } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const modules = [
@@ -10,6 +10,7 @@ const modules = [
   { title: 'Support', desc: 'Client and website support threads.', href: '/SupportInbox', icon: LifeBuoy },
   { title: 'Blog Manager', desc: 'Create, edit and publish SEO blog posts.', href: '/admin/marketing/blog', icon: BookOpen },
   { title: 'Content Manager', desc: 'Manage editable website copy blocks.', href: '/admin/marketing/content', icon: FileText },
+  { title: 'Media Library', desc: 'Manage image and file URLs for content and campaigns.', href: '/admin/marketing/media', icon: Image },
   { title: 'Site Settings', desc: 'Global business, CTA and contact settings.', href: '/admin/marketing/site-settings', icon: SlidersHorizontal },
   { title: 'SEO Dashboard', desc: 'Search strategy and optimisation tasks.', href: '/admin/marketing/seo-dashboard', icon: Search },
   { title: 'Campaigns', desc: 'Marketing campaigns and outbound content.', href: '/admin/marketing/campaigns', icon: ClipboardList },
@@ -22,7 +23,7 @@ export default function AdminHome() {
       <div className="rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-8">
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-300">AssistantAI Backend</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Control Centre</h1>
-        <p className="mt-4 max-w-3xl text-slate-300">Manage leads, clients, onboarding, content, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
+        <p className="mt-4 max-w-3xl text-slate-300">Manage leads, clients, onboarding, content, media, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
