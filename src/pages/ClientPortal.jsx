@@ -21,20 +21,98 @@ function getClientId(user) {
   return user?.client_account_id || user?.client_record_id || user?.client_id || `portal-${String(user?.email || user?.id || 'client').toLowerCase()}`;
 }
 
+function normaliseSupabasePortalAccess(data, user) {
+  if (!data?.success) return null;
+
+  if (data.linked && data.client?.id) {
+    return {
+      clientId: data.client.id,
+      client: data.client,
+      billing: data.billing || null,
+      intake: data.intake || null,
+      integrations: data.integrations || [],
+      tasks: data.tasks || [],
+      notes: data.notes || [],
+      status: data.state || 'linked',
+      source: 'supabase',
+      provisional: false,
+    };
+  }
+
+  return {
+    clientId: getClientId(user),
+    client: { email: user?.email || '', full_name: user?.full_name || user?.name || '', business_name: user?.business_name || 'Your business' },
+    billing: null,
+    intake: null,
+    integrations: [],
+    tasks: [],
+    notes: [],
+    status: data.state || 'provisional',
+    source: 'supabase',
+    provisional: true,
+  };
+}
+
+async function getSupabasePortalAccess(user) {
+  const email = user?.email || user?.user_email || '';
+  if (!email) return null;
+
+  const response = await fetch('/api/client-portal-resolve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || 'Supabase portal resolver failed');
+  }
+
+  return normaliseSupabasePortalAccess(data, user);
+}
+
+async function getBase44PortalAccess(user) {
+  const result = await base44.functions.invoke('resolveClientPortalAccess', {});
+  const data = result?.data || result;
+  if (data?.success && data?.client_id) {
+    return {
+      clientId: data.client_id,
+      client: data.client || null,
+      status: data.access_method || 'linked',
+      source: 'base44',
+      provisional: false,
+    };
+  }
+  return null;
+}
+
 async function getPortalAccess(user) {
   try {
-    const result = await base44.functions.invoke('resolveClientPortalAccess', {});
-    const data = result?.data || result;
-    if (data?.success && data?.client_id) {
-      return { clientId: data.client_id, client: data.client || null, status: data.access_method || 'linked', provisional: false };
-    }
+    const supabaseAccess = await getSupabasePortalAccess(user);
+    if (supabaseAccess && !supabaseAccess.provisional) return supabaseAccess;
   } catch (error) {
-    console.warn('Portal resolver unavailable; opening authenticated portal shell.', error);
+    console.warn('Supabase portal resolver unavailable; trying Base44 resolver.', error?.message || error);
   }
+
+  try {
+    const base44Access = await getBase44PortalAccess(user);
+    if (base44Access) return base44Access;
+  } catch (error) {
+    console.warn('Base44 portal resolver unavailable; opening authenticated portal shell.', error?.message || error);
+  }
+
+  try {
+    const supabaseAccess = await getSupabasePortalAccess(user);
+    if (supabaseAccess) return supabaseAccess;
+  } catch (error) {
+    console.warn('Supabase provisional resolver unavailable; opening local portal shell.', error?.message || error);
+  }
+
   return {
     clientId: getClientId(user),
     client: { email: user?.email || '', full_name: user?.full_name || user?.name || '', business_name: user?.business_name || 'Your business' },
     status: 'provisional',
+    source: 'local',
     provisional: true,
   };
 }
@@ -82,6 +160,8 @@ export default function ClientPortal() {
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
               <Badge className="bg-white/5 text-gray-300 border-white/10">Private access</Badge>
+              {access?.source === 'supabase' && !access?.provisional && <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20">Supabase linked</Badge>}
+              {access?.source === 'base44' && <Badge className="bg-blue-500/10 text-blue-300 border-blue-500/20">Legacy linked</Badge>}
               {access?.provisional && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Linking in progress</Badge>}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI Client Portal</h1>
@@ -107,14 +187,14 @@ export default function ClientPortal() {
             <TabsTrigger value="support"><LifeBuoy className="w-4 h-4 mr-2" />Support</TabsTrigger>
             <TabsTrigger value="files"><FolderOpen className="w-4 h-4 mr-2" />Files</TabsTrigger>
           </TabsList>
-          <TabsContent value="overview"><ClientOverviewSection clientAccountId={clientId} /></TabsContent>
-          <TabsContent value="leads"><ClientLeadsSection clientAccountId={clientId} /></TabsContent>
-          <TabsContent value="calls"><CallRecordings clientAccountId={clientId} /></TabsContent>
-          <TabsContent value="analytics"><AnalyticsSection clientAccountId={clientId} /></TabsContent>
-          <TabsContent value="billing"><BillingSection clientId={clientId} /></TabsContent>
-          <TabsContent value="integrations"><PortalIntegrations clientAccountId={clientId} /></TabsContent>
-          <TabsContent value="support"><SupportSection clientAccountId={clientId} currentUser={user} /></TabsContent>
-          <TabsContent value="files"><PortalFilesSection clientAccountId={clientId} /></TabsContent>
+          <TabsContent value="overview"><ClientOverviewSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="leads"><ClientLeadsSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="calls"><CallRecordings clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="analytics"><AnalyticsSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="billing"><BillingSection clientId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="integrations"><PortalIntegrations clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="support"><SupportSection clientAccountId={clientId} currentUser={user} portalAccess={access} /></TabsContent>
+          <TabsContent value="files"><PortalFilesSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
         </Tabs>
       </div>
     </div>
