@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { CheckCircle2, Lock, Loader2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -8,8 +9,14 @@ function valueOrEmpty(value) {
   return value || '';
 }
 
+function getTokenFromUrl(routeToken) {
+  const queryToken = new URLSearchParams(window.location.search).get('t') || '';
+  return routeToken || queryToken || '';
+}
+
 export default function SecureSetup() {
-  const token = useMemo(() => new URLSearchParams(window.location.search).get('t') || '', []);
+  const params = useParams();
+  const token = useMemo(() => getTokenFromUrl(params.token), [params.token]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -26,7 +33,7 @@ export default function SecureSetup() {
   useEffect(() => {
     async function loadPrefill() {
       if (!token) {
-        setError('This secure setup link is missing its access token. Please contact AssistantAI for a fresh link.');
+        setError('This secure setup link is missing its access token. Please use the unique link sent by AssistantAI, or ask the receptionist to send a fresh secure setup link.');
         setLoading(false);
         return;
       }
@@ -63,6 +70,12 @@ export default function SecureSetup() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+
+    if (!token) {
+      setError('This form cannot be submitted because the unique setup token is missing. Please use the secure link sent by AssistantAI.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
