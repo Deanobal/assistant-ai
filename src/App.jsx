@@ -70,6 +70,7 @@ function App() {
               <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
               <Route path="/GetStartedNow" element={<GetStartedNow />} />
               <Route path="/secure-setup" element={<SecureSetup />} />
+              <Route path="/secure-setup/:token" element={<SecureSetup />} />
               <Route path="/CaseStudies" element={<CaseStudies />} />
               <Route path="/Blog" element={<Blog />} />
               <Route path="/Blog/:slug" element={<BlogPost />} />
