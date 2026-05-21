@@ -4,66 +4,34 @@ import { Button } from '@/components/ui/button';
 
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 const CALL_START_TIMEOUT_MS = 12000;
-const PRODUCTION_REBUILD_MARKER = 'vapi-production-rebuild-2026-05-22';
-const VAPI_SDK_SOURCES = [
-  'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js',
-  'https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.umd.js',
-];
+const PRODUCTION_REBUILD_MARKER = 'vapi-mic-permission-2026-05-22';
+const VAPI_SDK_MODULE = 'https://esm.sh/@vapi-ai/web';
 
 const BUILD_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || '';
 const BUILD_ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID || '';
 
 let sdkLoadPromise;
 
-function getLoadedVapiConstructor() {
-  return window?.Vapi || window?.vapiSDK?.Vapi || window?.vapiSDK || window?.VapiAI || null;
-}
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`);
-    if (existing) {
-      if (getLoadedVapiConstructor()) {
-        resolve();
-        return;
-      }
-      existing.addEventListener('load', resolve, { once: true });
-      existing.addEventListener('error', reject, { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
-}
-
 async function loadVapiSdk() {
   if (typeof window === 'undefined') throw new Error('Browser unavailable');
 
-  const existing = getLoadedVapiConstructor();
-  if (existing) return existing;
-
   if (!sdkLoadPromise) {
-    sdkLoadPromise = (async () => {
-      let lastError;
-      for (const src of VAPI_SDK_SOURCES) {
-        try {
-          await loadScript(src);
-          const loaded = getLoadedVapiConstructor();
-          if (loaded) return loaded;
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error('Vapi SDK unavailable');
-    })();
+    sdkLoadPromise = import(/* @vite-ignore */ VAPI_SDK_MODULE).then((module) => module.default || module.Vapi);
   }
 
-  return sdkLoadPromise;
+  const VapiConstructor = await sdkLoadPromise;
+  if (!VapiConstructor) throw new Error('Vapi Web SDK unavailable');
+  return VapiConstructor;
+}
+
+async function requestMicrophonePermission() {
+  if (!navigator?.mediaDevices?.getUserMedia) {
+    throw new Error('This browser does not support microphone access. Try Chrome on desktop or mobile.');
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  stream.getTracks().forEach((track) => track.stop());
+  return true;
 }
 
 async function getRuntimeConfig() {
@@ -146,17 +114,12 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
     setFallbackVisible(false);
 
     try {
+      await requestMicrophonePermission();
+
       const VapiConstructor = await loadVapiSdk();
-      if (!VapiConstructor) throw new Error('Vapi SDK unavailable');
 
       if (!vapiRef.current) {
-        if (typeof VapiConstructor === 'function') {
-          vapiRef.current = new VapiConstructor(publicKey);
-        } else if (typeof VapiConstructor.run === 'function') {
-          vapiRef.current = VapiConstructor.run({ apiKey: publicKey });
-        } else {
-          throw new Error('Unsupported Vapi SDK shape');
-        }
+        vapiRef.current = new VapiConstructor(publicKey);
 
         vapiRef.current?.on?.('call-start', () => {
           clearTimeout(startTimeoutRef.current);
@@ -181,7 +144,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       startTimeoutRef.current = window.setTimeout(() => {
         setStatus('unavailable');
         setFallbackVisible(true);
-        setErrorMessage('The browser did not receive a Vapi call-start event. Check microphone permission, popup/audio blocking, and that the Vapi assistant is public-call enabled.');
+        setErrorMessage('Microphone permission was granted, but Vapi did not start the call. Check that the assistant allows web calls and that the public key belongs to the same Vapi workspace.');
         vapiRef.current?.stop?.();
       }, CALL_START_TIMEOUT_MS);
 
@@ -190,7 +153,10 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       clearTimeout(startTimeoutRef.current);
       setStatus('unavailable');
       setFallbackVisible(true);
-      setErrorMessage(error?.message || 'The voice demo could not start.');
+      const message = error?.name === 'NotAllowedError'
+        ? 'Microphone permission was blocked. Click the lock icon in the address bar, allow microphone access, then refresh and try again.'
+        : error?.message || 'The voice demo could not start.';
+      setErrorMessage(message);
     }
   };
 
