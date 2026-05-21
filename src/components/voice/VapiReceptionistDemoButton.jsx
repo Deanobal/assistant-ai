@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 const CALL_START_TIMEOUT_MS = 12000;
+const PRODUCTION_REBUILD_MARKER = 'vapi-production-rebuild-2026-05-22';
 const VAPI_SDK_SOURCES = [
   'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js',
   'https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.umd.js',
@@ -67,7 +68,7 @@ async function loadVapiSdk() {
 
 async function getRuntimeConfig() {
   try {
-    const response = await fetch('/api/config-status', { cache: 'no-store' });
+    const response = await fetch(`/api/config-status?marker=${PRODUCTION_REBUILD_MARKER}`, { cache: 'no-store' });
     if (!response.ok) return null;
     const data = await response.json();
     const vapiVariables = data?.status?.vapi?.variables || [];
