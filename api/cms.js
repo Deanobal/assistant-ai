@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') {
@@ -25,13 +27,72 @@ const resources = {
   'site-settings': { table: 'site_settings', list: 'settings', single: 'setting' },
   'media-assets': { table: 'media_assets', list: 'assets', single: 'asset' },
   'content-drafts': { table: 'content_drafts', list: 'drafts', single: 'draft' },
-  'landing-pages': { table: 'landing_pages', list: 'pages', single: 'page', defaultStatus: 'draft', publicStatus: 'published' },
+  'landing-pages': { table: 'landing_pages', list: 'pages', single: 'page', defaultStatus: 'published', publicStatus: 'published' },
   'offers-pricing': { table: 'offers_pricing', list: 'offers', single: 'offer', defaultStatus: 'draft', publicStatus: 'active' },
   'social-proof': { table: 'social_proof_items', list: 'items', single: 'item', defaultStatus: 'draft', publicStatus: 'active' },
   'faq-items': { table: 'faq_items', list: 'items', single: 'item', defaultStatus: 'draft', publicStatus: 'active' },
   'navigation-items': { table: 'navigation_items', list: 'items', single: 'item', defaultStatus: 'draft', publicStatus: 'active' },
   'lead-forms': { table: 'lead_forms', list: 'forms', single: 'form', defaultStatus: 'draft', publicStatus: 'active' },
 };
+
+function getSecret() {
+  return process.env.ADMIN_ACCESS_CODE || process.env.SUPABASE_SERVICE_ROLE_KEY || 'assistantai-admin-dev';
+}
+
+function signSession(ts) {
+  return crypto.createHmac('sha256', getSecret()).update(String(ts)).digest('hex');
+}
+
+function readCookie(req, name) {
+  const cookie = req.headers.cookie || '';
+  const found = cookie.split(';').map((item) => item.trim()).find((item) => item.startsWith(`${name}=`));
+  return found ? decodeURIComponent(found.slice(name.length + 1)) : '';
+}
+
+function isAdminSession(req) {
+  const value = readCookie(req, 'aai_admin');
+  const [ts, sig] = value.split('.');
+  if (!ts || !sig) return false;
+  const ageMs = Date.now() - Number(ts);
+  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > 1000 * 60 * 60 * 12) return false;
+  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(signSession(ts)));
+}
+
+function setAdminCookie(res) {
+  const ts = Date.now();
+  const token = `${ts}.${signSession(ts)}`;
+  res.setHeader('Set-Cookie', `aai_admin=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=43200`);
+}
+
+function clearAdminCookie(res) {
+  res.setHeader('Set-Cookie', 'aai_admin=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0');
+}
+
+async function handleAdminAuth(req, res, resource) {
+  if (resource === 'admin-session') return res.status(200).json({ authenticated: isAdminSession(req) });
+  if (resource === 'admin-logout') {
+    clearAdminCookie(res);
+    return res.status(200).json({ success: true });
+  }
+  if (resource === 'admin-login') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const body = parseBody(req);
+    const code = String(body.code || '');
+    if (!process.env.ADMIN_ACCESS_CODE) return res.status(500).json({ error: 'ADMIN_ACCESS_CODE is not configured in Vercel' });
+    if (code !== process.env.ADMIN_ACCESS_CODE) return res.status(401).json({ error: 'Invalid admin code' });
+    setAdminCookie(res);
+    return res.status(200).json({ success: true });
+  }
+  return null;
+}
+
+function requiresAdmin(req, resource) {
+  if (resource === 'media-upload') return true;
+  if (req.method !== 'GET') return true;
+  if (req.query?.includeDrafts === 'true') return true;
+  if (!resources[resource]?.publicStatus && !['blog-posts', 'landing-pages', 'offers-pricing', 'social-proof', 'faq-items', 'navigation-items', 'lead-forms'].includes(resource)) return true;
+  return false;
+}
 
 async function supabaseRequest(path, options = {}) {
   const url = process.env.VITE_SUPABASE_URL;
@@ -70,7 +131,6 @@ function normalise(resource, body) {
   const now = new Date().toISOString();
   const b = { ...body };
   delete b.id;
-
   if (resource === 'blog-posts') {
     b.slug = slugify(b.slug || b.title);
     b.body = Array.isArray(b.body) ? b.body : lines(b.body);
@@ -78,20 +138,17 @@ function normalise(resource, body) {
     b.status = b.status === 'published' ? 'published' : 'draft';
     b.published_at = b.status === 'published' ? (b.published_at || now) : null;
   }
-
   if (resource === 'content-drafts') {
     b.keywords = Array.isArray(b.keywords) ? b.keywords : String(b.keywords || '').split(',').map((x) => x.trim()).filter(Boolean);
     b.draft_body = b.draft_body || generateDraft(b);
     b.status = b.status || 'draft';
   }
-
   if (resource === 'landing-pages') {
     b.slug = slugify(b.slug || b.title);
     b.sections = Array.isArray(b.sections) ? b.sections : lines(b.sections).map((body) => ({ title: '', body }));
     b.status = b.status === 'published' ? 'published' : 'draft';
     b.published_at = b.status === 'published' ? (b.published_at || now) : null;
   }
-
   if (resource === 'offers-pricing') {
     b.slug = slugify(b.slug || b.offer_name);
     b.inclusions = Array.isArray(b.inclusions) ? b.inclusions : lines(b.inclusions);
@@ -100,24 +157,20 @@ function normalise(resource, body) {
     b.sort_order = Number(b.sort_order || 0);
     b.status = b.status === 'active' ? 'active' : 'draft';
   }
-
   if (resource === 'social-proof') {
     b.sort_order = Number(b.sort_order || 0);
     b.status = b.status === 'active' ? 'active' : 'draft';
   }
-
   if (resource === 'faq-items') {
     b.keywords = Array.isArray(b.keywords) ? b.keywords : String(b.keywords || '').split(',').map((x) => x.trim()).filter(Boolean);
     b.sort_order = Number(b.sort_order || 0);
     b.status = b.status === 'active' ? 'active' : 'draft';
   }
-
   if (resource === 'navigation-items') {
     b.open_in_new_tab = Boolean(b.open_in_new_tab);
     b.sort_order = Number(b.sort_order || 0);
     b.status = b.status === 'active' ? 'active' : 'draft';
   }
-
   if (resource === 'lead-forms') {
     b.form_key = keyify(b.form_key || b.form_name);
     b.fields = Array.isArray(b.fields) ? b.fields : lines(b.fields).map((line) => {
@@ -127,11 +180,9 @@ function normalise(resource, body) {
     });
     b.status = b.status === 'active' ? 'active' : 'draft';
   }
-
   if (resource === 'media-assets') {
     b.tags = Array.isArray(b.tags) ? b.tags : String(b.tags || '').split(',').map((x) => x.trim()).filter(Boolean);
   }
-
   b.updated_at = now;
   return b;
 }
@@ -176,20 +227,24 @@ async function handleUpload(req, res) {
 export default async function handler(req, res) {
   try {
     const resource = String(req.query?.resource || '').trim();
-    if (resource === 'media-upload') return handleUpload(req, res);
+    const authResponse = await handleAdminAuth(req, res, resource);
+    if (authResponse) return authResponse;
+    if (resource === 'media-upload') {
+      if (!isAdminSession(req)) return res.status(401).json({ error: 'Admin login required' });
+      return handleUpload(req, res);
+    }
     const config = resources[resource];
     if (!config) return res.status(404).json({ error: 'Unknown CMS resource' });
+    if (requiresAdmin(req, resource) && !isAdminSession(req)) return res.status(401).json({ error: 'Admin login required' });
 
     if (req.method === 'GET') {
       const data = await supabaseRequest(buildListQuery(resource, config, req.query || {}), { method: 'GET' });
       return res.status(200).json({ success: true, [config.list]: data });
     }
-
     if (req.method === 'POST') {
       const data = await supabaseRequest(`/${config.table}`, { method: 'POST', body: JSON.stringify(normalise(resource, parseBody(req))) });
       return res.status(200).json({ success: true, [config.single]: Array.isArray(data) ? data[0] : data });
     }
-
     if (req.method === 'PATCH') {
       const body = parseBody(req);
       const id = String(body.id || '').trim();
@@ -197,14 +252,12 @@ export default async function handler(req, res) {
       const data = await supabaseRequest(`/${config.table}?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(normalise(resource, body)) });
       return res.status(200).json({ success: true, [config.single]: Array.isArray(data) ? data[0] : data });
     }
-
     if (req.method === 'DELETE') {
       const id = String(req.query?.id || '').trim();
       if (!id) return res.status(400).json({ error: 'id is required' });
       await supabaseRequest(`/${config.table}?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', prefer: 'return=minimal' });
       return res.status(200).json({ success: true });
     }
-
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     return res.status(500).json({ error: 'CMS API failed', details: error.message });
