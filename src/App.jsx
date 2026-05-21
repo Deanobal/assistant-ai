@@ -12,6 +12,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import BookStrategyCall from './pages/BookStrategyCall';
 import GetStartedNow from './pages/GetStartedNow';
+import SecureSetup from './pages/SecureSetup';
 import CaseStudies from './pages/CaseStudies';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
@@ -68,6 +69,7 @@ function App() {
               <Route path="/Contact" element={<Contact />} />
               <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
               <Route path="/GetStartedNow" element={<GetStartedNow />} />
+              <Route path="/secure-setup" element={<SecureSetup />} />
               <Route path="/CaseStudies" element={<CaseStudies />} />
               <Route path="/Blog" element={<Blog />} />
               <Route path="/Blog/:slug" element={<BlogPost />} />
