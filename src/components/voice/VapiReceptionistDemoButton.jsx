@@ -4,13 +4,37 @@ import { Button } from '@/components/ui/button';
 
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 const CALL_START_TIMEOUT_MS = 12000;
-const PRODUCTION_REBUILD_MARKER = 'vapi-mic-permission-2026-05-22';
+const PRODUCTION_REBUILD_MARKER = 'vapi-error-detail-2026-05-22';
 const VAPI_SDK_MODULE = 'https://esm.sh/@vapi-ai/web';
 
 const BUILD_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || '';
 const BUILD_ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID || '';
 
 let sdkLoadPromise;
+
+function formatError(error) {
+  if (!error) return 'Unknown Vapi error';
+  if (typeof error === 'string') return error;
+  const candidates = [
+    error.message,
+    error.error,
+    error.errorMsg,
+    error.reason,
+    error.statusText,
+    error?.response?.message,
+    error?.response?.error,
+    error?.data?.message,
+    error?.data?.error,
+  ].filter(Boolean);
+
+  if (candidates.length) return candidates.join(' | ');
+
+  try {
+    return JSON.stringify(error).slice(0, 320);
+  } catch (_error) {
+    return 'Unable to read Vapi error payload';
+  }
+}
 
 async function loadVapiSdk() {
   if (typeof window === 'undefined') throw new Error('Browser unavailable');
@@ -137,14 +161,16 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
           clearTimeout(startTimeoutRef.current);
           setStatus('unavailable');
           setFallbackVisible(true);
-          setErrorMessage(error?.message || 'The voice demo could not start. Check microphone permission and Vapi assistant settings.');
+          const detail = formatError(error);
+          console.error('[AssistantAI Vapi demo error]', error);
+          setErrorMessage(`Vapi error: ${detail}`);
         });
       }
 
       startTimeoutRef.current = window.setTimeout(() => {
         setStatus('unavailable');
         setFallbackVisible(true);
-        setErrorMessage('Microphone permission was granted, but Vapi did not start the call. Check that the assistant allows web calls and that the public key belongs to the same Vapi workspace.');
+        setErrorMessage('Microphone permission was granted, but Vapi did not start the call. Check Vapi Assistant settings: public/web calls enabled, allowed domain includes assistantai.com.au, and public key is from the same workspace as the assistant.');
         vapiRef.current?.stop?.();
       }, CALL_START_TIMEOUT_MS);
 
@@ -153,9 +179,10 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       clearTimeout(startTimeoutRef.current);
       setStatus('unavailable');
       setFallbackVisible(true);
+      console.error('[AssistantAI Vapi demo start failed]', error);
       const message = error?.name === 'NotAllowedError'
         ? 'Microphone permission was blocked. Click the lock icon in the address bar, allow microphone access, then refresh and try again.'
-        : error?.message || 'The voice demo could not start.';
+        : `Vapi start failed: ${formatError(error)}`;
       setErrorMessage(message);
     }
   };
