@@ -3,6 +3,7 @@ import { Mic, Phone, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
+const CALL_START_TIMEOUT_MS = 12000;
 const VAPI_SDK_SOURCES = [
   'https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js',
   'https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.umd.js',
@@ -21,9 +22,12 @@ function loadScript(src) {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
     if (existing) {
+      if (getLoadedVapiConstructor()) {
+        resolve();
+        return;
+      }
       existing.addEventListener('load', resolve, { once: true });
       existing.addEventListener('error', reject, { once: true });
-      if (getLoadedVapiConstructor()) resolve();
       return;
     }
 
@@ -77,9 +81,11 @@ async function getRuntimeConfig() {
 
 export default function VapiReceptionistDemoButton({ className = '', variant = 'primary', showFallbackText = false }) {
   const vapiRef = useRef(null);
+  const startTimeoutRef = useRef(null);
   const [status, setStatus] = useState('checking');
   const [fallbackVisible, setFallbackVisible] = useState(false);
   const [runtimeConfigured, setRuntimeConfigured] = useState(Boolean(BUILD_PUBLIC_KEY && BUILD_ASSISTANT_ID));
+  const [errorMessage, setErrorMessage] = useState('');
 
   const publicKey = useMemo(() => BUILD_PUBLIC_KEY, []);
   const assistantId = useMemo(() => BUILD_ASSISTANT_ID, []);
@@ -104,6 +110,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
 
     return () => {
       cancelled = true;
+      clearTimeout(startTimeoutRef.current);
       vapiRef.current?.stop?.();
     };
   }, [hasBuildConfig]);
@@ -119,12 +126,16 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
           : 'Talk to Our AI Receptionist';
 
   const handleClick = async () => {
+    setErrorMessage('');
+
     if (!hasBuildConfig) {
       setFallbackVisible(true);
+      setErrorMessage('The voice demo configuration is visible to the server but not to this browser build. Redeploy with VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID selected for Production.');
       return;
     }
 
     if (isLive) {
+      clearTimeout(startTimeoutRef.current);
       vapiRef.current?.stop?.();
       setStatus('idle');
       return;
@@ -135,7 +146,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
 
     try {
       const VapiConstructor = await loadVapiSdk();
-      if (!VapiConstructor) throw new Error('Vapi unavailable');
+      if (!VapiConstructor) throw new Error('Vapi SDK unavailable');
 
       if (!vapiRef.current) {
         if (typeof VapiConstructor === 'function') {
@@ -146,22 +157,39 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
           throw new Error('Unsupported Vapi SDK shape');
         }
 
-        vapiRef.current?.on?.('call-start', () => setStatus('listening'));
-        vapiRef.current?.on?.('call-end', () => setStatus('idle'));
-        vapiRef.current?.on?.('error', () => {
+        vapiRef.current?.on?.('call-start', () => {
+          clearTimeout(startTimeoutRef.current);
+          setStatus('listening');
+          setFallbackVisible(false);
+          setErrorMessage('');
+        });
+
+        vapiRef.current?.on?.('call-end', () => {
+          clearTimeout(startTimeoutRef.current);
+          setStatus('idle');
+        });
+
+        vapiRef.current?.on?.('error', (error) => {
+          clearTimeout(startTimeoutRef.current);
           setStatus('unavailable');
           setFallbackVisible(true);
+          setErrorMessage(error?.message || 'The voice demo could not start. Check microphone permission and Vapi assistant settings.');
         });
       }
 
-      await vapiRef.current?.start?.(assistantId, {
-        firstMessage: 'Hi, you’re speaking with the AssistantAI.com.au demo receptionist. I can explain pricing, recommend Starter or Growth, and escalate Enterprise needs for review.',
-      });
+      startTimeoutRef.current = window.setTimeout(() => {
+        setStatus('unavailable');
+        setFallbackVisible(true);
+        setErrorMessage('The browser did not receive a Vapi call-start event. Check microphone permission, popup/audio blocking, and that the Vapi assistant is public-call enabled.');
+        vapiRef.current?.stop?.();
+      }, CALL_START_TIMEOUT_MS);
 
-      setStatus('listening');
-    } catch (_error) {
+      await vapiRef.current?.start?.(assistantId);
+    } catch (error) {
+      clearTimeout(startTimeoutRef.current);
       setStatus('unavailable');
       setFallbackVisible(true);
+      setErrorMessage(error?.message || 'The voice demo could not start.');
     }
   };
 
@@ -185,11 +213,14 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       {(showFallbackText || fallbackVisible) && !isConfigured && (
         <p className="max-w-sm text-sm leading-relaxed text-slate-400">{FALLBACK_MESSAGE}</p>
       )}
+      {status === 'connecting' && (
+        <p className="max-w-sm text-sm leading-relaxed text-cyan-300">Requesting microphone access and starting the live demo...</p>
+      )}
       {isLive && (
         <p className="max-w-sm text-sm leading-relaxed text-cyan-300">Listening...</p>
       )}
       {fallbackVisible && isConfigured && (
-        <p className="max-w-sm text-sm leading-relaxed text-slate-400">{FALLBACK_MESSAGE}</p>
+        <p className="max-w-sm text-sm leading-relaxed text-slate-400">{errorMessage || FALLBACK_MESSAGE}</p>
       )}
     </div>
   );
