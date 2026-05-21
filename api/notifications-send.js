@@ -24,48 +24,45 @@ function normalisePhone(phone) {
   return String(phone || '').replace(/\s+/g, '').trim();
 }
 
-async function sendMessageMediaSms({ to, message }) {
-  const apiKey = process.env.MESSAGEMEDIA_API_KEY;
-  const apiSecret = process.env.MESSAGEMEDIA_API_SECRET;
-  const sender = process.env.MESSAGEMEDIA_SENDER_ID || 'AssistantAI';
+async function sendTwilioSms({ to, message }) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
 
-  if (!apiKey || !apiSecret || !to) {
+  if (!accountSid || !authToken || !from || !to) {
     return { status: 'not_configured' };
   }
 
-  const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-  const response = await fetch('https://api.messagemedia.com/v1/messages', {
+  const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+  const params = new URLSearchParams();
+  params.append('To', normalisePhone(to));
+  params.append('From', normalisePhone(from));
+  params.append('Body', message);
+
+  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: JSON.stringify({
-      messages: [
-        {
-          content: message,
-          destination_number: normalisePhone(to),
-          source_number: sender
-        }
-      ]
-    })
+    body: params.toString()
   });
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     return {
       status: 'failed',
-      provider: 'messagemedia',
-      error: data?.message || data?.error || JSON.stringify(data)
+      provider: 'twilio',
+      error: data?.message || data?.error_message || JSON.stringify(data),
+      provider_response: data
     };
   }
 
   return {
     status: 'sent',
-    provider: 'messagemedia',
+    provider: 'twilio',
     provider_response: data,
-    provider_message_id: data?.messages?.[0]?.message_id || data?.message_id || null
+    provider_message_id: data?.sid || null
   };
 }
 
@@ -97,7 +94,7 @@ export default async function handler(req, res) {
     const requestedChannel = body.channel || 'in_app';
     const shouldSendSms = requestedChannel === 'sms' || body.send_sms === true;
     const smsResult = shouldSendSms
-      ? await sendMessageMediaSms({ to: recipientPhone, message: `${title}: ${message}` })
+      ? await sendTwilioSms({ to: recipientPhone, message: `${title}: ${message}` })
       : { status: 'not_requested' };
 
     const payload = {
@@ -121,7 +118,7 @@ export default async function handler(req, res) {
       actor_email: body.actor_email || null,
       metadata: {
         ...(body.metadata || {}),
-        sms_provider: shouldSendSms ? 'messagemedia' : null,
+        sms_provider: shouldSendSms ? 'twilio' : null,
         sms_result: smsResult.status,
         sms_provider_response: smsResult.provider_response || null
       }
@@ -136,7 +133,7 @@ export default async function handler(req, res) {
         in_app: 'stored',
         email: process.env.RESEND_API_KEY ? 'not_implemented_yet' : 'not_configured',
         sms: smsResult.status,
-        sms_provider: 'messagemedia',
+        sms_provider: 'twilio',
         push: 'not_configured'
       }
     });
