@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
+import CrispChat from './components/chat/CrispChat';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Industries from './pages/Industries';
@@ -58,6 +59,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <Router>
+        <CrispChat />
         <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
