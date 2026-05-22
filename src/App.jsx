@@ -2,6 +2,7 @@ import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import './styles/admin-shopify.css';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
 import CrispChat from './components/chat/CrispChat';
