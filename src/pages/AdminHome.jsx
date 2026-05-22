@@ -26,11 +26,11 @@ const modules = [
 
 export default function AdminHome() {
   return (
-    <div className="space-y-8">
-      <div className="rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-300">AssistantAI Backend</p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Control Centre</h1>
-        <p className="mt-4 max-w-3xl text-slate-300">Manage leads, clients, onboarding, forms, offers, navigation, FAQs, social proof, content, media, landing pages, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
+    <div className="space-y-8 text-slate-950">
+      <div className="admin-card p-8">
+        <p className="admin-kicker">AssistantAI Backend</p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Control Centre</h1>
+        <p className="admin-muted mt-4 max-w-3xl">Manage leads, clients, onboarding, forms, offers, navigation, FAQs, social proof, content, media, landing pages, blog posts, SEO, campaigns and launch readiness from one internal workspace.</p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -38,13 +38,13 @@ export default function AdminHome() {
           const Icon = module.icon;
           return (
             <Link key={module.href} to={module.href}>
-              <Card className="h-full border-white/10 bg-[#0b0f18] transition hover:border-cyan-400/30 hover:bg-white/[0.04]">
+              <Card className="admin-card h-full transition">
                 <CardContent className="p-6">
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-900">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h2 className="text-xl font-semibold text-white">{module.title}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{module.desc}</p>
+                  <h2 className="text-xl font-semibold text-slate-950">{module.title}</h2>
+                  <p className="admin-muted mt-2 text-sm leading-relaxed">{module.desc}</p>
                 </CardContent>
               </Card>
             </Link>
