@@ -26,3 +26,52 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
+
+.admin-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.admin-panel-muted {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+}
+
+.admin-tab {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #475569;
+}
+
+.admin-tab-active {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.admin-filter {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #475569;
+}
+
+.admin-filter-active-purple {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+  color: #6d28d9;
+}
+
+.admin-filter-active-amber {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.admin-alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
