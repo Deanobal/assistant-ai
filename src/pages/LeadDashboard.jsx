@@ -88,15 +88,17 @@ export default function LeadDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Lead Dashboard</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Internal sales pipeline</Badge>
+    <div className="space-y-8 text-slate-950">
+      <div className="admin-card p-6 md:p-8">
+        <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <Badge className="border-0 bg-slate-900 text-white">Lead Dashboard</Badge>
+              <Badge className="border-0 bg-emerald-50 text-emerald-700">Internal sales pipeline</Badge>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-950 mb-2">Manage Leads, Pipeline, and Onboarding</h2>
+            <p className="admin-muted max-w-3xl">Track every incoming enquiry, move leads through the pipeline, and keep onboarding visibility in the same internal workspace.</p>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Manage Leads, Pipeline, and Onboarding</h2>
-          <p className="text-gray-400 max-w-3xl">Track every incoming enquiry, move leads through the pipeline, and keep onboarding visibility in the same internal workspace.</p>
         </div>
       </div>
 
