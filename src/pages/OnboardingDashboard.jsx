@@ -176,20 +176,22 @@ export default function OnboardingDashboard() {
   const smartPriorityQueue = getSmartPriorityQueue(preLiveClients, taskMap);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-3 flex-wrap">
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Onboarding Hub</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Pre-Live = Onboarding Hub</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Live = Client Manager</Badge>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Operational onboarding system for sold AssistantAI clients</h2>
-          <p className="text-gray-400 max-w-4xl">Lead-first onboarding workflow with real client records, structured intake, dynamic checklist logic, integrations tracking, billing status, blockers, notes, and go-live readiness.</p>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
-              + New Onboarding
-            </Button>
+    <div className="space-y-8 text-slate-950">
+      <div className="admin-card p-6 md:p-8">
+        <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              <Badge className="border-0 bg-slate-900 text-white">Client Onboarding Hub</Badge>
+              <Badge className="border-0 bg-blue-50 text-blue-700">Pre-Live = Onboarding Hub</Badge>
+              <Badge className="border-0 bg-emerald-50 text-emerald-700">Live = Client Manager</Badge>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-950 mb-2">Operational onboarding system for sold AssistantAI clients</h2>
+            <p className="admin-muted max-w-4xl">Lead-first onboarding workflow with real client records, structured intake, dynamic checklist logic, integrations tracking, billing status, blockers, notes, and go-live readiness.</p>
+            <div className="flex flex-wrap gap-3 mt-5">
+              <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800">
+                + New Onboarding
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -213,27 +215,27 @@ export default function OnboardingDashboard() {
 
       <SmartPriorityQueue items={smartPriorityQueue} />
 
-      <div className="space-y-4">
-        <h3 className="text-white text-xl font-semibold">Sold Leads Ready to Start Onboarding</h3>
+      <div className="admin-panel p-5 space-y-4">
+        <h3 className="text-slate-950 text-xl font-semibold">Sold Leads Ready to Start Onboarding</h3>
         {readyLeads.length === 0 ? (
-          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-6 text-gray-400">No sold leads are waiting to enter the onboarding hub.</CardContent></Card>
+          <Card className="border-slate-200 bg-slate-50"><CardContent className="p-6 text-slate-500">No sold leads are waiting to enter the onboarding hub.</CardContent></Card>
         ) : readyLeads.map((lead) => (
           <OnboardingLeadCard key={lead.id} lead={lead} onConvert={(item) => createClientMutation.mutate(item)} disabled={createClientMutation.isPending} />
         ))}
       </div>
 
-      <div className="space-y-4">
+      <div className="admin-panel p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h3 className="text-white text-xl font-semibold">Active Onboarding</h3>
+          <h3 className="text-slate-950 text-xl font-semibold">Active Onboarding</h3>
         </div>
         <OnboardingClientsToolbar filters={filters} onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))} />
         <OnboardingClientsTable clients={filteredClients} />
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-white text-xl font-semibold">Live</h3>
+      <div className="admin-panel p-5 space-y-4">
+        <h3 className="text-slate-950 text-xl font-semibold">Live</h3>
         {liveClients.length === 0 ? (
-          <Card className="bg-[#12121a] border-white/5"><CardContent className="p-6 text-gray-400">No completed live clients yet.</CardContent></Card>
+          <Card className="border-slate-200 bg-slate-50"><CardContent className="p-6 text-slate-500">No completed live clients yet.</CardContent></Card>
         ) : (
           <OnboardingClientsTable clients={liveClients} />
         )}
