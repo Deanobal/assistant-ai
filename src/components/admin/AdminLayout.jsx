@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart3, BriefcaseBusiness, Home, Inbox, LogOut, MessageSquare, Rocket, ShieldCheck, TrendingUp } from 'lucide-react';
+import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
 
 const navItems = [
   {
@@ -14,6 +14,7 @@ const navItems = [
     icon: Home,
     subtitle: 'Control centre',
     match: ['/admin'],
+    group: 'Operate',
   },
   {
     label: 'Action Inbox',
@@ -21,6 +22,7 @@ const navItems = [
     icon: Inbox,
     subtitle: 'Live response queue',
     match: ['/ActionInbox', '/UnmatchedSmsInbox'],
+    group: 'Operate',
   },
   {
     label: 'Leads',
@@ -28,6 +30,7 @@ const navItems = [
     icon: BarChart3,
     subtitle: 'Pipeline and follow-up',
     match: ['/LeadDashboard', '/LeadDetail'],
+    group: 'Operate',
   },
   {
     label: 'Onboarding',
@@ -35,6 +38,7 @@ const navItems = [
     icon: Rocket,
     subtitle: 'Rollout progress',
     match: ['/Onboarding', '/OnboardingIntake'],
+    group: 'Operate',
   },
   {
     label: 'Support',
@@ -42,6 +46,7 @@ const navItems = [
     icon: MessageSquare,
     subtitle: 'All support threads',
     match: ['/SupportInbox'],
+    group: 'Operate',
   },
   {
     label: 'Admin',
@@ -49,15 +54,29 @@ const navItems = [
     icon: ShieldCheck,
     subtitle: 'System controls',
     match: ['/ClientManager', '/ClientWorkspace', '/TeamAccess', '/SystemReadiness'],
+    group: 'Manage',
   },
   {
     label: 'Marketing',
     path: '/admin/marketing/seo-dashboard',
     icon: TrendingUp,
-    subtitle: 'SEO & campaigns',
+    subtitle: 'SEO and campaigns',
     match: ['/admin/marketing'],
+    group: 'Grow',
   },
 ];
+
+const quickActions = [
+  { label: 'Reply queue', path: '/ActionInbox' },
+  { label: 'New leads', path: '/LeadDashboard' },
+  { label: 'Readiness', path: '/SystemReadiness' },
+];
+
+function getCount(item, actionCount, unreadSupportCount) {
+  if (item.path === '/ActionInbox') return actionCount;
+  if (item.path === '/SupportInbox') return unreadSupportCount;
+  return 0;
+}
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -114,28 +133,33 @@ export default function AdminLayout() {
   const unreadSupportCount = unreadConversations.filter((conversation) => !['resolved', 'closed'].includes(conversation.status)).length;
   const actionCount = unreadSupportCount + unmatchedSms.length;
   const activeNavItem = navItems.find((item) => item.match.some((path) => location.pathname.startsWith(path))) || navItems[0];
+  const groupedNavItems = navItems.reduce((groups, item) => {
+    groups[item.group] = groups[item.group] || [];
+    groups[item.group].push(item);
+    return groups;
+  }, {});
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#07070d]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-400" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f6f7]">
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#07070d] px-6">
-        <Card className="w-full max-w-md border-white/5 bg-[#12121a]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f6f7] px-6">
+        <Card className="w-full max-w-md border-slate-200 bg-white shadow-xl shadow-slate-200/70">
           <CardContent className="space-y-4 p-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
-              <BriefcaseBusiness className="h-7 w-7 text-cyan-400" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white">
+              <BriefcaseBusiness className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="mb-2 text-2xl font-bold text-white">Admin Access Only</h1>
-              <p className="text-gray-400">This internal workspace is reserved for the AssistantAI team.</p>
+              <h1 className="mb-2 text-2xl font-bold text-slate-950">Admin Access Only</h1>
+              <p className="text-slate-500">This internal workspace is reserved for the AssistantAI team.</p>
             </div>
-            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">
+            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
               Return to Website
             </Button>
           </CardContent>
@@ -145,85 +169,121 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06070b] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-slate-950">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 flex-col border-r border-white/10 bg-[#0b0f18] p-6 lg:flex">
-          <Link to="/admin" className="mb-10 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500">
-              <BriefcaseBusiness className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold">AssistantAI</p>
-              <p className="text-sm text-slate-500">Internal Operations</p>
-            </div>
-          </Link>
-
-          <div className="flex-1 space-y-2">
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-slate-200 transition-colors mb-4 pb-4 border-b border-white/10"
-            >
-              ← Back to Site
+        <aside className="hidden w-72 flex-col border-r border-white/10 bg-[#111827] text-white lg:flex">
+          <div className="border-b border-white/10 p-5">
+            <Link to="/admin" className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-950 shadow-sm">
+                <BriefcaseBusiness className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-base font-semibold leading-tight">AssistantAI</p>
+                <p className="text-xs text-slate-400">Operations admin</p>
+              </div>
             </Link>
-            {navItems.map((item) => {
-              const isActive = item.match.some((path) => location.pathname.startsWith(path));
-              const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition-colors ${isActive ? 'border-cyan-400/40 bg-cyan-500/12 text-white ring-1 ring-cyan-300/10' : ['Admin', 'Marketing'].includes(item.label) ? 'border-transparent text-slate-500 hover:bg-white/[0.02] hover:text-slate-200' : 'border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-white'}`}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{item.label}</p>
-                      <p className="truncate text-xs text-slate-500">{item.subtitle}</p>
-                    </div>
-                  </div>
-                  {count > 0 && <Badge className="shrink-0 border-cyan-500/20 bg-cyan-500/10 text-cyan-200">{count}</Badge>}
-                </Link>
-              );
-            })}
           </div>
 
-          <Button onClick={() => base44.auth.logout('/')} className="w-full bg-slate-700 hover:bg-slate-600 text-white">
-            <LogOut className="mr-2 h-4 w-4" />
-            Log Out
-          </Button>
+          <div className="flex-1 overflow-y-auto p-3">
+            <Link
+              to="/"
+              className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <span>Back to public site</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+
+            <div className="space-y-5">
+              {Object.entries(groupedNavItems).map(([group, items]) => (
+                <div key={group}>
+                  <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{group}</p>
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const isActive = item.match.some((path) => location.pathname.startsWith(path));
+                      const count = getCount(item, actionCount, unreadSupportCount);
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`group flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-slate-900' : 'text-slate-400 group-hover:text-white'}`} />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold">{item.label}</p>
+                              <p className={`truncate text-[11px] ${isActive ? 'text-slate-500' : 'text-slate-500'}`}>{item.subtitle}</p>
+                            </div>
+                          </div>
+                          {count > 0 && <Badge className="shrink-0 border-0 bg-emerald-500 text-white">{count}</Badge>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 p-4">
+            <Button onClick={() => base44.auth.logout('/')} className="w-full justify-start rounded-xl bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white">
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </Button>
+          </div>
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b0f18]/92 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-slate-500">AssistantAI Internal Workspace</p>
-                <h1 className="text-xl font-semibold text-white">{activeNavItem.label}</h1>
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm shadow-slate-200/60 backdrop-blur-xl sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <span>AssistantAI admin</span>
+                  <span>/</span>
+                  <span>{activeNavItem.subtitle}</span>
+                </div>
+                <h1 className="mt-1 truncate text-2xl font-bold tracking-tight text-slate-950">{activeNavItem.label}</h1>
               </div>
-              <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{activeNavItem.subtitle}</Badge>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="hidden min-w-[260px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 xl:flex">
+                  <Search className="h-4 w-4" />
+                  <span>Search leads, clients, tasks...</span>
+                </div>
+                {quickActions.map((action) => (
+                  <Link key={action.path} to={action.path} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                    {action.label}
+                  </Link>
+                ))}
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <Bell className="h-4 w-4 text-slate-600" />
+                  {actionCount > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">{actionCount}</span>}
+                </div>
+              </div>
             </div>
           </header>
 
-          <main className="px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pb-8">
+          <main className="mx-auto w-full max-w-[1540px] px-4 py-6 pb-[calc(6.75rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pb-10">
             <Outlet />
           </main>
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f18]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-7 gap-2">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
+        <div className="grid grid-cols-7 gap-1">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));
-            const count = item.path === '/ActionInbox' ? actionCount : item.path === '/SupportInbox' ? unreadSupportCount : 0;
+            const count = getCount(item, actionCount, unreadSupportCount);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex min-h-[56px] flex-col items-center justify-center rounded-2xl px-2 text-center text-[10px] ${isActive ? 'bg-cyan-500/10 text-cyan-200' : 'text-slate-400'}`}
+                className={`relative flex min-h-[58px] flex-col items-center justify-center rounded-2xl px-1 text-center text-[10px] font-semibold ${isActive ? 'bg-slate-900 text-white' : 'text-slate-500'}`}
               >
-                <item.icon className="mb-1 h-4 w-4" />
+                <Icon className="mb-1 h-4 w-4" />
                 <span>{item.label}</span>
-                {count > 0 && <span className="absolute right-2 top-1 rounded-full bg-cyan-400 px-1.5 text-[10px] font-semibold text-slate-950">{count}</span>}
+                {count > 0 && <span className="absolute right-1 top-1 rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold text-white">{count}</span>}
               </Link>
             );
           })}
