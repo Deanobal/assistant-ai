@@ -409,23 +409,25 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const listTitle = mode === 'support' ? 'Support Threads' : 'Action Queue';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <div className="mb-3 flex items-center gap-3">
-            <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{config.badge}</Badge>
-            <Badge className="border-white/10 bg-white/5 text-slate-300">Lead-closing workflow</Badge>
+    <div className="space-y-6 text-slate-950">
+      <div className="admin-card p-5 md:p-6">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <Badge className="border-0 bg-slate-900 text-white">{config.badge}</Badge>
+              <Badge className="border-0 bg-emerald-50 text-emerald-700">Lead-closing workflow</Badge>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-950">{config.title}</h2>
+            <p className="admin-muted mt-2 max-w-3xl">{config.description}</p>
+            <ActionInboxMobileControls
+              canInstall={!!installPromptEvent}
+              isStandalone={isStandalone}
+              onInstall={handleInstall}
+              notificationsSupported={notificationSupported}
+              notificationPermission={notificationPermission}
+              onEnableNotifications={handleEnableNotifications}
+            />
           </div>
-          <h2 className="text-3xl font-bold text-white">{config.title}</h2>
-          <p className="mt-2 max-w-3xl text-slate-400">{config.description}</p>
-          <ActionInboxMobileControls
-            canInstall={!!installPromptEvent}
-            isStandalone={isStandalone}
-            onInstall={handleInstall}
-            notificationsSupported={notificationSupported}
-            notificationPermission={notificationPermission}
-            onEnableNotifications={handleEnableNotifications}
-          />
         </div>
       </div>
 
@@ -438,43 +440,45 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
               setActiveView(view.key);
               if (isMobile) setShowMobileDetail(false);
             }}
-            className={`rounded-3xl border px-4 py-4 text-left transition-colors ${activeView === view.key ? 'border-cyan-500/30 bg-cyan-500/10' : 'border-white/5 bg-[#0f172a] hover:bg-white/[0.03]'}`}
+            className={`rounded-3xl px-4 py-4 text-left transition ${activeView === view.key ? 'admin-tab-active' : 'admin-tab hover:bg-slate-50'}`}
           >
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{view.label}</p>
-            <p className="mt-2 text-3xl font-semibold text-white tabular-nums">{counts[view.key] || 0}</p>
+            <p className={`text-xs uppercase tracking-[0.16em] ${activeView === view.key ? 'text-slate-300' : 'text-slate-500'}`}>{view.label}</p>
+            <p className={`mt-2 text-3xl font-semibold tabular-nums ${activeView === view.key ? 'text-white' : 'text-slate-950'}`}>{counts[view.key] || 0}</p>
           </button>
         ))}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2">
-          {SALES_HEAT_VIEWS.map((view) => (
-            <button
-              key={view.key}
-              type="button"
-              onClick={() => setHeatFilter(view.key)}
-              className={`rounded-2xl border px-4 py-2 text-sm ${heatFilter === view.key ? 'border-violet-500/30 bg-violet-500/10 text-violet-200' : 'border-white/10 bg-[#111827] text-slate-300 hover:bg-slate-800'}`}
-            >
-              {view.label} <span className="ml-2 tabular-nums text-xs opacity-75">{heatCounts[view.key] || 0}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {OWNERSHIP_VIEWS.map((view) => (
-            <button
-              key={view.key}
-              type="button"
-              onClick={() => setOwnerFilter(view.key)}
-              className={`rounded-2xl border px-4 py-2 text-sm ${ownerFilter === view.key ? 'border-amber-500/30 bg-amber-500/10 text-amber-200' : 'border-white/10 bg-[#111827] text-slate-300 hover:bg-slate-800'}`}
-            >
-              {view.label} <span className="ml-2 tabular-nums text-xs opacity-75">{ownerCounts[view.key] || 0}</span>
-            </button>
-          ))}
+      <div className="admin-panel p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            {SALES_HEAT_VIEWS.map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                onClick={() => setHeatFilter(view.key)}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium ${heatFilter === view.key ? 'admin-filter-active-purple' : 'admin-filter hover:bg-slate-50'}`}
+              >
+                {view.label} <span className="ml-2 tabular-nums text-xs opacity-75">{heatCounts[view.key] || 0}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {OWNERSHIP_VIEWS.map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                onClick={() => setOwnerFilter(view.key)}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium ${ownerFilter === view.key ? 'admin-filter-active-amber' : 'admin-filter hover:bg-slate-50'}`}
+              >
+                {view.label} <span className="ml-2 tabular-nums text-xs opacity-75">{ownerCounts[view.key] || 0}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {selectionError && (
-        <div className="rounded-3xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+        <div className="admin-alert-error rounded-3xl px-4 py-3 text-sm">
           {selectionError}
         </div>
       )}
