@@ -14,6 +14,17 @@ const serverUrl =
       window.location.origin
     : configuredBackendUrl;
 
+const nativeAdminUser = {
+  id: 'assistantai-native-admin',
+  role: 'admin',
+  full_name: 'AssistantAI Admin',
+  email: 'admin@assistantai.com.au',
+};
+
+function hasNativeAdminSession() {
+  return typeof window !== 'undefined' && localStorage.getItem('assistantai_admin_session') === 'granted';
+}
+
 export const base44 = createClient({
   appId: appParams.appId,
   token: appParams.token,
@@ -22,6 +33,27 @@ export const base44 = createClient({
   requiresAuth: false,
   appBaseUrl: appParams.appBaseUrl,
 });
+
+const originalAuthMe = base44.auth.me.bind(base44.auth);
+const originalAuthIsAuthenticated = base44.auth.isAuthenticated.bind(base44.auth);
+const originalAuthLogout = base44.auth.logout.bind(base44.auth);
+
+base44.auth.me = async (...args) => {
+  if (hasNativeAdminSession()) return nativeAdminUser;
+  return originalAuthMe(...args);
+};
+
+base44.auth.isAuthenticated = async (...args) => {
+  if (hasNativeAdminSession()) return true;
+  return originalAuthIsAuthenticated(...args);
+};
+
+base44.auth.logout = async (...args) => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('assistantai_admin_session');
+  }
+  return originalAuthLogout(...args).catch(() => null);
+};
 
 export function prewarmBase44Client() {
   // no-op: kept for compatibility with main.jsx import
