@@ -6,6 +6,31 @@ import CampaignForm from '@/components/admin/marketing/CampaignForm';
 import CampaignCard from '@/components/admin/marketing/CampaignCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+function isMissingFunctionError(message = '') {
+  return message.includes('404') || message.toLowerCase().includes('not found') || message.toLowerCase().includes('app not found');
+}
+
+function makeDraft(formData) {
+  return {
+    name: formData.name,
+    type: formData.type,
+    template: formData.template,
+    segment: formData.segment,
+    subject: formData.subject,
+    body: formData.body,
+    cta_text: formData.ctaText,
+    cta_url: formData.ctaUrl,
+    scheduled_date: formData.scheduledDate || null,
+    status: 'draft',
+    total_sent: 0,
+    open_rate: 0,
+    click_rate: 0,
+    reply_rate: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -14,13 +39,14 @@ export default function Campaigns() {
   const [isCreating, setIsCreating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
+  const [warning, setWarning] = useState(null);
 
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
         setLoading(true);
         const data = await base44.entities.Campaign.list('-created_date', 50);
-        setCampaigns(data);
+        setCampaigns(data || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -34,19 +60,35 @@ export default function Campaigns() {
   const handleCreateCampaign = async (formData) => {
     try {
       setIsCreating(true);
-      const result = await base44.functions.invoke('createCampaign', {
-        name: formData.name,
-        type: formData.type,
-        template: formData.template,
-        segment: formData.segment,
-        subject: formData.subject,
-        body: formData.body,
-        ctaText: formData.ctaText,
-        ctaUrl: formData.ctaUrl,
-        scheduledDate: formData.scheduledDate,
-      });
+      setError(null);
+      setWarning(null);
+      try {
+        const result = await base44.functions.invoke('createCampaign', {
+          name: formData.name,
+          type: formData.type,
+          template: formData.template,
+          segment: formData.segment,
+          subject: formData.subject,
+          body: formData.body,
+          ctaText: formData.ctaText,
+          ctaUrl: formData.ctaUrl,
+          scheduledDate: formData.scheduledDate,
+        });
 
-      setCampaigns((prev) => [result.data.campaign, ...prev]);
+        const campaign = result?.data?.campaign;
+        if (campaign) {
+          setCampaigns((prev) => [campaign, ...prev]);
+          setShowForm(false);
+          return;
+        }
+      } catch (functionError) {
+        if (!isMissingFunctionError(functionError?.message || '')) throw functionError;
+        setWarning('Campaign function is not deployed yet. Saved as a database draft instead.');
+      }
+
+      const draft = await base44.entities.Campaign.create(makeDraft(formData));
+      setCampaigns((prev) => [draft, ...prev]);
+      setSelectedCampaign(draft);
       setShowForm(false);
     } catch (err) {
       setError(err.message);
@@ -58,16 +100,16 @@ export default function Campaigns() {
   const handleSendCampaign = async (campaignId) => {
     try {
       setIsSending(true);
-      const result = await base44.functions.invoke('sendCampaign', {
-        campaignId: campaignId,
-      });
-
-      setCampaigns((prev) =>
-        prev.map((c) => (c.id === campaignId ? result.data.campaign : c))
-      );
+      setWarning(null);
+      const result = await base44.functions.invoke('sendCampaign', { campaignId });
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? result.data.campaign : c)));
       setSelectedCampaign(result.data.campaign);
     } catch (err) {
-      setError(err.message);
+      if (isMissingFunctionError(err?.message || '')) {
+        setWarning('Send function is not deployed yet. Campaign remains a draft until outbound sending is configured.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsSending(false);
     }
@@ -83,16 +125,12 @@ export default function Campaigns() {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Marketing Campaigns</h2>
           <p className="text-slate-400">Create and manage email and SMS campaigns</p>
         </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-cyan-500 hover:bg-cyan-600"
-        >
+        <Button onClick={() => setShowForm(!showForm)} className="bg-cyan-500 hover:bg-cyan-600">
           {showForm ? 'Cancel' : '+ New Campaign'}
         </Button>
       </div>
@@ -104,7 +142,13 @@ export default function Campaigns() {
         </div>
       )}
 
-      {/* Form */}
+      {warning && (
+        <div className="rounded-lg border border-amber-400/20 bg-amber-400/5 p-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-400" />
+          <p className="text-amber-300">{warning}</p>
+        </div>
+      )}
+
       {showForm && (
         <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Create New Campaign</h3>
@@ -112,23 +156,16 @@ export default function Campaigns() {
         </div>
       )}
 
-      {/* Selected Campaign Details */}
       {selectedCampaign && (
         <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white">{selectedCampaign.name}</h3>
-            <button onClick={() => setSelectedCampaign(null)} className="text-slate-400 hover:text-white">
-              <X className="h-5 w-5" />
-            </button>
+            <button onClick={() => setSelectedCampaign(null)} className="text-slate-400 hover:text-white"><X className="h-5 w-5" /></button>
           </div>
 
           {selectedCampaign.status !== 'sent' && (
             <div className="mb-6">
-              <Button
-                onClick={() => handleSendCampaign(selectedCampaign.id)}
-                disabled={isSending}
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-              >
+              <Button onClick={() => handleSendCampaign(selectedCampaign.id)} disabled={isSending} className="flex items-center gap-2 bg-green-500 hover:bg-green-600">
                 {isSending && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Send className="h-4 w-4" />
                 Send Campaign
@@ -138,29 +175,13 @@ export default function Campaigns() {
 
           {selectedCampaign.status === 'sent' && (
             <div className="space-y-6">
-              {/* Performance Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-lg bg-white/[0.02] p-4">
-                  <p className="text-xs text-slate-400 mb-1">Sent</p>
-                  <p className="text-2xl font-bold text-cyan-400">{selectedCampaign.total_sent}</p>
-                </div>
-                <div className="rounded-lg bg-white/[0.02] p-4">
-                  <p className="text-xs text-slate-400 mb-1">Opened</p>
-                  <p className="text-2xl font-bold text-cyan-400">{selectedCampaign.open_rate?.toFixed(1)}%</p>
-                </div>
-                <div className="rounded-lg bg-white/[0.02] p-4">
-                  <p className="text-xs text-slate-400 mb-1">Clicked</p>
-                  <p className="text-2xl font-bold text-cyan-400">{selectedCampaign.click_rate?.toFixed(1)}%</p>
-                </div>
-                <div className="rounded-lg bg-white/[0.02] p-4">
-                  <p className="text-xs text-slate-400 mb-1">Campaign Score</p>
-                  <p className="text-2xl font-bold text-cyan-400">
-                    {Math.round(selectedCampaign.open_rate * 0.4 + selectedCampaign.click_rate * 0.4 + selectedCampaign.reply_rate * 0.2)}/100
-                  </p>
-                </div>
+                <div className="rounded-lg bg-white/[0.02] p-4"><p className="text-xs text-slate-400 mb-1">Sent</p><p className="text-2xl font-bold text-cyan-400">{selectedCampaign.total_sent}</p></div>
+                <div className="rounded-lg bg-white/[0.02] p-4"><p className="text-xs text-slate-400 mb-1">Opened</p><p className="text-2xl font-bold text-cyan-400">{selectedCampaign.open_rate?.toFixed(1)}%</p></div>
+                <div className="rounded-lg bg-white/[0.02] p-4"><p className="text-xs text-slate-400 mb-1">Clicked</p><p className="text-2xl font-bold text-cyan-400">{selectedCampaign.click_rate?.toFixed(1)}%</p></div>
+                <div className="rounded-lg bg-white/[0.02] p-4"><p className="text-xs text-slate-400 mb-1">Campaign Score</p><p className="text-2xl font-bold text-cyan-400">{Math.round((selectedCampaign.open_rate || 0) * 0.4 + (selectedCampaign.click_rate || 0) * 0.4 + (selectedCampaign.reply_rate || 0) * 0.2)}/100</p></div>
               </div>
 
-              {/* Performance Chart */}
               {selectedCampaign.performanceTrend && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
                   <h4 className="text-sm font-semibold text-white mb-4">Performance Over Time</h4>
@@ -169,12 +190,7 @@ export default function Campaigns() {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
                       <XAxis dataKey="day" stroke="rgb(148, 163, 184)" style={{ fontSize: '12px' }} />
                       <YAxis stroke="rgb(148, 163, 184)" style={{ fontSize: '12px' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                          border: '1px solid rgba(148, 163, 184, 0.2)',
-                        }}
-                      />
+                      <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(148, 163, 184, 0.2)' }} />
                       <Legend />
                       <Line type="monotone" dataKey="opens" stroke="#06b6d4" strokeWidth={2} />
                       <Line type="monotone" dataKey="clicks" stroke="#3b82f6" strokeWidth={2} />
@@ -187,25 +203,12 @@ export default function Campaigns() {
         </div>
       )}
 
-      {/* Campaigns Grid */}
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">
-          {campaigns.length} Campaigns
-        </h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{campaigns.length} Campaigns</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {campaigns.map((campaign) => (
-            <CampaignCard
-              key={campaign.id}
-              campaign={campaign}
-              onView={setSelectedCampaign}
-            />
-          ))}
+          {campaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} onView={setSelectedCampaign} />)}
         </div>
-        {campaigns.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-slate-400">No campaigns yet. Create your first one!</p>
-          </div>
-        )}
+        {campaigns.length === 0 && <div className="text-center py-12"><p className="text-slate-400">No campaigns yet. Create your first one!</p></div>}
       </div>
     </div>
   );
