@@ -17,7 +17,6 @@ import GoLiveTab from '@/components/admin/onboarding/GoLiveTab';
 import SettingsTab from '@/components/admin/onboarding/SettingsTab';
 import ClientConnectorCockpit from '@/components/admin/onboarding/ClientConnectorCockpit';
 import { PLAN_PRICING, getBlockers, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
-import { getSmartPriorityTask } from '@/components/admin/onboarding/smartPriority';
 
 export default function ClientWorkspace() {
   const queryClient = useQueryClient();
@@ -108,7 +107,6 @@ export default function ClientWorkspace() {
   const taskSummary = useMemo(() => ({ total: tasks.length, completed: tasks.filter((task) => task.completed).length }), [tasks]);
   const activeTasks = tasks.filter((task) => !task.is_archived);
   const activeNotes = notes.filter((note) => !note.is_archived || clientDraft?.lifecycle_state === 'live');
-  const activeSmartPriorityTasks = clientDraft ? activeTasks.map((task) => getSmartPriorityTask(task, clientDraft)) : [];
   const progressPercentage = getProgressFromTasks(activeTasks);
   const workflowPhase = getWorkflowPhaseFromTasks(activeTasks);
   const nextAction = getNextActionFromTasks(activeTasks);
