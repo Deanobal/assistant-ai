@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -80,42 +80,43 @@ function getCount(item, actionCount, unreadSupportCount) {
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const authenticated = await base44.auth.isAuthenticated();
-      if (!authenticated) {
-        base44.auth.redirectToLogin(`${window.location.pathname}${window.location.search}`);
+    const checkAdminSession = () => {
+      // Check if user has valid admin session
+      const hasSession = localStorage.getItem('assistantai_admin_session') === 'granted';
+      
+      if (!hasSession) {
+        // Redirect to admin login with current path
+        navigate(`/AdminLogin?from=${location.pathname}`);
         return;
       }
 
-      const user = await base44.auth.me();
-      setIsAdmin(user?.role === 'admin');
       setIsLoading(false);
     };
 
-    checkAccess();
-  }, []);
+    checkAdminSession();
+  }, [navigate, location.pathname]);
 
   const { data: unreadConversations = [] } = useQuery({
     queryKey: ['admin-support-unread-count'],
     queryFn: () => base44.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
     initialData: [],
-    enabled: !isLoading && isAdmin,
+    enabled: !isLoading,
   });
 
   const { data: unmatchedSms = [] } = useQuery({
     queryKey: ['admin-unmatched-sms-count'],
     queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
     initialData: [],
-    enabled: !isLoading && isAdmin,
+    enabled: !isLoading,
   });
 
   useEffect(() => {
-    if (isLoading || !isAdmin) return undefined;
+    if (isLoading) return undefined;
     const refreshCounts = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-support-unread-count'] });
       queryClient.invalidateQueries({ queryKey: ['admin-unmatched-sms-count'] });
@@ -128,7 +129,7 @@ export default function AdminLayout() {
       unsubscribeConversation?.();
       unsubscribeNotification?.();
     };
-  }, [isLoading, isAdmin, queryClient]);
+  }, [isLoading, queryClient]);
 
   const unreadSupportCount = unreadConversations.filter((conversation) => !['resolved', 'closed'].includes(conversation.status)).length;
   const actionCount = unreadSupportCount + unmatchedSms.length;
@@ -139,31 +140,17 @@ export default function AdminLayout() {
     return groups;
   }, {});
 
+  const handleLogout = () => {
+    // Remove admin session from localStorage
+    localStorage.removeItem('assistantai_admin_session');
+    // Redirect to login
+    navigate('/AdminLogin');
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f6f6f7]">
         <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f6f7] px-6">
-        <Card className="w-full max-w-md border-slate-200 bg-white shadow-xl shadow-slate-200/70">
-          <CardContent className="space-y-4 p-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white">
-              <BriefcaseBusiness className="h-7 w-7" />
-            </div>
-            <div>
-              <h1 className="mb-2 text-2xl font-bold text-slate-950">Admin Access Only</h1>
-              <p className="text-slate-500">This internal workspace is reserved for the AssistantAI team.</p>
-            </div>
-            <Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
-              Return to Website
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -206,7 +193,7 @@ export default function AdminLayout() {
                         <Link
                           key={item.path}
                           to={item.path}
-                          className={`group flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                          className={`group flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-300 hover:bg-white/10'}`}
                         >
                           <div className="flex min-w-0 items-center gap-3">
                             <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-slate-900' : 'text-slate-400 group-hover:text-white'}`} />
@@ -226,7 +213,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="border-t border-white/10 p-4">
-            <Button onClick={() => base44.auth.logout('/')} className="w-full justify-start rounded-xl bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white">
+            <Button onClick={handleLogout} className="w-full justify-start rounded-xl bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white">
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </Button>
@@ -279,7 +266,7 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex min-h-[58px] flex-col items-center justify-center rounded-2xl px-1 text-center text-[10px] font-semibold ${isActive ? 'bg-slate-900 text-white' : 'text-slate-500'}`}
+                className={`relative flex min-h-[58px] flex-col items-center justify-center rounded-2xl px-1 text-center text-[10px] font-semibold ${isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 <Icon className="mb-1 h-4 w-4" />
                 <span>{item.label}</span>
