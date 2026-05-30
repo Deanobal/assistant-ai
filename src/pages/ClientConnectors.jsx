@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
+import { AdminEmptyState } from '@/components/admin/AdminState';
 import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, CreditCard, DatabaseZap, FileText, Globe, Mail, MessageSquare, PhoneCall, Rocket, Sparkles, Workflow, XCircle } from 'lucide-react';
 
 const connectorBlueprint = [
@@ -135,12 +136,12 @@ export default function ClientConnectors() {
       </section>
 
       {!client ? (
-        <section className="admin-card p-8 text-center">
-          <DatabaseZap className="mx-auto mb-4 h-12 w-12 text-slate-400" />
-          <h2 className="text-2xl font-bold text-slate-950">No client records yet</h2>
-          <p className="admin-muted mt-2">Create a new onboarding record first, then return here to connect the client.</p>
-          <Link to="/Onboarding" className="mt-5 inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Create onboarding</Link>
-        </section>
+        <AdminEmptyState
+          icon={DatabaseZap}
+          title="No client records yet"
+          description="Create a new onboarding record first, then return here to connect the client across AI, phone, email, CRM, billing and go-live QA."
+          action={<Link to="/Onboarding" className="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Create onboarding</Link>}
+        />
       ) : (
         <>
           <section className="grid gap-4 md:grid-cols-3">
