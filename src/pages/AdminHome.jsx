@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, Bot, BriefcaseBusiness, CheckCircle2, ClipboardList, Clock, DollarSign, FileText, Gauge, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, Clock, DollarSign, FileText, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,6 +9,7 @@ const operations = [
   { title: 'Action Inbox', desc: 'Urgent conversations, replies and escalations.', href: '/ActionInbox', icon: Inbox, tag: 'Live queue' },
   { title: 'Leads', desc: 'Pipeline, lead detail and follow-up control.', href: '/LeadDashboard', icon: BarChart3, tag: 'Revenue' },
   { title: 'Clients', desc: 'Client records, workspaces and account status.', href: '/ClientManager', icon: BriefcaseBusiness, tag: 'Accounts' },
+  { title: 'Client Connectors', desc: 'One-page client setup, integrations, billing and go-live checklist.', href: '/ClientConnectors', icon: PlugZap, tag: 'Setup' },
   { title: 'Onboarding', desc: 'Build progress, intake and go-live readiness.', href: '/Onboarding', icon: Rocket, tag: 'Delivery' },
   { title: 'Support', desc: 'Client and website support threads.', href: '/SupportInbox', icon: LifeBuoy, tag: 'Service' },
   { title: 'System Readiness', desc: 'Launch checks, config and operational status.', href: '/SystemReadiness', icon: Settings, tag: 'Ops' },
@@ -39,12 +40,12 @@ const connectorSteps = [
 ];
 
 const connectorLinks = [
+  { label: 'Connector launchpad', href: '/ClientConnectors', icon: PlugZap },
   { label: 'New onboarding', href: '/Onboarding', icon: Rocket },
   { label: 'Client manager', href: '/ClientManager', icon: BriefcaseBusiness },
   { label: 'System readiness', href: '/SystemReadiness', icon: ShieldCheck },
   { label: 'Pricing', href: '/admin/marketing/pricing', icon: DollarSign },
   { label: 'Forms', href: '/admin/marketing/forms', icon: ClipboardList },
-  { label: 'Site settings', href: '/admin/marketing/site-settings', icon: Settings },
 ];
 
 function percentage(value, total) {
@@ -160,6 +161,7 @@ export default function AdminHome() {
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-300 md:text-lg">Monitor leads, onboarding, support, live clients, integrations, compliance readiness and launch risk from one high-signal operating page.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/Onboarding" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-black/20 hover:bg-slate-100">Start new client</Link>
+              <Link to="/ClientConnectors" className="rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3 text-sm font-bold text-cyan-100 hover:bg-cyan-400/15">Open connector hub</Link>
               <Link to="/ActionInbox" className="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Open live queue</Link>
               <Link to="/SystemReadiness" className="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Check readiness</Link>
             </div>
