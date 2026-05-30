@@ -6,6 +6,7 @@ import './styles/admin-shopify.css';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
 import CrispChat from './components/chat/CrispChat';
+import AdminSessionGate from './components/admin/AdminSessionGate';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Industries from './pages/Industries';
@@ -57,6 +58,14 @@ import SiteSettings from './pages/admin/marketing/SiteSettings';
 import Campaigns from './pages/admin/marketing/Campaigns';
 import MarketingSettings from './pages/admin/marketing/Settings';
 
+function ProtectedMarketingLayout() {
+  return (
+    <AdminSessionGate>
+      <MarketingLayout />
+    </AdminSessionGate>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
@@ -103,7 +112,7 @@ function App() {
               <Route path="/TeamAccess" element={<TeamAccess />} />
               <Route path="/SystemReadiness" element={<SystemReadiness />} />
             </Route>
-            <Route element={<MarketingLayout />}>
+            <Route element={<ProtectedMarketingLayout />}>
               <Route path="/admin/marketing/seo-dashboard" element={<SeoDashboard />} />
               <Route path="/admin/marketing/content-studio" element={<ContentStudio />} />
               <Route path="/admin/marketing/landing-pages" element={<LandingPageBuilder />} />
