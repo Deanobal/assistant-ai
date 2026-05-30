@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
-import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, Clock, PlugZap, Rocket, ShieldCheck, Signal, SlidersHorizontal } from 'lucide-react';
+import { AdminEmptyState } from '@/components/admin/AdminState';
+import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, Clock, PlugZap, Rocket, ShieldCheck, Signal } from 'lucide-react';
 
 function isLive(client) {
   return client.lifecycle_state === 'live' || client.status === 'Live';
@@ -126,7 +126,12 @@ export default function ClientManager() {
           </div>
           <div className="space-y-3">
             {liveClients.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">No live clients yet. Move a client through onboarding and mark them live to see them here.</div>
+              <AdminEmptyState
+                icon={BriefcaseBusiness}
+                title="No live clients yet"
+                description="Move a client through onboarding, activate billing, complete go-live QA, then mark them live. Live accounts will appear here for ongoing management."
+                action={<Link to="/Onboarding" className="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Open onboarding</Link>}
+              />
             ) : liveClients.map((client) => <ClientRow key={client.id} client={client} />)}
           </div>
         </div>
