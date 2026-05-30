@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,15 +13,15 @@ import OnboardingClientsToolbar from '@/components/admin/onboarding/OnboardingCl
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
 import SmartPriorityQueue from '@/components/admin/onboarding/SmartPriorityQueue';
 import NewOnboardingDialog from '@/components/admin/onboarding/NewOnboardingDialog';
-import { getProgressFromTasks } from '@/components/admin/onboarding/onboardingConfig';
+import { PLAN_PRICING, getDefaultIntegrationRecords, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks } from '@/components/admin/onboarding/onboardingConfig';
 import { getSmartPriorityQueue } from '@/components/admin/onboarding/smartPriority';
 
-export default function OnboardingDashboard() {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const [filters, setFilters] = useState({ search: '', plan: 'all', status: 'all', owner: 'all' });
-  const [isNewOnboardingOpen, setIsNewOnboardingOpen] = useState(false);
-  const [newOnboardingForm, setNewOnboardingForm] = useState({
+function isMissingFunctionError(message = '') {
+  return message.includes('404') || message.toLowerCase().includes('not found') || message.toLowerCase().includes('app not found');
+}
+
+function resetManualForm() {
+  return {
     full_name: '',
     business_name: '',
     mobile_number: '',
@@ -29,120 +30,232 @@ export default function OnboardingDashboard() {
     website: '',
     plan: 'Starter',
     source: 'manual_sale',
+  };
+}
+
+function leadFromManualForm(form) {
+  return {
+    full_name: form.full_name?.trim(),
+    business_name: form.business_name?.trim(),
+    email: form.email?.trim(),
+    mobile_number: form.mobile_number?.trim(),
+    industry: form.industry,
+    website: form.website?.trim(),
+    source_page: form.source,
+    message: `Manual onboarding entry from ${form.source.replaceAll('_', ' ')}.`,
+    status: 'Won',
+    plan: form.plan,
+    booking_intent: false,
+  };
+}
+
+function validateLeadForOnboarding(lead) {
+  if (!lead?.business_name && !lead?.full_name) throw new Error('Business name or contact name is required.');
+  if (!lead?.email && !lead?.mobile_number) throw new Error('Email or phone number is required.');
+}
+
+async function createDirectOnboardingFromLead(lead) {
+  validateLeadForOnboarding(lead);
+  const plan = lead.plan || 'Starter';
+  const taskTemplates = getTasksForPlan(plan);
+  const now = new Date().toISOString();
+
+  const client = await base44.entities.Client.create({
+    full_name: lead.full_name || lead.contact_name || '',
+    business_name: lead.business_name || lead.company || lead.full_name || 'New Client',
+    email: lead.email || '',
+    mobile_number: lead.mobile_number || lead.phone || '',
+    industry: lead.industry || 'other',
+    website: lead.website || '',
+    plan,
+    source_lead_id: lead.id || null,
+    source_page: lead.source_page || lead.source || 'manual_sale',
+    status: 'Awaiting Payment',
+    lifecycle_state: 'pre_live',
+    workflow_phase: 'Payment',
+    assigned_owner: 'Onboarding',
+    progress_percentage: 0,
+    next_action: 'Complete: confirm setup payment received',
+    blockers: ['Missing intake details', 'Unpaid billing', 'Missing integrations'],
+    go_live_ready: false,
+    onboarding_archived: false,
+    last_activity: 'Onboarding created directly from dashboard',
+    created_at: now,
+    updated_at: now,
   });
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ['onboarding-clients'],
-    queryFn: () => base44.entities.Client.list('-updated_date', 200),
-    initialData: [],
+  const intake = await base44.entities.IntakeForm.create({
+    client_id: client.id,
+    contact_name: lead.full_name || '',
+    business_name: lead.business_name || lead.full_name || '',
+    email: lead.email || '',
+    phone: lead.mobile_number || lead.phone || '',
+    website: lead.website || '',
+    industry: lead.industry || 'other',
+    approval_status: 'draft',
+    business_description: '',
+    services_offered: '',
+    service_areas: '',
+    business_hours: '',
+    emergency_rules: '',
+    faq_list: '',
+    pricing_guidance: '',
+    escalation_contact: lead.mobile_number || lead.email || '',
+    is_archived: false,
+    last_updated: now,
   });
 
-  const { data: leads = [] } = useQuery({
-    queryKey: ['onboarding-leads'],
-    queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100),
-    initialData: [],
+  const taskRecords = taskTemplates.map((task) => ({
+    ...task,
+    client_id: client.id,
+    completed: false,
+    due_date: null,
+    assigned_to: 'Onboarding',
+    notes: '',
+    created_at: now,
+    updated_at: now,
+    blocked: false,
+    is_archived: false,
+  }));
+
+  if (taskRecords.length) await base44.entities.OnboardingTask.bulkCreate(taskRecords);
+
+  const integrationRecords = getDefaultIntegrationRecords(client.id, plan).map((record) => ({
+    ...record,
+    created_at: now,
+    updated_at: now,
+  }));
+  if (integrationRecords.length) await base44.entities.IntegrationStatus.bulkCreate(integrationRecords);
+
+  await base44.entities.BillingStatus.create({
+    client_id: client.id,
+    plan,
+    setup_fee: PLAN_PRICING[plan]?.setup_fee || 0,
+    monthly_fee: PLAN_PRICING[plan]?.monthly_fee || 0,
+    billing_status: 'draft',
+    payment_method: '',
+    invoice_reference: '',
+    renewal_date: null,
+    stripe_customer_id: null,
+    stripe_subscription_id: null,
+    stripe_checkout_session_id: null,
+    admin_override: false,
+    notes: 'Created from onboarding dashboard fallback flow.',
   });
 
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['onboarding-tasks'],
-    queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500),
-    initialData: [],
+  await base44.entities.ClientNote.create({
+    client_id: client.id,
+    note_type: 'system',
+    content: `Onboarding created from ${lead.source_page || lead.source || 'manual'} without relying on conversion function.`,
+    created_by: 'admin',
+    created_at: now,
+    is_archived: false,
   });
 
-  const { data: notes = [] } = useQuery({
-    queryKey: ['onboarding-notes'],
-    queryFn: () => base44.entities.ClientNote.list('-updated_date', 500),
-    initialData: [],
+  if (lead.id) {
+    await base44.entities.Lead.update(lead.id, {
+      ...lead,
+      status: 'Won',
+      client_account_id: client.id,
+      updated_at: now,
+    }).catch(() => null);
+  }
+
+  const progress = getProgressFromTasks(taskRecords);
+  await base44.entities.Client.update(client.id, {
+    ...client,
+    progress_percentage: progress,
+    workflow_phase: getWorkflowPhaseFromTasks(taskRecords),
+    next_action: getNextActionFromTasks(taskRecords),
+    updated_at: now,
   });
 
-  const { data: billingRecords = [] } = useQuery({
-    queryKey: ['onboarding-billing'],
-    queryFn: () => base44.entities.BillingStatus.list('-updated_date', 300),
-    initialData: [],
-  });
+  return { client_id: client.id, intake_id: intake.id, fallback: true };
+}
 
-  const { data: integrationRecords = [] } = useQuery({
-    queryKey: ['onboarding-integrations'],
-    queryFn: () => base44.entities.IntegrationStatus.list('-updated_date', 300),
-    initialData: [],
-  });
+export default function OnboardingDashboard() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState({ search: '', plan: 'all', status: 'all', owner: 'all' });
+  const [isNewOnboardingOpen, setIsNewOnboardingOpen] = useState(false);
+  const [newOnboardingForm, setNewOnboardingForm] = useState(resetManualForm());
+  const [onboardingError, setOnboardingError] = useState(null);
+  const [onboardingNotice, setOnboardingNotice] = useState(null);
+
+  const invalidateOnboardingQueries = () => {
+    ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads', 'connector-clients'].forEach((key) => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+    });
+  };
+
+  const { data: clients = [] } = useQuery({ queryKey: ['onboarding-clients'], queryFn: () => base44.entities.Client.list('-updated_date', 200), initialData: [] });
+  const { data: leads = [] } = useQuery({ queryKey: ['onboarding-leads'], queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100), initialData: [] });
+  const { data: tasks = [] } = useQuery({ queryKey: ['onboarding-tasks'], queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
+  const { data: notes = [] } = useQuery({ queryKey: ['onboarding-notes'], queryFn: () => base44.entities.ClientNote.list('-updated_date', 500), initialData: [] });
+  const { data: billingRecords = [] } = useQuery({ queryKey: ['onboarding-billing'], queryFn: () => base44.entities.BillingStatus.list('-updated_date', 300), initialData: [] });
+  const { data: integrationRecords = [] } = useQuery({ queryKey: ['onboarding-integrations'], queryFn: () => base44.entities.IntegrationStatus.list('-updated_date', 300), initialData: [] });
 
   const createClientMutation = useMutation({
     mutationFn: async (lead) => {
-      const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
-        event: { entity_name: 'Lead', type: 'update' },
-        data: lead,
-        old_data: { ...lead, status: 'New Lead' },
-      });
-      return response.data;
+      setOnboardingError(null);
+      setOnboardingNotice(null);
+      try {
+        const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
+          event: { entity_name: 'Lead', type: 'update' },
+          data: lead,
+          old_data: { ...lead, status: 'New Lead' },
+        });
+        return response.data;
+      } catch (err) {
+        if (!isMissingFunctionError(err?.message || '')) throw err;
+        const result = await createDirectOnboardingFromLead(lead);
+        setOnboardingNotice('Conversion function unavailable. Onboarding was created using the direct database fallback.');
+        return result;
+      }
     },
     onSuccess: (result) => {
-      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads'].forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: [key] });
-      });
+      invalidateOnboardingQueries();
       if (result?.client_id) navigate(`/ClientWorkspace?id=${result.client_id}`);
     },
+    onError: (err) => setOnboardingError(err.message || 'Could not start onboarding.'),
   });
 
   const createManualOnboardingMutation = useMutation({
     mutationFn: async (form) => {
-      const lead = await base44.entities.Lead.create({
-        full_name: form.full_name,
-        business_name: form.business_name,
-        email: form.email,
-        mobile_number: form.mobile_number,
-        industry: form.industry,
-        website: form.website,
-        source_page: form.source,
-        message: `Manual onboarding entry from ${form.source.replaceAll('_', ' ')}.`,
-        status: 'Won',
-        plan: form.plan,
-        booking_intent: false,
-      });
+      setOnboardingError(null);
+      setOnboardingNotice(null);
+      const leadPayload = leadFromManualForm(form);
+      validateLeadForOnboarding(leadPayload);
+      const lead = await base44.entities.Lead.create(leadPayload);
 
-      const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
-        event: { entity_name: 'Lead', type: 'update' },
-        data: lead,
-        old_data: { ...lead, status: 'New Lead' },
-      });
-
-      return response.data;
+      try {
+        const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
+          event: { entity_name: 'Lead', type: 'update' },
+          data: lead,
+          old_data: { ...lead, status: 'New Lead' },
+        });
+        return response.data;
+      } catch (err) {
+        if (!isMissingFunctionError(err?.message || '')) throw err;
+        const result = await createDirectOnboardingFromLead(lead);
+        setOnboardingNotice('Conversion function unavailable. Manual onboarding was created using the direct database fallback.');
+        return result;
+      }
     },
     onSuccess: (result) => {
       setIsNewOnboardingOpen(false);
-      setNewOnboardingForm({
-        full_name: '',
-        business_name: '',
-        mobile_number: '',
-        email: '',
-        industry: 'other',
-        website: '',
-        plan: 'Starter',
-        source: 'manual_sale',
-      });
-      ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'onboarding-billing', 'onboarding-integrations', 'client-manager-clients', 'admin-leads'].forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: [key] });
-      });
+      setNewOnboardingForm(resetManualForm());
+      invalidateOnboardingQueries();
       if (result?.client_id) navigate(`/ClientWorkspace?id=${result.client_id}`);
     },
+    onError: (err) => setOnboardingError(err.message || 'Could not start onboarding.'),
   });
 
   const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
   const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
-  const billingMap = billingRecords.reduce((acc, item) => {
-    acc[item.client_id] = item;
-    return acc;
-  }, {});
-  const integrationMap = integrationRecords.reduce((acc, item) => {
-    acc[item.client_id] = acc[item.client_id] || [];
-    acc[item.client_id].push(item);
-    return acc;
-  }, {});
-  const taskMap = useMemo(() => tasks.reduce((acc, task) => {
-    acc[task.client_id] = acc[task.client_id] || [];
-    acc[task.client_id].push(task);
-    return acc;
-  }, {}), [tasks]);
+  const billingMap = billingRecords.reduce((acc, item) => { acc[item.client_id] = item; return acc; }, {});
+  const integrationMap = integrationRecords.reduce((acc, item) => { acc[item.client_id] = acc[item.client_id] || []; acc[item.client_id].push(item); return acc; }, {});
+  const taskMap = useMemo(() => tasks.reduce((acc, task) => { acc[task.client_id] = acc[task.client_id] || []; acc[task.client_id].push(task); return acc; }, {}), [tasks]);
 
   const filteredClients = preLiveClients.filter((client) => {
     const matchesSearch = !filters.search || [client.business_name, client.full_name].join(' ').toLowerCase().includes(filters.search.toLowerCase());
@@ -188,22 +301,27 @@ export default function OnboardingDashboard() {
             <h2 className="text-3xl font-bold text-slate-950 mb-2">Operational onboarding system for sold AssistantAI clients</h2>
             <p className="admin-muted max-w-4xl">Lead-first onboarding workflow with real client records, structured intake, dynamic checklist logic, integrations tracking, billing status, blockers, notes, and go-live readiness.</p>
             <div className="flex flex-wrap gap-3 mt-5">
-              <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800">
-                + New Onboarding
-              </Button>
+              <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800">+ New Onboarding</Button>
             </div>
           </div>
         </div>
       </div>
 
-      <NewOnboardingDialog
-        open={isNewOnboardingOpen}
-        onOpenChange={setIsNewOnboardingOpen}
-        form={newOnboardingForm}
-        onChange={(key, value) => setNewOnboardingForm((prev) => ({ ...prev, [key]: value }))}
-        onSubmit={() => createManualOnboardingMutation.mutate(newOnboardingForm)}
-        isSaving={createManualOnboardingMutation.isPending}
-      />
+      {onboardingError && (
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-red-700 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5" />
+          <p>{onboardingError}</p>
+        </div>
+      )}
+
+      {onboardingNotice && (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-amber-800 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5" />
+          <p>{onboardingNotice}</p>
+        </div>
+      )}
+
+      <NewOnboardingDialog open={isNewOnboardingOpen} onOpenChange={setIsNewOnboardingOpen} form={newOnboardingForm} onChange={(key, value) => setNewOnboardingForm((prev) => ({ ...prev, [key]: value }))} onSubmit={() => createManualOnboardingMutation.mutate(newOnboardingForm)} isSaving={createManualOnboardingMutation.isPending} />
 
       <OnboardingKpiGrid items={kpis} />
 
@@ -225,9 +343,7 @@ export default function OnboardingDashboard() {
       </div>
 
       <div className="admin-panel p-5 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h3 className="text-slate-950 text-xl font-semibold">Active Onboarding</h3>
-        </div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"><h3 className="text-slate-950 text-xl font-semibold">Active Onboarding</h3></div>
         <OnboardingClientsToolbar filters={filters} onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))} />
         <OnboardingClientsTable clients={filteredClients} />
       </div>
