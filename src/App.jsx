@@ -30,6 +30,7 @@ import Dashboard from './pages/Dashboard';
 import AdminHome from './pages/AdminHome';
 import AdminLogin from './pages/AdminLogin';
 import ClientManager from './pages/ClientManager';
+import ClientConnectors from './pages/ClientConnectors';
 import ClientWorkspace from './pages/ClientWorkspace';
 import LeadDashboard from './pages/LeadDashboard';
 import LeadDetail from './pages/LeadDetail';
@@ -103,6 +104,7 @@ function App() {
               <Route path="/LeadDashboard" element={<LeadDashboard />} />
               <Route path="/LeadDetail" element={<LeadDetail />} />
               <Route path="/ClientManager" element={<ClientManager />} />
+              <Route path="/ClientConnectors" element={<ClientConnectors />} />
               <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
               <Route path="/Onboarding" element={<OnboardingDashboard />} />
               <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
