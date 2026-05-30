@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BriefcaseBusiness } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdminEmptyState } from '@/components/admin/AdminState';
 import WorkspaceHeader from '@/components/admin/onboarding/WorkspaceHeader';
 import OverviewTab from '@/components/admin/onboarding/OverviewTab';
 import OnboardingIntakeForm from '@/components/admin/onboarding/OnboardingIntakeForm';
@@ -118,7 +119,16 @@ export default function ClientWorkspace() {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
   }, [clientDraft?.plan]);
 
-  if (!clientDraft || !intakeDraft) return <div className="admin-card p-8 text-slate-500">Client not found or intake has not been created yet.</div>;
+  if (!clientDraft || !intakeDraft) {
+    return (
+      <AdminEmptyState
+        icon={BriefcaseBusiness}
+        title="Client workspace unavailable"
+        description="This client could not be loaded, or the required intake record has not been created yet. Start or review onboarding, then reopen the client workspace."
+        action={<Link to="/Onboarding" className="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Open onboarding</Link>}
+      />
+    );
+  }
 
   const getOperationalClientState = (baseClient, nextTasks = activeTasks, nextIntake = intakeDraft, nextIntegrations = integrations, nextBilling = billing) => ({
     ...baseClient,
