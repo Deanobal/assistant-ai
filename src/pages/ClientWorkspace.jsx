@@ -15,6 +15,7 @@ import BillingTab from '@/components/admin/onboarding/BillingTab';
 import FilesTab from '@/components/admin/onboarding/FilesTab';
 import GoLiveTab from '@/components/admin/onboarding/GoLiveTab';
 import SettingsTab from '@/components/admin/onboarding/SettingsTab';
+import ClientConnectorCockpit from '@/components/admin/onboarding/ClientConnectorCockpit';
 import { PLAN_PRICING, getBlockers, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
 import { getSmartPriorityTask } from '@/components/admin/onboarding/smartPriority';
 
@@ -93,7 +94,6 @@ export default function ClientWorkspace() {
     },
   });
 
-
   const ensurePlanTasksMutation = useMutation({
     mutationFn: async (plan) => {
       const existingNames = new Set(tasks.map((task) => task.task_name));
@@ -106,7 +106,6 @@ export default function ClientWorkspace() {
   });
 
   const taskSummary = useMemo(() => ({ total: tasks.length, completed: tasks.filter((task) => task.completed).length }), [tasks]);
-
   const activeTasks = tasks.filter((task) => !task.is_archived);
   const activeNotes = notes.filter((note) => !note.is_archived || clientDraft?.lifecycle_state === 'live');
   const activeSmartPriorityTasks = clientDraft ? activeTasks.map((task) => getSmartPriorityTask(task, clientDraft)) : [];
@@ -121,7 +120,7 @@ export default function ClientWorkspace() {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
   }, [clientDraft?.plan]);
 
-  if (!clientDraft || !intakeDraft) return <div className="text-gray-400">Client not found.</div>;
+  if (!clientDraft || !intakeDraft) return <div className="admin-card p-8 text-slate-500">Client not found or intake has not been created yet.</div>;
 
   const getOperationalClientState = (baseClient, nextTasks = activeTasks, nextIntake = intakeDraft, nextIntegrations = integrations, nextBilling = billing) => ({
     ...baseClient,
@@ -171,17 +170,19 @@ export default function ClientWorkspace() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-slate-950">
       <div className="flex items-center justify-between gap-4">
-        <Link to={clientDraft.lifecycle_state === 'live' ? '/ClientManager' : '/Onboarding'} className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white"><ArrowLeft className="w-4 h-4" />Back</Link>
-        {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} disabled={!isBillingActive} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50">Mark as Go Live</Button>}
+        <Link to={clientDraft.lifecycle_state === 'live' ? '/ClientManager' : '/Onboarding'} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"><ArrowLeft className="w-4 h-4" />Back</Link>
+        {clientDraft.lifecycle_state !== 'live' && <Button onClick={handleGoLive} disabled={!isBillingActive} className="bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50">Mark as Go Live</Button>}
       </div>
 
       <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: goLiveReady && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
 
+      <ClientConnectorCockpit client={clientDraft} intake={intakeDraft} integrations={integrations} billing={billing} tasks={activeTasks} />
+
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-[#12121a] border border-white/5 flex flex-wrap h-auto gap-2 p-2 justify-start">
-          {['overview', 'intake', 'checklist', 'integrations', 'notes', 'billing', 'files', 'go_live', 'settings'].map((tab) => <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500">{tab.replace('_', ' ')}</TabsTrigger>)}
+        <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          {['overview', 'intake', 'checklist', 'integrations', 'notes', 'billing', 'files', 'go_live', 'settings'].map((tab) => <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-slate-900 data-[state=active]:text-white">{tab.replace('_', ' ')}</TabsTrigger>)}
         </TabsList>
 
         <TabsContent value="overview"><OverviewTab client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers }} intake={intakeDraft} taskSummary={taskSummary} /></TabsContent>
