@@ -5,7 +5,8 @@ export default function handler(req, res) {
   }
 
   // Get password from request body
-  const { password } = req.body;
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  const { password } = body;
 
   if (!password) {
     return res.status(400).json({ error: 'Password is required' });
