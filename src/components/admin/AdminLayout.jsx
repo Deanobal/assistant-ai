@@ -4,71 +4,24 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
+import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, PlugZap, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
 
 const navItems = [
-  {
-    label: 'Home',
-    path: '/admin',
-    icon: Home,
-    subtitle: 'Control centre',
-    match: ['/admin'],
-    group: 'Operate',
-  },
-  {
-    label: 'Action Inbox',
-    path: '/ActionInbox',
-    icon: Inbox,
-    subtitle: 'Live response queue',
-    match: ['/ActionInbox', '/UnmatchedSmsInbox'],
-    group: 'Operate',
-  },
-  {
-    label: 'Leads',
-    path: '/LeadDashboard',
-    icon: BarChart3,
-    subtitle: 'Pipeline and follow-up',
-    match: ['/LeadDashboard', '/LeadDetail'],
-    group: 'Operate',
-  },
-  {
-    label: 'Onboarding',
-    path: '/Onboarding',
-    icon: Rocket,
-    subtitle: 'Rollout progress',
-    match: ['/Onboarding', '/OnboardingIntake'],
-    group: 'Operate',
-  },
-  {
-    label: 'Support',
-    path: '/SupportInbox',
-    icon: MessageSquare,
-    subtitle: 'All support threads',
-    match: ['/SupportInbox'],
-    group: 'Operate',
-  },
-  {
-    label: 'Admin',
-    path: '/ClientManager',
-    icon: ShieldCheck,
-    subtitle: 'System controls',
-    match: ['/ClientManager', '/ClientWorkspace', '/TeamAccess', '/SystemReadiness'],
-    group: 'Manage',
-  },
-  {
-    label: 'Marketing',
-    path: '/admin/marketing/seo-dashboard',
-    icon: TrendingUp,
-    subtitle: 'SEO and campaigns',
-    match: ['/admin/marketing'],
-    group: 'Grow',
-  },
+  { label: 'Home', path: '/admin', icon: Home, subtitle: 'Control centre', match: ['/admin'], group: 'Operate' },
+  { label: 'Action Inbox', path: '/ActionInbox', icon: Inbox, subtitle: 'Live response queue', match: ['/ActionInbox', '/UnmatchedSmsInbox'], group: 'Operate' },
+  { label: 'Leads', path: '/LeadDashboard', icon: BarChart3, subtitle: 'Pipeline and follow-up', match: ['/LeadDashboard', '/LeadDetail'], group: 'Operate' },
+  { label: 'Onboarding', path: '/Onboarding', icon: Rocket, subtitle: 'Rollout progress', match: ['/Onboarding', '/OnboardingIntake'], group: 'Operate' },
+  { label: 'Support', path: '/SupportInbox', icon: MessageSquare, subtitle: 'All support threads', match: ['/SupportInbox'], group: 'Operate' },
+  { label: 'Clients', path: '/ClientManager', icon: BriefcaseBusiness, subtitle: 'Live accounts', match: ['/ClientManager', '/ClientWorkspace'], group: 'Manage' },
+  { label: 'Connectors', path: '/ClientConnectors', icon: PlugZap, subtitle: 'Client setup hub', match: ['/ClientConnectors'], group: 'Manage' },
+  { label: 'System', path: '/SystemReadiness', icon: ShieldCheck, subtitle: 'Readiness and access', match: ['/TeamAccess', '/SystemReadiness'], group: 'Manage' },
+  { label: 'Marketing', path: '/admin/marketing/seo-dashboard', icon: TrendingUp, subtitle: 'SEO and campaigns', match: ['/admin/marketing'], group: 'Grow' },
 ];
 
 const quickActions = [
   { label: 'Reply queue', path: '/ActionInbox' },
-  { label: 'New leads', path: '/LeadDashboard' },
+  { label: 'New client', path: '/Onboarding' },
+  { label: 'Connectors', path: '/ClientConnectors' },
   { label: 'Readiness', path: '/SystemReadiness' },
 ];
 
@@ -85,20 +38,12 @@ export default function AdminLayout() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdminSession = () => {
-      // Check if user has valid admin session
-      const hasSession = localStorage.getItem('assistantai_admin_session') === 'granted';
-      
-      if (!hasSession) {
-        // Redirect to admin login with current path
-        navigate(`/AdminLogin?from=${location.pathname}`);
-        return;
-      }
-
-      setIsLoading(false);
-    };
-
-    checkAdminSession();
+    const hasSession = localStorage.getItem('assistantai_admin_session') === 'granted';
+    if (!hasSession) {
+      navigate(`/AdminLogin?from=${location.pathname}`);
+      return;
+    }
+    setIsLoading(false);
   }, [navigate, location.pathname]);
 
   const { data: unreadConversations = [] } = useQuery({
@@ -141,9 +86,7 @@ export default function AdminLayout() {
   }, {});
 
   const handleLogout = () => {
-    // Remove admin session from localStorage
     localStorage.removeItem('assistantai_admin_session');
-    // Redirect to login
     navigate('/AdminLogin');
   };
 
@@ -172,10 +115,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
-            <Link
-              to="/"
-              className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-            >
+            <Link to="/" className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white">
               <span>Back to public site</span>
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
@@ -190,11 +130,7 @@ export default function AdminLayout() {
                       const count = getCount(item, actionCount, unreadSupportCount);
                       const Icon = item.icon;
                       return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          className={`group flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-300 hover:bg-white/10'}`}
-                        >
+                        <Link key={item.path} to={item.path} className={`group flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-300 hover:bg-white/10'}`}>
                           <div className="flex min-w-0 items-center gap-3">
                             <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-slate-900' : 'text-slate-400 group-hover:text-white'}`} />
                             <div className="min-w-0">
@@ -257,17 +193,13 @@ export default function AdminLayout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-9 gap-1">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));
             const count = getCount(item, actionCount, unreadSupportCount);
             const Icon = item.icon;
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`relative flex min-h-[58px] flex-col items-center justify-center rounded-2xl px-1 text-center text-[10px] font-semibold ${isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}
-              >
+              <Link key={item.path} to={item.path} className={`relative flex min-h-[58px] flex-col items-center justify-center rounded-2xl px-1 text-center text-[10px] font-semibold ${isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>
                 <Icon className="mb-1 h-4 w-4" />
                 <span>{item.label}</span>
                 {count > 0 && <span className="absolute right-1 top-1 rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold text-white">{count}</span>}
