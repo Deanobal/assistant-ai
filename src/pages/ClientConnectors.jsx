@@ -3,31 +3,33 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, ClipboardList, CreditCard, DatabaseZap, FileText, Globe, Mail, MessageSquare, PhoneCall, PlugZap, Rocket, ShieldCheck, Sparkles, Workflow, XCircle } from 'lucide-react';
+import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, CreditCard, DatabaseZap, FileText, Globe, Mail, MessageSquare, PhoneCall, Rocket, Sparkles, Workflow, XCircle } from 'lucide-react';
 
 const connectorBlueprint = [
-  { key: 'business_profile', label: 'Business Profile', icon: BriefcaseBusiness, description: 'Business name, contact, industry, locations, hours and service area.', tab: 'intake' },
-  { key: 'knowledge', label: 'Knowledge Base', icon: FileText, description: 'Website, service list, FAQs, booking rules, policies and product information.', tab: 'intake' },
-  { key: 'voice_agent', label: 'Voice Agent', icon: Bot, description: 'Vapi assistant, prompts, fallback logic, secure setup link and call handling.', tab: 'integrations' },
-  { key: 'phone_sms', label: 'Phone + SMS', icon: PhoneCall, description: 'Twilio number, admin SMS alerts, missed lead routing and reply handling.', tab: 'integrations' },
-  { key: 'email', label: 'Email', icon: Mail, description: 'Resend notifications, admin email, sender identity and support routing.', tab: 'integrations' },
-  { key: 'crm', label: 'CRM / GHL', icon: Workflow, description: 'Lead capture, pipeline sync, booking workflow and follow-up automation.', tab: 'integrations' },
-  { key: 'website', label: 'Website Widget', icon: Globe, description: 'Hero-page demo, lead forms, embedded AI assistant and tracking.', tab: 'files' },
-  { key: 'billing', label: 'Billing', icon: CreditCard, description: 'Stripe setup fee, subscription, checkout session and billing status.', tab: 'billing' },
-  { key: 'support', label: 'Support', icon: MessageSquare, description: 'Action Inbox, support inbox, handover, escalation and human fallback.', tab: 'notes' },
-  { key: 'go_live', label: 'Go-Live QA', icon: Rocket, description: 'End-to-end test call, secure form test, notifications, payment and launch signoff.', tab: 'go_live' },
+  { key: 'business_profile', label: 'Business Profile', icon: BriefcaseBusiness, description: 'Business name, contact, industry, locations, hours and service area.' },
+  { key: 'knowledge', label: 'Knowledge Base', icon: FileText, description: 'Website, service list, FAQs, booking rules, policies and product information.' },
+  { key: 'voice_agent', label: 'Voice Agent', icon: Bot, description: 'Vapi assistant, prompts, fallback logic, secure setup link and call handling.' },
+  { key: 'phone_sms', label: 'Phone + SMS', icon: PhoneCall, description: 'Twilio number, admin SMS alerts, missed lead routing and reply handling.' },
+  { key: 'email', label: 'Email', icon: Mail, description: 'Resend notifications, admin email, sender identity and support routing.' },
+  { key: 'crm', label: 'CRM / GHL', icon: Workflow, description: 'Lead capture, pipeline sync, booking workflow and follow-up automation.' },
+  { key: 'website', label: 'Website Widget', icon: Globe, description: 'Hero-page demo, lead forms, embedded AI assistant and tracking.' },
+  { key: 'billing', label: 'Billing', icon: CreditCard, description: 'Stripe setup fee, subscription, checkout session and billing status.' },
+  { key: 'support', label: 'Support', icon: MessageSquare, description: 'Action Inbox, support inbox, handover, escalation and human fallback.' },
+  { key: 'go_live', label: 'Go-Live QA', icon: Rocket, description: 'End-to-end test call, secure form test, notifications, payment and launch signoff.' },
 ];
 
 function clientName(client) {
   return client.business_name || client.full_name || client.email || 'Unnamed client';
 }
 
-function connectorStatus(client, integrations, billing, connector) {
-  const integrationNames = integrations.map((item) => `${item.integration_name || ''} ${item.provider || ''} ${item.integration_type || ''}`.toLowerCase());
-  const hasConnected = (keywords) => integrations.some((item) => item.connection_status === 'connected' && keywords.some((keyword) => integrationNames[integrations.indexOf(item)]?.includes(keyword)));
+function integrationText(item) {
+  return `${item.integration_name || ''} ${item.provider || ''} ${item.integration_type || ''}`.toLowerCase();
+}
 
-  if (connector.key === 'business_profile') return Boolean(client.business_name && (client.email || client.mobile_number));
+function connectorStatus(client, integrations, billing, connector) {
+  const hasConnected = (keywords) => integrations.some((item) => item.connection_status === 'connected' && keywords.some((keyword) => integrationText(item).includes(keyword)));
+
+  if (connector.key === 'business_profile') return Boolean(client.business_name && (client.email || client.mobile_number || client.phone));
   if (connector.key === 'knowledge') return Boolean(client.website || client.knowledge_base_url || client.service_summary);
   if (connector.key === 'voice_agent') return hasConnected(['vapi', 'voice', 'assistant']);
   if (connector.key === 'phone_sms') return hasConnected(['twilio', 'sms', 'phone']);
@@ -61,6 +63,16 @@ function ConnectorCard({ connector, isReady, clientId }) {
           Open workspace <ArrowUpRight className="h-4 w-4" />
         </div>
       </div>
+    </Link>
+  );
+}
+
+function MissingAction({ item, clientId }) {
+  const Icon = item.icon;
+  return (
+    <Link to={`/ClientWorkspace?id=${clientId}`} className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 transition hover:bg-amber-100">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <span><strong>{item.label}:</strong> {item.description}</span>
     </Link>
   );
 }
@@ -165,12 +177,7 @@ export default function ClientConnectors() {
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm font-semibold text-emerald-700">All connector checkpoints look ready. Run go-live QA inside the client workspace.</div>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {missing.slice(0, 6).map((item) => (
-                  <Link key={item.key} to={`/ClientWorkspace?id=${client.id}`} className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 transition hover:bg-amber-100">
-                    <item.icon className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span><strong>{item.label}:</strong> {item.description}</span>
-                  </Link>
-                ))}
+                {missing.slice(0, 6).map((item) => <MissingAction key={item.key} item={item} clientId={client.id} />)}
               </div>
             )}
           </section>
