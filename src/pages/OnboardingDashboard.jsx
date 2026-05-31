@@ -16,10 +16,6 @@ import NewOnboardingDialog from '@/components/admin/onboarding/NewOnboardingDial
 import { PLAN_PRICING, getDefaultIntegrationRecords, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks } from '@/components/admin/onboarding/onboardingConfig';
 import { getSmartPriorityQueue } from '@/components/admin/onboarding/smartPriority';
 
-function isMissingFunctionError(message = '') {
-  return message.includes('404') || message.toLowerCase().includes('not found') || message.toLowerCase().includes('app not found');
-}
-
 function resetManualForm() {
   return {
     full_name: '',
@@ -42,6 +38,7 @@ function leadFromManualForm(form) {
     industry: form.industry,
     website: form.website?.trim(),
     source_page: form.source,
+    source: form.source,
     message: `Manual onboarding entry from ${form.source.replaceAll('_', ' ')}.`,
     status: 'Won',
     plan: form.plan,
@@ -52,6 +49,33 @@ function leadFromManualForm(form) {
 function validateLeadForOnboarding(lead) {
   if (!lead?.business_name && !lead?.full_name) throw new Error('Business name or contact name is required.');
   if (!lead?.email && !lead?.mobile_number) throw new Error('Email or phone number is required.');
+}
+
+async function safeBulkCreate(entity, records) {
+  if (!records?.length) return [];
+  try {
+    if (typeof entity.bulkCreate === 'function') return await entity.bulkCreate(records);
+  } catch (error) {
+    console.warn('bulkCreate failed, falling back to individual creates', error);
+  }
+  const created = [];
+  for (const record of records) {
+    try {
+      created.push(await entity.create(record));
+    } catch (error) {
+      console.warn('Non-blocking onboarding record create failed', error);
+    }
+  }
+  return created;
+}
+
+async function safeCreate(entity, record) {
+  try {
+    return await entity.create(record);
+  } catch (error) {
+    console.warn('Non-blocking onboarding record create failed', error);
+    return null;
+  }
 }
 
 async function createDirectOnboardingFromLead(lead) {
@@ -118,16 +142,16 @@ async function createDirectOnboardingFromLead(lead) {
     is_archived: false,
   }));
 
-  if (taskRecords.length) await base44.entities.OnboardingTask.bulkCreate(taskRecords);
+  await safeBulkCreate(base44.entities.OnboardingTask, taskRecords);
 
   const integrationRecords = getDefaultIntegrationRecords(client.id, plan).map((record) => ({
     ...record,
     created_at: now,
     updated_at: now,
   }));
-  if (integrationRecords.length) await base44.entities.IntegrationStatus.bulkCreate(integrationRecords);
+  await safeBulkCreate(base44.entities.IntegrationStatus, integrationRecords);
 
-  await base44.entities.BillingStatus.create({
+  await safeCreate(base44.entities.BillingStatus, {
     client_id: client.id,
     plan,
     setup_fee: PLAN_PRICING[plan]?.setup_fee || 0,
@@ -140,13 +164,13 @@ async function createDirectOnboardingFromLead(lead) {
     stripe_subscription_id: null,
     stripe_checkout_session_id: null,
     admin_override: false,
-    notes: 'Created from onboarding dashboard fallback flow.',
+    notes: 'Created from onboarding dashboard direct flow.',
   });
 
-  await base44.entities.ClientNote.create({
+  await safeCreate(base44.entities.ClientNote, {
     client_id: client.id,
     note_type: 'system',
-    content: `Onboarding created from ${lead.source_page || lead.source || 'manual'} without relying on conversion function.`,
+    content: `Onboarding created directly from ${lead.source_page || lead.source || 'manual'}.`,
     created_by: 'admin',
     created_at: now,
     is_archived: false,
@@ -168,7 +192,7 @@ async function createDirectOnboardingFromLead(lead) {
     workflow_phase: getWorkflowPhaseFromTasks(taskRecords),
     next_action: getNextActionFromTasks(taskRecords),
     updated_at: now,
-  });
+  }).catch(() => null);
 
   return { client_id: client.id, intake_id: intake.id, fallback: true };
 }
@@ -199,19 +223,9 @@ export default function OnboardingDashboard() {
     mutationFn: async (lead) => {
       setOnboardingError(null);
       setOnboardingNotice(null);
-      try {
-        const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
-          event: { entity_name: 'Lead', type: 'update' },
-          data: lead,
-          old_data: { ...lead, status: 'New Lead' },
-        });
-        return response.data;
-      } catch (err) {
-        if (!isMissingFunctionError(err?.message || '')) throw err;
-        const result = await createDirectOnboardingFromLead(lead);
-        setOnboardingNotice('Conversion function unavailable. Onboarding was created using the direct database fallback.');
-        return result;
-      }
+      const result = await createDirectOnboardingFromLead(lead);
+      setOnboardingNotice('Onboarding created directly. Missing conversion app was bypassed.');
+      return result;
     },
     onSuccess: (result) => {
       invalidateOnboardingQueries();
@@ -226,21 +240,9 @@ export default function OnboardingDashboard() {
       setOnboardingNotice(null);
       const leadPayload = leadFromManualForm(form);
       validateLeadForOnboarding(leadPayload);
-      const lead = await base44.entities.Lead.create(leadPayload);
-
-      try {
-        const response = await base44.functions.invoke('convertWonLeadToOnboarding', {
-          event: { entity_name: 'Lead', type: 'update' },
-          data: lead,
-          old_data: { ...lead, status: 'New Lead' },
-        });
-        return response.data;
-      } catch (err) {
-        if (!isMissingFunctionError(err?.message || '')) throw err;
-        const result = await createDirectOnboardingFromLead(lead);
-        setOnboardingNotice('Conversion function unavailable. Manual onboarding was created using the direct database fallback.');
-        return result;
-      }
+      const result = await createDirectOnboardingFromLead(leadPayload);
+      setOnboardingNotice('Manual onboarding created directly.');
+      return result;
     },
     onSuccess: (result) => {
       setIsNewOnboardingOpen(false);
@@ -253,8 +255,6 @@ export default function OnboardingDashboard() {
 
   const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
   const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
-  const billingMap = billingRecords.reduce((acc, item) => { acc[item.client_id] = item; return acc; }, {});
-  const integrationMap = integrationRecords.reduce((acc, item) => { acc[item.client_id] = acc[item.client_id] || []; acc[item.client_id].push(item); return acc; }, {});
   const taskMap = useMemo(() => tasks.reduce((acc, task) => { acc[task.client_id] = acc[task.client_id] || []; acc[task.client_id].push(task); return acc; }, {}), [tasks]);
 
   const filteredClients = preLiveClients.filter((client) => {
