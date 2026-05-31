@@ -7,20 +7,42 @@ const GROUPS = {
   sms: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER', 'ADMIN_NOTIFICATION_PHONE']
 };
 
+function rawValue(name) {
+  return String(process.env[name] || '').trim();
+}
+
 function maskStatus(name) {
-  const value = process.env[name];
+  const value = rawValue(name);
   return {
     name,
     present: Boolean(value),
-    length: value ? String(value).length : 0
+    length: value.length,
+    valid: isVariableValid(name, value)
   };
+}
+
+function isVariableValid(name, value) {
+  if (!value) return false;
+  if (name === 'VITE_SUPABASE_URL') {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === 'https:' && parsed.hostname.endsWith('.supabase.co');
+    } catch (_error) {
+      return false;
+    }
+  }
+  if (name === 'SUPABASE_SERVICE_ROLE_KEY') {
+    return value.startsWith('eyJ') && value.length > 150;
+  }
+  return true;
 }
 
 function groupStatus(names) {
   const vars = names.map(maskStatus);
   return {
-    ready: vars.every((item) => item.present),
+    ready: vars.every((item) => item.present && item.valid),
     missing: vars.filter((item) => !item.present).map((item) => item.name),
+    invalid: vars.filter((item) => item.present && !item.valid).map((item) => item.name),
     variables: vars
   };
 }
@@ -35,7 +57,7 @@ export default function handler(req, res) {
   return res.status(200).json({
     ok: true,
     service: 'assistantai-config-status',
-    warning: 'This route reports presence only. It never returns secret values.',
+    warning: 'This route reports presence and validity only. It never returns secret values.',
     timestamp: new Date().toISOString(),
     status
   });
