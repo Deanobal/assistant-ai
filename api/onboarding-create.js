@@ -7,30 +7,77 @@ function parseBody(req) {
 }
 
 function getSupabaseConfig() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const rawUrl = process.env.VITE_SUPABASE_URL;
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = String(rawUrl || '').trim().replace(/\/$/, '');
+  const key = String(rawKey || '').trim();
   if (!url || !key) throw new Error('Supabase server configuration missing');
-  return { url: url.replace(/\/$/, ''), key };
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch (_error) {
+    throw new Error('VITE_SUPABASE_URL is not a valid URL');
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('VITE_SUPABASE_URL must start with https://');
+  return { url, key, host: parsed.host };
+}
+
+function getSafeDiagnostics() {
+  try {
+    const config = getSupabaseConfig();
+    return {
+      supabase_url_present: true,
+      supabase_host: config.host,
+      service_role_key_present: Boolean(config.key),
+      service_role_key_length: config.key.length,
+    };
+  } catch (error) {
+    return {
+      supabase_url_present: Boolean(process.env.VITE_SUPABASE_URL),
+      service_role_key_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      configuration_error: error.message,
+    };
+  }
 }
 
 function cleanRecord(record) {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
 }
 
+function explainFetchFailure(error, targetUrl) {
+  const cause = error?.cause;
+  const parts = [error.message || 'fetch failed'];
+  if (cause?.code) parts.push(`cause_code=${cause.code}`);
+  if (cause?.errno) parts.push(`errno=${cause.errno}`);
+  if (cause?.syscall) parts.push(`syscall=${cause.syscall}`);
+  if (cause?.hostname) parts.push(`hostname=${cause.hostname}`);
+  if (targetUrl) {
+    try { parts.push(`target_host=${new URL(targetUrl).host}`); } catch (_error) {}
+  }
+  return parts.join(' ');
+}
+
 async function supabase(path, options = {}) {
   const { url, key } = getSupabaseConfig();
-  const response = await fetch(`${url}/rest/v1${path}`, {
-    ...options,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      Prefer: options.prefer || 'return=representation',
-      ...(options.headers || {})
-    }
-  });
+  const targetUrl = `${url}/rest/v1${path}`;
+  let response;
+  try {
+    response = await fetch(targetUrl, {
+      ...options,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: options.prefer || 'return=representation',
+        ...(options.headers || {})
+      }
+    });
+  } catch (error) {
+    throw new Error(explainFetchFailure(error, targetUrl));
+  }
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_error) { data = text; }
   if (!response.ok) {
     const message = data?.message || data?.error || text || response.statusText;
     const error = new Error(message);
@@ -115,6 +162,13 @@ function integrationTemplates(plan) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      success: true,
+      service: 'assistantai-onboarding-create',
+      diagnostics: getSafeDiagnostics(),
+    });
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
@@ -256,6 +310,7 @@ export default async function handler(req, res) {
       success: true,
       client_id: clientId,
       client,
+      diagnostics: getSafeDiagnostics(),
       tables: {
         client: clientInsert.table,
         intake: intakeResult.table || null,
@@ -267,6 +322,10 @@ export default async function handler(req, res) {
       warnings: [intakeResult, tasksResult, integrationsResult, billingResult, noteResult].filter((item) => item.skipped)
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Direct onboarding creation failed', details: error.message });
+    return res.status(500).json({
+      error: 'Direct onboarding creation failed',
+      details: error.message,
+      diagnostics: getSafeDiagnostics()
+    });
   }
 }
