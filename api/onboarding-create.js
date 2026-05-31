@@ -1,0 +1,272 @@
+function parseBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === 'string') {
+    try { return JSON.parse(req.body || '{}'); } catch (_error) { return {}; }
+  }
+  return req.body;
+}
+
+function getSupabaseConfig() {
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase server configuration missing');
+  return { url: url.replace(/\/$/, ''), key };
+}
+
+function cleanRecord(record) {
+  return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
+}
+
+async function supabase(path, options = {}) {
+  const { url, key } = getSupabaseConfig();
+  const response = await fetch(`${url}/rest/v1${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: options.prefer || 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const message = data?.message || data?.error || text || response.statusText;
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
+}
+
+async function insertIntoCandidates(tableCandidates, record, label) {
+  const errors = [];
+  for (const table of tableCandidates) {
+    try {
+      const data = await supabase(`/${table}`, { method: 'POST', body: JSON.stringify(cleanRecord(record)) });
+      return { table, record: Array.isArray(data) ? data[0] : data };
+    } catch (error) {
+      errors.push(`${table}: ${error.message}`);
+    }
+  }
+  throw new Error(`${label} insert failed. ${errors.join(' | ')}`);
+}
+
+async function optionalInsert(tableCandidates, record, label) {
+  try {
+    return await insertIntoCandidates(tableCandidates, record, label);
+  } catch (error) {
+    return { skipped: true, label, error: error.message };
+  }
+}
+
+async function optionalBulkInsert(tableCandidates, records, label) {
+  if (!records.length) return { skipped: true, label, reason: 'No records' };
+  const errors = [];
+  for (const table of tableCandidates) {
+    try {
+      const data = await supabase(`/${table}`, { method: 'POST', body: JSON.stringify(records.map(cleanRecord)) });
+      return { table, records: data || [] };
+    } catch (error) {
+      errors.push(`${table}: ${error.message}`);
+    }
+  }
+  return { skipped: true, label, error: errors.join(' | ') };
+}
+
+function validate(payload) {
+  if (!payload.business_name && !payload.full_name) throw new Error('Business name or contact name is required');
+  if (!payload.email && !payload.mobile_number && !payload.phone) throw new Error('Email or phone number is required');
+}
+
+function planPricing(plan) {
+  if (plan === 'Growth') return { setup_fee: 1990, monthly_fee: 990 };
+  if (plan === 'Enterprise') return { setup_fee: 4990, monthly_fee: 2490 };
+  return { setup_fee: 990, monthly_fee: 497 };
+}
+
+function taskTemplates(plan) {
+  const core = [
+    'Confirm setup payment received',
+    'Complete business intake',
+    'Collect knowledge base and website details',
+    'Configure voice assistant',
+    'Configure SMS and email notifications',
+    'Run test call and secure setup test',
+    'Approve go-live handover'
+  ];
+  if (plan === 'Growth' || plan === 'Enterprise') core.splice(4, 0, 'Connect CRM workflow');
+  if (plan === 'Enterprise') core.splice(5, 0, 'Configure custom escalation and reporting rules');
+  return core;
+}
+
+function integrationTemplates(plan) {
+  const items = [
+    ['Vapi Voice Agent', 'vapi', 'voice_agent'],
+    ['Twilio SMS', 'twilio', 'sms'],
+    ['Resend Email', 'resend', 'email'],
+    ['Stripe Billing', 'stripe', 'billing'],
+    ['Website Widget', 'website', 'website']
+  ];
+  if (plan === 'Growth' || plan === 'Enterprise') items.push(['CRM / GHL', 'ghl', 'crm']);
+  return items;
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    const body = parseBody(req);
+    validate(body);
+
+    const now = new Date().toISOString();
+    const plan = body.plan || 'Starter';
+    const pricing = planPricing(plan);
+    const phone = body.mobile_number || body.phone || '';
+    const businessName = body.business_name || body.full_name || 'New Client';
+    const contactName = body.full_name || body.contact_name || '';
+
+    const clientInsert = await insertIntoCandidates(['clients', 'client'], {
+      full_name: contactName,
+      business_name: businessName,
+      email: body.email || '',
+      mobile_number: phone,
+      phone,
+      industry: body.industry || 'other',
+      website: body.website || '',
+      plan,
+      source_page: body.source || body.source_page || 'manual_sale',
+      status: 'Awaiting Payment',
+      lifecycle_state: 'pre_live',
+      workflow_phase: 'Payment',
+      assigned_owner: 'Onboarding',
+      progress_percentage: 0,
+      next_action: 'Complete: confirm setup payment received',
+      blockers: ['Missing intake details', 'Unpaid billing', 'Missing integrations'],
+      go_live_ready: false,
+      onboarding_archived: false,
+      last_activity: 'Onboarding created from direct API',
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now
+    }, 'Client');
+
+    const client = clientInsert.record;
+    const clientId = client.id;
+
+    const intakeResult = await optionalInsert(['intake_forms', 'intakeforms', 'intake_form'], {
+      client_id: clientId,
+      contact_name: contactName,
+      full_name: contactName,
+      business_name: businessName,
+      email: body.email || '',
+      phone,
+      mobile_number: phone,
+      website: body.website || '',
+      industry: body.industry || 'other',
+      approval_status: 'draft',
+      business_description: '',
+      services_offered: '',
+      service_areas: '',
+      business_hours: '',
+      emergency_rules: '',
+      faq_list: '',
+      pricing_guidance: '',
+      escalation_contact: phone || body.email || '',
+      is_archived: false,
+      last_updated: now,
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now
+    }, 'Intake form');
+
+    const tasks = taskTemplates(plan).map((task_name, index) => ({
+      client_id: clientId,
+      task_name,
+      task_type: index === 0 ? 'billing' : index < 3 ? 'intake' : 'setup',
+      priority: index === 0 ? 'high' : 'normal',
+      completed: false,
+      due_date: null,
+      assigned_to: 'Onboarding',
+      notes: '',
+      blocked: false,
+      is_archived: false,
+      sort_order: index + 1,
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now
+    }));
+
+    const tasksResult = await optionalBulkInsert(['onboarding_tasks', 'onboardingtasks', 'onboarding_task'], tasks, 'Onboarding tasks');
+
+    const integrations = integrationTemplates(plan).map(([integration_name, provider, integration_type]) => ({
+      client_id: clientId,
+      integration_name,
+      provider,
+      integration_type,
+      connection_status: 'not_connected',
+      last_sync: null,
+      notes: '',
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now
+    }));
+
+    const integrationsResult = await optionalBulkInsert(['integration_status', 'integration_statuses', 'integrationstatuses'], integrations, 'Integration records');
+
+    const billingResult = await optionalInsert(['billing_status', 'billing_statuses', 'billingstatus'], {
+      client_id: clientId,
+      plan,
+      setup_fee: pricing.setup_fee,
+      monthly_fee: pricing.monthly_fee,
+      billing_status: 'draft',
+      payment_method: '',
+      invoice_reference: '',
+      renewal_date: null,
+      stripe_customer_id: null,
+      stripe_subscription_id: null,
+      stripe_checkout_session_id: null,
+      admin_override: false,
+      notes: 'Created from direct onboarding API.',
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now
+    }, 'Billing status');
+
+    const noteResult = await optionalInsert(['client_notes', 'clientnotes', 'client_note'], {
+      client_id: clientId,
+      note_type: 'system',
+      content: 'Onboarding created from direct onboarding API.',
+      created_by: 'admin',
+      created_at: now,
+      updated_at: now,
+      created_date: now,
+      updated_date: now,
+      is_archived: false
+    }, 'Client note');
+
+    return res.status(200).json({
+      success: true,
+      client_id: clientId,
+      client,
+      tables: {
+        client: clientInsert.table,
+        intake: intakeResult.table || null,
+        tasks: tasksResult.table || null,
+        integrations: integrationsResult.table || null,
+        billing: billingResult.table || null,
+        note: noteResult.table || null
+      },
+      warnings: [intakeResult, tasksResult, integrationsResult, billingResult, noteResult].filter((item) => item.skipped)
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Direct onboarding creation failed', details: error.message });
+  }
+}
