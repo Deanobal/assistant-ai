@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,31 @@ function UploadBox({ label, value = [], onChange, disabled }) {
 
 export default function OnboardingIntakeForm({ value, client, onChange, onClientChange, onSave, isSaving, isReadOnly }) {
   const inputClass = 'bg-white/[0.03] border-white/10 text-white';
+  const [localSaving, setLocalSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  async function saveIntake() {
+    if (isReadOnly || localSaving) return;
+    setLocalSaving(true);
+    setSaveMessage('');
+    try {
+      const clientId = value?.client_id || client?.id;
+      if (!clientId) throw new Error('Client ID is missing. Reopen the workspace and try again.');
+      const response = await fetch('/api/intake-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId, client, intake: value })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) throw new Error(data.details || data.error || 'Intake could not be saved.');
+      setSaveMessage('Saved successfully.');
+      if (typeof onSave === 'function') onSave({ skipLegacySave: true, result: data });
+    } catch (error) {
+      setSaveMessage(error.message || 'Save failed.');
+    } finally {
+      setLocalSaving(false);
+    }
+  }
 
   return (
     <div className="space-y-6 pb-24">
@@ -107,9 +132,11 @@ export default function OnboardingIntakeForm({ value, client, onChange, onClient
         <UploadBox label="General Supporting Uploads" value={value.supporting_files} onChange={(files) => onChange('supporting_files', files)} disabled={isReadOnly} />
       </IntakeSectionCard>
 
+      {saveMessage && <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-gray-200">{saveMessage}</div>}
+
       <div className="sticky bottom-4 z-10 flex justify-end">
-        <Button onClick={onSave} disabled={isSaving || isReadOnly} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-2xl disabled:opacity-50">
-          {isReadOnly ? 'Onboarding Archived' : isSaving ? 'Saving…' : 'Save Intake'}
+        <Button onClick={saveIntake} disabled={localSaving || isSaving || isReadOnly} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-2xl disabled:opacity-50">
+          {isReadOnly ? 'Onboarding Archived' : localSaving || isSaving ? 'Saving…' : 'Save Intake'}
         </Button>
       </div>
     </div>
