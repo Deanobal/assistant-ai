@@ -19,6 +19,30 @@ import SettingsTab from '@/components/admin/onboarding/SettingsTab';
 import ClientConnectorCockpit from '@/components/admin/onboarding/ClientConnectorCockpit';
 import { PLAN_PRICING, getBlockers, getNextActionFromTasks, getProgressFromTasks, getTasksForPlan, getWorkflowPhaseFromTasks, isGoLiveReady } from '@/components/admin/onboarding/onboardingConfig';
 
+function fallbackIntakeFromClient(client, clientId) {
+  if (!client) return null;
+  return {
+    client_id: clientId,
+    contact_name: client.full_name || '',
+    business_name: client.business_name || client.full_name || '',
+    email: client.email || '',
+    phone: client.mobile_number || client.phone || '',
+    website: client.website || '',
+    industry: client.industry || 'other',
+    approval_status: 'draft',
+    business_description: '',
+    services_offered: '',
+    service_areas: '',
+    business_hours: '',
+    emergency_rules: '',
+    faq_list: '',
+    pricing_guidance: '',
+    escalation_contact: client.mobile_number || client.phone || client.email || '',
+    is_archived: false,
+    last_updated: new Date().toISOString(),
+  };
+}
+
 export default function ClientWorkspace() {
   const queryClient = useQueryClient();
   const clientId = new URLSearchParams(window.location.search).get('id');
@@ -37,9 +61,11 @@ export default function ClientWorkspace() {
   const billing = billingRecords[0] || null;
 
   useEffect(() => {
-    if (client) setClientDraft(client);
-    if (intake) setIntakeDraft(intake);
-  }, [client, intake]);
+    if (client) {
+      setClientDraft(client);
+      setIntakeDraft(intake || fallbackIntakeFromClient(client, clientId));
+    }
+  }, [client, intake, clientId]);
 
   const updateClientMutation = useMutation({
     mutationFn: (data) => base44.entities.Client.update(clientId, { ...data, updated_at: new Date().toISOString() }),
@@ -49,7 +75,9 @@ export default function ClientWorkspace() {
   });
 
   const updateIntakeMutation = useMutation({
-    mutationFn: (data) => base44.entities.IntakeForm.update(intakeDraft.id, { ...data, last_updated: new Date().toISOString() }),
+    mutationFn: (data) => data.id
+      ? base44.entities.IntakeForm.update(data.id, { ...data, last_updated: new Date().toISOString() })
+      : base44.entities.IntakeForm.create({ ...data, client_id: clientId, last_updated: new Date().toISOString() }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-intake', clientId] }),
   });
 
@@ -80,9 +108,7 @@ export default function ClientWorkspace() {
     mutationFn: () => base44.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] });
-      if (response?.data?.checkout_url) {
-        window.open(response.data.checkout_url, '_blank');
-      }
+      if (response?.data?.checkout_url) window.open(response.data.checkout_url, '_blank');
     },
   });
 
@@ -119,12 +145,12 @@ export default function ClientWorkspace() {
     if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
   }, [clientDraft?.plan]);
 
-  if (!clientDraft || !intakeDraft) {
+  if (!clientDraft) {
     return (
       <AdminEmptyState
         icon={BriefcaseBusiness}
         title="Client workspace unavailable"
-        description="This client could not be loaded, or the required intake record has not been created yet. Start or review onboarding, then reopen the client workspace."
+        description="This client could not be loaded. Return to onboarding and open the client again."
         action={<Link to="/Onboarding" className="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Open onboarding</Link>}
       />
     );
@@ -142,12 +168,8 @@ export default function ClientWorkspace() {
 
   const persistClient = (patch) => {
     const next = { ...clientDraft, ...patch };
-    if (patch.plan && patch.plan !== clientDraft.plan) {
-      updateBillingMutation.mutate({ plan: patch.plan, setup_fee: PLAN_PRICING[patch.plan].setup_fee, monthly_fee: PLAN_PRICING[patch.plan].monthly_fee });
-    }
-    if (patch.plan || patch.status || patch.assigned_owner) {
-      next.last_activity = 'Client workspace updated';
-    }
+    if (patch.plan && patch.plan !== clientDraft.plan) updateBillingMutation.mutate({ plan: patch.plan, setup_fee: PLAN_PRICING[patch.plan].setup_fee, monthly_fee: PLAN_PRICING[patch.plan].monthly_fee });
+    if (patch.plan || patch.status || patch.assigned_owner) next.last_activity = 'Client workspace updated';
     const operationalClient = getOperationalClientState(next);
     setClientDraft(operationalClient);
     updateClientMutation.mutate(operationalClient);
@@ -167,9 +189,7 @@ export default function ClientWorkspace() {
       progress_percentage: 100,
       updated_at: new Date().toISOString(),
     });
-    if (intakeDraft?.id) {
-      await updateIntakeMutation.mutateAsync({ ...intakeDraft, is_archived: true, approval_status: 'approved', last_updated: new Date().toISOString() });
-    }
+    if (intakeDraft?.id) await updateIntakeMutation.mutateAsync({ ...intakeDraft, is_archived: true, approval_status: 'approved', last_updated: new Date().toISOString() });
     await Promise.all(tasks.map((task) => updateTaskMutation.mutateAsync({ ...task, is_archived: true })));
     await Promise.all(notes.filter((note) => !note.is_archived).map((note) => base44.entities.ClientNote.update(note.id, { ...note, is_archived: true })));
     queryClient.invalidateQueries({ queryKey: ['client-workspace-notes', clientId] });
@@ -187,6 +207,8 @@ export default function ClientWorkspace() {
       <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: goLiveReady && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
 
       <ClientConnectorCockpit client={clientDraft} intake={intakeDraft} integrations={integrations} billing={billing} tasks={activeTasks} />
+
+      {!intakeDraft?.id && <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">This workspace is using a temporary intake draft from the client record. Open the Intake tab and save once to create the permanent intake record.</div>}
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
