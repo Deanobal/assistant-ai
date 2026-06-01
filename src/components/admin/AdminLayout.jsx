@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, PlugZap, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
+import AdminAICopilot from './AdminAICopilot';
 
 const navItems = [
   { label: 'Home', path: '/admin', icon: Home, subtitle: 'Control centre', match: ['/admin'], group: 'Operate' },
@@ -191,6 +192,8 @@ export default function AdminLayout() {
           </main>
         </div>
       </div>
+
+      <AdminAICopilot />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-9 gap-1">
