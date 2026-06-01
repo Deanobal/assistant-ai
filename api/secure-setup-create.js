@@ -8,11 +8,23 @@ function normalisePhone(phone) {
   return String(phone || '').replace(/\s+/g, '').trim();
 }
 
+function text(value) {
+  const clean = String(value || '').trim();
+  return clean || null;
+}
+
 function getConfig() {
   const url = String(process.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
   const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   if (!url || !key) throw new Error('Server database configuration missing');
   return { url, key };
+}
+
+function isAuthorised(req) {
+  const expected = String(process.env.VAPI_WEBHOOK_SECRET || '').trim();
+  if (!expected) return true;
+  const received = String(req.headers['x-webhook-secret'] || req.headers['X-Webhook-Secret'] || '').trim();
+  return received === expected;
 }
 
 async function sendTwilioSms({ to, message }) {
@@ -58,6 +70,24 @@ async function sendTwilioSms({ to, message }) {
   };
 }
 
+function buildNotes(body) {
+  const parts = [
+    body.notes,
+    body.summary,
+    body.conversation_summary,
+    body.reason ? `Reason: ${body.reason}` : null,
+    body.service_needed ? `Service needed: ${body.service_needed}` : null,
+    body.buyer_intent ? `Buyer intent: ${body.buyer_intent}` : null,
+    body.current_call_handling ? `Current call handling: ${body.current_call_handling}` : null,
+    body.monthly_enquiry_volume ? `Monthly enquiry volume: ${body.monthly_enquiry_volume}` : null,
+    body.wants_booking !== undefined ? `Wants booking: ${body.wants_booking}` : null,
+    body.wants_crm_sync !== undefined ? `Wants CRM sync: ${body.wants_crm_sync}` : null,
+    body.wants_sms_followup !== undefined ? `Wants SMS follow-up: ${body.wants_sms_followup}` : null,
+    body.wants_email_followup !== undefined ? `Wants email follow-up: ${body.wants_email_followup}` : null,
+  ].map(text).filter(Boolean);
+  return parts.length ? parts.join('\n') : null;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
@@ -65,12 +95,17 @@ export default async function handler(req, res) {
       service: 'assistantai-secure-setup-create',
       supabase_url_present: Boolean(process.env.VITE_SUPABASE_URL),
       service_role_key_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-      twilio_configured: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER)
+      twilio_configured: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER),
+      webhook_secret_required: Boolean(process.env.VAPI_WEBHOOK_SECRET)
     });
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!isAuthorised(req)) {
+    return res.status(401).json({ error: 'Unauthorised secure setup tool call' });
   }
 
   try {
@@ -83,15 +118,15 @@ export default async function handler(req, res) {
 
     const payload = {
       token,
-      source: body.source || 'vapi',
+      source: text(body.source || body.lead_source || body.source_page) || 'vapi',
       caller_phone: phone,
-      captured_name: body.name || body.full_name || null,
-      captured_email: body.email || null,
-      captured_business_name: body.business_name || body.company || null,
-      captured_plan: body.plan || body.selected_plan || body.likely_plan_fit || null,
-      captured_notes: body.notes || body.summary || body.conversation_summary || null,
-      call_id: body.call_id || body.callId || null,
-      lead_id: body.lead_id || body.leadId || null,
+      captured_name: text(body.name || body.full_name),
+      captured_email: text(body.email),
+      captured_business_name: text(body.business_name || body.businessName || body.company),
+      captured_plan: text(body.plan || body.selected_plan || body.likely_plan_fit),
+      captured_notes: buildNotes(body),
+      call_id: text(body.call_id || body.callId),
+      lead_id: text(body.lead_id || body.leadId),
       submitted_payload: body.raw_payload || body,
     };
 
@@ -106,8 +141,8 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload)
     });
 
-    const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    const textResponse = await response.text();
+    const data = textResponse ? JSON.parse(textResponse) : null;
 
     if (!response.ok) {
       return res.status(500).json({ error: 'Secure setup request creation failed', details: data });
