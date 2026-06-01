@@ -40,7 +40,16 @@ function fallbackIntakeFromClient(client, clientId) {
     escalation_contact: client.mobile_number || client.phone || client.email || '',
     is_archived: false,
     last_updated: new Date().toISOString(),
+    _temporary: true,
   };
+}
+
+async function loadWorkspace(clientId) {
+  if (!clientId) throw new Error('Client id is required');
+  const response = await fetch(`/api/client-workspace?id=${encodeURIComponent(clientId)}`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.success) throw new Error(data.details || data.error || 'Client workspace could not be loaded');
+  return data;
 }
 
 export default function ClientWorkspace() {
@@ -49,16 +58,19 @@ export default function ClientWorkspace() {
   const [clientDraft, setClientDraft] = useState(null);
   const [intakeDraft, setIntakeDraft] = useState(null);
 
-  const { data: clients = [] } = useQuery({ queryKey: ['client-workspace', clientId], queryFn: () => base44.entities.Client.filter({ id: clientId }, '-updated_date', 1), initialData: [] });
-  const { data: intakeForms = [] } = useQuery({ queryKey: ['client-workspace-intake', clientId], queryFn: () => base44.entities.IntakeForm.filter({ client_id: clientId }, '-updated_date', 1), initialData: [] });
-  const { data: tasks = [] } = useQuery({ queryKey: ['client-workspace-tasks', clientId], queryFn: () => base44.entities.OnboardingTask.filter({ client_id: clientId }, '-updated_date', 300), initialData: [] });
-  const { data: integrations = [] } = useQuery({ queryKey: ['client-workspace-integrations', clientId], queryFn: () => base44.entities.IntegrationStatus.filter({ client_id: clientId }, '-updated_date', 100), initialData: [] });
-  const { data: notes = [] } = useQuery({ queryKey: ['client-workspace-notes', clientId], queryFn: () => base44.entities.ClientNote.filter({ client_id: clientId }, '-updated_date', 200), initialData: [] });
-  const { data: billingRecords = [] } = useQuery({ queryKey: ['client-workspace-billing', clientId], queryFn: () => base44.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 10), initialData: [] });
+  const { data: workspace = null, error: workspaceError, isLoading } = useQuery({
+    queryKey: ['client-workspace-direct', clientId],
+    queryFn: () => loadWorkspace(clientId),
+    enabled: Boolean(clientId),
+    retry: 1,
+  });
 
-  const client = clients[0] || null;
-  const intake = intakeForms[0] || null;
-  const billing = billingRecords[0] || null;
+  const client = workspace?.client || null;
+  const intake = workspace?.intake || null;
+  const tasks = workspace?.tasks || [];
+  const integrations = workspace?.integrations || [];
+  const notes = workspace?.notes || [];
+  const billing = workspace?.billing || null;
 
   useEffect(() => {
     if (client) {
@@ -70,7 +82,7 @@ export default function ClientWorkspace() {
   const updateClientMutation = useMutation({
     mutationFn: (data) => base44.entities.Client.update(clientId, { ...data, updated_at: new Date().toISOString() }),
     onSuccess: () => {
-      ['client-workspace', 'onboarding-clients', 'client-manager-clients'].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+      ['client-workspace-direct', 'onboarding-clients', 'client-manager-clients'].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
     },
   });
 
@@ -78,58 +90,28 @@ export default function ClientWorkspace() {
     mutationFn: (data) => data.id
       ? base44.entities.IntakeForm.update(data.id, { ...data, last_updated: new Date().toISOString() })
       : base44.entities.IntakeForm.create({ ...data, client_id: clientId, last_updated: new Date().toISOString() }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-intake', clientId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const updateTaskMutation = useMutation({
-    mutationFn: (task) => base44.entities.OnboardingTask.update(task.id, { ...task, updated_at: new Date().toISOString() }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-tasks', clientId] }),
-  });
+  const updateTaskMutation = useMutation({ mutationFn: (task) => base44.entities.OnboardingTask.update(task.id, { ...task, updated_at: new Date().toISOString() }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const updateIntegrationMutation = useMutation({
     mutationFn: async ({ record, status }) => {
       if (record.id) return base44.entities.IntegrationStatus.update(record.id, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : record.last_sync });
       return base44.entities.IntegrationStatus.create({ ...record, client_id: clientId, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null, notes: record.notes || '' });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-integrations', clientId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const createNoteMutation = useMutation({
-    mutationFn: (note) => base44.entities.ClientNote.create({ client_id: clientId, note_type: note.note_type, content: note.content, created_by: 'admin', created_at: new Date().toISOString(), is_archived: false }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-notes', clientId] }),
-  });
+  const createNoteMutation = useMutation({ mutationFn: (note) => base44.entities.ClientNote.create({ client_id: clientId, note_type: note.note_type, content: note.content, created_by: 'admin', created_at: new Date().toISOString(), is_archived: false }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const updateBillingMutation = useMutation({
     mutationFn: (patch) => billing?.id ? base44.entities.BillingStatus.update(billing.id, { ...billing, ...patch }) : base44.entities.BillingStatus.create({ client_id: clientId, plan: clientDraft.plan, setup_fee: PLAN_PRICING[clientDraft.plan].setup_fee, monthly_fee: PLAN_PRICING[clientDraft.plan].monthly_fee, billing_status: 'draft', payment_method: '', invoice_reference: '', renewal_date: null, stripe_customer_id: null, stripe_subscription_id: null, stripe_checkout_session_id: null, admin_override: false, notes: '', ...patch }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const sendCheckoutMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] });
-      if (response?.data?.checkout_url) window.open(response.data.checkout_url, '_blank');
-    },
-  });
-
-  const overrideBillingMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('adminOverrideBillingStatus', { clientId, billingStatus: 'active' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['client-workspace-billing', clientId] });
-      queryClient.invalidateQueries({ queryKey: ['client-workspace', clientId] });
-    },
-  });
-
-  const ensurePlanTasksMutation = useMutation({
-    mutationFn: async (plan) => {
-      const existingNames = new Set(tasks.map((task) => task.task_name));
-      const missing = getTasksForPlan(plan).filter((task) => !existingNames.has(task.task_name));
-      if (missing.length) {
-        await base44.entities.OnboardingTask.bulkCreate(missing.map((task) => ({ ...task, client_id: clientId, completed: false, due_date: null, assigned_to: clientDraft.assigned_owner || '', notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), blocked: false, is_archived: false })));
-      }
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-tasks', clientId] }),
-  });
+  const sendCheckoutMutation = useMutation({ mutationFn: () => base44.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }), onSuccess: (response) => { queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }); if (response?.data?.checkout_url) window.open(response.data.checkout_url, '_blank'); } });
+  const overrideBillingMutation = useMutation({ mutationFn: () => base44.functions.invoke('adminOverrideBillingStatus', { clientId, billingStatus: 'active' }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const taskSummary = useMemo(() => ({ total: tasks.length, completed: tasks.filter((task) => task.completed).length }), [tasks]);
   const activeTasks = tasks.filter((task) => !task.is_archived);
@@ -141,16 +123,16 @@ export default function ClientWorkspace() {
   const isBillingActive = billing?.billing_status === 'active';
   const goLiveReady = isGoLiveReady(activeTasks);
 
-  useEffect(() => {
-    if (clientDraft?.plan) ensurePlanTasksMutation.mutate(clientDraft.plan);
-  }, [clientDraft?.plan]);
+  if (isLoading) {
+    return <AdminEmptyState icon={BriefcaseBusiness} title="Loading client workspace" description="Fetching the client directly from Supabase." />;
+  }
 
   if (!clientDraft) {
     return (
       <AdminEmptyState
         icon={BriefcaseBusiness}
         title="Client workspace unavailable"
-        description="This client could not be loaded. Return to onboarding and open the client again."
+        description={workspaceError?.message || 'This client could not be loaded. Return to onboarding and open the client again.'}
         action={<Link to="/Onboarding" className="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800">Open onboarding</Link>}
       />
     );
@@ -177,22 +159,11 @@ export default function ClientWorkspace() {
 
   const handleGoLive = async () => {
     if (!isBillingActive) return;
-    await updateClientMutation.mutateAsync({
-      ...getOperationalClientState(clientDraft),
-      status: 'Live',
-      lifecycle_state: 'live',
-      onboarding_archived: true,
-      go_live_ready: true,
-      go_live_date: new Date().toISOString().slice(0, 10),
-      workflow_phase: 'Go Live',
-      last_activity: 'Client marked live and transitioned into Client Manager',
-      progress_percentage: 100,
-      updated_at: new Date().toISOString(),
-    });
+    await updateClientMutation.mutateAsync({ ...getOperationalClientState(clientDraft), status: 'Live', lifecycle_state: 'live', onboarding_archived: true, go_live_ready: true, go_live_date: new Date().toISOString().slice(0, 10), workflow_phase: 'Go Live', last_activity: 'Client marked live and transitioned into Client Manager', progress_percentage: 100, updated_at: new Date().toISOString() });
     if (intakeDraft?.id) await updateIntakeMutation.mutateAsync({ ...intakeDraft, is_archived: true, approval_status: 'approved', last_updated: new Date().toISOString() });
     await Promise.all(tasks.map((task) => updateTaskMutation.mutateAsync({ ...task, is_archived: true })));
     await Promise.all(notes.filter((note) => !note.is_archived).map((note) => base44.entities.ClientNote.update(note.id, { ...note, is_archived: true })));
-    queryClient.invalidateQueries({ queryKey: ['client-workspace-notes', clientId] });
+    queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] });
     queryClient.invalidateQueries({ queryKey: ['onboarding-clients'] });
     queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });
   };
@@ -205,16 +176,13 @@ export default function ClientWorkspace() {
       </div>
 
       <WorkspaceHeader client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers, go_live_ready: goLiveReady, status: goLiveReady && clientDraft.status !== 'Live' ? 'Ready for Go Live' : clientDraft.status }} />
-
       <ClientConnectorCockpit client={clientDraft} intake={intakeDraft} integrations={integrations} billing={billing} tasks={activeTasks} />
-
       {!intakeDraft?.id && <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">This workspace is using a temporary intake draft from the client record. Open the Intake tab and save once to create the permanent intake record.</div>}
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
           {['overview', 'intake', 'checklist', 'integrations', 'notes', 'billing', 'files', 'go_live', 'settings'].map((tab) => <TabsTrigger key={tab} value={tab} className="capitalize data-[state=active]:bg-slate-900 data-[state=active]:text-white">{tab.replace('_', ' ')}</TabsTrigger>)}
         </TabsList>
-
         <TabsContent value="overview"><OverviewTab client={{ ...clientDraft, progress_percentage: progressPercentage, workflow_phase: workflowPhase, next_action: nextAction, blockers }} intake={intakeDraft} taskSummary={taskSummary} /></TabsContent>
         <TabsContent value="intake"><OnboardingIntakeForm value={intakeDraft} client={clientDraft} onChange={(key, value) => setIntakeDraft((prev) => ({ ...prev, [key]: value }))} onClientChange={(key, value) => setClientDraft((prev) => ({ ...prev, [key]: value }))} onSave={() => { const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Intake updated', status: clientDraft.onboarding_archived ? clientDraft.status : 'Onboarding' }, activeTasks, intakeDraft); setClientDraft(operationalClient); updateIntakeMutation.mutate(intakeDraft); updateClientMutation.mutate(operationalClient); }} isSaving={updateIntakeMutation.isPending || updateClientMutation.isPending} isReadOnly={!!clientDraft.onboarding_archived || !isBillingActive} /></TabsContent>
         <TabsContent value="checklist"><ChecklistTab client={clientDraft} tasks={activeTasks} onToggleTask={(task) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, completed: !task.completed } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, completed: !task.completed }); updateClientMutation.mutate(operationalClient); }} onToggleBlocked={(task) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, blocked: !task.blocked } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist blocker updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, blocked: !task.blocked }); updateClientMutation.mutate(operationalClient); }} onUpdateDueDate={(task, dueDate) => { if (!isBillingActive) return; const nextTasks = activeTasks.map((item) => item.id === task.id ? { ...item, due_date: dueDate || null } : item); const operationalClient = getOperationalClientState({ ...clientDraft, last_activity: 'Checklist due date updated' }, nextTasks); setClientDraft(operationalClient); updateTaskMutation.mutate({ ...task, due_date: dueDate || null }); updateClientMutation.mutate(operationalClient); }} /></TabsContent>
