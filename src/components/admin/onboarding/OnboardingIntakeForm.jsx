@@ -13,6 +13,27 @@ function Field({ label, children, className = '' }) {
   return <div className={`space-y-2 ${className}`}><Label className="text-gray-400">{label}</Label>{children}</div>;
 }
 
+function UploadBox({ label, value = [], onChange, disabled }) {
+  const files = Array.isArray(value) ? value : [];
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+      <Label className="text-gray-300">{label}</Label>
+      <Input
+        type="file"
+        multiple
+        disabled={disabled}
+        className="bg-white/[0.03] border-white/10 text-white"
+        onChange={(event) => {
+          const selected = Array.from(event.target.files || []).map((file) => ({ name: file.name, size: file.size, type: file.type || 'file', last_modified: file.lastModified ? new Date(file.lastModified).toISOString() : null }));
+          onChange([...files, ...selected]);
+          event.target.value = '';
+        }}
+      />
+      {files.length > 0 && <div className="space-y-2">{files.map((file, index) => <div key={`${file.name}-${index}`} className="flex justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-gray-300"><span className="truncate">{file.name}</span>{!disabled && <button type="button" className="text-red-300" onClick={() => onChange(files.filter((_, i) => i !== index))}>Remove</button>}</div>)}</div>}
+    </div>
+  );
+}
+
 export default function OnboardingIntakeForm({ value, client, onChange, onClientChange, onSave, isSaving, isReadOnly }) {
   const inputClass = 'bg-white/[0.03] border-white/10 text-white';
 
@@ -59,12 +80,16 @@ export default function OnboardingIntakeForm({ value, client, onChange, onClient
         </div>
       </IntakeSectionCard>
 
-      <IntakeSectionCard title="Section D — Assets / Knowledge" description="Knowledge sources and business assets required for build quality.">
+      <IntakeSectionCard title="Section D — Assets / Knowledge" description="Knowledge sources, file uploads and business assets required for build quality.">
         <div className="grid md:grid-cols-2 gap-5">
           <Field label="Existing Scripts"><Textarea value={value.scripts_assets || ''} onChange={(e) => onChange('scripts_assets', e.target.value)} className={`${inputClass} min-h-[100px]`} disabled={isReadOnly} /></Field>
           <Field label="FAQ List"><Textarea value={value.faq_list || ''} onChange={(e) => onChange('faq_list', e.target.value)} className={`${inputClass} min-h-[100px]`} disabled={isReadOnly} /></Field>
           <Field label="Pricing Guidance"><Textarea value={value.pricing_guidance || ''} onChange={(e) => onChange('pricing_guidance', e.target.value)} className={`${inputClass} min-h-[100px]`} disabled={isReadOnly} /></Field>
           <Field label="Objection Handling"><Textarea value={value.objection_handling || ''} onChange={(e) => onChange('objection_handling', e.target.value)} className={`${inputClass} min-h-[100px]`} disabled={isReadOnly} /></Field>
+          <UploadBox label="Upload Scripts / Call Flows" value={value.script_files} onChange={(files) => onChange('script_files', files)} disabled={isReadOnly} />
+          <UploadBox label="Upload FAQ / Knowledge Files" value={value.knowledge_files} onChange={(files) => onChange('knowledge_files', files)} disabled={isReadOnly} />
+          <UploadBox label="Upload Pricing / Service Files" value={value.pricing_files} onChange={(files) => onChange('pricing_files', files)} disabled={isReadOnly} />
+          <UploadBox label="Upload Brand / Business Files" value={value.brand_files} onChange={(files) => onChange('brand_files', files)} disabled={isReadOnly} />
         </div>
       </IntakeSectionCard>
 
@@ -76,6 +101,10 @@ export default function OnboardingIntakeForm({ value, client, onChange, onClient
           <Field label="Is outbound calling approved?"><Select value={String(value.outbound_calling_approved ?? '')} onValueChange={(next) => onChange('outbound_calling_approved', next === 'true')} disabled={isReadOnly}><SelectTrigger className={inputClass}><SelectValue placeholder="Select" /></SelectTrigger><SelectContent><SelectItem value="true">Yes</SelectItem><SelectItem value="false">No</SelectItem></SelectContent></Select></Field>
           <Field label="Who approves final scripts and workflows?"><Input value={value.final_approver || ''} onChange={(e) => onChange('final_approver', e.target.value)} className={inputClass} disabled={isReadOnly} /></Field>
         </div>
+      </IntakeSectionCard>
+
+      <IntakeSectionCard title="Final Uploads — Extra Data / Supporting Files" description="Upload any extra data or reference files needed for setup.">
+        <UploadBox label="General Supporting Uploads" value={value.supporting_files} onChange={(files) => onChange('supporting_files', files)} disabled={isReadOnly} />
       </IntakeSectionCard>
 
       <div className="sticky bottom-4 z-10 flex justify-end">
