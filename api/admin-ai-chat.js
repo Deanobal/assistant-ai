@@ -8,13 +8,24 @@ function safeText(value, fallback = '') {
   return String(value || fallback).slice(0, 4000);
 }
 
-function buildLocalAnswer(message, context = {}) {
+function buildLocalAnswer(message, context = {}, aiError = '') {
   const lower = message.toLowerCase();
   const page = context.page || 'admin';
+  const statusLine = aiError ? `\n\nLive AI status: ${aiError}` : '';
+
+  if (lower.includes('fix this page') || lower.includes('help me fix this page')) {
+    return {
+      reply: `I am looking at ${page}. Live AI is not active, so I am using fallback mode. For this page, check the visible error, then test the page API route in a new browser tab. If this is ClientWorkspace, check /api/client-workspace?id=<client_id> and /api/intake-save. If this is Onboarding, check /api/onboarding-create. If this is secure setup, check /api/secure-setup-create.${statusLine}`,
+      actions: [
+        { label: 'Open System Readiness', href: '/SystemReadiness' },
+        { label: 'Open Onboarding', href: '/Onboarding' }
+      ]
+    };
+  }
 
   if (lower.includes('intake') || lower.includes('onboarding')) {
     return {
-      reply: `I can help with onboarding. Current page: ${page}. Best next checks: confirm the client record exists, open the Intake tab, complete missing business details, save once to create the permanent intake record, then review blockers and checklist progress. I can also draft onboarding notes, summarise missing fields, or prepare client setup instructions.`,
+      reply: `Onboarding operator mode for ${page}: create or load the client, complete Intake, save once, check blockers, confirm payment, connect tools, run a test call, then move to go-live. If saving fails, the likely fault is a missing Supabase column or old Base44 write path.${statusLine}`,
       actions: [
         { label: 'Open Onboarding', href: '/Onboarding' },
         { label: 'Open Clients', href: '/ClientManager' }
@@ -24,7 +35,7 @@ function buildLocalAnswer(message, context = {}) {
 
   if (lower.includes('lead') || lower.includes('sale') || lower.includes('pipeline')) {
     return {
-      reply: `For leads, focus on speed-to-response. Check new leads, follow-up overdue leads, and any leads marked Payment Pending. I can help draft a reply, qualify plan fit, or prepare a next-action summary before you call them.`,
+      reply: `Lead operator mode: sort by newest and overdue, identify hot leads, prepare a fast follow-up, then move qualified leads into onboarding. Focus on speed-to-response and payment intent.${statusLine}`,
       actions: [
         { label: 'Open Leads', href: '/LeadDashboard' },
         { label: 'Open Action Inbox', href: '/ActionInbox' }
@@ -34,7 +45,7 @@ function buildLocalAnswer(message, context = {}) {
 
   if (lower.includes('stripe') || lower.includes('payment') || lower.includes('billing')) {
     return {
-      reply: `Billing changes should be handled carefully. I can explain the current flow, draft payment follow-up copy, or help identify what needs checking. I will not change pricing, override billing, or mark payment active without a confirmed admin action.`,
+      reply: `Billing operator mode: check Stripe checkout creation, payment status, webhook delivery, BillingStatus, then onboarding record creation. I will not override billing or alter pricing without explicit confirmation.${statusLine}`,
       actions: [
         { label: 'Open Clients', href: '/ClientManager' },
         { label: 'Open System Readiness', href: '/SystemReadiness' }
@@ -44,7 +55,7 @@ function buildLocalAnswer(message, context = {}) {
 
   if (lower.includes('content') || lower.includes('seo') || lower.includes('ad') || lower.includes('campaign')) {
     return {
-      reply: `For marketing, I can draft page copy, rewrite CTAs, create campaign ideas, generate SEO outlines, and prepare content blocks. Use the Marketing area for publishing and CMS-style edits.`,
+      reply: `Marketing operator mode: I can draft page copy, rewrite CTAs, prepare campaign ideas, generate SEO outlines, and suggest content blocks. Publishing still needs confirmation.${statusLine}`,
       actions: [
         { label: 'Open Marketing', href: '/admin/marketing/seo-dashboard' },
         { label: 'Open Content Studio', href: '/admin/marketing/content-studio' }
@@ -54,7 +65,7 @@ function buildLocalAnswer(message, context = {}) {
 
   if (lower.includes('error') || lower.includes('broken') || lower.includes('not working')) {
     return {
-      reply: `Send me the exact error text, page URL, and what you clicked before it failed. I will classify whether it is frontend, API, Supabase, Base44 legacy, Vercel env, or integration-related, then give the safest fix path.`,
+      reply: `Error triage for ${page}: capture the exact red error, browser console error, and failed Network request. Then check whether it is frontend, API, Supabase, Vercel env, Vapi, Stripe, Twilio, Crisp, or old Base44 dependency.${statusLine}`,
       actions: [
         { label: 'Open System Readiness', href: '/SystemReadiness' }
       ]
@@ -62,7 +73,7 @@ function buildLocalAnswer(message, context = {}) {
   }
 
   return {
-    reply: `I can help operate the admin system from here. Ask me to summarise a client, draft a reply, plan next actions, explain an error, prepare onboarding steps, improve page copy, or identify what needs attention next. For safety, I can suggest and prepare changes, but high-risk actions like pricing, publishing, billing, deleting, or sending require explicit confirmation.`,
+    reply: `Admin Copilot fallback mode is active on ${page}. Ask for a concrete page fix, onboarding step, lead follow-up, error diagnosis, or content draft. The live AI model is not responding yet, so I am not going to pretend this is full AI mode.${statusLine}`,
     actions: [
       { label: 'Open Action Inbox', href: '/ActionInbox' },
       { label: 'Open Leads', href: '/LeadDashboard' },
@@ -71,12 +82,15 @@ function buildLocalAnswer(message, context = {}) {
   };
 }
 
+function buildSystemPrompt() {
+  return `You are AssistantAI Admin Copilot for Con Balatli, owner of AssistantAI. Help operate the admin dashboard: leads, onboarding, support, client setup, content, errors, system readiness and next actions. Be specific, commercial, and action-focused. Do not repeat generic capability text. If the user asks to fix a page, use the current page context and provide concrete checks or fixes. Never claim you performed destructive or high-risk actions.`;
+}
+
 async function getOpenAIAnswer(message, context) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
+  const apiKey = String(process.env.OPENAI_API_KEY || '').trim();
+  if (!apiKey) throw new Error('OPENAI_API_KEY is not configured in Vercel');
 
-  const system = `You are AssistantAI Admin Copilot for a premium AI receptionist and automation business. Help the admin operate leads, onboarding, support, billing checks, content and system readiness. Be concise, commercial, and action-focused. You may suggest actions and draft text, but you must not claim you performed irreversible/high-risk actions such as sending messages, publishing, deleting, changing pricing, or overriding billing. Ask for explicit confirmation for those.`;
-
+  const model = String(process.env.ADMIN_AI_MODEL || 'gpt-4o-mini').trim();
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -84,22 +98,33 @@ async function getOpenAIAnswer(message, context) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: process.env.ADMIN_AI_MODEL || 'gpt-4o-mini',
+      model,
       messages: [
-        { role: 'system', content: system },
+        { role: 'system', content: buildSystemPrompt() },
         { role: 'user', content: `Admin page/context: ${safeText(JSON.stringify(context || {}))}\n\nAdmin request: ${safeText(message)}` }
       ],
-      temperature: 0.3,
-      max_tokens: 700
+      temperature: 0.2,
+      max_tokens: 900
     })
   });
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.error?.message || 'OpenAI request failed');
-  return { reply: data?.choices?.[0]?.message?.content || 'I could not generate a response.', actions: [] };
+  if (!response.ok) throw new Error(data?.error?.message || `OpenAI request failed with status ${response.status}`);
+  const reply = data?.choices?.[0]?.message?.content;
+  if (!reply) throw new Error('OpenAI returned an empty response');
+  return { reply, actions: [], mode: 'live_ai', model };
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      success: true,
+      service: 'assistantai-admin-ai-chat',
+      openai_configured: Boolean(String(process.env.OPENAI_API_KEY || '').trim()),
+      admin_ai_model: process.env.ADMIN_AI_MODEL || 'gpt-4o-mini'
+    });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
@@ -108,15 +133,13 @@ export default async function handler(req, res) {
     const context = body.context || {};
     if (!message) return res.status(400).json({ error: 'Message is required' });
 
-    let answer = null;
     try {
-      answer = await getOpenAIAnswer(message, context);
+      const answer = await getOpenAIAnswer(message, context);
+      return res.status(200).json({ success: true, ...answer });
     } catch (error) {
-      answer = null;
+      const fallback = buildLocalAnswer(message, context, error.message || 'OpenAI request failed');
+      return res.status(200).json({ success: true, mode: 'fallback', openai_error: error.message || 'OpenAI request failed', ...fallback });
     }
-
-    if (!answer) answer = buildLocalAnswer(message, context);
-    return res.status(200).json({ success: true, ...answer });
   } catch (error) {
     return res.status(500).json({ error: 'Admin AI chat failed', details: error.message });
   }
