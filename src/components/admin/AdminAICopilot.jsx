@@ -14,12 +14,20 @@ const starterPrompts = [
 function initialMessage() {
   return {
     role: 'assistant',
-    content: 'Admin Copilot ready. I can help with leads, onboarding, support, content, errors and next actions. High-risk changes still need your confirmation.',
+    content: 'Admin Copilot loaded. I can help with leads, onboarding, support, content, errors and next actions. Each reply will now show whether it came from live AI or fallback mode.',
     actions: [
       { label: 'Open Leads', href: '/LeadDashboard' },
       { label: 'Open Onboarding', href: '/Onboarding' },
     ],
   };
+}
+
+function withModeNote(data) {
+  const parts = [data.reply || 'No response.'];
+  if (data.mode) parts.push(`Mode: ${data.mode}`);
+  if (data.model) parts.push(`Model: ${data.model}`);
+  if (data.openai_error) parts.push(`OpenAI error: ${data.openai_error}`);
+  return parts.join('\n\n');
 }
 
 export default function AdminAICopilot() {
@@ -51,7 +59,7 @@ export default function AdminAICopilot() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) throw new Error(data.details || data.error || 'Copilot failed.');
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply, actions: data.actions || [] }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: withModeNote(data), actions: data.actions || [] }]);
     } catch (error) {
       setMessages((prev) => [...prev, { role: 'assistant', content: error.message || 'Copilot could not respond.', actions: [] }]);
     } finally {
@@ -79,7 +87,7 @@ export default function AdminAICopilot() {
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white"><Bot className="h-5 w-5" /></div>
           <div className="min-w-0">
             <p className="truncate text-sm font-extrabold text-slate-950">AssistantAI Admin Copilot</p>
-            <p className="truncate text-xs font-semibold text-slate-500">Safe operator mode · {location.pathname}</p>
+            <p className="truncate text-xs font-semibold text-slate-500">Operator mode · {location.pathname}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
