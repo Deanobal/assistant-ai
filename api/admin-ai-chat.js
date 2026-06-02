@@ -15,7 +15,7 @@ function buildLocalAnswer(message, context = {}, aiError = '') {
 
   if (lower.includes('fix this page') || lower.includes('help me fix this page')) {
     return {
-      reply: `I am looking at ${page}. Live AI is not active, so I am using fallback mode. For this page, check the visible error, then test the page API route in a new browser tab. If this is ClientWorkspace, check /api/client-workspace?id=<client_id> and /api/intake-save. If this is Onboarding, check /api/onboarding-create. If this is secure setup, check /api/secure-setup-create.${statusLine}`,
+      reply: `I am looking at ${page}. Live hosted AI is not active, so I am using fallback mode. For this page, check the visible error, then test the page API route in a new browser tab. If this is ClientWorkspace, check /api/client-workspace?id=<client_id> and /api/intake-save. If this is Onboarding, check /api/onboarding-create. If this is secure setup, check /api/secure-setup-create.${statusLine}`,
       actions: [
         { label: 'Open System Readiness', href: '/SystemReadiness' },
         { label: 'Open Onboarding', href: '/Onboarding' }
@@ -73,7 +73,7 @@ function buildLocalAnswer(message, context = {}, aiError = '') {
   }
 
   return {
-    reply: `Admin Copilot fallback mode is active on ${page}. Ask for a concrete page fix, onboarding step, lead follow-up, error diagnosis, or content draft. The live AI model is not responding yet, so I am not going to pretend this is full AI mode.${statusLine}`,
+    reply: `Admin Copilot fallback mode is active on ${page}. Ask for a concrete page fix, onboarding step, lead follow-up, error diagnosis, or content draft. No hosted AI provider is responding yet.${statusLine}`,
     actions: [
       { label: 'Open Action Inbox', href: '/ActionInbox' },
       { label: 'Open Leads', href: '/LeadDashboard' },
@@ -86,33 +86,57 @@ function buildSystemPrompt() {
   return `You are AssistantAI Admin Copilot for Con Balatli, owner of AssistantAI. Help operate the admin dashboard: leads, onboarding, support, client setup, content, errors, system readiness and next actions. Be specific, commercial, and action-focused. Do not repeat generic capability text. If the user asks to fix a page, use the current page context and provide concrete checks or fixes. Never claim you performed destructive or high-risk actions.`;
 }
 
-async function getOpenAIAnswer(message, context) {
-  const apiKey = String(process.env.OPENAI_API_KEY || '').trim();
-  if (!apiKey) throw new Error('OPENAI_API_KEY is not configured in Vercel');
+function buildMessages(message, context) {
+  return [
+    { role: 'system', content: buildSystemPrompt() },
+    { role: 'user', content: `Admin page/context: ${safeText(JSON.stringify(context || {}))}\n\nAdmin request: ${safeText(message)}` }
+  ];
+}
 
-  const model = String(process.env.ADMIN_AI_MODEL || 'gpt-4o-mini').trim();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callProvider({ provider, key, url, model, messages }) {
+  if (!key) throw new Error(`${provider} is not configured`);
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${key}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: buildSystemPrompt() },
-        { role: 'user', content: `Admin page/context: ${safeText(JSON.stringify(context || {}))}\n\nAdmin request: ${safeText(message)}` }
-      ],
-      temperature: 0.2,
-      max_tokens: 900
-    })
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 900 })
   });
-
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.error?.message || `OpenAI request failed with status ${response.status}`);
+  if (!response.ok) throw new Error(`${provider}: ${data?.error?.message || data?.message || `request failed with status ${response.status}`}`);
   const reply = data?.choices?.[0]?.message?.content;
-  if (!reply) throw new Error('OpenAI returned an empty response');
-  return { reply, actions: [], mode: 'live_ai', model };
+  if (!reply) throw new Error(`${provider}: empty response`);
+  return { reply, actions: [], mode: provider, model };
+}
+
+async function getHostedAIAnswer(message, context) {
+  const messages = buildMessages(message, context);
+  const errors = [];
+  const providers = [
+    {
+      provider: 'openai',
+      key: String(process.env.OPENAI_API_KEY || '').trim(),
+      url: 'https://api.openai.com/v1/chat/completions',
+      model: String(process.env.ADMIN_AI_MODEL || 'gpt-4o-mini').trim()
+    },
+    {
+      provider: 'groq',
+      key: String(process.env.GROQ_ADMIN_AI_KEY || process.env.GROQ_API_KEY || '').trim(),
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      model: String(process.env.GROQ_ADMIN_AI_MODEL || 'llama-3.3-70b-versatile').trim()
+    }
+  ];
+
+  for (const provider of providers) {
+    try {
+      return await callProvider({ ...provider, messages });
+    } catch (error) {
+      errors.push(error.message || `${provider.provider} failed`);
+    }
+  }
+
+  throw new Error(errors.join(' | '));
 }
 
 export default async function handler(req, res) {
@@ -121,7 +145,9 @@ export default async function handler(req, res) {
       success: true,
       service: 'assistantai-admin-ai-chat',
       openai_configured: Boolean(String(process.env.OPENAI_API_KEY || '').trim()),
-      admin_ai_model: process.env.ADMIN_AI_MODEL || 'gpt-4o-mini'
+      groq_configured: Boolean(String(process.env.GROQ_ADMIN_AI_KEY || process.env.GROQ_API_KEY || '').trim()),
+      admin_ai_model: process.env.ADMIN_AI_MODEL || 'gpt-4o-mini',
+      groq_admin_ai_model: process.env.GROQ_ADMIN_AI_MODEL || 'llama-3.3-70b-versatile'
     });
   }
 
@@ -134,11 +160,11 @@ export default async function handler(req, res) {
     if (!message) return res.status(400).json({ error: 'Message is required' });
 
     try {
-      const answer = await getOpenAIAnswer(message, context);
+      const answer = await getHostedAIAnswer(message, context);
       return res.status(200).json({ success: true, ...answer });
     } catch (error) {
-      const fallback = buildLocalAnswer(message, context, error.message || 'OpenAI request failed');
-      return res.status(200).json({ success: true, mode: 'fallback', openai_error: error.message || 'OpenAI request failed', ...fallback });
+      const fallback = buildLocalAnswer(message, context, error.message || 'Hosted AI request failed');
+      return res.status(200).json({ success: true, mode: 'fallback', openai_error: error.message || 'Hosted AI request failed', ...fallback });
     }
   } catch (error) {
     return res.status(500).json({ error: 'Admin AI chat failed', details: error.message });
