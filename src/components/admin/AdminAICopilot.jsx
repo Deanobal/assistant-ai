@@ -112,11 +112,17 @@ export default function AdminAICopilot() {
 
     const response = await fetch('/api/admin-client-safe-update', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-action-secret': localStorage.getItem('assistantai_admin_action_secret') || localStorage.getItem('assistantai_admin_password') || ''
+      },
       body: JSON.stringify({ client_id: clientId, patch: parsed.patch })
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.success) throw new Error(data.details || data.error || 'Safe client update failed.');
+    if (!response.ok || !data.success) {
+      if (response.status === 401) throw new Error('Admin action blocked. Re-enter the admin action secret before allowing AI edits.');
+      throw new Error(data.details || data.error || 'Safe client update failed.');
+    }
 
     setMessages((prev) => [...prev, {
       role: 'assistant',
