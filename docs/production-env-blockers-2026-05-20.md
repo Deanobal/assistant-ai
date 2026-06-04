@@ -113,14 +113,19 @@ Impact:
 
 ### SMS notifications
 
-Missing:
+Required:
 
 - TWILIO_ACCOUNT_SID
 - TWILIO_AUTH_TOKEN
 - TWILIO_FROM_NUMBER
 - ADMIN_NOTIFICATION_PHONE
 
-Impact:
+Current sender/admin number to use moving forward:
+
+- TWILIO_FROM_NUMBER=+61482088811
+- ADMIN_NOTIFICATION_PHONE=+61482088811
+
+Impact if missing:
 
 - SMS alerts are not active yet
 
@@ -158,10 +163,25 @@ Copy the webhook signing secret into Vercel as:
 
 - STRIPE_WEBHOOK_SECRET
 
+## Required SMS action
+
+Set the Twilio sender/admin number wherever SMS configuration is stored:
+
+- Vercel environment variables
+- Base44/backend secrets
+- Supabase app settings/config tables if used
+- Vapi webhook/tool payloads should reference backend env vars, not hardcoded numbers
+- Admin settings screens should display +61482088811 as the current SMS sender/admin number
+
+Use:
+
+- TWILIO_FROM_NUMBER=+61482088811
+- ADMIN_NOTIFICATION_PHONE=+61482088811
+
 ## Launch status
 
 Code migration: largely complete.
 
-Live execution: blocked by missing production environment variables.
+Live execution: blocked by missing production environment variables if these remain unset.
 
 Base44 remains as fallback for checkout and auth until the missing env vars are added and tested.
