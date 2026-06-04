@@ -27,6 +27,63 @@ function isAuthorised(req) {
   return received === expected;
 }
 
+function parseArgs(raw) {
+  if (!raw) return {};
+  if (typeof raw === 'object') return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function getToolCallId(call, index) {
+  return String(
+    call?.toolCallId ||
+    call?.tool_call_id ||
+    call?.id ||
+    call?.functionCall?.id ||
+    call?.function_call?.id ||
+    `tool_call_${index + 1}`
+  );
+}
+
+function getToolArguments(call) {
+  return parseArgs(
+    call?.function?.arguments ??
+    call?.function?.parameters ??
+    call?.functionCall?.arguments ??
+    call?.functionCall?.parameters ??
+    call?.function_call?.arguments ??
+    call?.function_call?.parameters ??
+    call?.arguments ??
+    call?.parameters ??
+    call?.args
+  );
+}
+
+function extractVapiToolCalls(body) {
+  const calls = Array.isArray(body?.message?.toolCallList)
+    ? body.message.toolCallList
+    : Array.isArray(body?.message?.toolCalls)
+      ? body.message.toolCalls
+      : Array.isArray(body?.toolCallList)
+        ? body.toolCallList
+        : Array.isArray(body?.toolCalls)
+          ? body.toolCalls
+          : body?.functionCall
+            ? [body.functionCall]
+            : body?.message?.functionCall
+              ? [body.message.functionCall]
+              : [];
+
+  return calls.map((call, index) => ({
+    toolCallId: getToolCallId(call, index),
+    arguments: getToolArguments(call)
+  }));
+}
+
 async function sendTwilioSms({ to, message }) {
   const accountSid = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
   const authToken = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
@@ -34,7 +91,7 @@ async function sendTwilioSms({ to, message }) {
   const recipient = normalisePhone(to);
 
   if (!accountSid || !authToken || !from || !recipient) {
-    return { status: 'not_configured_or_missing_phone' };
+    return { status: 'not_configured_or_missing_phone', from: from || null };
   }
 
   const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
@@ -57,6 +114,7 @@ async function sendTwilioSms({ to, message }) {
     return {
       status: 'failed',
       provider: 'twilio',
+      from,
       error: data?.message || data?.error_message || JSON.stringify(data),
       provider_response: data
     };
@@ -65,6 +123,7 @@ async function sendTwilioSms({ to, message }) {
   return {
     status: 'sent',
     provider: 'twilio',
+    from,
     provider_message_id: data?.sid || null,
     provider_response: data
   };
@@ -88,6 +147,71 @@ function buildNotes(body) {
   return parts.length ? parts.join('\n') : null;
 }
 
+async function createSecureSetup(body) {
+  const { url, key } = getConfig();
+  const token = makeToken();
+  const baseUrl = (process.env.SITE_URL || 'https://www.assistantai.com.au').replace(/\/$/, '');
+  const phone = normalisePhone(body.phone || body.caller_phone || body.mobile_number || body.mobile);
+
+  if (!phone) {
+    throw new Error('A mobile/phone number is required to send the secure setup form link');
+  }
+
+  const setupUrl = `${baseUrl}/secure-setup?t=${encodeURIComponent(token)}`;
+
+  const payload = {
+    token,
+    source: text(body.source || body.lead_source || body.source_page) || 'vapi',
+    caller_phone: phone,
+    captured_name: text(body.name || body.full_name),
+    captured_email: text(body.email),
+    captured_business_name: text(body.business_name || body.businessName || body.company),
+    captured_plan: text(body.plan || body.selected_plan || body.likely_plan_fit),
+    captured_notes: buildNotes(body),
+    call_id: text(body.call_id || body.callId),
+    lead_id: text(body.lead_id || body.leadId),
+    submitted_payload: body.raw_payload || body,
+  };
+
+  const response = await fetch(`${url}/rest/v1/secure_setup_requests`, {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const textResponse = await response.text();
+  const data = textResponse ? JSON.parse(textResponse) : null;
+
+  if (!response.ok) {
+    throw new Error(`Secure setup request creation failed: ${JSON.stringify(data)}`);
+  }
+
+  const record = Array.isArray(data) ? data[0] : data;
+  const smsMessage = `AssistantAI secure setup form: ${setupUrl}`;
+  const sms = await sendTwilioSms({ to: phone, message: smsMessage });
+
+  return {
+    success: true,
+    token,
+    secure_setup_url: setupUrl,
+    sent_to: phone,
+    twilio_from_number: sms.from || process.env.TWILIO_FROM_NUMBER || null,
+    sms_status: sms.status,
+    sms_provider: sms.provider || 'twilio',
+    sms_provider_message_id: sms.provider_message_id || null,
+    sms_error: sms.error || null,
+    next_step: sms.status === 'sent'
+      ? 'Secure setup form link sent by SMS. Tell the caller the link has been sent.'
+      : 'Secure setup form was created, but SMS was not confirmed. Give the caller the secure setup link verbally if suitable and flag the SMS issue.',
+    record
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
@@ -96,7 +220,9 @@ export default async function handler(req, res) {
       supabase_url_present: Boolean(process.env.VITE_SUPABASE_URL),
       service_role_key_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
       twilio_configured: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER),
-      webhook_secret_required: Boolean(process.env.VAPI_WEBHOOK_SECRET)
+      twilio_from_number_present: Boolean(process.env.TWILIO_FROM_NUMBER),
+      webhook_secret_required: Boolean(process.env.VAPI_WEBHOOK_SECRET),
+      supports_vapi_tool_results: true
     });
   }
 
@@ -108,60 +234,35 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorised secure setup tool call' });
   }
 
-  try {
-    const { url, key } = getConfig();
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
-    const token = makeToken();
-    const baseUrl = (process.env.SITE_URL || 'https://www.assistantai.com.au').replace(/\/$/, '');
-    const phone = normalisePhone(body.phone || body.caller_phone || body.mobile_number || body.mobile);
-    const setupUrl = `${baseUrl}/secure-setup?t=${encodeURIComponent(token)}`;
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+  const toolCalls = extractVapiToolCalls(body);
 
-    const payload = {
-      token,
-      source: text(body.source || body.lead_source || body.source_page) || 'vapi',
-      caller_phone: phone,
-      captured_name: text(body.name || body.full_name),
-      captured_email: text(body.email),
-      captured_business_name: text(body.business_name || body.businessName || body.company),
-      captured_plan: text(body.plan || body.selected_plan || body.likely_plan_fit),
-      captured_notes: buildNotes(body),
-      call_id: text(body.call_id || body.callId),
-      lead_id: text(body.lead_id || body.leadId),
-      submitted_payload: body.raw_payload || body,
-    };
-
-    const response = await fetch(`${url}/rest/v1/secure_setup_requests`, {
-      method: 'POST',
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const textResponse = await response.text();
-    const data = textResponse ? JSON.parse(textResponse) : null;
-
-    if (!response.ok) {
-      return res.status(500).json({ error: 'Secure setup request creation failed', details: data });
+  if (toolCalls.length > 0) {
+    const results = [];
+    for (const toolCall of toolCalls) {
+      try {
+        const result = await createSecureSetup({
+          ...toolCall.arguments,
+          raw_payload: toolCall.arguments
+        });
+        results.push({ toolCallId: toolCall.toolCallId, result });
+      } catch (error) {
+        results.push({
+          toolCallId: toolCall.toolCallId,
+          result: {
+            success: false,
+            error: error.message,
+            next_step: 'Tell the caller the secure setup link could not be sent automatically and a team member will follow up.'
+          }
+        });
+      }
     }
+    return res.status(200).json({ results });
+  }
 
-    const record = Array.isArray(data) ? data[0] : data;
-    const smsMessage = `AssistantAI secure setup form: ${setupUrl}`;
-    const sms = await sendTwilioSms({ to: phone, message: smsMessage });
-
-    return res.status(200).json({
-      success: true,
-      token,
-      secure_setup_url: setupUrl,
-      sms_status: sms.status,
-      sms_provider: sms.provider || 'twilio',
-      sms_provider_message_id: sms.provider_message_id || null,
-      sms_error: sms.error || null,
-      record
-    });
+  try {
+    const result = await createSecureSetup(body);
+    return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({ error: 'Secure setup request creation failed', details: error.message });
   }
