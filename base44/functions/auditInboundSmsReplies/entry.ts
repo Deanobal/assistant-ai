@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+const DEFAULT_TWILIO_FROM_NUMBER = '+61482088811';
+
 function buildAuditPhone(stamp) {
   const suffix = String(stamp).slice(-8);
   return `+614${suffix}`;
@@ -67,6 +69,7 @@ Deno.serve(async (req) => {
     const stamp = String(Date.now());
     const now = new Date().toISOString();
     const phone = buildAuditPhone(stamp);
+    const twilioFromNumber = payload.twilioFromNumber || Deno.env.get('TWILIO_FROM_NUMBER') || DEFAULT_TWILIO_FROM_NUMBER;
     const lead = await base44.asServiceRole.entities.Lead.create({
       created_at: now,
       last_activity_at: now,
@@ -110,6 +113,7 @@ Deno.serve(async (req) => {
       metadata: {
         sms_kind: 'customer_strategy_call_request',
         unique_key: `seed:${stamp}`,
+        twilio_from_number: twilioFromNumber,
       },
     });
 
@@ -117,15 +121,16 @@ Deno.serve(async (req) => {
       success: true,
       lead_id: lead.id,
       phone,
+      twilio_from_number: twilioFromNumber,
       matched_payload: {
         From: phone,
-        To: '+12603059865',
+        To: twilioFromNumber,
         Body: 'YES call me tomorrow at 3pm',
         MessageSid: `audit-match-${stamp}`,
       },
       unmatched_payload: {
         From: '+61411111111',
-        To: '+12603059865',
+        To: twilioFromNumber,
         Body: 'Can you call me?',
         MessageSid: `audit-unmatched-${stamp}`,
       },
