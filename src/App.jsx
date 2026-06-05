@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import './styles/admin-shopify.css';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
-import CrispChat from './components/chat/CrispChat';
 import AdminSessionGate from './components/admin/AdminSessionGate';
 import Home from './pages/Home';
 import Services from './pages/Services';
@@ -71,7 +70,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <Router>
-        <CrispChat />
         <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
