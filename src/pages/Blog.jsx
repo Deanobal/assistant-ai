@@ -23,10 +23,10 @@ export default function Blog() {
     let active = true;
     async function loadPosts() {
       try {
-        const response = await fetch('/api/blog-posts');
+        const response = await fetch('/api/cms?resource=blog-posts');
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase posts');
-        const apiPosts = (data.posts || []).map(mapApiPost);
+        const apiPosts = (data.posts || data.items || []).map(mapApiPost);
         if (active && apiPosts.length > 0) setPosts(apiPosts);
       } catch (error) {
         console.warn('Using static blog fallback:', error?.message || error);
