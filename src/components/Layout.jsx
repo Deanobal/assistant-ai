@@ -9,6 +9,7 @@ const navLinks = [
 { label: 'Integrations', path: '/Integrations' },
 { label: 'Pricing', path: '/Pricing' },
 { label: 'Blog', path: '/Blog' },
+{ label: 'Resources', path: '/Resources' },
 { label: 'Case Studies', path: '/CaseStudies' },
 { label: 'About', path: '/About' },
 { label: 'Contact', path: '/Contact' }];
@@ -151,6 +152,7 @@ function Footer() {
             <div className="space-y-2.5 text-gray-500 text-sm">
               <p className="text-base">sales@assistantai.com.au</p>
               <Link to="/Platform" className="text-base block hover:text-cyan-400 transition-colors">Platform Preview</Link>
+              <Link to="/Resources" className="text-base block hover:text-cyan-400 transition-colors">AI Receptionist Resources</Link>
               <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
             </div>
           </div>
