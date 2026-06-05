@@ -22,6 +22,7 @@ import LandingPage from './pages/LandingPage';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
 import AIDemo from './pages/AIDemo';
+import Resources from './pages/Resources';
 import ClientLogin from './pages/ClientLogin';
 import ClientPortal from './pages/ClientPortal';
 import ThankYou from './pages/ThankYou';
@@ -90,6 +91,7 @@ function App() {
               <Route path="/Integrations" element={<Integrations />} />
               <Route path="/Platform" element={<Platform />} />
               <Route path="/AIDemo" element={<AIDemo />} />
+              <Route path="/Resources" element={<Resources />} />
               <Route path="/ClientLogin" element={<ClientLogin />} />
               <Route path="/ClientPortal" element={<ClientPortal />} />
               <Route path="/thank-you" element={<ThankYou />} />
