@@ -28,10 +28,11 @@ export default function BlogPost() {
     async function loadPost() {
       setLoading(true);
       try {
-        const response = await fetch(`/api/blog-posts?slug=${encodeURIComponent(slug)}`);
+        const response = await fetch(`/api/cms?resource=blog-posts&slug=${encodeURIComponent(slug)}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase post');
-        const apiPost = data.posts?.[0] ? mapApiPost(data.posts[0]) : null;
+        const posts = data.posts || data.items || [];
+        const apiPost = posts?.[0] ? mapApiPost(posts[0]) : null;
         if (active && apiPost) setPost(apiPost);
       } catch (error) {
         console.warn('Using static blog post fallback:', error?.message || error);
