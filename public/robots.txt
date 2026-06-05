@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://assistantai.com.au/sitemap.xml
+Sitemap: https://www.assistantai.com.au/sitemap.xml
