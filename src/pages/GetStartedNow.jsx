@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import SEO from '@/components/SEO';
 import { base44 } from '@/api/base44Client';
 import CheckoutReturnCard from '@/components/pricing/CheckoutReturnCard';
 import PlanSelectionStep from '@/components/get-started/PlanSelectionStep';
@@ -177,58 +178,65 @@ export default function GetStartedNow() {
   };
 
   return (
-    <div>
-      <section className="relative py-24 md:py-28 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
-            <p className="text-cyan-400 mb-3 text-base font-medium">START YOUR ASSISTANTAI SETUP</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">
-              {isCheckoutReturn ? 'Checkout Update' : selectedPlan ? `Start with the ${selectedPlan.name} Plan` : 'Choose Your Plan First'}
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready. Prices are in AUD and exclude GST unless stated otherwise.
-            </p>
-          </motion.div>
+    <>
+      <SEO
+        title="Get Started | AssistantAI Secure Signup"
+        description="Choose a Starter or Growth AssistantAI plan, confirm your business details, and proceed to secure signup for AI receptionist setup."
+        canonicalPath="/GetStartedNow"
+      />
+      <div>
+        <section className="relative py-24 md:py-28 bg-grid">
+          <div className="bg-radial-glow absolute inset-0" />
+          <div className="relative max-w-7xl mx-auto px-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
+              <p className="text-cyan-400 mb-3 text-base font-medium">START YOUR ASSISTANTAI SETUP</p>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">
+                {isCheckoutReturn ? 'Checkout Update' : selectedPlan ? `Start with the ${selectedPlan.name} Plan` : 'Choose Your Plan First'}
+              </h1>
+              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
+                Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready. Prices are in AUD and exclude GST unless stated otherwise.
+              </p>
+            </motion.div>
 
-          {isCheckoutReturn ? (
-            <div className="max-w-4xl mx-auto">
-              <CheckoutReturnCard planName={selectedPlan?.name || 'selected'} checkoutState={checkoutState} sessionId={sessionId} />
-            </div>
-          ) : (
-            <div className="mx-auto max-w-5xl">
-              {step === 'plans' && (
-                <>
-                  {error && <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
-                  <PlanSelectionStep selectedPlan={selectedPlan} onChoosePlan={choosePlan} />
-                </>
-              )}
+            {isCheckoutReturn ? (
+              <div className="max-w-4xl mx-auto">
+                <CheckoutReturnCard planName={selectedPlan?.name || 'selected'} checkoutState={checkoutState} sessionId={sessionId} />
+              </div>
+            ) : (
+              <div className="mx-auto max-w-5xl">
+                {step === 'plans' && (
+                  <>
+                    {error && <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+                    <PlanSelectionStep selectedPlan={selectedPlan} onChoosePlan={choosePlan} />
+                  </>
+                )}
 
-              {step === 'details' && selectedPlan && (
-                <SignupDetailsForm
-                  form={form}
-                  selectedPlan={selectedPlan}
-                  onChange={setForm}
-                  onBackToPlans={changePlan}
-                  onContinue={continueToReview}
-                />
-              )}
+                {step === 'details' && selectedPlan && (
+                  <SignupDetailsForm
+                    form={form}
+                    selectedPlan={selectedPlan}
+                    onChange={setForm}
+                    onBackToPlans={changePlan}
+                    onContinue={continueToReview}
+                  />
+                )}
 
-              {step === 'review' && selectedPlan && (
-                <SignupReviewStep
-                  selectedPlan={selectedPlan}
-                  form={form}
-                  error={error}
-                  submitting={submitting}
-                  onBackToForm={() => setStep('details')}
-                  onChangePlan={changePlan}
-                  onProceed={proceedToPayment}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
+                {step === 'review' && selectedPlan && (
+                  <SignupReviewStep
+                    selectedPlan={selectedPlan}
+                    form={form}
+                    error={error}
+                    submitting={submitting}
+                    onBackToForm={() => setStep('details')}
+                    onChangePlan={changePlan}
+                    onProceed={proceedToPayment}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
