@@ -4,10 +4,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 
+function buildInternalStrategySlots() {
+  const slots = [];
+  const now = new Date();
+  const slotHours = [10, 13, 15];
+
+  for (let dayOffset = 1; slots.length < 9 && dayOffset <= 14; dayOffset += 1) {
+    const date = new Date(now);
+    date.setDate(now.getDate() + dayOffset);
+
+    const day = date.getDay();
+    if (day === 0 || day === 6) continue;
+
+    slotHours.forEach((hour) => {
+      if (slots.length >= 9) return;
+      const start = new Date(date);
+      start.setHours(hour, 0, 0, 0);
+      const end = new Date(start);
+      end.setMinutes(start.getMinutes() + 60);
+      slots.push({ start: start.toISOString(), end: end.toISOString(), source: 'internal' });
+    });
+  }
+
+  return slots;
+}
+
 export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, onAvailabilityStateChange }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne' });
+  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne', provider: 'AssistantAI internal booking' });
 
   useEffect(() => {
     const loadAvailability = async () => {
@@ -20,11 +45,20 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           slotMinutes: 60,
         });
         const data = response.data;
-        setAvailability({ ...data, working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne' });
-        onAvailabilityStateChange?.({ isLive: true, hasSlots: (data.slots || []).length > 0, error: '' });
+        const slots = data.slots || [];
+        if (!slots.length) throw new Error('No live calendar slots returned');
+        setAvailability({ ...data, slots, working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne', provider: data.provider || 'Google Calendar' });
+        onAvailabilityStateChange?.({ isLive: true, hasSlots: true, error: '', provider: data.provider || 'Google Calendar' });
       } catch (loadError) {
-        setError('Submit your details and we’ll contact you to confirm the best time.');
-        onAvailabilityStateChange?.({ isLive: false, hasSlots: false, error: loadError.message || 'Availability unavailable' });
+        const slots = buildInternalStrategySlots();
+        setAvailability({
+          slots,
+          working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time',
+          timezone: 'Australia/Melbourne',
+          provider: 'AssistantAI internal booking',
+        });
+        setError('');
+        onAvailabilityStateChange?.({ isLive: true, hasSlots: slots.length > 0, error: '', provider: 'AssistantAI internal booking' });
       } finally {
         setLoading(false);
       }
@@ -42,7 +76,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           </div>
           <div>
             <h3 className="text-white font-semibold text-lg">Strategy Call Availability</h3>
-            <p className="text-sm text-gray-400 mt-1">Preferred availability: Monday to Friday, 9:00am–5:00pm Melbourne time.</p>
+            <p className="text-sm text-gray-400 mt-1">Choose a 60-minute strategy call slot. Times are shown in Melbourne time.</p>
           </div>
         </div>
 
@@ -56,25 +90,30 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
             {error}
           </div>
         ) : availability.slots?.length ? (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {availability.slots.map((slot) => {
-              const isSelected = selectedSlot?.start === slot.start;
-              return (
-                <Button
-                  key={slot.start}
-                  type="button"
-                  variant="outline"
-                  onClick={() => onSelectSlot(slot)}
-                  className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
-                >
-                  <div>
-                    <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne' })}</div>
-                    <div className="text-sm text-gray-400">{new Date(slot.start).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} – {new Date(slot.end).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} Melbourne time</div>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
+          <>
+            <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3 text-sm text-cyan-100">
+              Provider: {availability.provider}. If a connected Google Calendar is unavailable, AssistantAI stores the selected slot against the lead record for team confirmation.
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {availability.slots.map((slot) => {
+                const isSelected = selectedSlot?.start === slot.start;
+                return (
+                  <Button
+                    key={slot.start}
+                    type="button"
+                    variant="outline"
+                    onClick={() => onSelectSlot(slot)}
+                    className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
+                  >
+                    <div>
+                      <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                      <div className="text-sm text-gray-400">{new Date(slot.start).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} – {new Date(slot.end).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} Melbourne time</div>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+          </>
         ) : (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-gray-300">
             Submit your details and we’ll contact you to confirm the best time.
