@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import SystemReadinessCard from '@/components/admin/system/SystemReadinessCard';
 
-const readinessItems = [
+const baseReadinessItems = [
   {
     title: 'Lead Capture',
     status: 'live',
@@ -62,10 +62,10 @@ const readinessItems = [
   {
     title: 'Notifications',
     status: 'partial',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['NotificationLog entity', 'business event handler', 'entity automations'],
-    notes: 'Key business events are stored honestly in notification logs for admin tracking, but live email/SMS delivery providers are not connected yet.',
-    nextAction: 'Connect email and SMS delivery providers for outbound notifications.',
+    lastUpdated: '6 Jun 2026',
+    dependencies: ['notification_logs table', '/api/notifications-send', 'Resend email', 'Twilio SMS'],
+    notes: 'Business events are stored in notification logs. Email delivery uses Resend when configured. SMS delivery uses Twilio when configured. If providers are missing, the notification is still stored for admin tracking.',
+    nextAction: 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL for live email. Add Twilio values only when SMS verification is ready.',
   },
   {
     title: 'Analytics Data',
@@ -85,7 +85,56 @@ const readinessItems = [
   },
 ];
 
+function buildNotificationItem(baseItem, configStatus) {
+  const providers = configStatus?.status?.notifications?.providers;
+  if (!providers) return baseItem;
+
+  const inAppReady = providers.in_app === 'ready';
+  const emailReady = providers.email === 'ready';
+  const smsReady = providers.sms === 'ready';
+  const status = inAppReady && (emailReady || smsReady) ? 'live' : inAppReady ? 'partial' : 'partial';
+
+  return {
+    ...baseItem,
+    status,
+    dependencies: [
+      `In-app log: ${inAppReady ? 'ready' : 'not configured'}`,
+      `Email provider: ${emailReady ? 'Resend ready' : 'not configured'}`,
+      `SMS provider: ${smsReady ? 'Twilio ready' : 'not configured'}`,
+    ],
+    notes: emailReady || smsReady
+      ? `Notification logging is live. ${emailReady ? 'Resend email delivery is configured. ' : ''}${smsReady ? 'Twilio SMS delivery is configured. ' : 'SMS remains stored-only until Twilio values are added.'}`
+      : 'Notification logging is live if Supabase is configured, but outbound email/SMS providers are not fully configured yet. Events will still be stored for admin tracking.',
+    nextAction: emailReady
+      ? smsReady
+        ? 'Monitor delivery logs and provider failure rates after live events fire.'
+        : 'Email is ready. Add SMS only after phone/SMS provider verification is complete.'
+      : 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL in Vercel to activate live email notifications.',
+  };
+}
+
 export default function SystemReadiness() {
+  const [configStatus, setConfigStatus] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadConfigStatus() {
+      try {
+        const response = await fetch('/api/config-status');
+        const data = await response.json();
+        if (active && response.ok) setConfigStatus(data);
+      } catch (error) {
+        console.warn('System readiness config status unavailable:', error?.message || error);
+      }
+    }
+    loadConfigStatus();
+    return () => { active = false; };
+  }, []);
+
+  const readinessItems = useMemo(() => baseReadinessItems.map((item) => (
+    item.title === 'Notifications' ? buildNotificationItem(item, configStatus) : item
+  )), [configStatus]);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
