@@ -4,7 +4,8 @@ const GROUPS = {
   vapi: ['VITE_VAPI_PUBLIC_KEY', 'VITE_VAPI_ASSISTANT_ID', 'VAPI_WEBHOOK_SECRET'],
   ghl: ['GHL_API_KEY', 'GHL_LOCATION_ID'],
   email: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'ADMIN_NOTIFICATION_EMAIL'],
-  sms: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER', 'ADMIN_NOTIFICATION_PHONE']
+  sms: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER', 'ADMIN_NOTIFICATION_PHONE'],
+  notifications: ['VITE_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_NOTIFICATION_EMAIL']
 };
 
 function rawValue(name) {
@@ -34,6 +35,12 @@ function isVariableValid(name, value) {
   if (name === 'SUPABASE_SERVICE_ROLE_KEY') {
     return value.startsWith('eyJ') && value.length > 150;
   }
+  if (name === 'RESEND_FROM_EMAIL' || name === 'ADMIN_NOTIFICATION_EMAIL') {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+  if (name === 'TWILIO_FROM_NUMBER' || name === 'ADMIN_NOTIFICATION_PHONE') {
+    return /^\+?[0-9]{8,15}$/.test(value.replace(/\s+/g, ''));
+  }
   return true;
 }
 
@@ -53,6 +60,13 @@ export default function handler(req, res) {
   }
 
   const status = Object.fromEntries(Object.entries(GROUPS).map(([group, names]) => [group, groupStatus(names)]));
+
+  status.notifications.ready = status.notifications.ready && (status.email.ready || status.sms.ready || Boolean(rawValue('ADMIN_NOTIFICATION_EMAIL')));
+  status.notifications.providers = {
+    in_app: status.supabase.ready ? 'ready' : 'not_configured',
+    email: status.email.ready ? 'ready' : 'not_configured',
+    sms: status.sms.ready ? 'ready' : 'not_configured'
+  };
 
   return res.status(200).json({
     ok: true,
