@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, Clock, DollarSign, FileText, Gauge, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, DollarSign, FileText, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import HomeAnalyticsPanel from '@/components/admin/HomeAnalyticsPanel';
 
 const operations = [
   { title: 'Action Inbox', desc: 'Urgent conversations, replies and escalations.', href: '/ActionInbox', icon: Inbox, tag: 'Live queue' },
@@ -243,7 +244,7 @@ export default function AdminHome() {
               <p className="mt-2 text-xs leading-relaxed text-slate-500">Missing information needed to complete your live revenue system.</p>
               <div className="mt-4 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-emerald-600" style={{ width: `${metrics.readinessScore}%` }} /></div><span className="text-sm font-bold text-emerald-700">{metrics.readinessScore}%</span></div>
               <div className="mt-4 space-y-3 rounded-2xl bg-white/70 p-4">
-                {[['Create your first workspace', clients.length > 0], ['Deploy an AI agent', metrics.readinessScore > 40], ['Configure data connectors', metrics.readinessScore === 100], ['Set up approval workflows', tasks.length > 0]].map(([label, done]) => <div key={label} className="flex items-center gap-3 text-sm text-slate-700">{done ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-slate-400" />}{label}</div>)}
+                {[["Create your first workspace", clients.length > 0], ["Deploy an AI agent", metrics.readinessScore > 40], ["Configure data connectors", metrics.readinessScore === 100], ["Set up approval workflows", tasks.length > 0]].map(([label, done]) => <div key={label} className="flex items-center gap-3 text-sm text-slate-700">{done ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-slate-400" />}{label}</div>)}
               </div>
             </div>
 
@@ -263,6 +264,8 @@ export default function AdminHome() {
           </div>
         </div>
       </section>
+
+      <HomeAnalyticsPanel />
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="admin-card p-6">
