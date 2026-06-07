@@ -1,5 +1,9 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
+    { "source": "/careproof", "destination": "/careproof.html" },
     { "source": "/api/blog-posts", "destination": "/api/cms?resource=blog-posts" },
     { "source": "/api/content-blocks", "destination": "/api/cms?resource=content-blocks" },
     { "source": "/api/site-settings", "destination": "/api/cms?resource=site-settings" },
