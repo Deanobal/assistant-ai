@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import CrispChat from './chat/CrispChat';
+import SiteAnalyticsTracker from './analytics/SiteAnalyticsTracker';
 
 const navLinks = [
 { label: 'Home', path: '/' },
@@ -169,6 +170,7 @@ function Footer() {
 export default function Layout() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
+      <SiteAnalyticsTracker />
       <Navbar />
       <main className="pt-16">
         <Outlet />
