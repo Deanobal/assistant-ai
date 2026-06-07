@@ -64,8 +64,8 @@ const baseReadinessItems = [
     status: 'partial',
     lastUpdated: '6 Jun 2026',
     dependencies: ['notification_logs table', '/api/notifications-send', 'Resend email', 'Twilio SMS'],
-    notes: 'Business events are stored in notification logs. Email delivery uses Resend when configured. SMS delivery uses Twilio when configured. If providers are missing, the notification is still stored for admin tracking.',
-    nextAction: 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL for live email. Add Twilio values only when SMS verification is ready.',
+    notes: 'Business events can be sent through /api/notifications-send. The route requires Supabase notification logging first, then uses Resend email and Twilio SMS when providers are configured.',
+    nextAction: 'Confirm VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are present in Vercel so notification logs can be stored before outbound provider delivery.',
   },
   {
     title: 'Analytics Data',
@@ -92,7 +92,26 @@ function buildNotificationItem(baseItem, configStatus) {
   const inAppReady = providers.in_app === 'ready';
   const emailReady = providers.email === 'ready';
   const smsReady = providers.sms === 'ready';
-  const status = inAppReady && (emailReady || smsReady) ? 'live' : inAppReady ? 'partial' : 'partial';
+  const outboundReady = emailReady || smsReady;
+  const status = inAppReady && outboundReady ? 'live' : 'partial';
+
+  let notes = '';
+  let nextAction = '';
+
+  if (!inAppReady) {
+    notes = `Outbound provider variables are detected (${emailReady ? 'Resend email ready' : 'email not configured'}; ${smsReady ? 'Twilio SMS ready' : 'SMS not configured'}), but notification logging is not configured. /api/notifications-send requires Supabase logging before it can complete delivery.`;
+    nextAction = 'Add or fix VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel, then redeploy and retest /api/config-status.';
+  } else if (outboundReady) {
+    notes = `Notification logging is live. ${emailReady ? 'Resend email delivery is configured. ' : 'Email is not configured. '}${smsReady ? 'Twilio SMS delivery is configured.' : 'SMS remains stored-only until Twilio values are added.'}`;
+    nextAction = smsReady && emailReady
+      ? 'Monitor delivery logs and provider failure rates after live events fire.'
+      : emailReady
+        ? 'Email is ready. Add SMS only after phone/SMS provider verification is complete.'
+        : 'SMS is ready. Add Resend for email delivery if admin email notifications are required.';
+  } else {
+    notes = 'Notification logging is live, but outbound email/SMS providers are not fully configured yet. Events will still be stored for admin tracking.';
+    nextAction = 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL in Vercel to activate live email notifications.';
+  }
 
   return {
     ...baseItem,
@@ -102,14 +121,8 @@ function buildNotificationItem(baseItem, configStatus) {
       `Email provider: ${emailReady ? 'Resend ready' : 'not configured'}`,
       `SMS provider: ${smsReady ? 'Twilio ready' : 'not configured'}`,
     ],
-    notes: emailReady || smsReady
-      ? `Notification logging is live. ${emailReady ? 'Resend email delivery is configured. ' : ''}${smsReady ? 'Twilio SMS delivery is configured. ' : 'SMS remains stored-only until Twilio values are added.'}`
-      : 'Notification logging is live if Supabase is configured, but outbound email/SMS providers are not fully configured yet. Events will still be stored for admin tracking.',
-    nextAction: emailReady
-      ? smsReady
-        ? 'Monitor delivery logs and provider failure rates after live events fire.'
-        : 'Email is ready. Add SMS only after phone/SMS provider verification is complete.'
-      : 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL in Vercel to activate live email notifications.',
+    notes,
+    nextAction,
   };
 }
 
