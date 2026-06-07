@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareProof AI - NDIS Shift Note Audit Demo</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { margin: 0; background: #020617; color: #f8fafc; }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 36px 24px; }
+      .badge { display: inline-flex; gap: 8px; align-items: center; border: 1px solid rgba(52,211,153,.35); background: rgba(52,211,153,.10); color: #bbf7d0; padding: 7px 12px; border-radius: 999px; font-size: 14px; }
+      .hero { display: grid; grid-template-columns: 1.5fr .8fr; gap: 28px; align-items: center; border-bottom: 1px solid rgba(255,255,255,.10); padding-bottom: 34px; }
+      h1 { font-size: clamp(44px, 7vw, 86px); line-height: .92; margin: 18px 0; letter-spacing: -0.06em; }
+      h2 { font-size: 26px; margin: 0 0 12px; }
+      p { color: #cbd5e1; line-height: 1.65; }
+      .card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); border-radius: 26px; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,.25); }
+      .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 28px 0; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      label { display:block; font-size: 14px; color:#cbd5e1; margin: 16px 0 8px; }
+      input, textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.12); background:#0f172a; color:#fff; border-radius: 14px; padding: 14px 16px; font: inherit; outline: none; }
+      textarea { min-height: 210px; resize: vertical; }
+      button { border: 0; border-radius: 14px; padding: 13px 16px; font-weight: 800; cursor: pointer; margin-top: 14px; }
+      .primary { background:#34d399; color:#022c22; }
+      .secondary { background:#f8fafc; color:#020617; margin-left: 10px; }
+      .metric small { color:#94a3b8; display:block; margin-bottom:8px; }
+      .metric strong { font-size: 34px; }
+      .check { display:flex; justify-content:space-between; gap: 14px; padding: 15px; border-radius: 18px; background:#0f172a; margin: 10px 0; }
+      .ok { color:#6ee7b7; font-weight:800; }
+      .warn { color:#fcd34d; font-weight:800; }
+      .notice { border:1px solid rgba(252,211,77,.25); background:rgba(252,211,77,.10); color:#fef3c7; margin-top:20px; }
+      .steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin-top:20px; }
+      @media (max-width: 900px) { .hero, .grid2, .grid4, .steps { grid-template-columns: 1fr; } .secondary { margin-left:0; display:block; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <div>
+          <span class="badge">Pilot MVP Demo</span>
+          <h1>CareProof AI</h1>
+          <p style="font-size:20px;max-width:760px">AI shift-note review for NDIS providers. Clean weak notes, flag missing billing evidence, and create audit-ready documentation before claims or compliance reviews become a problem.</p>
+        </div>
+        <div class="card">
+          <small style="color:#94a3b8;text-transform:uppercase;letter-spacing:.12em">First validation offer</small>
+          <h2 style="margin-top:10px">Free 50-note audit</h2>
+          <p>For providers willing to test the platform with de-identified shift notes.</p>
+        </div>
+      </section>
+
+      <section class="grid4">
+        <div class="card metric"><small>Billing evidence score</small><strong id="billingScore">0%</strong></div>
+        <div class="card metric"><small>Compliance readiness</small><strong id="complianceScore">0%</strong></div>
+        <div class="card metric"><small>Risk level</small><strong id="riskLevel">-</strong></div>
+        <div class="card metric"><small>Missing items</small><strong id="missingCount">0</strong></div>
+      </section>
+
+      <main class="grid2">
+        <section class="card">
+          <h2>Shift note audit</h2>
+          <p>Paste a de-identified NDIS support note. This demo uses local rule-based scoring now; the production version will use the OpenAI API with provider-specific compliance prompts.</p>
+          <label>Provider name</label>
+          <input id="provider" value="Demo NDIS Provider" />
+          <label>Support category / service type</label>
+          <input id="supportType" value="Community participation and daily living support" />
+          <label>Original shift note</label>
+          <textarea id="note">Support worker attended participant home from 10am to 12pm. Took client shopping. Helped with groceries. All good.</textarea>
+          <button class="primary" onclick="runAudit()">Run audit</button>
+          <button class="secondary" onclick="downloadReport()">Export demo report</button>
+        </section>
+        <section>
+          <div class="card">
+            <h2>Improved note draft</h2>
+            <p id="improved" style="background:#0f172a;border-radius:18px;padding:18px"></p>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <h2>Compliance checklist</h2>
+            <div id="checks"></div>
+          </div>
+          <div class="card notice">
+            <strong>Important pilot disclaimer</strong>
+            <p style="color:#fef3c7">CareProof AI assists documentation quality review only. It does not provide legal, clinical, regulatory, or NDIS advice. Final judgement and responsibility remain with the provider.</p>
+          </div>
+        </section>
+      </main>
+
+      <section class="steps">
+        <div class="card"><h2>1. Upload or paste notes</h2><p>Providers submit de-identified notes from community access, SIL, daily living, or support coordination work.</p></div>
+        <div class="card"><h2>2. AI checks evidence</h2><p>The platform flags missing time, service detail, participant outcome, risk statements, and weak wording.</p></div>
+        <div class="card"><h2>3. Manager approves</h2><p>Managers edit, approve, and export an evidence-ready report for internal review or pilot discussions.</p></div>
+      </section>
+    </div>
+
+    <script>
+      const rules = [
+        { label: 'Time and duration evidence', test: t => /\b\d{1,2}(:\d{2})?\s?(am|pm)\b/i.test(t) || /\bfrom\b.+\bto\b/i.test(t), fix: 'Add start time, finish time, and total duration.' },
+        { label: 'Support activity detail', test: t => /(supported|assisted|prompted|transport|community|personal care|meal|medication|shopping|budget|mobility|helped)/i.test(t), fix: 'Describe the actual support provided, not only the outing/task.' },
+        { label: 'Participant goal or outcome', test: t => /(goal|outcome|independent|capacity|choice|skill|confidence|community access|daily living)/i.test(t), fix: 'Link the work to the participant goal, skill, or outcome.' },
+        { label: 'Incident or escalation statement', test: t => /(no incident|incident|escalated|reported|risk|concern|safe|safety)/i.test(t), fix: 'State whether incidents, risks, or concerns occurred and what action was taken.' },
+        { label: 'Professional objective wording', test: t => !/(lazy|bad|annoying|refused for no reason|crazy|rude)/i.test(t), fix: 'Use neutral, factual wording and avoid judgemental language.' }
+      ];
+      let lastResult = null;
+      function clamp(n){ return Math.max(1, Math.min(100, n)); }
+      function audit(){
+        const note = document.getElementById('note').value.trim();
+        const supportType = document.getElementById('supportType').value.trim();
+        const checks = rules.map(r => ({...r, passed:r.test(note)}));
+        const passed = checks.filter(c => c.passed).length;
+        const billing = clamp(35 + passed * 12 + (note.length > 160 ? 8 : 0));
+        const compliance = clamp(30 + passed * 13 + (supportType ? 5 : 0));
+        const missing = checks.filter(c => !c.passed).map(c => c.fix);
+        const risk = compliance >= 80 ? 'Low' : compliance >= 60 ? 'Medium' : 'High';
+        const improved = `Supported participant with ${supportType || 'NDIS support services'} during the recorded shift. Worker provided practical assistance with the stated activity, encouraged participant choice and safe participation, and documented the support provided in a factual manner. Recommended manager edit: add exact start and finish times, participant goal/outcome, and whether any incidents, risks, or follow-up actions occurred before this note is used for billing or audit evidence.`;
+        return { note, supportType, checks, billing, compliance, missing, risk, improved };
+      }
+      function runAudit(){
+        lastResult = audit();
+        document.getElementById('billingScore').textContent = lastResult.billing + '%';
+        document.getElementById('complianceScore').textContent = lastResult.compliance + '%';
+        document.getElementById('riskLevel').textContent = lastResult.risk;
+        document.getElementById('missingCount').textContent = lastResult.missing.length;
+        document.getElementById('improved').textContent = lastResult.improved;
+        document.getElementById('checks').innerHTML = lastResult.checks.map(c => `<div class="check"><div><strong>${c.label}</strong><br><small style="color:#94a3b8">${c.passed ? 'Detected in note.' : c.fix}</small></div><span class="${c.passed ? 'ok' : 'warn'}">${c.passed ? 'PASS' : 'REVIEW'}</span></div>`).join('');
+      }
+      function downloadReport(){
+        if(!lastResult) runAudit();
+        const provider = document.getElementById('provider').value.trim();
+        const lines = [
+          'CareProof AI - Demo Shift Note Audit',
+          `Provider: ${provider}`,
+          `Support type: ${lastResult.supportType}`,
+          `Billing evidence score: ${lastResult.billing}%`,
+          `Compliance readiness score: ${lastResult.compliance}%`,
+          `Risk level: ${lastResult.risk}`,
+          '', 'Original note:', lastResult.note,
+          '', 'Improved note draft:', lastResult.improved,
+          '', 'Missing information:', ...(lastResult.missing.length ? lastResult.missing.map(x => '- ' + x) : ['- No major missing fields detected in demo rules.']),
+          '', 'Disclaimer: CareProof AI assists documentation review only. It does not provide legal, clinical, regulatory, or NDIS advice. Final review remains with the provider.'
+        ];
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'careproof-ai-demo-audit.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      runAudit();
+    </script>
+  </body>
+</html>
