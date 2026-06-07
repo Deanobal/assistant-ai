@@ -32,27 +32,21 @@ function getRequiredConfig() {
   return {
     clientEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
     privateKey: getPrivateKey(),
+    oauthClientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+    oauthClientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
+    oauthRefreshToken: process.env.GOOGLE_OAUTH_REFRESH_TOKEN || '',
     gaPropertyId: process.env.GA_PROPERTY_ID || '',
     gscSiteUrl: process.env.GSC_SITE_URL || 'https://www.assistantai.com.au/',
   };
 }
 
-async function getAccessToken(scopes) {
+async function getServiceAccountAccessToken(scopes) {
   const { clientEmail, privateKey } = getRequiredConfig();
-  if (!clientEmail || !privateKey) {
-    throw new Error('Google service account credentials are not configured');
-  }
+  if (!clientEmail || !privateKey) throw new Error('Google service account credentials are not configured');
 
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: 'RS256', typ: 'JWT' };
-  const payload = {
-    iss: clientEmail,
-    scope: Array.isArray(scopes) ? scopes.join(' ') : scopes,
-    aud: TOKEN_URL,
-    exp: now + 3600,
-    iat: now,
-  };
-
+  const payload = { iss: clientEmail, scope: Array.isArray(scopes) ? scopes.join(' ') : scopes, aud: TOKEN_URL, exp: now + 3600, iat: now };
   const unsigned = `${base64Url(JSON.stringify(header))}.${base64Url(JSON.stringify(payload))}`;
   const signature = crypto.createSign('RSA-SHA256').update(unsigned).sign(privateKey, 'base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   const assertion = `${unsigned}.${signature}`;
@@ -60,17 +54,40 @@ async function getAccessToken(scopes) {
   const response = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }).toString(),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.access_token) throw new Error(data.error_description || data.error || 'Google service-account token request failed');
+  return data.access_token;
+}
+
+async function getOAuthRefreshAccessToken() {
+  const { oauthClientId, oauthClientSecret, oauthRefreshToken } = getRequiredConfig();
+  if (!oauthClientId || !oauthClientSecret || !oauthRefreshToken) throw new Error('Google OAuth refresh-token credentials are not configured');
+
+  const response = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
+      client_id: oauthClientId,
+      client_secret: oauthClientSecret,
+      refresh_token: oauthRefreshToken,
+      grant_type: 'refresh_token',
     }).toString(),
   });
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.access_token) {
-    throw new Error(data.error_description || data.error || 'Google OAuth token request failed');
-  }
+  if (!response.ok || !data.access_token) throw new Error(data.error_description || data.error || 'Google OAuth refresh-token request failed');
   return data.access_token;
+}
+
+async function getAccessToken(scopes) {
+  const config = getRequiredConfig();
+  if (config.oauthClientId && config.oauthClientSecret && config.oauthRefreshToken) {
+    return getOAuthRefreshAccessToken();
+  }
+  return getServiceAccountAccessToken(scopes);
 }
 
 function rowValue(row, metricName, metricHeaders) {
@@ -88,10 +105,7 @@ async function runGaReport({ accessToken, propertyId, range }) {
 
   const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       dateRanges: [{ startDate: `${range.days}daysAgo`, endDate: 'today' }],
       dimensions: [{ name: 'sessionDefaultChannelGroup' }, { name: 'sessionSourceMedium' }, { name: 'landingPagePlusQueryString' }],
@@ -115,36 +129,14 @@ async function runGaReport({ accessToken, propertyId, range }) {
     engagement_rate: Math.round(rowValue(totalsRow, 'engagementRate', metricHeaders) * 1000) / 10,
   };
 
-  return {
-    ready: true,
-    error: '',
-    totals,
-    channels: rows.map((row) => ({
-      channel: dimensionValue(row, 0),
-      source_medium: dimensionValue(row, 1),
-      landing_page: dimensionValue(row, 2),
-      sessions: rowValue(row, 'sessions', metricHeaders),
-      users: rowValue(row, 'totalUsers', metricHeaders),
-      page_views: rowValue(row, 'screenPageViews', metricHeaders),
-      conversions: rowValue(row, 'conversions', metricHeaders),
-    })).slice(0, 20),
-  };
+  return { ready: true, error: '', totals, channels: rows.map((row) => ({ channel: dimensionValue(row, 0), source_medium: dimensionValue(row, 1), landing_page: dimensionValue(row, 2), sessions: rowValue(row, 'sessions', metricHeaders), users: rowValue(row, 'totalUsers', metricHeaders), page_views: rowValue(row, 'screenPageViews', metricHeaders), conversions: rowValue(row, 'conversions', metricHeaders) })).slice(0, 20) };
 }
 
 async function querySearchConsole({ accessToken, siteUrl, range, dimensions, rowLimit = 25 }) {
   const response = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      startDate: isoDateOffset(range.days),
-      endDate: isoDateOffset(0),
-      dimensions,
-      rowLimit,
-      startRow: 0,
-    }),
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ startDate: isoDateOffset(range.days), endDate: isoDateOffset(0), dimensions, rowLimit, startRow: 0 }),
   });
 
   const data = await response.json().catch(() => ({}));
@@ -153,18 +145,11 @@ async function querySearchConsole({ accessToken, siteUrl, range, dimensions, row
 }
 
 function mapGscRows(rows, keyName) {
-  return rows.map((row) => ({
-    [keyName]: row.keys?.[0] || 'Unknown',
-    clicks: row.clicks || 0,
-    impressions: row.impressions || 0,
-    ctr: Math.round((row.ctr || 0) * 1000) / 10,
-    position: Math.round((row.position || 0) * 10) / 10,
-  }));
+  return rows.map((row) => ({ [keyName]: row.keys?.[0] || 'Unknown', clicks: row.clicks || 0, impressions: row.impressions || 0, ctr: Math.round((row.ctr || 0) * 1000) / 10, position: Math.round((row.position || 0) * 10) / 10 }));
 }
 
 async function runSearchConsole({ accessToken, siteUrl, range }) {
   if (!siteUrl) return { ready: false, error: 'GSC_SITE_URL is not configured', totals: {}, queries: [], pages: [] };
-
   try {
     const [queries, pages, countries, devices] = await Promise.all([
       querySearchConsole({ accessToken, siteUrl, range, dimensions: ['query'], rowLimit: 25 }),
@@ -172,28 +157,12 @@ async function runSearchConsole({ accessToken, siteUrl, range }) {
       querySearchConsole({ accessToken, siteUrl, range, dimensions: ['country'], rowLimit: 15 }),
       querySearchConsole({ accessToken, siteUrl, range, dimensions: ['device'], rowLimit: 10 }),
     ]);
-
     const queryRows = mapGscRows(queries, 'query');
-    const pageRows = mapGscRows(pages, 'page');
-    const totals = queryRows.reduce((acc, row) => ({
-      clicks: acc.clicks + row.clicks,
-      impressions: acc.impressions + row.impressions,
-      ctr: 0,
-      avg_position_sum: acc.avg_position_sum + row.position,
-    }), { clicks: 0, impressions: 0, ctr: 0, avg_position_sum: 0 });
+    const totals = queryRows.reduce((acc, row) => ({ clicks: acc.clicks + row.clicks, impressions: acc.impressions + row.impressions, ctr: 0, avg_position_sum: acc.avg_position_sum + row.position }), { clicks: 0, impressions: 0, ctr: 0, avg_position_sum: 0 });
     totals.ctr = totals.impressions ? Math.round((totals.clicks / totals.impressions) * 1000) / 10 : 0;
     totals.avg_position = queryRows.length ? Math.round((totals.avg_position_sum / queryRows.length) * 10) / 10 : 0;
     delete totals.avg_position_sum;
-
-    return {
-      ready: true,
-      error: '',
-      totals,
-      queries: queryRows,
-      pages: pageRows,
-      countries: mapGscRows(countries, 'country'),
-      devices: mapGscRows(devices, 'device'),
-    };
+    return { ready: true, error: '', totals, queries: queryRows, pages: mapGscRows(pages, 'page'), countries: mapGscRows(countries, 'country'), devices: mapGscRows(devices, 'device') };
   } catch (error) {
     return { ready: false, error: error.message, totals: {}, queries: [], pages: [], countries: [], devices: [] };
   }
@@ -205,49 +174,33 @@ export default async function handler(req, res) {
 
   const range = normaliseRange(req.query?.range || '30d');
   const config = getRequiredConfig();
+  const hasOAuth = Boolean(config.oauthClientId && config.oauthClientSecret && config.oauthRefreshToken);
+  const hasServiceAccount = Boolean(config.clientEmail && config.privateKey);
   const missing = [];
-  if (!config.clientEmail) missing.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-  if (!config.privateKey) missing.push('GOOGLE_PRIVATE_KEY');
+  if (!hasOAuth && !hasServiceAccount) missing.push('GOOGLE_OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_SECRET', 'GOOGLE_OAUTH_REFRESH_TOKEN');
 
   if (missing.length) {
     return res.status(200).json({
       success: true,
       connected: false,
+      auth_method: 'none',
       missing,
       generated_at: new Date().toISOString(),
       range,
-      ga4: { ready: false, error: 'Google service account credentials are missing', totals: {}, channels: [] },
-      search_console: { ready: false, error: 'Google service account credentials are missing', totals: {}, queries: [], pages: [], countries: [], devices: [] },
+      ga4: { ready: false, error: 'Google OAuth refresh-token credentials are missing', totals: {}, channels: [] },
+      search_console: { ready: false, error: 'Google OAuth refresh-token credentials are missing', totals: {}, queries: [], pages: [], countries: [], devices: [] },
     });
   }
 
   try {
-    const [gaToken, gscToken] = await Promise.all([
-      getAccessToken(GA_SCOPE),
-      getAccessToken(GSC_SCOPE),
-    ]);
-
+    const accessToken = await getAccessToken([GA_SCOPE, GSC_SCOPE]);
     const [ga4, searchConsole] = await Promise.all([
-      runGaReport({ accessToken: gaToken, propertyId: config.gaPropertyId, range }),
-      runSearchConsole({ accessToken: gscToken, siteUrl: config.gscSiteUrl, range }),
+      runGaReport({ accessToken, propertyId: config.gaPropertyId, range }),
+      runSearchConsole({ accessToken, siteUrl: config.gscSiteUrl, range }),
     ]);
 
-    return res.status(200).json({
-      success: true,
-      connected: ga4.ready || searchConsole.ready,
-      generated_at: new Date().toISOString(),
-      range,
-      ga4,
-      search_console: searchConsole,
-    });
+    return res.status(200).json({ success: true, connected: ga4.ready || searchConsole.ready, auth_method: hasOAuth ? 'oauth_refresh_token' : 'service_account', generated_at: new Date().toISOString(), range, ga4, search_console: searchConsole });
   } catch (error) {
-    return res.status(200).json({
-      success: true,
-      connected: false,
-      generated_at: new Date().toISOString(),
-      range,
-      ga4: { ready: false, error: error.message, totals: {}, channels: [] },
-      search_console: { ready: false, error: error.message, totals: {}, queries: [], pages: [], countries: [], devices: [] },
-    });
+    return res.status(200).json({ success: true, connected: false, auth_method: hasOAuth ? 'oauth_refresh_token' : 'service_account', generated_at: new Date().toISOString(), range, ga4: { ready: false, error: error.message, totals: {}, channels: [] }, search_console: { ready: false, error: error.message, totals: {}, queries: [], pages: [], countries: [], devices: [] } });
   }
 }
