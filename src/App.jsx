@@ -29,6 +29,7 @@ import ThankYou from './pages/ThankYou';
 import Dashboard from './pages/Dashboard';
 import AdminHome from './pages/AdminHome';
 import AdminLogin from './pages/AdminLogin';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import ClientManager from './pages/ClientManager';
 import ClientConnectors from './pages/ClientConnectors';
 import ClientWorkspace from './pages/ClientWorkspace';
@@ -100,6 +101,7 @@ function App() {
             <Route path="/AdminLogin" element={<AdminLogin />} />
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<AdminHome />} />
+              <Route path="/Analytics" element={<AnalyticsDashboard />} />
               <Route path="/ActionInbox" element={<ActionInbox />} />
               <Route path="/LeadDashboard" element={<LeadDashboard />} />
               <Route path="/LeadDetail" element={<LeadDetail />} />
