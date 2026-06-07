@@ -4,11 +4,12 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, PlugZap, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
+import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, PlugZap, Radio, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
 import AdminAICopilot from './AdminAICopilot';
 
 const navItems = [
   { label: 'Home', path: '/admin', icon: Home, subtitle: 'Control centre', match: ['/admin'], group: 'Operate' },
+  { label: 'Analytics', path: '/Analytics', icon: Radio, subtitle: 'Live site intelligence', match: ['/Analytics'], group: 'Operate' },
   { label: 'Action Inbox', path: '/ActionInbox', icon: Inbox, subtitle: 'Live response queue', match: ['/ActionInbox', '/UnmatchedSmsInbox'], group: 'Operate' },
   { label: 'Leads', path: '/LeadDashboard', icon: BarChart3, subtitle: 'Pipeline and follow-up', match: ['/LeadDashboard', '/LeadDetail'], group: 'Operate' },
   { label: 'Onboarding', path: '/Onboarding', icon: Rocket, subtitle: 'Rollout progress', match: ['/Onboarding', '/OnboardingIntake'], group: 'Operate' },
@@ -20,6 +21,7 @@ const navItems = [
 ];
 
 const quickActions = [
+  { label: 'Analytics', path: '/Analytics' },
   { label: 'Reply queue', path: '/ActionInbox' },
   { label: 'New client', path: '/Onboarding' },
   { label: 'Connectors', path: '/ClientConnectors' },
@@ -196,7 +198,7 @@ export default function AdminLayout() {
       <AdminAICopilot />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-9 gap-1">
+        <div className="grid grid-cols-10 gap-1">
           {navItems.map((item) => {
             const isActive = item.match.some((path) => location.pathname.startsWith(path));
             const count = getCount(item, actionCount, unreadSupportCount);
