@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, BarChart3, Clock3, Globe2, MousePointerClick, Radio, Search, Smartphone, TrendingUp, Users, RefreshCw, Target, MapPin, Monitor, Zap } from 'lucide-react';
+import { Activity, BarChart3, Globe2, MousePointerClick, Radio, Search, Smartphone, TrendingUp, Users, RefreshCw, Target, MapPin, Monitor, Zap } from 'lucide-react';
+import GoogleAcquisitionPanel from '@/components/analytics/GoogleAcquisitionPanel';
 
 const ranges = [
   { key: '1h', label: '1 hour' },
@@ -250,8 +251,10 @@ export default function AnalyticsDashboard() {
         <RecentEvents events={recent.events || []} />
       </section>
 
-      <section className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900">
-        <strong>Important:</strong> this is first-party AssistantAI tracking. It now tracks page views, CTA clicks, navigation clicks, and form submissions. Google Analytics/Search Console can still be connected later for search acquisition data.
+      <GoogleAcquisitionPanel range={range} />
+
+      <section className="rounded-[28px] border border-sky-200 bg-sky-50 p-5 text-sm leading-7 text-sky-900">
+        <strong>Analytics stack:</strong> first-party AssistantAI tracking shows live operational behaviour. GA4 and Search Console add external acquisition and organic search data once the Google service account and property IDs are configured.
       </section>
     </div>
   );
