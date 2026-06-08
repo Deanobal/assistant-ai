@@ -19,6 +19,7 @@ import CaseStudies from './pages/CaseStudies';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import LandingPage from './pages/LandingPage';
+import HighIntentSeoLanding from './pages/HighIntentSeoLanding';
 import Integrations from './pages/Integrations';
 import Platform from './pages/Platform';
 import AIDemo from './pages/AIDemo';
@@ -89,6 +90,7 @@ function App() {
               <Route path="/Blog" element={<Blog />} />
               <Route path="/Blog/:slug" element={<BlogPost />} />
               <Route path="/lp/:slug" element={<LandingPage />} />
+              <Route path="/:slug" element={<HighIntentSeoLanding />} />
               <Route path="/Integrations" element={<Integrations />} />
               <Route path="/Platform" element={<Platform />} />
               <Route path="/AIDemo" element={<AIDemo />} />
