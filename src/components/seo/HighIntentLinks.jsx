@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, CalendarCheck, MessageSquareText, PhoneCall, ShieldCheck, Target } from 'lucide-react';
+import { ArrowRight, Bot, BriefcaseBusiness, Building2, CalendarCheck, Gavel, MessageSquareText, PhoneCall, ShieldCheck, Sparkles, Target, Wrench } from 'lucide-react';
 
 const highIntentLinks = [
   {
@@ -38,6 +38,42 @@ const highIntentLinks = [
     href: '/ai-receptionist-for-trades',
     icon: ShieldCheck,
   },
+  {
+    title: 'AI Receptionist for Clinics',
+    description: 'For appointment-based teams that need enquiry capture, booking intent, and careful human escalation.',
+    href: '/ai-receptionist-for-clinics',
+    icon: CalendarCheck,
+  },
+  {
+    title: 'AI Receptionist for Real Estate',
+    description: 'Capture buyer, seller, rental, appraisal, and property management enquiries before they go cold.',
+    href: '/ai-receptionist-for-real-estate',
+    icon: Building2,
+  },
+  {
+    title: 'AI Receptionist for Cleaning Companies',
+    description: 'Capture cleaning quote requests, service frequency, site details, and recurring contract opportunities.',
+    href: '/ai-receptionist-for-cleaning-companies',
+    icon: Sparkles,
+  },
+  {
+    title: 'AI Receptionist for Law Firms',
+    description: 'Support careful intake capture, matter routing, and human review for professional service enquiries.',
+    href: '/ai-receptionist-for-law-firms',
+    icon: Gavel,
+  },
+  {
+    title: 'AI Receptionist for Property Maintenance',
+    description: 'Triage maintenance requests, capture property details, identify urgency, and route jobs faster.',
+    href: '/ai-receptionist-for-property-maintenance',
+    icon: Wrench,
+  },
+  {
+    title: 'AI Receptionist for Professional Services',
+    description: 'For consultants, advisors, and service firms that need structured enquiry capture and follow-up.',
+    href: '/ai-receptionist-for-law-firms',
+    icon: BriefcaseBusiness,
+  },
 ];
 
 export default function HighIntentLinks({ compact = false }) {
@@ -56,7 +92,7 @@ export default function HighIntentLinks({ compact = false }) {
           {highIntentLinks.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.href} to={item.href} className="group rounded-[28px] border border-white/8 bg-white/[0.035] p-6 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-white/[0.06]">
+              <Link key={`${item.href}-${item.title}`} to={item.href} className="group rounded-[28px] border border-white/8 bg-white/[0.035] p-6 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-white/[0.06]">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
                     <Icon className="h-5 w-5 text-cyan-300" />
