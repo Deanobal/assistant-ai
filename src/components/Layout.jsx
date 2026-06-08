@@ -10,11 +10,15 @@ const navLinks = [
 { label: 'Industries', path: '/Industries' },
 { label: 'Integrations', path: '/Integrations' },
 { label: 'Pricing', path: '/Pricing' },
-{ label: 'Blog', path: '/Blog' },
 { label: 'Resources', path: '/Resources' },
 { label: 'Case Studies', path: '/CaseStudies' },
 { label: 'About', path: '/About' },
 { label: 'Contact', path: '/Contact' }];
+
+const footerCompanyLinks = [
+  ...navLinks,
+  { label: 'Blog', path: '/Blog' },
+];
 
 const footerSolutionLinks = [
   { label: 'AI Receptionist Australia', path: '/ai-receptionist-australia' },
@@ -144,7 +148,7 @@ function Footer() {
           <div>
             <h4 className="text-white font-medium text-sm mb-4">Company</h4>
             <div className="space-y-2.5">
-              {navLinks.map((link) =>
+              {footerCompanyLinks.map((link) =>
                 link.path.includes('#') ? (
                   <a key={link.path} href={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
                     {link.label}
