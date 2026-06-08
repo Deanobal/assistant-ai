@@ -68,10 +68,13 @@ function trackGoogleEvent(payload) {
     return;
   }
   window.gtag('event', payload.event_type, {
-    event_category: payload.metadata?.tag || 'site_interaction',
+    event_category: payload.metadata?.tag || payload.metadata?.intent || 'site_interaction',
     event_label: payload.metadata?.label || payload.page_path,
     page_path: payload.page_path,
     link_url: payload.metadata?.href || '',
+    cta_intent: payload.metadata?.intent || '',
+    commercial_stage: payload.metadata?.stage || '',
+    source_section: payload.metadata?.section || '',
   });
 }
 
@@ -101,13 +104,49 @@ function cleanLabel(value) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 120);
 }
 
-function classifyClick(element) {
+function classifyConversionIntent({ href = '', label = '', pathname = '' }) {
+  const joined = `${label} ${href} ${pathname}`;
+  if (/AIDemo|Talk to Our AI Receptionist|voice demo|live demo|receptionist demo/i.test(joined)) {
+    return { event_type: 'demo_intent', intent: 'voice_demo', stage: 'consideration' };
+  }
+  if (/GetStartedNow|Get Started|sign up|secure checkout|checkout|stripe/i.test(joined)) {
+    return { event_type: 'signup_intent', intent: 'get_started', stage: 'conversion' };
+  }
+  if (/Pricing|View Pricing|price|plans/i.test(joined)) {
+    return { event_type: 'pricing_intent', intent: 'pricing_view', stage: 'evaluation' };
+  }
+  if (/BookStrategyCall|Book Strategy|strategy call|consultation/i.test(joined)) {
+    return { event_type: 'strategy_call_intent', intent: 'book_strategy_call', stage: 'conversion' };
+  }
+  if (/Contact|contact|sales@assistantai/i.test(joined)) {
+    return { event_type: 'contact_intent', intent: 'contact_sales', stage: 'conversion' };
+  }
+  if (/ai-receptionist|missed-call|lead-follow-up|appointment-booking|phone-assistant/i.test(href)) {
+    return { event_type: 'solution_page_click', intent: 'solution_research', stage: 'consideration' };
+  }
+  return null;
+}
+
+function classifyClick(element, location) {
   const href = element.getAttribute('href') || '';
   const label = cleanLabel(element.getAttribute('aria-label') || element.innerText || element.value || href || element.tagName);
+  const explicitEvent = element.getAttribute('data-analytics-event');
+  const explicitIntent = element.getAttribute('data-analytics-intent');
+  const explicitSection = element.getAttribute('data-analytics-section') || element.closest('[data-analytics-section]')?.getAttribute('data-analytics-section') || '';
+  const explicitStage = element.getAttribute('data-analytics-stage');
+  const conversion = classifyConversionIntent({ href, label, pathname: location.pathname });
   const ctaPattern = /get started|pricing|contact|demo|call|checkout|strategy|book|receptionist|sign up|start/i;
   const hrefPattern = /GetStartedNow|Pricing|Contact|AIDemo|BookStrategyCall|checkout|stripe/i;
-  const isCta = ctaPattern.test(label) || hrefPattern.test(href);
-  return { event_type: isCta ? 'cta_click' : 'nav_click', label, href };
+  const isCta = Boolean(conversion) || ctaPattern.test(label) || hrefPattern.test(href) || explicitEvent;
+
+  return {
+    event_type: explicitEvent || conversion?.event_type || (isCta ? 'cta_click' : 'nav_click'),
+    label,
+    href,
+    intent: explicitIntent || conversion?.intent || '',
+    stage: explicitStage || conversion?.stage || '',
+    section: explicitSection,
+  };
 }
 
 export default function SiteAnalyticsTracker() {
@@ -142,10 +181,18 @@ export default function SiteAnalyticsTracker() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
+    window.AssistantAIAnalytics = {
+      track: (eventType, metadata = {}) => trackEvent({
+        ...basePayload(location),
+        event_type: eventType,
+        metadata,
+      }),
+    };
+
     const handleClick = (event) => {
       const element = getClickableElement(event.target);
       if (!element) return;
-      const clickData = classifyClick(element);
+      const clickData = classifyClick(element, location);
       trackEvent({
         ...basePayload(location),
         event_type: clickData.event_type,
@@ -153,6 +200,9 @@ export default function SiteAnalyticsTracker() {
           label: clickData.label,
           href: clickData.href,
           tag: element.tagName?.toLowerCase(),
+          intent: clickData.intent,
+          stage: clickData.stage,
+          section: clickData.section,
         },
       });
     };
@@ -165,6 +215,8 @@ export default function SiteAnalyticsTracker() {
         metadata: {
           form_id: form?.id || '',
           form_name: form?.getAttribute?.('name') || '',
+          intent: 'form_submission',
+          stage: 'conversion',
         },
       });
     };
@@ -174,6 +226,7 @@ export default function SiteAnalyticsTracker() {
     return () => {
       document.removeEventListener('click', handleClick, true);
       document.removeEventListener('submit', handleSubmit, true);
+      if (window.AssistantAIAnalytics) delete window.AssistantAIAnalytics;
     };
   }, [location.pathname, location.search]);
 
