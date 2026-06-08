@@ -1,4 +1,6 @@
-export const blogPosts = [
+import { seoBlogPosts } from './seoBlogPosts';
+
+const existingBlogPosts = [
   {
     slug: 'ai-receptionist-australia-service-businesses',
     title: 'AI Receptionist Australia: What Service Businesses Should Look For',
@@ -6,6 +8,10 @@ export const blogPosts = [
     excerpt: 'The best AI receptionist is not just the one that answers calls. It is the one that captures the right details and moves the enquiry forward.',
     category: 'AI Receptionist',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'Best AI Receptionist Australia Checklist', href: '/Blog/best-ai-receptionist-australia-checklist' },
+    ],
     body: [
       'Australian service businesses are not buying an AI receptionist because they want a novelty voice bot. They are buying speed, consistency, lead capture, and a better front-end workflow. The first question should not be whether the voice sounds impressive. The better question is what happens after the call is answered.',
       'A strong AI receptionist should capture the caller’s name, phone number, service need, urgency, location, and preferred next step. For many businesses, that record should then move into a CRM, trigger SMS or email follow-up, create a booking request, or alert a human when the enquiry is urgent or complex.',
@@ -19,6 +25,10 @@ export const blogPosts = [
     excerpt: 'For service businesses, a missed call is often not just a missed message. It can be a lost quote, booking, inspection, or urgent job.',
     category: 'Lead Capture',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'Missed Call Automation Australia', href: '/missed-call-automation-australia' },
+      { label: 'AI Lead Follow-Up Automation', href: '/ai-lead-follow-up-automation' },
+    ],
     body: [
       'Most service businesses already know missed calls are a problem. The harder part is seeing the full revenue leak. A customer who needs a plumber, cleaner, clinic appointment, property service, or urgent quote usually wants a response now. If the call is missed and voicemail is the only option, many buyers simply contact the next provider.',
       'The practical fix is not to hire more admin before you have the volume to justify it. The fix is to install a front-end system that answers, asks the right questions, captures the lead, and sends the next step to the right place. That can mean a callback task, a calendar request, a CRM record, an SMS confirmation, or a human escalation.',
@@ -32,6 +42,10 @@ export const blogPosts = [
     excerpt: 'Call answering is only step one. The real business value comes from what the AI does with the enquiry after the conversation.',
     category: 'Workflow Automation',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Lead Follow-Up Automation', href: '/ai-lead-follow-up-automation' },
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+    ],
     body: [
       'A basic AI receptionist can answer a phone call and take a message. That is useful, but it is not enough for businesses that rely on fast lead conversion. The real test is whether the system can turn the conversation into a structured workflow.',
       'After a call, the business should know who called, what they wanted, how urgent it was, whether they fit the service, what follow-up is required, and who owns the next action. If the caller is ready to proceed, the system should be able to move them toward booking, payment, onboarding, or human review depending on the complexity of the job.',
@@ -45,6 +59,10 @@ export const blogPosts = [
     excerpt: 'Trades businesses lose opportunities when calls arrive while the team is on the tools, driving, or already handling another job.',
     category: 'Trades',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist for Trades', href: '/ai-receptionist-for-trades' },
+      { label: 'AI Receptionist for Plumbers and Electricians', href: '/Blog/ai-receptionist-for-plumbers-electricians' },
+    ],
     body: [
       'Trades businesses are built around movement. The team is on-site, driving between jobs, quoting, ordering materials, or speaking with existing customers. That makes phone coverage inconsistent, especially for smaller operators that do not have dedicated office staff.',
       'An AI receptionist can act as the first layer of response. It can answer the call, identify the job type, capture the suburb, ask whether the job is urgent, collect the caller’s details, and push the enquiry into the right follow-up path. For simple enquiries, that may be a booking request. For urgent or high-value work, that may be an immediate human alert.',
@@ -58,6 +76,10 @@ export const blogPosts = [
     excerpt: 'Virtual receptionists and AI receptionists solve similar problems, but they are not the same operational model.',
     category: 'Comparison',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'AI Phone Assistant for Small Business', href: '/ai-phone-assistant-small-business' },
+    ],
     body: [
       'A virtual receptionist is usually a human or outsourced team answering calls on behalf of your business. An AI receptionist is a software-driven system that answers calls, follows rules, captures structured information, and can trigger connected workflows. Both can improve availability, but they suit different operating models.',
       'Virtual receptionists can be useful where human judgement and nuanced conversation are essential. AI receptionists are stronger where the call flow can be structured: missed-call coverage, lead capture, appointment requests, FAQs, CRM updates, SMS follow-up, and escalation rules. The best businesses often use AI for the first response and humans for complex or high-value situations.',
@@ -71,6 +93,10 @@ export const blogPosts = [
     excerpt: 'When connected to your CRM, AI receptionists can help keep lead records cleaner and follow-up more consistent.',
     category: 'CRM Integration',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Lead Follow-Up Automation', href: '/ai-lead-follow-up-automation' },
+      { label: 'Integrations', href: '/Integrations' },
+    ],
     body: [
       'The biggest operational problem with missed calls is not only that the conversation is missed. It is that the business has no clean record of what happened. CRM integration fixes that by turning call activity into structured customer data.',
       'A well-configured AI receptionist can create or update a contact, summarise the enquiry, tag the lead type, record urgency, assign a next action, and push the opportunity into the correct pipeline stage. This gives the team a clear view of what needs action instead of relying on memory, sticky notes, or scattered inboxes.',
@@ -84,6 +110,10 @@ export const blogPosts = [
     excerpt: 'AI scheduling helps customers move from enquiry to appointment faster, with less back-and-forth for the team.',
     category: 'Scheduling',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Appointment Booking Assistant', href: '/ai-appointment-booking-assistant' },
+      { label: 'AI Phone Assistant for Small Business', href: '/ai-phone-assistant-small-business' },
+    ],
     body: [
       'Manual appointment scheduling creates friction. Customers ask for availability, staff check calendars, someone sends a reply, and the booking can still fall through if the timing is slow. For busy service businesses, that delay can cost real opportunities.',
       'AI scheduling can help by collecting the customer’s preferred time, service type, location, and contact details. Where calendar integration is live, it can present available slots or create a booking request. Where direct booking is not appropriate, it can still capture the required information and prepare the team to confirm quickly.',
@@ -97,6 +127,10 @@ export const blogPosts = [
     excerpt: 'AI-powered lead capture helps you collect, qualify, and follow up with every lead more consistently.',
     category: 'Lead Capture',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Lead Follow-Up Automation', href: '/ai-lead-follow-up-automation' },
+      { label: 'Missed Call Automation Australia', href: '/missed-call-automation-australia' },
+    ],
     body: [
       'Lead capture fails when a business collects partial information. A name without a number, a message without urgency, or a call note without service type all create follow-up problems. AI can improve this by asking a controlled set of questions every time.',
       'For most service businesses, the minimum useful lead record includes name, phone, email if available, service required, suburb or location, urgency, preferred time, and a short summary of what the customer wants. Once captured, that information can be sent to the CRM, the team, or a follow-up workflow.',
@@ -110,6 +144,10 @@ export const blogPosts = [
     excerpt: 'Cleaning businesses can use AI to answer enquiries faster, gather quote details, and keep follow-up organised.',
     category: 'Cleaning',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Phone Assistant for Small Business', href: '/ai-phone-assistant-small-business' },
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+    ],
     body: [
       'Cleaning companies often handle enquiries while managers are on-site, staff are moving between jobs, or the team is already dealing with operations. That makes it easy for quote requests and recurring service enquiries to sit unanswered.',
       'An AI receptionist can ask the right first questions: residential or commercial, site size, frequency, location, preferred start date, access requirements, and whether the enquiry is urgent. That gives the team a better starting point before calling back or preparing a quote.',
@@ -123,6 +161,10 @@ export const blogPosts = [
     excerpt: 'AI helps property maintenance and field-service teams triage requests, dispatch faster, and keep everyone updated.',
     category: 'Field Services',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist for Trades', href: '/ai-receptionist-for-trades' },
+      { label: 'Missed Call Automation Australia', href: '/missed-call-automation-australia' },
+    ],
     body: [
       'Property maintenance businesses deal with a mix of routine requests, urgent issues, tenant updates, and client communication. Without a structured intake process, important details get missed and urgent work can be delayed.',
       'An AI receptionist can triage incoming calls by asking what happened, where it happened, whether there is risk or damage, who needs to be contacted, and whether photos or follow-up details are required. That gives the operations team a cleaner handover.',
@@ -136,6 +178,10 @@ export const blogPosts = [
     excerpt: 'AI receptionists can improve response times, but businesses still need clear privacy, retention, and escalation rules.',
     category: 'AI Privacy',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'Secure Setup', href: '/secure-setup' },
+    ],
     body: [
       'AI systems can handle customer conversations, but that also means they may process names, phone numbers, emails, job details, addresses, payment intent, and sometimes sensitive information. Businesses should treat that data with the same care they apply to CRM, email, and call recording systems.',
       'Before launching an AI receptionist, define what data the AI can collect, what it must avoid, when it should escalate, how long records are retained, who can access transcripts, and whether customers need to be told calls may be recorded or handled by AI. These decisions should be made before the system goes live, not after a complaint.',
@@ -149,6 +195,10 @@ export const blogPosts = [
     excerpt: 'The right AI assistant should match your workflows, protect your data, and scale as your business grows.',
     category: 'AI Strategy',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'Services', href: '/Services' },
+    ],
     body: [
       'Choosing an AI assistant should start with the business process, not the technology. A good fit for one company may be weak for another if the workflow, customer expectations, or integration needs are different.',
       'Evaluate the system across six areas: what it can answer, what it can capture, what systems it connects to, when it escalates, what reporting it provides, and how easily the workflow can be changed later. Cheap tools can become expensive if they create manual cleanup for the team.',
@@ -162,6 +212,10 @@ export const blogPosts = [
     excerpt: 'Plumbers and electricians often win or lose work based on how quickly they respond to urgent enquiries.',
     category: 'Trades',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist for Trades', href: '/ai-receptionist-for-trades' },
+      { label: 'Missed Call Automation Australia', href: '/missed-call-automation-australia' },
+    ],
     body: [
       'Plumbers and electricians receive high-intent calls because customers often have a real problem now. A leaking pipe, loss of power, hot water issue, safety concern, or urgent repair request can turn into a job quickly if the business responds fast.',
       'An AI receptionist can ask whether the issue is urgent, identify the service type, capture the suburb, collect contact details, and send the enquiry to the right person. For after-hours calls, it can separate genuine urgent work from routine quote requests so the team is not overwhelmed.',
@@ -175,6 +229,10 @@ export const blogPosts = [
     excerpt: 'Use this checklist before choosing an AI receptionist provider in Australia.',
     category: 'Comparison',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'Resources', href: '/Resources' },
+    ],
     body: [
       'The phrase best AI receptionist can be misleading because the best option depends on the business. A clinic, trades business, law firm, real estate agency, and cleaning company all need different call flows. The right provider should adapt to your workflow rather than forcing every caller through the same script.',
       'Use a practical checklist: Does it answer naturally? Can it qualify leads? Can it capture structured data? Can it connect to your CRM? Can it support booking workflows? Can it send follow-up? Can it escalate urgent or sensitive enquiries? Is pricing clear? Are limits explained honestly?',
@@ -188,6 +246,10 @@ export const blogPosts = [
     excerpt: 'Small businesses do not need a complex AI stack on day one. They need reliable call answering and clean lead capture first.',
     category: 'Small Business',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Phone Assistant for Small Business', href: '/ai-phone-assistant-small-business' },
+      { label: 'AI Call Answering Guide', href: '/Blog/ai-phone-assistant-small-business-guide' },
+    ],
     body: [
       'Small businesses often overcomplicate AI adoption. The first useful step is usually not a full automation rebuild. It is making sure enquiries are answered, captured, and followed up consistently.',
       'Start with a narrow call flow: greet the caller, understand the service needed, capture contact details, identify urgency, and send the next step to the owner or team. Once that works, add CRM updates, calendar booking, SMS follow-up, and reporting.',
@@ -201,6 +263,10 @@ export const blogPosts = [
     excerpt: 'A phased rollout makes AI easier to adopt, starting with the workflows that create the clearest commercial return.',
     category: 'Implementation',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'Services', href: '/Services' },
+      { label: 'Book Strategy Call', href: '/BookStrategyCall' },
+    ],
     body: [
       'A practical AI implementation should begin with the workflows that are already costing time or leads. For most service businesses, that means missed calls, slow follow-up, manual booking, and scattered customer records.',
       'Start by documenting the current workflow. Where do enquiries come from? Who answers? What happens after hours? What information is often missing? What makes a lead urgent? Which systems need to be updated? Those answers become the foundation of the AI setup.',
@@ -214,6 +280,10 @@ export const blogPosts = [
     excerpt: 'The ROI of an AI receptionist should be measured against missed opportunities, saved admin time, and improved follow-up.',
     category: 'ROI',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'Missed Call Automation Australia', href: '/missed-call-automation-australia' },
+      { label: 'Pricing', href: '/Pricing' },
+    ],
     body: [
       'The return on an AI receptionist depends on the value of the enquiries it helps capture and the admin time it reduces. Instead of relying on broad industry claims, measure your own numbers: missed calls per week, average job value, lead-to-customer conversion rate, and time spent on manual follow-up.',
       'A simple ROI model starts with three questions. How many enquiries are currently missed or delayed? How many of those could realistically become paid work? How much staff time is spent answering repetitive calls, collecting details, booking, or updating records?',
@@ -227,6 +297,10 @@ export const blogPosts = [
     excerpt: 'Common questions about AI receptionists, including staffing impact, pricing, after-hours coverage, privacy, and integrations.',
     category: 'FAQ',
     date: '6 June 2026',
+    relatedLinks: [
+      { label: 'AI Receptionist Australia', href: '/ai-receptionist-australia' },
+      { label: 'Contact AssistantAI', href: '/Contact' },
+    ],
     body: [
       'Will an AI receptionist replace my staff? Usually no. The better role for AI is first response, lead capture, routine questions, booking support, and follow-up. Human staff should still handle complex, sensitive, or high-value conversations.',
       'Can AI handle after-hours calls? Yes, if the call flow is configured correctly. It can answer, capture details, identify urgency, and send the next step. If it does not have live calendar or dispatch access, it should be clear that it is requesting a booking or callback rather than confirming one.',
@@ -234,3 +308,5 @@ export const blogPosts = [
     ]
   }
 ];
+
+export const blogPosts = [...seoBlogPosts, ...existingBlogPosts];
