@@ -5,19 +5,20 @@ import CrispChat from './chat/CrispChat';
 import SiteAnalyticsTracker from './analytics/SiteAnalyticsTracker';
 
 const navLinks = [
-{ label: 'Home', path: '/' },
-{ label: 'Services', path: '/Services' },
-{ label: 'Industries', path: '/Industries' },
-{ label: 'Integrations', path: '/Integrations' },
-{ label: 'Pricing', path: '/Pricing' },
-{ label: 'Resources', path: '/Resources' },
-{ label: 'Case Studies', path: '/CaseStudies' },
-{ label: 'About', path: '/About' },
-{ label: 'Contact', path: '/Contact' }];
+  { label: 'Services', path: '/Services' },
+  { label: 'Industries', path: '/Industries' },
+  { label: 'Integrations', path: '/Integrations' },
+  { label: 'Pricing', path: '/Pricing' },
+  { label: 'Case Studies', path: '/CaseStudies' },
+  { label: 'Contact', path: '/Contact' },
+];
 
 const footerCompanyLinks = [
+  { label: 'Home', path: '/' },
   ...navLinks,
+  { label: 'Resources', path: '/Resources' },
   { label: 'Blog', path: '/Blog' },
+  { label: 'About', path: '/About' },
 ];
 
 const footerSolutionLinks = [
