@@ -15,6 +15,15 @@ const navLinks = [
 { label: 'About', path: '/About' },
 { label: 'Contact', path: '/Contact' }];
 
+const footerSolutionLinks = [
+  { label: 'AI Receptionist Australia', path: '/ai-receptionist-australia' },
+  { label: 'AI Phone Assistant', path: '/ai-phone-assistant-small-business' },
+  { label: 'Missed Call Automation', path: '/missed-call-automation-australia' },
+  { label: 'Lead Follow-Up Automation', path: '/ai-lead-follow-up-automation' },
+  { label: 'Appointment Booking AI', path: '/ai-appointment-booking-assistant' },
+  { label: 'AI Receptionist for Trades', path: '/ai-receptionist-for-trades' },
+];
+
 const mobileNavLinks = [
   ...navLinks,
   { label: 'Client Login', path: '/ClientLogin' }
@@ -115,7 +124,7 @@ function Footer() {
   return (
     <footer className="bg-[#070710] border-t border-white/5">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12 lg:grid-cols-5">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
               <img
@@ -145,6 +154,17 @@ function Footer() {
                   </Link>
                 )
               )}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-white font-medium text-sm mb-4">Solutions</h4>
+            <div className="space-y-2.5">
+              {footerSolutionLinks.map((link) => (
+                <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </div>
 
