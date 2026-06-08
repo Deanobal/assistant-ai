@@ -104,7 +104,7 @@ export default async function handler(req, res) {
 
     const params = new URLSearchParams();
     params.append('mode', 'subscription');
-    params.append('success_url', `${baseUrl}/ThankYou?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+    params.append('success_url', `${baseUrl}/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}`);
     params.append('cancel_url', `${baseUrl}/GetStartedNow?plan=${encodeURIComponent(config.selected_plan.toLowerCase())}&checkout=cancelled`);
     params.append('line_items[0][price]', setupPriceId);
     params.append('line_items[0][quantity]', '1');
