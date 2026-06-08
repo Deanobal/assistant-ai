@@ -16,6 +16,13 @@ function mapApiPost(post) {
   };
 }
 
+function mergePosts(staticPosts, apiPosts) {
+  const bySlug = new Map();
+  staticPosts.forEach((post) => bySlug.set(post.slug, post));
+  apiPosts.forEach((post) => bySlug.set(post.slug, post));
+  return Array.from(bySlug.values());
+}
+
 export default function Blog() {
   const [posts, setPosts] = React.useState(staticBlogPosts);
 
@@ -27,7 +34,7 @@ export default function Blog() {
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase posts');
         const apiPosts = (data.posts || data.items || []).map(mapApiPost);
-        if (active && apiPosts.length > 0) setPosts(apiPosts);
+        if (active) setPosts(mergePosts(staticBlogPosts, apiPosts));
       } catch (error) {
         console.warn('Using static blog fallback:', error?.message || error);
       }
