@@ -4,7 +4,6 @@ import { AdminEmptyState } from '@/components/admin/AdminState';
 import SeoMetricsCard from '@/components/admin/marketing/SeoMetricsCard';
 import KeywordsTable from '@/components/admin/marketing/KeywordsTable';
 import PerformanceChart from '@/components/admin/marketing/PerformanceChart';
-import CompetitorCard from '@/components/admin/marketing/CompetitorCard';
 
 const fallbackGoogleData = {
   connected: false,
@@ -24,14 +23,65 @@ const fallbackGoogleData = {
   },
 };
 
-const fallbackCompetitorData = {
-  assistantAiMetrics: { domainRating: 0 },
-  competitors: [],
-  analysis: {
-    strengths: ['AssistantAI has clear commercial positioning around missed-call prevention and AI receptionist workflows.'],
-    opportunities: ['Publish more industry pages for AI receptionist Australia, trades, clinics and service businesses.'],
-    threats: ['Competitors with older domains, case studies and backlink authority may outrank new commercial pages.'],
+const competitorWatchlist = [
+  {
+    id: 'vozi',
+    name: 'Vozi',
+    domain: 'vozi.com.au',
+    category: 'Australian AI receptionist',
+    positioning: 'Local voice, 24/7 call answering and appointment handling.',
+    attackAngle: 'Differentiate on revenue workflow depth: CRM updates, follow-up, checkout, onboarding and measurable lead conversion.',
   },
+  {
+    id: 'lana',
+    name: 'LANA Software',
+    domain: 'lanasoftware.com.au',
+    category: 'AI receptionist for service businesses',
+    positioning: 'AI receptionist, trades/service-business focus, booking and call handling.',
+    attackAngle: 'Win with stronger done-for-you implementation, clearer plan fit and faster path from enquiry to paid client.',
+  },
+  {
+    id: 'autoreception',
+    name: 'AutoReception',
+    domain: 'autoreception.com.au',
+    category: 'AI call answering',
+    positioning: 'Call answering replacement for reception/admin workflows.',
+    attackAngle: 'Position AssistantAI as a complete revenue system, not just a message-taking tool.',
+  },
+  {
+    id: 'sophiie',
+    name: 'Sophiie',
+    domain: 'sophiie.com.au',
+    category: 'AI receptionist / business phone assistant',
+    positioning: 'AI call handling with business-friendly receptionist language.',
+    attackAngle: 'Outrank with industry pages, proof assets, comparison pages and workflow automation examples.',
+  },
+  {
+    id: 'enterprise-cx',
+    name: 'Enterprise CX platforms',
+    domain: 'Genesys / AWS Connect / enterprise stacks',
+    category: 'Large contact-centre AI',
+    positioning: 'Enterprise-grade contact centre infrastructure and AI customer experience tooling.',
+    attackAngle: 'Counter with SMB speed: fixed-scope implementation, transparent pricing and service-business workflows without enterprise complexity.',
+  },
+];
+
+const competitorInsights = {
+  strengths: [
+    'AssistantAI is positioned around revenue protection, not generic AI novelty.',
+    'The site now has GA4 and Search Console visibility, so SEO decisions can be driven by live data.',
+    'Starter and Growth checkout flows create a clearer commercial path than demo-only competitors.',
+  ],
+  opportunities: [
+    'Build comparison pages for AI receptionist Australia, virtual receptionist alternatives and trades-specific use cases.',
+    'Publish proof assets showing call capture, CRM update, SMS follow-up and onboarding trigger flows.',
+    'Add backlink/provider data later through DataForSEO, SEMrush or Ahrefs to replace manual watchlist mode.',
+  ],
+  threats: [
+    'Competitors with older domains and existing backlinks may outrank new pages initially.',
+    'Australian accent and 24/7 answering are now commodity claims, so weak copy will blend into the market.',
+    'Enterprise vendors can appear more credible unless AssistantAI shows clear implementation outcomes and proof.',
+  ],
 };
 
 const rangeOptions = [
@@ -80,7 +130,6 @@ function buildSummaryTrend(searchConsole = {}) {
 
 export default function SeoDashboard() {
   const [googleData, setGoogleData] = useState(fallbackGoogleData);
-  const [competitorData] = useState(fallbackCompetitorData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState('30d');
@@ -287,31 +336,56 @@ export default function SeoDashboard() {
         <h3 className="mb-4 text-lg font-semibold text-white">Backlinks & Authority</h3>
         <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-4">
           <div><p className="mb-1 text-sm text-slate-500">CTR</p><p className="text-3xl font-bold text-white">{ctr ? `${ctr}%` : '—'}</p></div>
-          <div><p className="mb-1 text-sm text-slate-500">Domain Rating</p><p className="text-3xl font-bold text-white">0</p></div>
-          <div><p className="mb-1 text-sm text-slate-500">Backlinks</p><p className="text-3xl font-bold text-white">0</p></div>
-          <div><p className="mb-1 text-sm text-slate-500">Provider</p><p className="text-lg font-bold text-white">Not connected</p></div>
+          <div><p className="mb-1 text-sm text-slate-500">Domain Rating</p><p className="text-3xl font-bold text-white">Manual</p></div>
+          <div><p className="mb-1 text-sm text-slate-500">Competitors</p><p className="text-3xl font-bold text-white">{competitorWatchlist.length}</p></div>
+          <div><p className="mb-1 text-sm text-slate-500">Provider</p><p className="text-lg font-bold text-white">Watchlist mode</p></div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4 text-sm text-slate-400">
-          Google Analytics and Search Console are live. Backlink/domain authority data still needs a provider such as SEMrush, Ahrefs or DataForSEO before this card can show authority metrics.
+          Google Analytics and Search Console are live. Authority metrics are currently in manual watchlist mode until DataForSEO, SEMrush or Ahrefs is connected.
         </div>
       </div>
 
       <div>
-        <h3 className="mb-4 text-lg font-semibold text-white">Competitive Analysis</h3>
-        {(competitorData?.competitors || []).length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-sm text-slate-400">No competitor authority provider connected yet.</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {competitorData.competitors.map((competitor) => <CompetitorCard key={competitor.id} competitor={competitor} userMetrics={competitorData.assistantAiMetrics} />)}
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-white">Competitive Analysis</h3>
+            <p className="mt-1 text-sm text-slate-500">Manual competitor watchlist. No fake authority scores are displayed.</p>
           </div>
-        )}
+          <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-cyan-200">Watchlist mode</span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {competitorWatchlist.map((competitor) => (
+            <div key={competitor.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="mb-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-base font-bold text-white">{competitor.name}</h4>
+                    <p className="mt-1 text-xs text-slate-500">{competitor.domain}</p>
+                  </div>
+                  <span className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold text-cyan-200">{competitor.category}</span>
+                </div>
+              </div>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Positioning</p>
+                  <p className="leading-relaxed text-slate-300">{competitor.positioning}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">AssistantAI attack angle</p>
+                  <p className="leading-relaxed text-slate-300">{competitor.attackAngle}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] mt-6 p-6">
           <h4 className="mb-4 text-sm font-semibold text-white">Insights & Opportunities</h4>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div><h5 className="mb-3 text-xs font-semibold uppercase text-emerald-400">Strengths</h5><ul className="space-y-2">{(competitorData?.analysis?.strengths || []).map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
-            <div><h5 className="mb-3 text-xs font-semibold uppercase text-cyan-400">Opportunities</h5><ul className="space-y-2">{(competitorData?.analysis?.opportunities || []).map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
-            <div><h5 className="mb-3 text-xs font-semibold uppercase text-red-400">Threats</h5><ul className="space-y-2">{(competitorData?.analysis?.threats || []).map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
+            <div><h5 className="mb-3 text-xs font-semibold uppercase text-emerald-400">Strengths</h5><ul className="space-y-2">{competitorInsights.strengths.map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
+            <div><h5 className="mb-3 text-xs font-semibold uppercase text-cyan-400">Opportunities</h5><ul className="space-y-2">{competitorInsights.opportunities.map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
+            <div><h5 className="mb-3 text-xs font-semibold uppercase text-red-400">Threats</h5><ul className="space-y-2">{competitorInsights.threats.map((item, idx) => <li key={idx} className="text-sm text-slate-400">• {item}</li>)}</ul></div>
           </div>
         </div>
       </div>
