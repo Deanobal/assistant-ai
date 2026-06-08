@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import SEO from '@/components/SEO';
 import { blogPosts } from '@/lib/blogPosts';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,26 @@ function mapApiPost(post) {
     excerpt: post.excerpt,
     category: post.category,
     date: post.published_at ? new Date(post.published_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Recently published',
-    body: Array.isArray(post.body) ? post.body : []
+    body: Array.isArray(post.body) ? post.body : [],
+    relatedLinks: Array.isArray(post.related_links) ? post.related_links : [],
   };
+}
+
+function RelatedLinks({ links = [] }) {
+  if (!links.length) return null;
+  return (
+    <div className="mt-12 rounded-[28px] border border-cyan-400/15 bg-cyan-400/[0.06] p-6 md:p-8">
+      <h2 className="text-2xl font-bold text-white">Related AssistantAI resources</h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        {links.map((link) => (
+          <Link key={`${link.href}-${link.label}`} to={link.href} className="group flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-white/[0.04]">
+            <span>{link.label}</span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-cyan-300 transition group-hover:translate-x-0.5" />
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function BlogPost() {
@@ -33,7 +51,7 @@ export default function BlogPost() {
         if (!response.ok) throw new Error(data?.error || 'Unable to load Supabase post');
         const posts = data.posts || data.items || [];
         const apiPost = posts?.[0] ? mapApiPost(posts[0]) : null;
-        if (active && apiPost) setPost(apiPost);
+        if (active && apiPost) setPost({ ...staticPost, ...apiPost, relatedLinks: apiPost.relatedLinks?.length ? apiPost.relatedLinks : staticPost?.relatedLinks || [] });
       } catch (error) {
         console.warn('Using static blog post fallback:', error?.message || error);
       } finally {
@@ -42,7 +60,7 @@ export default function BlogPost() {
     }
     loadPost();
     return () => { active = false; };
-  }, [slug]);
+  }, [slug, staticPost]);
 
   if (!post && !loading) {
     return (
@@ -98,6 +116,8 @@ export default function BlogPost() {
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
+
+          <RelatedLinks links={post.relatedLinks || []} />
         </div>
       </article>
     </>
