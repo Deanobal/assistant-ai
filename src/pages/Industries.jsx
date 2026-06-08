@@ -64,9 +64,6 @@ const industries = [
 ];
 
 export default function Industries() {
-  const topIndustries = industries.slice(0, 4);
-  const bottomIndustries = industries.slice(4);
-
   return (
     <>
       <SEO
@@ -75,121 +72,77 @@ export default function Industries() {
         canonicalPath="/Industries"
       />
       <div>
-      <section className="relative py-24 md:py-32 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-20"
-          >
-            <p className="text-cyan-400 text-sm font-medium mb-3">INDUSTRIES</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              AI Assistant and AI Receptionist Workflows for <span className="text-gradient">Australian Service Industries</span>
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              See how AssistantAI can be tailored for cleaning, trades, property, and other service-based businesses that need better lead capture, job booking, CRM integration, and service business automation.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {topIndustries.map((ind, i) => (
-              <motion.div
-                key={ind.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="p-8 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-                    <ind.icon className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white">{ind.name}</h2>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">Challenge</p>
-                    <p className="text-gray-400 text-sm leading-relaxed">{ind.problem}</p>
-                  </div>
-                  <div>
-                    <p className="text-cyan-400/70 text-xs font-medium uppercase tracking-wider mb-1">How AI Helps</p>
-                    <p className="text-gray-300 text-sm leading-relaxed">{ind.solution}</p>
-                  </div>
-                  <div className="pt-4 border-t border-white/5">
-                    <p className="text-cyan-400 text-sm font-medium">{ind.fit}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mb-12 text-center p-8 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
-            <h3 className="text-2xl font-bold text-white mb-3">See how AssistantAI.com.au would work in your business.</h3>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Book a strategy call and we’ll map the right workflow for your industry, team, and enquiry process.
-            </p>
-            <Link
-              to="/Contact"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
+        <section className="relative py-24 md:py-32 bg-grid">
+          <div className="bg-radial-glow absolute inset-0" />
+          <div className="relative max-w-7xl mx-auto px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-20"
             >
-              Book Strategy Call
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+              <p className="text-cyan-400 text-sm font-medium mb-3">INDUSTRIES</p>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                AI Assistant and AI Receptionist Workflows for <span className="text-gradient">Australian Service Industries</span>
+              </h1>
+              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
+                See how AssistantAI can be tailored for cleaning, trades, property, and other service-based businesses that need better lead capture, job booking, CRM integration, and service business automation.
+              </p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {bottomIndustries.map((ind, i) => (
-              <motion.div
-                key={ind.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="p-8 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-                    <ind.icon className="w-5 h-5 text-cyan-400" />
+            <div className="grid md:grid-cols-2 gap-6">
+              {industries.map((ind, i) => (
+                <motion.div
+                  key={ind.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="p-8 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
+                      <ind.icon className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">{ind.name}</h2>
                   </div>
-                  <h2 className="text-xl font-bold text-white">{ind.name}</h2>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">Challenge</p>
-                    <p className="text-gray-400 text-sm leading-relaxed">{ind.problem}</p>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">Challenge</p>
+                      <p className="text-gray-400 text-sm leading-relaxed">{ind.problem}</p>
+                    </div>
+                    <div>
+                      <p className="text-cyan-400/70 text-xs font-medium uppercase tracking-wider mb-1">How AI Helps</p>
+                      <p className="text-gray-300 text-sm leading-relaxed">{ind.solution}</p>
+                    </div>
+                    <div className="pt-4 border-t border-white/5">
+                      <p className="text-cyan-400 text-sm font-medium">{ind.fit}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-cyan-400/70 text-xs font-medium uppercase tracking-wider mb-1">How AI Helps</p>
-                    <p className="text-gray-300 text-sm leading-relaxed">{ind.solution}</p>
-                  </div>
-                  <div className="pt-4 border-t border-white/5">
-                    <p className="text-cyan-400 text-sm font-medium">{ind.fit}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-20 text-center"
-          >
-            <p className="text-gray-400 mb-4">See how AssistantAI.com.au would work in your business.</p>
-            <Link
-              to="/Contact"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-20 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
             >
-              Book Your Free Strategy Call
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-    </div>
+              <h3 className="text-2xl font-bold text-white mb-3">See How AssistantAI Would Work in Your Business</h3>
+              <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+                Map the right workflow for your industry, team, and enquiry process.
+              </p>
+              <Link
+                to="/Contact"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
+              >
+                Book Your Free Strategy Call
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
