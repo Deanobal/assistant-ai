@@ -3,6 +3,7 @@ import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { Mic, UserCheck, CreditCard, ClipboardList, Rocket, ArrowRight } from 'lucide-react';
 import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
+import HighIntentLinks from '@/components/seo/HighIntentLinks';
 
 const services = [
   { icon: Mic, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7.', outcomes: ['Instant call answering', 'After-hours coverage', 'Clear enquiry capture', 'Human handoff when needed'] },
@@ -52,6 +53,7 @@ export default function Services() {
             </div>
           </div>
         </section>
+        <HighIntentLinks />
       </div>
     </>
   );
