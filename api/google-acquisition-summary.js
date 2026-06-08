@@ -40,6 +40,26 @@ function getRequiredConfig() {
   };
 }
 
+function getSearchConsoleCandidates(siteUrl) {
+  const candidates = new Set([siteUrl]);
+  try {
+    if (siteUrl && siteUrl.startsWith('http')) {
+      const host = new URL(siteUrl).hostname.replace(/^www\./, '');
+      if (host) candidates.add(`sc-domain:${host}`);
+    }
+    if (siteUrl && siteUrl.startsWith('sc-domain:')) {
+      const domain = siteUrl.replace('sc-domain:', '').trim();
+      if (domain) {
+        candidates.add(`https://${domain}/`);
+        candidates.add(`https://www.${domain}/`);
+      }
+    }
+  } catch (_error) {
+    return Array.from(candidates).filter(Boolean);
+  }
+  return Array.from(candidates).filter(Boolean);
+}
+
 async function getServiceAccountAccessToken(scopes) {
   const { clientEmail, privateKey } = getRequiredConfig();
   if (!clientEmail || !privateKey) throw new Error('Google service account credentials are not configured');
@@ -148,24 +168,34 @@ function mapGscRows(rows, keyName) {
   return rows.map((row) => ({ [keyName]: row.keys?.[0] || 'Unknown', clicks: row.clicks || 0, impressions: row.impressions || 0, ctr: Math.round((row.ctr || 0) * 1000) / 10, position: Math.round((row.position || 0) * 10) / 10 }));
 }
 
+async function runSearchConsoleForSite({ accessToken, siteUrl, range }) {
+  const [queries, pages, countries, devices] = await Promise.all([
+    querySearchConsole({ accessToken, siteUrl, range, dimensions: ['query'], rowLimit: 25 }),
+    querySearchConsole({ accessToken, siteUrl, range, dimensions: ['page'], rowLimit: 25 }),
+    querySearchConsole({ accessToken, siteUrl, range, dimensions: ['country'], rowLimit: 15 }),
+    querySearchConsole({ accessToken, siteUrl, range, dimensions: ['device'], rowLimit: 10 }),
+  ]);
+  const queryRows = mapGscRows(queries, 'query');
+  const totals = queryRows.reduce((acc, row) => ({ clicks: acc.clicks + row.clicks, impressions: acc.impressions + row.impressions, ctr: 0, avg_position_sum: acc.avg_position_sum + row.position }), { clicks: 0, impressions: 0, ctr: 0, avg_position_sum: 0 });
+  totals.ctr = totals.impressions ? Math.round((totals.clicks / totals.impressions) * 1000) / 10 : 0;
+  totals.avg_position = queryRows.length ? Math.round((totals.avg_position_sum / queryRows.length) * 10) / 10 : 0;
+  delete totals.avg_position_sum;
+  return { ready: true, error: '', property_used: siteUrl, attempted_properties: [], totals, queries: queryRows, pages: mapGscRows(pages, 'page'), countries: mapGscRows(countries, 'country'), devices: mapGscRows(devices, 'device') };
+}
+
 async function runSearchConsole({ accessToken, siteUrl, range }) {
-  if (!siteUrl) return { ready: false, error: 'GSC_SITE_URL is not configured', totals: {}, queries: [], pages: [] };
-  try {
-    const [queries, pages, countries, devices] = await Promise.all([
-      querySearchConsole({ accessToken, siteUrl, range, dimensions: ['query'], rowLimit: 25 }),
-      querySearchConsole({ accessToken, siteUrl, range, dimensions: ['page'], rowLimit: 25 }),
-      querySearchConsole({ accessToken, siteUrl, range, dimensions: ['country'], rowLimit: 15 }),
-      querySearchConsole({ accessToken, siteUrl, range, dimensions: ['device'], rowLimit: 10 }),
-    ]);
-    const queryRows = mapGscRows(queries, 'query');
-    const totals = queryRows.reduce((acc, row) => ({ clicks: acc.clicks + row.clicks, impressions: acc.impressions + row.impressions, ctr: 0, avg_position_sum: acc.avg_position_sum + row.position }), { clicks: 0, impressions: 0, ctr: 0, avg_position_sum: 0 });
-    totals.ctr = totals.impressions ? Math.round((totals.clicks / totals.impressions) * 1000) / 10 : 0;
-    totals.avg_position = queryRows.length ? Math.round((totals.avg_position_sum / queryRows.length) * 10) / 10 : 0;
-    delete totals.avg_position_sum;
-    return { ready: true, error: '', totals, queries: queryRows, pages: mapGscRows(pages, 'page'), countries: mapGscRows(countries, 'country'), devices: mapGscRows(devices, 'device') };
-  } catch (error) {
-    return { ready: false, error: error.message, totals: {}, queries: [], pages: [], countries: [], devices: [] };
+  if (!siteUrl) return { ready: false, error: 'GSC_SITE_URL is not configured', property_used: '', attempted_properties: [], totals: {}, queries: [], pages: [] };
+  const candidates = getSearchConsoleCandidates(siteUrl);
+  const errors = [];
+  for (const candidate of candidates) {
+    try {
+      const result = await runSearchConsoleForSite({ accessToken, siteUrl: candidate, range });
+      return { ...result, attempted_properties: candidates };
+    } catch (error) {
+      errors.push(`${candidate}: ${error.message}`);
+    }
   }
+  return { ready: false, error: errors.join(' | '), property_used: '', attempted_properties: candidates, totals: {}, queries: [], pages: [], countries: [], devices: [] };
 }
 
 export default async function handler(req, res) {
