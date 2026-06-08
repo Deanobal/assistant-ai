@@ -7,6 +7,7 @@ import SiteAnalyticsTracker from './analytics/SiteAnalyticsTracker';
 const navLinks = [
 { label: 'Home', path: '/' },
 { label: 'Services', path: '/Services' },
+{ label: 'Industries', path: '/Industries' },
 { label: 'Integrations', path: '/Integrations' },
 { label: 'Pricing', path: '/Pricing' },
 { label: 'Blog', path: '/Blog' },
