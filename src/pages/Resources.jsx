@@ -1,6 +1,7 @@
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, ClipboardCheck, Gauge, Link as LinkIcon, PhoneCall, Workflow } from 'lucide-react';
+import HighIntentLinks from '@/components/seo/HighIntentLinks';
 
 const resources = [
   {
@@ -96,8 +97,14 @@ export default function Resources() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="mt-16 grid gap-6 lg:grid-cols-2">
+      <HighIntentLinks />
+
+      <section className="relative overflow-hidden bg-[#070912] pb-24 md:pb-28">
+        <div className="relative mx-auto max-w-7xl px-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-[28px] border border-white/8 bg-[#10131f] p-7 md:p-8">
               <div className="mb-5 flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/10">
