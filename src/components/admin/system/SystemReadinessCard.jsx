@@ -38,7 +38,7 @@ export default function SystemReadinessCard({ item }) {
 
           <div>
             <p className="text-gray-500 mb-1">Next Required Action</p>
-            <p className="text-cyan-300 leading-relaxed">{item.nextAction}</p>
+            <p className={`${item.status === 'action needed' ? 'text-amber-300' : 'text-cyan-300'} leading-relaxed`}>{item.nextAction}</p>
           </div>
         </div>
       </CardContent>
