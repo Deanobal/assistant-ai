@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, BarChart3, Globe2, MousePointerClick, Radio, Search, Smartphone, TrendingUp, Users, RefreshCw, Target, MapPin, Monitor, Zap } from 'lucide-react';
+import { Activity, BarChart3, ClipboardCheck, CreditCard, Globe2, MapPin, MessageSquareText, Monitor, MousePointerClick, PhoneCall, Radio, RefreshCw, Search, Smartphone, Target, TrendingUp, Users, Zap } from 'lucide-react';
 import GoogleAcquisitionPanel from '@/components/analytics/GoogleAcquisitionPanel';
 
 const ranges = [
@@ -61,7 +61,7 @@ function MetricCard({ title, value, subtitle, icon: Icon, delta, tone = 'slate' 
   );
 }
 
-function BarList({ title, rows, emptyText = 'No data yet.', icon: Icon }) {
+function BarList({ title, rows, emptyText = 'No data yet.', icon: Icon, valueRenderer }) {
   const max = Math.max(...(rows || []).map((row) => row.count), 1);
   return (
     <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -71,10 +71,10 @@ function BarList({ title, rows, emptyText = 'No data yet.', icon: Icon }) {
       </div>
       <div className="mt-5 space-y-3">
         {rows?.length ? rows.map((row) => (
-          <div key={row.name}>
+          <div key={`${row.name}-${row.page || ''}`}>
             <div className="mb-1 flex items-center justify-between gap-3 text-sm">
               <span className="truncate font-medium text-slate-700">{row.name}</span>
-              <span className="font-bold text-slate-950">{formatNumber(row.count)}</span>
+              <span className="font-bold text-slate-950">{valueRenderer ? valueRenderer(row) : formatNumber(row.count)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-slate-900" style={{ width: `${Math.max(6, (row.count / max) * 100)}%` }} />
@@ -86,8 +86,8 @@ function BarList({ title, rows, emptyText = 'No data yet.', icon: Icon }) {
   );
 }
 
-function TimeChart({ title, subtitle, series, secondarySeries }) {
-  const max = Math.max(...(series || []).map((item) => item.count), ...(secondarySeries || []).map((item) => item.count), 1);
+function TimeChart({ title, subtitle, series, secondarySeries, thirdSeries }) {
+  const max = Math.max(...(series || []).map((item) => item.count), ...(secondarySeries || []).map((item) => item.count), ...(thirdSeries || []).map((item) => item.count), 1);
   return (
     <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2">
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -100,14 +100,16 @@ function TimeChart({ title, subtitle, series, secondarySeries }) {
       <div className="flex h-48 items-end gap-1.5 overflow-hidden rounded-2xl bg-slate-50 p-4">
         {(series || []).map((item, index) => (
           <div key={item.time} className="flex flex-1 flex-col items-center justify-end gap-1">
+            {thirdSeries?.[index] && <div className="w-full rounded-t-lg bg-emerald-400" style={{ height: `${Math.max(2, (thirdSeries[index].count / max) * 44)}px` }} title={`${thirdSeries[index].count} conversion intents`} />}
             {secondarySeries?.[index] && <div className="w-full rounded-t-lg bg-slate-300" style={{ height: `${Math.max(2, (secondarySeries[index].count / max) * 50)}px` }} title={`${secondarySeries[index].count} clicks`} />}
             <div className="w-full rounded-t-lg bg-slate-900" style={{ height: `${Math.max(4, (item.count / max) * 132)}px` }} title={`${item.count} views`} />
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-900" /> Page views</span>
         <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-300" /> Clicks</span>
+        {thirdSeries && <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Conversion intents</span>}
       </div>
     </div>
   );
@@ -169,6 +171,33 @@ function RecentEvents({ events }) {
   );
 }
 
+function RecentConversions({ events }) {
+  return (
+    <div className="rounded-[28px] border border-emerald-200 bg-white p-5 shadow-sm xl:col-span-2">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-slate-950">Recent conversion intent</h3>
+          <p className="text-sm text-slate-500">Demo, signup, pricing, contact, strategy call, and form events</p>
+        </div>
+        <ClipboardCheck className="h-5 w-5 text-emerald-600" />
+      </div>
+      <div className="space-y-3">
+        {events?.length ? events.slice(0, 12).map((event) => (
+          <div key={`${event.created_at}-${event.event_type}-${event.page_path}-${event.label}`} className="rounded-2xl border border-slate-200 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-slate-950">{event.label}</p>
+                <p className="mt-1 text-xs text-slate-500">{event.event_type} · {event.intent || 'intent'} · {event.page_path}</p>
+              </div>
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{timeAgo(event.created_at)}</span>
+            </div>
+          </div>
+        )) : <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Conversion intent events will appear after visitors click key CTAs or submit forms.</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsDashboard() {
   const [range, setRange] = useState('24h');
   const [manualRefreshes, setManualRefreshes] = useState(0);
@@ -203,7 +232,7 @@ export default function AnalyticsDashboard() {
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-sky-700">Live Analytics</p>
             <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">Store-style site intelligence</h1>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">Shopify-style reporting for live visitors, sessions, page views, CTA clicks, sources, devices, leads, calls, and conversion movement.</p>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">Shopify-style reporting for live visitors, sessions, page views, CTA clicks, conversion intent, sources, devices, leads, calls, and revenue movement.</p>
             <p className="mt-2 text-sm text-slate-500">Last updated {timeAgo(data?.generated_at)} · Auto-refresh every 30 seconds</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -228,18 +257,27 @@ export default function AnalyticsDashboard() {
         <MetricCard title={`Visitors · ${selectedRange}`} value={formatNumber(metrics.visitors)} subtitle={`${formatNumber(metrics.sessions)} sessions`} icon={Users} tone="blue" delta={metrics.deltas?.visitors} />
         <MetricCard title="Page views" value={formatNumber(metrics.page_views)} subtitle={`${metrics.avg_pages_per_session || 0} pages per session`} icon={MousePointerClick} delta={metrics.deltas?.page_views} />
         <MetricCard title="Conversion rate" value={percent(metrics.conversion_rate)} subtitle={conversionSubtitle} icon={TrendingUp} tone="green" delta={metrics.deltas?.conversion_rate} />
+        <MetricCard title="Conversion intents" value={formatNumber(metrics.conversion_events)} subtitle={`${percent(metrics.intent_rate)} visitor/session intent rate`} icon={ClipboardCheck} tone="green" delta={metrics.deltas?.conversion_events} />
+        <MetricCard title="Demo intents" value={formatNumber(metrics.demo_intents)} subtitle="Talk to AI receptionist clicks" icon={PhoneCall} tone="purple" />
+        <MetricCard title="Pricing intents" value={formatNumber(metrics.pricing_intents)} subtitle="Pricing and plan clicks" icon={CreditCard} tone="amber" />
+        <MetricCard title="Strategy/contact" value={formatNumber((metrics.strategy_call_intents || 0) + (metrics.contact_intents || 0))} subtitle="High-intent sales enquiries" icon={MessageSquareText} tone="blue" />
         <MetricCard title="CTA clicks" value={formatNumber(metrics.clicks)} subtitle={`${formatNumber(metrics.form_submits)} form submits`} icon={Zap} tone="purple" delta={metrics.deltas?.clicks} />
-        <MetricCard title="Checkout starts" value={formatNumber(metrics.checkout_starts)} subtitle="Visits/clicks to Get Started" icon={Target} tone="amber" />
-        <MetricCard title="Leads" value={formatNumber(metrics.leads)} subtitle="Captured lead records" icon={Search} tone="amber" delta={metrics.deltas?.leads} />
+        <MetricCard title="Checkout starts" value={formatNumber(metrics.checkout_starts)} subtitle="Visits/clicks to Get Started" icon={Target} tone="amber" delta={metrics.deltas?.checkout_starts} />
+        <MetricCard title="Leads" value={formatNumber(metrics.leads)} subtitle={`${percent(metrics.lead_capture_rate)} intent-to-lead capture`} icon={Search} tone="amber" delta={metrics.deltas?.leads} />
         <MetricCard title="Calls" value={formatNumber(metrics.calls)} subtitle="Call records ingested" icon={Activity} delta={metrics.deltas?.calls} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <TimeChart title="Sessions and engagement" subtitle={`Page views and clicks · ${selectedRange}`} series={series.page_views || []} secondarySeries={series.clicks || []} />
+        <TimeChart title="Sessions and engagement" subtitle={`Page views, clicks, and conversion intent · ${selectedRange}`} series={series.page_views || []} secondarySeries={series.clicks || []} thirdSeries={series.conversion_events || []} />
         <FunnelCard rows={funnel} />
+        <BarList title="Conversion intent by type" rows={breakdowns.conversion_intents || []} emptyText="Conversion events will appear after key CTA clicks and form submits." icon={ClipboardCheck} />
+        <BarList title="Converting pages" rows={breakdowns.conversion_pages || []} emptyText="Pages with conversion intent or leads will appear here." icon={Target} valueRenderer={(row) => `${formatNumber(row.count)} · ${percent(row.conversion_rate)}`} />
+        <BarList title="Recent lead pages" rows={breakdowns.lead_pages || []} emptyText="Lead source pages will appear after leads are captured." icon={Search} />
+        <BarList title="Selected plans" rows={breakdowns.selected_plans || []} emptyText="Selected plan data will appear after signup or checkout events." icon={CreditCard} />
         <BarList title="Live pages right now" rows={breakdowns.live_pages || []} emptyText="No active pages in the last 30 minutes." icon={Radio} />
         <BarList title="Top pages" rows={breakdowns.top_pages || []} icon={MousePointerClick} />
         <BarList title="Top CTA labels" rows={breakdowns.cta_labels || []} emptyText="CTA clicks will appear after users click buttons or links." icon={Zap} />
+        <BarList title="Top conversion labels" rows={breakdowns.conversion_labels || []} emptyText="Key CTA labels will appear after conversion-intent clicks." icon={ClipboardCheck} />
         <BarList title="Traffic sources" rows={(breakdowns.sources?.length ? breakdowns.sources : breakdowns.referrers) || []} icon={Globe2} />
         <BarList title="Campaigns" rows={breakdowns.campaigns || []} emptyText="UTM campaign data will appear after campaign traffic arrives." icon={TrendingUp} />
         <BarList title="Devices" rows={breakdowns.devices || []} icon={Smartphone} />
@@ -248,13 +286,14 @@ export default function AnalyticsDashboard() {
         <BarList title="Countries" rows={breakdowns.countries || []} icon={MapPin} />
         <BarList title="Cities" rows={breakdowns.cities || []} icon={MapPin} />
         <BarList title="Event types" rows={breakdowns.event_types || []} icon={Activity} />
+        <RecentConversions events={recent.conversion_events || []} />
         <RecentEvents events={recent.events || []} />
       </section>
 
       <GoogleAcquisitionPanel range={range} />
 
       <section className="rounded-[28px] border border-sky-200 bg-sky-50 p-5 text-sm leading-7 text-sky-900">
-        <strong>Analytics stack:</strong> first-party AssistantAI tracking shows live operational behaviour. GA4 and Search Console add external acquisition and organic search data once the Google service account and property IDs are configured.
+        <strong>Analytics stack:</strong> first-party AssistantAI tracking shows live operational behaviour and conversion intent. GA4 and Search Console add external acquisition and organic search data once the Google OAuth credentials and property IDs are configured.
       </section>
     </div>
   );
