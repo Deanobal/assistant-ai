@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 
 const statusStyles = {
   live: 'bg-green-500/10 text-green-400 border-green-500/20',
-  partial: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  ready: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
+  'action needed': 'bg-amber-500/10 text-amber-300 border-amber-500/20',
   'not connected': 'bg-white/5 text-gray-300 border-white/10',
 };
 
@@ -17,7 +18,7 @@ export default function SystemReadinessCard({ item }) {
             <h3 className="text-white font-semibold text-lg">{item.title}</h3>
             <p className="text-sm text-gray-500 mt-1">Last updated: {item.lastUpdated}</p>
           </div>
-          <Badge className={statusStyles[item.status]}>{item.status}</Badge>
+          <Badge className={statusStyles[item.status] || statusStyles['not connected']}>{item.status}</Badge>
         </div>
 
         <div className="space-y-3 text-sm">
