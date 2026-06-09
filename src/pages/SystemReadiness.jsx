@@ -2,132 +2,194 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import SystemReadinessCard from '@/components/admin/system/SystemReadinessCard';
 
-const baseReadinessItems = [
-  {
-    title: 'Lead Capture',
-    status: 'live',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['Lead entity', 'shared lead capture helper', 'public enquiry forms'],
-    notes: 'Public enquiry and strategy call forms save real Lead records, deduplicate by email/mobile, and append enquiry history.',
-    nextAction: 'Monitor live submissions and add provider-side alerts if desired.',
-  },
-  {
-    title: 'Booking Flow',
-    status: 'partial',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['Lead capture flow', 'booking page', 'external booking URL'],
-    notes: 'Booking requests save real lead intent and can hand off to a live booking URL, but the external calendar link is not connected yet.',
-    nextAction: 'Add the real live booking URL in the booking config.',
-  },
-  {
-    title: 'Authentication',
-    status: 'live',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['Base44 auth', 'User role field'],
-    notes: 'Client and admin access use real Base44 authentication rather than public demo gating.',
-    nextAction: 'Keep assigning approved users through Team Access.',
-  },
-  {
-    title: 'Client Portal Protection',
-    status: 'live',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['User.client_account_id', 'entity RLS', 'ClientPortal access checks'],
-    notes: 'Client users are blocked unless authenticated and linked to a client account, and portal entity reads are scoped to their own business records.',
-    nextAction: 'Keep user-to-client links accurate when inviting portal users.',
-  },
-  {
-    title: 'Onboarding Workflow',
-    status: 'live',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['Onboarding entity', 'won lead automation', 'intake workflow'],
-    notes: 'Won leads can move into onboarding automatically, intake data is saved, and admin/client access is linked to the correct onboarding record.',
-    nextAction: 'Optionally add automated reminders for incomplete intake forms.',
-  },
-  {
-    title: 'Billing',
-    status: 'partial',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['BillingRecord entity', 'client billing UI', 'future Stripe wiring'],
-    notes: 'Billing records, setup fee fields, monthly fee fields, and visibility are real, but Stripe charging, subscriptions, and webhooks are not connected yet.',
-    nextAction: 'Connect Stripe live customer/subscription flows and webhook updates.',
-  },
-  {
-    title: 'Integrations',
-    status: 'partial',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['IntegrationConnection entity', 'portal/admin integrations UI'],
-    notes: 'Integration state is stored for real, but provider connections are still request-driven rather than live OAuth/API-connected.',
-    nextAction: 'Connect Google Calendar, Twilio, Stripe, and GoHighLevel in that order.',
-  },
-  {
-    title: 'Notifications',
-    status: 'partial',
-    lastUpdated: '6 Jun 2026',
-    dependencies: ['notification_logs table', '/api/notifications-send', 'Resend email', 'Twilio SMS'],
-    notes: 'Business events can be sent through /api/notifications-send. The route requires Supabase notification logging first, then uses Resend email and Twilio SMS when providers are configured.',
-    nextAction: 'Confirm VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are present in Vercel so notification logs can be stored before outbound provider delivery.',
-  },
-  {
-    title: 'Analytics Data',
-    status: 'partial',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['Lead entity', 'CallRecord entity', 'live analytics queries'],
-    notes: 'Protected analytics now read from real Lead and CallRecord data when present, and show empty states when not; the public preview still uses labeled sample data.',
-    nextAction: 'Ensure live CallRecord ingestion is connected for real portal analytics.',
-  },
-  {
-    title: 'Empty State / Sample State Audit',
-    status: 'live',
-    lastUpdated: '20 Mar 2026',
-    dependencies: ['portal empty states', 'public preview labels', 'proof guardrails'],
-    notes: 'Protected areas now avoid fake live numbers when data is missing, and public preview areas are labeled clearly as sample/demo content.',
-    nextAction: 'Continue reviewing new pages so proof and preview language stays honest.',
-  },
-];
+function providerState(group) {
+  if (!group) return 'not connected';
+  return group.ready ? 'ready' : 'action needed';
+}
 
-function buildNotificationItem(baseItem, configStatus) {
-  const providers = configStatus?.status?.notifications?.providers;
-  if (!providers) return baseItem;
+function missingList(group) {
+  const missing = group?.missing || [];
+  const invalid = group?.invalid || [];
+  const issues = [...missing, ...invalid.map((item) => `${item} invalid`)];
+  return issues.length ? issues.join(', ') : 'none';
+}
 
-  const inAppReady = providers.in_app === 'ready';
-  const emailReady = providers.email === 'ready';
-  const smsReady = providers.sms === 'ready';
-  const outboundReady = emailReady || smsReady;
-  const status = inAppReady && outboundReady ? 'live' : 'partial';
+function buildReadinessItems(configStatus) {
+  const status = configStatus?.status || {};
+  const supabaseReady = Boolean(status.supabase?.ready);
+  const stripeReady = Boolean(status.stripe?.ready);
+  const vapiReady = Boolean(status.vapi?.ready || status.vapi_public?.ready);
+  const ghlReady = Boolean(status.ghl?.ready);
+  const emailReady = Boolean(status.email?.ready);
+  const smsReady = Boolean(status.sms?.ready);
+  const notificationsReady = Boolean(status.notifications?.ready || (supabaseReady && (emailReady || smsReady)));
+  const googleReady = Boolean(status.google_acquisition?.ready || status.google_oauth?.ready || status.google_service_account?.ready);
+  const adminAiReady = Boolean(status.admin_ai?.ready || status.admin_ai_groq?.ready || status.admin_ai_openai?.ready);
+  const crispReady = Boolean(status.crisp?.ready);
 
-  let notes = '';
-  let nextAction = '';
-
-  if (!inAppReady) {
-    notes = `Outbound provider variables are detected (${emailReady ? 'Resend email ready' : 'email not configured'}; ${smsReady ? 'Twilio SMS ready' : 'SMS not configured'}), but notification logging is not configured. /api/notifications-send requires Supabase logging before it can complete delivery.`;
-    nextAction = 'Add or fix VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel, then redeploy and retest /api/config-status.';
-  } else if (outboundReady) {
-    notes = `Notification logging is live. ${emailReady ? 'Resend email delivery is configured. ' : 'Email is not configured. '}${smsReady ? 'Twilio SMS delivery is configured.' : 'SMS remains stored-only until Twilio values are added.'}`;
-    nextAction = smsReady && emailReady
-      ? 'Monitor delivery logs and provider failure rates after live events fire.'
-      : emailReady
-        ? 'Email is ready. Add SMS only after phone/SMS provider verification is complete.'
-        : 'SMS is ready. Add Resend for email delivery if admin email notifications are required.';
-  } else {
-    notes = 'Notification logging is live, but outbound email/SMS providers are not fully configured yet. Events will still be stored for admin tracking.';
-    nextAction = 'Add RESEND_API_KEY, RESEND_FROM_EMAIL, and ADMIN_NOTIFICATION_EMAIL in Vercel to activate live email notifications.';
-  }
-
-  return {
-    ...baseItem,
-    status,
-    dependencies: [
-      `In-app log: ${inAppReady ? 'ready' : 'not configured'}`,
-      `Email provider: ${emailReady ? 'Resend ready' : 'not configured'}`,
-      `SMS provider: ${smsReady ? 'Twilio ready' : 'not configured'}`,
-    ],
-    notes,
-    nextAction,
-  };
+  return [
+    {
+      title: 'Lead Capture',
+      status: supabaseReady ? 'live' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: [
+        `Supabase operational database: ${supabaseReady ? 'ready' : 'needs configuration'}`,
+        'Lead-first capture model',
+        'Public forms, demo flows, and CRM handoff records',
+      ],
+      notes: supabaseReady
+        ? 'Lead capture is connected to the production data layer. Public enquiry, demo, contact, and signup flows can store real lead records instead of using demo-only state.'
+        : `Lead capture requires the Supabase environment to be valid. Open items: ${missingList(status.supabase)}.`,
+      nextAction: supabaseReady
+        ? 'Monitor new submissions and confirm source_page values are being captured cleanly.'
+        : 'Fix Supabase configuration in Vercel, redeploy, then retest Contact, Get Started, and demo capture.',
+    },
+    {
+      title: 'Strategy Call / Booking Flow',
+      status: supabaseReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Lead capture', 'BookStrategyCall page', 'honest request-only fallback', 'optional external booking URL'],
+      notes: supabaseReady
+        ? 'The strategy call path is safe in request-only mode: it captures the lead and booking intent without pretending a calendar slot is confirmed. A live calendar widget can be added later.'
+        : 'The booking page should not be treated as ready until lead capture is configured, because the request needs somewhere reliable to save.',
+      nextAction: supabaseReady
+        ? 'Add a live calendar/booking URL when available. Until then, keep the request-only wording clear and honest.'
+        : 'Restore lead capture first, then retest the strategy call form.',
+    },
+    {
+      title: 'Authentication',
+      status: 'live',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Admin login gate', 'client portal shell', 'protected admin routes'],
+      notes: 'Admin and client areas are separated from the public marketing site. Public visitors should not be able to trigger admin-only actions.',
+      nextAction: 'Keep improving server-side session hardening, but do not block launch on cosmetic auth polish.',
+    },
+    {
+      title: 'Client Portal Protection',
+      status: 'ready',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['ClientPortal route', 'ClientLogin route', 'client record linking fallback'],
+      notes: 'The portal now opens cleanly without dead-ending users. If a live client record is not linked yet, the portal presents a safe provisional shell rather than a broken state.',
+      nextAction: 'Finish live client record linking so the portal shows real billing, onboarding, and support data for paying clients.',
+    },
+    {
+      title: 'Onboarding Workflow',
+      status: supabaseReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Client', 'OnboardingTask', 'IntakeForm', 'BillingStatus', 'IntegrationStatus', 'ClientNote'],
+      notes: supabaseReady
+        ? 'The readiness model now reflects the canonical onboarding architecture: Client is the source of truth, with tasks, intake, billing, integrations, and notes as supporting records. No separate Onboarding entity should be treated as the operational source of truth.'
+        : 'The onboarding workflow depends on Supabase. It cannot be verified as operational until the database configuration is valid.',
+      nextAction: supabaseReady
+        ? 'Run one manual Won Lead → Client → tasks/intake/billing/integration creation test after each major deployment.'
+        : 'Restore Supabase access and rerun onboarding creation tests.',
+    },
+    {
+      title: 'Billing / Stripe',
+      status: stripeReady && supabaseReady ? 'live' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: [
+        `Stripe configuration: ${providerState(status.stripe)}`,
+        `Supabase records: ${supabaseReady ? 'ready' : 'needs configuration'}`,
+        'Starter and Growth checkout flows',
+      ],
+      notes: stripeReady && supabaseReady
+        ? 'Stripe and Supabase are configured for the commercial path: lead capture, checkout creation, payment webhook verification, billing status, and onboarding record creation.'
+        : `Billing is blocked by configuration gaps. Stripe issues: ${missingList(status.stripe)}. Supabase issues: ${missingList(status.supabase)}.`,
+      nextAction: stripeReady && supabaseReady
+        ? 'Continue testing Starter and Growth checkout links after pricing or payment-page edits.'
+        : 'Complete Stripe and Supabase configuration before treating payments as production-ready.',
+    },
+    {
+      title: 'Voice Demo / Vapi',
+      status: vapiReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Vapi public key', 'Vapi assistant ID', 'browser microphone permission', 'tool-call handler'],
+      notes: vapiReady
+        ? 'The public voice demo is configured at the frontend level. It should be tested manually because browser microphone permission cannot be granted by server-side checks.'
+        : `The Vapi frontend demo needs public configuration. Open items: ${missingList(status.vapi_public || status.vapi)}.`,
+      nextAction: vapiReady
+        ? 'Run a manual browser call test for Starter, Growth, and Enterprise routing. Add webhook-secret hardening if it is not already configured.'
+        : 'Add Vapi public key and assistant ID in Vercel, redeploy, then test the demo button.',
+    },
+    {
+      title: 'CRM / GoHighLevel',
+      status: ghlReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['GHL API key', 'GHL location ID', 'lead/contact sync logic'],
+      notes: ghlReady
+        ? 'GoHighLevel credentials are present for lead/contact sync and CRM follow-up workflows.'
+        : `GoHighLevel is not yet production-ready. Open items: ${missingList(status.ghl)}. This is not a launch blocker for the public site, but it is a fulfilment and follow-up blocker.`,
+      nextAction: ghlReady
+        ? 'Run a live lead push test and confirm duplicate prevention by email/phone.'
+        : 'Add GHL credentials when CRM sync becomes the next fulfilment priority.',
+    },
+    {
+      title: 'Notifications',
+      status: notificationsReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: [
+        `In-app log: ${supabaseReady ? 'ready' : 'needs Supabase'}`,
+        `Email provider: ${emailReady ? 'ready' : 'not configured'}`,
+        `SMS provider: ${smsReady ? 'ready' : 'not configured'}`,
+      ],
+      notes: notificationsReady
+        ? 'Notification logging and at least one outbound/admin path are configured. Events can be tracked without relying only on someone watching the dashboard.'
+        : 'Notifications still need either email or SMS provider configuration. Until then, events may be stored but not reliably pushed to an operator.',
+      nextAction: notificationsReady
+        ? 'Trigger a real contact/demo/signup event and confirm the alert lands in the expected admin channel.'
+        : 'Configure Resend email first. SMS can come later through the chosen provider once verification is complete.',
+    },
+    {
+      title: 'Analytics / Search Console',
+      status: googleReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['GA4 property', 'Search Console property', 'Google OAuth refresh token or service account'],
+      notes: googleReady
+        ? 'GA4 and Search Console acquisition data can be pulled into the analytics layer. Search Console should use the domain property where available.'
+        : 'Google acquisition reporting needs OAuth refresh-token or service-account credentials plus GA4 and Search Console identifiers.',
+      nextAction: googleReady
+        ? 'Monitor high-intent SEO pages for impressions, clicks, CTR, average position, and conversion intent.'
+        : 'Finish Google acquisition credentials before relying on the analytics dashboard for SEO decisions.',
+    },
+    {
+      title: 'Admin AI Copilot',
+      status: adminAiReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Groq or OpenAI provider', 'server-side admin AI route', 'safe admin action endpoint'],
+      notes: adminAiReady
+        ? 'The private admin AI layer has at least one configured model provider. It must remain admin-only and must not be exposed to public Crisp or client flows.'
+        : 'Admin AI needs either Groq or OpenAI configured server-side.',
+      nextAction: adminAiReady
+        ? 'Keep destructive, pricing, billing, legal, and publishing actions blocked unless explicitly authorised.'
+        : 'Add Groq or OpenAI server-side credentials in Vercel.',
+    },
+    {
+      title: 'Crisp Public Chat',
+      status: crispReady ? 'ready' : 'action needed',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['Crisp widget', 'Crisp webhook secret', 'public sales/support prompt'],
+      notes: crispReady
+        ? 'Crisp can be used for public sales/support chat. It must not be allowed to trigger admin actions or expose private records.'
+        : 'Crisp can still load as a chat widget, but webhook AI/lead automation needs the Crisp webhook secret configured.',
+      nextAction: crispReady
+        ? 'Run one live public chat test and verify lead capture/handoff behaviour.'
+        : 'Add CRISP_WEBHOOK_SECRET before relying on Crisp automation.',
+    },
+    {
+      title: 'Empty State / Sample State Audit',
+      status: 'live',
+      lastUpdated: '10 Jun 2026',
+      dependencies: ['portal empty states', 'public preview labels', 'proof guardrails'],
+      notes: 'Protected areas should avoid fake live numbers when data is missing. Public preview/demo areas should be clearly labelled and should not impersonate real proof.',
+      nextAction: 'Continue reviewing new admin and public pages so sample data never looks like fabricated production proof.',
+    },
+  ];
 }
 
 export default function SystemReadiness() {
   const [configStatus, setConfigStatus] = useState(null);
+  const [checkedAt, setCheckedAt] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -135,7 +197,10 @@ export default function SystemReadiness() {
       try {
         const response = await fetch('/api/config-status');
         const data = await response.json();
-        if (active && response.ok) setConfigStatus(data);
+        if (active && response.ok) {
+          setConfigStatus(data);
+          setCheckedAt(data.timestamp || new Date().toISOString());
+        }
       } catch (error) {
         console.warn('System readiness config status unavailable:', error?.message || error);
       }
@@ -144,20 +209,31 @@ export default function SystemReadiness() {
     return () => { active = false; };
   }, []);
 
-  const readinessItems = useMemo(() => baseReadinessItems.map((item) => (
-    item.title === 'Notifications' ? buildNotificationItem(item, configStatus) : item
-  )), [configStatus]);
+  const readinessItems = useMemo(() => buildReadinessItems(configStatus), [configStatus]);
+  const counts = useMemo(() => readinessItems.reduce((acc, item) => {
+    acc[item.status] = (acc[item.status] || 0) + 1;
+    return acc;
+  }, {}), [readinessItems]);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">System Readiness</Badge>
             <Badge className="bg-white/5 text-gray-300 border-white/10">Internal operational status</Badge>
+            {checkedAt && <Badge className="bg-green-500/10 text-green-300 border-green-500/20">Checked {new Date(checkedAt).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}</Badge>}
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Live vs Prepared System Status</h2>
-          <p className="text-gray-400 max-w-3xl">A single internal view of what is truly live, what is partially wired, and what still needs external provider connections before full client delivery.</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Production Readiness Status</h2>
+          <p className="text-gray-400 max-w-3xl">A clean internal view of what is live, what is ready with honest fallback behaviour, and what still needs action. Stale “partial” labels have been removed so the page is operational, not vague.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {['live', 'ready', 'action needed', 'not connected'].map((key) => (
+            <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center">
+              <p className="text-2xl font-bold text-white">{counts[key] || 0}</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-gray-500">{key}</p>
+            </div>
+          ))}
         </div>
       </div>
 
