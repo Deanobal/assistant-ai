@@ -96,13 +96,74 @@ function safeLimitForHours(hours) {
   return 50000;
 }
 
+function isConversionEvent(event) {
+  return [
+    'demo_intent',
+    'signup_intent',
+    'pricing_intent',
+    'strategy_call_intent',
+    'contact_intent',
+    'form_submit',
+  ].includes(event.event_type);
+}
+
+function isCheckoutStart(event) {
+  return event.event_type === 'signup_intent' || event.page_path?.includes('/GetStartedNow') || event.metadata?.href?.includes('/GetStartedNow');
+}
+
+function buildConversionEvents(events) {
+  const rows = events.filter(isConversionEvent);
+  return rows.map((event) => ({
+    created_at: event.created_at,
+    event_type: event.event_type,
+    page_path: event.page_path,
+    label: event.metadata?.label || event.page_title || event.page_path || 'Unknown',
+    intent: event.metadata?.intent || event.event_type,
+    stage: event.metadata?.stage || 'conversion',
+    href: event.metadata?.href || '',
+    source: event.utm_source || event.referrer || 'direct',
+    device_type: event.device_type || 'unknown',
+    city: event.city || '',
+    country: event.country || '',
+  })).slice(0, 40);
+}
+
+function buildPageConversionRows(events, leads, limit = 12) {
+  const pageViews = events.filter((event) => event.event_type === 'page_view');
+  const conversionEvents = events.filter(isConversionEvent);
+  const pages = new Map();
+
+  function ensure(page) {
+    const key = page || 'Unknown';
+    if (!pages.has(key)) pages.set(key, { page: key, views: 0, conversion_events: 0, leads: 0, conversion_rate: 0 });
+    return pages.get(key);
+  }
+
+  pageViews.forEach((event) => { ensure(event.page_path).views += 1; });
+  conversionEvents.forEach((event) => { ensure(event.page_path).conversion_events += 1; });
+  leads.forEach((lead) => { ensure(lead.source_page || 'Unknown').leads += 1; });
+
+  return Array.from(pages.values())
+    .map((row) => ({ ...row, conversion_rate: percent(row.conversion_events + row.leads, row.views || 1) }))
+    .sort((a, b) => (b.conversion_events + b.leads) - (a.conversion_events + a.leads) || b.views - a.views)
+    .slice(0, limit);
+}
+
 function buildMetrics({ events, previousEvents, liveEvents, leads, previousLeads, calls, previousCalls }) {
   const pageViews = events.filter((event) => event.event_type === 'page_view');
   const previousPageViews = previousEvents.filter((event) => event.event_type === 'page_view');
   const clicks = events.filter((event) => ['cta_click', 'nav_click', 'button_click'].includes(event.event_type));
   const previousClicks = previousEvents.filter((event) => ['cta_click', 'nav_click', 'button_click'].includes(event.event_type));
   const formSubmits = events.filter((event) => event.event_type === 'form_submit');
-  const checkoutStarts = events.filter((event) => event.page_path?.includes('/GetStartedNow') || event.metadata?.href?.includes('/GetStartedNow'));
+  const previousFormSubmits = previousEvents.filter((event) => event.event_type === 'form_submit');
+  const checkoutStarts = events.filter(isCheckoutStart);
+  const previousCheckoutStarts = previousEvents.filter(isCheckoutStart);
+  const conversionEvents = events.filter(isConversionEvent);
+  const previousConversionEvents = previousEvents.filter(isConversionEvent);
+  const demoIntents = events.filter((event) => event.event_type === 'demo_intent');
+  const pricingIntents = events.filter((event) => event.event_type === 'pricing_intent');
+  const strategyCallIntents = events.filter((event) => event.event_type === 'strategy_call_intent');
+  const contactIntents = events.filter((event) => event.event_type === 'contact_intent');
   const visitors = uniqueCount(events, 'visitor_id') || uniqueCount(events, 'session_id');
   const previousVisitors = uniqueCount(previousEvents, 'visitor_id') || uniqueCount(previousEvents, 'session_id');
   const sessions = uniqueCount(events, 'session_id');
@@ -120,7 +181,14 @@ function buildMetrics({ events, previousEvents, liveEvents, leads, previousLeads
     checkout_starts: checkoutStarts.length,
     leads: leads.length,
     calls: calls.length,
+    conversion_events: conversionEvents.length,
+    demo_intents: demoIntents.length,
+    pricing_intents: pricingIntents.length,
+    strategy_call_intents: strategyCallIntents.length,
+    contact_intents: contactIntents.length,
     conversion_rate: conversionRate,
+    intent_rate: percent(conversionEvents.length, visitors || sessions),
+    lead_capture_rate: percent(leads.length, conversionEvents.length || visitors || sessions),
     avg_pages_per_session: sessions ? Math.round((pageViews.length / sessions) * 10) / 10 : 0,
     deltas: {
       visitors: delta(visitors, previousVisitors),
@@ -130,6 +198,9 @@ function buildMetrics({ events, previousEvents, liveEvents, leads, previousLeads
       leads: delta(leads.length, previousLeads.length),
       calls: delta(calls.length, previousCalls.length),
       conversion_rate: delta(conversionRate, previousConversionRate),
+      conversion_events: delta(conversionEvents.length, previousConversionEvents.length),
+      checkout_starts: delta(checkoutStarts.length, previousCheckoutStarts.length),
+      form_submits: delta(formSubmits.length, previousFormSubmits.length),
     }
   };
 }
@@ -139,6 +210,7 @@ function buildFunnel(metrics) {
     { name: 'Visitors', count: metrics.visitors, rate: 100 },
     { name: 'Sessions', count: metrics.sessions, rate: percent(metrics.sessions, metrics.visitors) },
     { name: 'CTA clicks', count: metrics.clicks, rate: percent(metrics.clicks, metrics.sessions || metrics.visitors) },
+    { name: 'Conversion intents', count: metrics.conversion_events, rate: percent(metrics.conversion_events, metrics.sessions || metrics.visitors) },
     { name: 'Checkout starts', count: metrics.checkout_starts, rate: percent(metrics.checkout_starts, metrics.sessions || metrics.visitors) },
     { name: 'Leads captured', count: metrics.leads, rate: percent(metrics.leads, metrics.visitors || metrics.sessions) },
   ];
@@ -179,6 +251,7 @@ export default async function handler(req, res) {
     const liveEvents = events.filter((event) => new Date(event.created_at) >= new Date(liveSince));
     const pageViews = events.filter((event) => event.event_type === 'page_view');
     const clickEvents = events.filter((event) => ['cta_click', 'nav_click', 'button_click'].includes(event.event_type));
+    const conversionEvents = events.filter(isConversionEvent);
     const metrics = buildMetrics({ events, previousEvents, liveEvents, leads, previousLeads, calls, previousCalls });
     return res.status(200).json({
       success: true,
@@ -186,7 +259,7 @@ export default async function handler(req, res) {
       range: { label: selectedRange.label, key: rangeKey, hours: selectedRange.hours, bucket: selectedRange.bucket, active_minutes: 30, since: sinceCurrent, previous_since: sincePrevious },
       metrics,
       funnel: buildFunnel(metrics),
-      series: { page_views: timeSeries(pageViews, selectedRange), clicks: timeSeries(clickEvents, selectedRange) },
+      series: { page_views: timeSeries(pageViews, selectedRange), clicks: timeSeries(clickEvents, selectedRange), conversion_events: timeSeries(conversionEvents, selectedRange) },
       breakdowns: {
         live_pages: groupCount(liveEvents, 'page_path', 8),
         top_pages: groupCount(pageViews, 'page_path', 12),
@@ -200,8 +273,14 @@ export default async function handler(req, res) {
         cities: groupCount(events, 'city', 10),
         event_types: groupCount(events, 'event_type', 8),
         cta_labels: groupByMetadata(clickEvents, 'label', 10),
+        conversion_intents: groupByMetadata(conversionEvents, 'intent', 10),
+        conversion_labels: groupByMetadata(conversionEvents, 'label', 10),
+        conversion_pages: buildPageConversionRows(events, leads, 12).map((row) => ({ name: row.page, count: row.conversion_events + row.leads, ...row })),
+        lead_sources: groupCount(leads, 'lead_source', 10),
+        lead_pages: groupCount(leads, 'source_page', 10),
+        selected_plans: groupCount(leads, 'selected_plan', 6),
       },
-      recent: { events: events.slice(0, 30), leads: leads.slice(0, 12), calls: calls.slice(0, 12) }
+      recent: { events: events.slice(0, 30), conversion_events: buildConversionEvents(events), leads: leads.slice(0, 12), calls: calls.slice(0, 12) }
     });
   } catch (error) {
     return res.status(500).json({ error: 'Analytics summary failed', details: error.message });
