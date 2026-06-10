@@ -55,7 +55,13 @@ function isAdminSession(req) {
   if (!ts || !sig) return false;
   const ageMs = Date.now() - Number(ts);
   if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > 1000 * 60 * 60 * 12) return false;
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(signSession(ts)));
+  try {
+    const expected = Buffer.from(signSession(ts));
+    const actual = Buffer.from(sig);
+    return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
+  } catch (_error) {
+    return false;
+  }
 }
 
 function setAdminCookie(res) {
@@ -112,6 +118,11 @@ async function supabaseRequest(path, options = {}) {
   const data = text ? JSON.parse(text) : null;
   if (!response.ok) throw new Error(data?.message || text || response.statusText);
   return data;
+}
+
+function isMissingTableError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('could not find the table') || message.includes('schema cache') || message.includes('relation') && message.includes('does not exist');
 }
 
 function generateDraft(body) {
@@ -238,8 +249,15 @@ export default async function handler(req, res) {
     if (requiresAdmin(req, resource) && !isAdminSession(req)) return res.status(401).json({ error: 'Admin login required' });
 
     if (req.method === 'GET') {
-      const data = await supabaseRequest(buildListQuery(resource, config, req.query || {}), { method: 'GET' });
-      return res.status(200).json({ success: true, [config.list]: data });
+      try {
+        const data = await supabaseRequest(buildListQuery(resource, config, req.query || {}), { method: 'GET' });
+        return res.status(200).json({ success: true, [config.list]: data });
+      } catch (error) {
+        if (isMissingTableError(error) && !requiresAdmin(req, resource)) {
+          return res.status(200).json({ success: true, [config.list]: [], warning: `${config.table} is not migrated yet; static frontend fallback should be used.` });
+        }
+        throw error;
+      }
     }
     if (req.method === 'POST') {
       const data = await supabaseRequest(`/${config.table}`, { method: 'POST', body: JSON.stringify(normalise(resource, parseBody(req))) });
