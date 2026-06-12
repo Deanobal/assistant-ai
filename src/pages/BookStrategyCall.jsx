@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
-import { base44 } from '@/api/base44Client';
 import LeadForm from '@/components/LeadForm';
 import BookingSupportPanel from '@/components/contact/BookingSupportPanel';
 import StrategyCallAvailability from '@/components/contact/StrategyCallAvailability';
@@ -98,18 +97,24 @@ export default function BookStrategyCall() {
                   successTertiaryActionHref="/Contact"
                   successTertiaryActionLabel="Contact Our Team"
                   onSubmitted={hasGoogleCalendarLive ? async ({ lead, form }) => {
-                    const response = await base44.functions.invoke('createStrategyCallBooking', {
-                      leadId: lead.id,
-                      fullName: form.full_name,
-                      businessName: form.business_name,
-                      email: form.email,
-                      message: form.message,
-                      slotStart: selectedSlot.start,
-                      slotEnd: selectedSlot.end,
-                      timezone: 'Australia/Melbourne',
-                      calendarId: ASSISTANTAI_SALES_CALENDAR_ID,
+                    const response = await fetch('/api/strategy-call-booking', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        leadId: lead.id,
+                        fullName: form.full_name,
+                        businessName: form.business_name,
+                        email: form.email,
+                        message: form.message,
+                        slotStart: selectedSlot.start,
+                        slotEnd: selectedSlot.end,
+                        timezone: 'Australia/Melbourne',
+                        calendarId: ASSISTANTAI_SALES_CALENDAR_ID,
+                      })
                     });
-                    return response.data;
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.error || data.details || 'Strategy call booking failed');
+                    return data;
                   } : undefined}
                 />
               </motion.div>
