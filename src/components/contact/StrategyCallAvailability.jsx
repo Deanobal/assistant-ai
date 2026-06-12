@@ -22,7 +22,7 @@ function buildInternalStrategySlots() {
       start.setHours(hour, 0, 0, 0);
       const end = new Date(start);
       end.setMinutes(start.getMinutes() + 60);
-      slots.push({ start: start.toISOString(), end: end.toISOString(), source: 'internal' });
+      slots.push({ start: start.toISOString(), end: end.toISOString(), source: 'internal_request_only' });
     });
   }
 
@@ -32,7 +32,7 @@ function buildInternalStrategySlots() {
 export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, onAvailabilityStateChange }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne', provider: 'AssistantAI internal booking' });
+  const [availability, setAvailability] = useState({ slots: [], working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne', provider: 'AssistantAI internal booking request' });
 
   useEffect(() => {
     const loadAvailability = async () => {
@@ -55,10 +55,10 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           slots,
           working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time',
           timezone: 'Australia/Melbourne',
-          provider: 'AssistantAI internal booking',
+          provider: 'AssistantAI booking request mode',
         });
-        setError('');
-        onAvailabilityStateChange?.({ isLive: true, hasSlots: slots.length > 0, error: '', provider: 'AssistantAI internal booking' });
+        setError('Live Google Calendar availability could not be loaded. You can still request a preferred time and our team will confirm it.');
+        onAvailabilityStateChange?.({ isLive: false, hasSlots: slots.length > 0, error: loadError.message || 'Live calendar unavailable', provider: 'AssistantAI booking request mode' });
       } finally {
         setLoading(false);
       }
@@ -86,13 +86,34 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
             Loading available slots…
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
-            {error}
-          </div>
+          <>
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
+              {error}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {availability.slots.map((slot) => {
+                const isSelected = selectedSlot?.start === slot.start;
+                return (
+                  <Button
+                    key={slot.start}
+                    type="button"
+                    variant="outline"
+                    onClick={() => onSelectSlot(slot)}
+                    className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
+                  >
+                    <div>
+                      <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                      <div className="text-sm text-gray-400">{new Date(slot.start).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} – {new Date(slot.end).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit' })} Melbourne time</div>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+          </>
         ) : availability.slots?.length ? (
           <>
             <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3 text-sm text-cyan-100">
-              Provider: {availability.provider}. If a connected Google Calendar is unavailable, AssistantAI stores the selected slot against the lead record for team confirmation.
+              Provider: {availability.provider}. Confirmed bookings are added to the AssistantAI Google Calendar for sales@assistantai.com.au.
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               {availability.slots.map((slot) => {
