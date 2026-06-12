@@ -12,6 +12,8 @@ import {
   STRATEGY_CALL_BOOKING_MODE,
 } from '@/lib/booking';
 
+const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
+
 export default function BookStrategyCall() {
   const [calendarAvailability, setCalendarAvailability] = useState({ isLive: false, hasSlots: false, error: '' });
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -105,6 +107,7 @@ export default function BookStrategyCall() {
                       slotStart: selectedSlot.start,
                       slotEnd: selectedSlot.end,
                       timezone: 'Australia/Melbourne',
+                      calendarId: ASSISTANTAI_SALES_CALENDAR_ID,
                     });
                     return response.data;
                   } : undefined}
