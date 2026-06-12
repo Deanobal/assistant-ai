@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Loader2, CalendarClock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 
 function buildInternalStrategySlots() {
   const slots = [];
@@ -40,11 +39,13 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
       setError('');
 
       try {
-        const response = await base44.functions.invoke('getCalendarAvailability', {
-          daysAhead: 10,
-          slotMinutes: 60,
+        const response = await fetch('/api/calendar-availability', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ daysAhead: 10, slotMinutes: 60 })
         });
-        const data = response.data;
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.details || data.error || 'No live calendar slots returned');
         const slots = data.slots || [];
         if (!slots.length) throw new Error('No live calendar slots returned');
         setAvailability({ ...data, slots, working_hours: 'Monday to Friday, 9:00am–5:00pm Melbourne time', timezone: 'Australia/Melbourne', provider: data.provider || 'Google Calendar' });
