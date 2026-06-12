@@ -4,14 +4,55 @@ const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
 const TIMEZONE = 'Australia/Melbourne';
 
 function overlaps(slotStart, slotEnd, busyStart, busyEnd) {
-  return busyStart < slotEnd && busyEnd > slotStart;
+  return slotStart < busyEnd && slotEnd > busyStart;
 }
 
-function melbourneDateParts(date, dayOffset, hour, minute = 0) {
-  const local = new Date(date.toLocaleString('en-US', { timeZone: TIMEZONE }));
-  local.setDate(local.getDate() + dayOffset);
-  local.setHours(hour, minute, 0, 0);
-  return new Date(local.getTime() - (local.getTimezoneOffset() * 60 * 1000));
+function getTimeZoneOffsetMinutes(date, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone,
+    timeZoneName: 'shortOffset',
+    hour: '2-digit',
+  }).formatToParts(date);
+  const offset = parts.find((part) => part.type === 'timeZoneName')?.value || 'GMT+0';
+  const match = offset.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+  if (!match) return 0;
+  const sign = match[1] === '+' ? 1 : -1;
+  const hours = Number(match[2] || 0);
+  const minutes = Number(match[3] || 0);
+  return sign * ((hours * 60) + minutes);
+}
+
+function zonedDateTimeToUtc(year, month, day, hour, minute, timeZone) {
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
+  const offsetMinutes = getTimeZoneOffsetMinutes(utcGuess, timeZone);
+  return new Date(utcGuess.getTime() - offsetMinutes * 60 * 1000);
+}
+
+function getMelbourneDateParts(date, dayOffset) {
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const year = Number(parts.find((part) => part.type === 'year')?.value);
+  const month = Number(parts.find((part) => part.type === 'month')?.value);
+  const day = Number(parts.find((part) => part.type === 'day')?.value);
+  const localMiddayUtc = zonedDateTimeToUtc(year, month, day, 12, 0, TIMEZONE);
+  localMiddayUtc.setUTCDate(localMiddayUtc.getUTCDate() + dayOffset);
+  const shiftedParts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+  }).formatToParts(localMiddayUtc);
+  return {
+    year: Number(shiftedParts.find((part) => part.type === 'year')?.value),
+    month: Number(shiftedParts.find((part) => part.type === 'month')?.value),
+    day: Number(shiftedParts.find((part) => part.type === 'day')?.value),
+    weekday: shiftedParts.find((part) => part.type === 'weekday')?.value,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -53,13 +94,11 @@ Deno.serve(async (req) => {
     const slots = [];
 
     for (let dayOffset = 0; dayOffset < daysAhead; dayOffset += 1) {
-      const candidateDay = new Date(now);
-      candidateDay.setDate(now.getDate() + dayOffset);
-      const dayOfWeek = new Intl.DateTimeFormat('en-AU', { timeZone: TIMEZONE, weekday: 'short' }).format(candidateDay);
-      if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') continue;
+      const localDate = getMelbourneDateParts(now, dayOffset);
+      if (localDate.weekday === 'Sat' || localDate.weekday === 'Sun') continue;
 
       for (let hour = 9; hour < 17; hour += 1) {
-        const slotStart = melbourneDateParts(now, dayOffset, hour, 0);
+        const slotStart = zonedDateTimeToUtc(localDate.year, localDate.month, localDate.day, hour, 0, TIMEZONE);
         const slotEnd = new Date(slotStart.getTime() + slotMinutes * 60 * 1000);
 
         if (slotStart <= now) continue;
