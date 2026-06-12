@@ -1,5 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
+const TIMEZONE = 'Australia/Melbourne';
+
 async function notifyAdmins(base44, lead, details) {
   const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '-created_date', 100);
   const triggeredAt = new Date().toISOString();
@@ -20,6 +23,7 @@ async function notifyAdmins(base44, lead, details) {
     confirmed_meeting_time: details.confirmedTime || '',
     booking_provider: details.bookingProvider || '',
     booking_reference: details.bookingReference || '',
+    calendar_id: details.calendarId || ASSISTANTAI_SALES_CALENDAR_ID,
   };
 
   for (const admin of admins) {
@@ -72,6 +76,7 @@ async function notifyAdmins(base44, lead, details) {
           `Source page: ${baseMetadata.source_page}`,
           `Preferred time: ${[baseMetadata.preferred_meeting_date, baseMetadata.preferred_meeting_time].filter(Boolean).join(' ') || 'Not provided'}`,
           `Confirmed time: ${[baseMetadata.confirmed_meeting_date, baseMetadata.confirmed_meeting_time].filter(Boolean).join(' ') || 'Not confirmed yet'}`,
+          `Calendar: ${baseMetadata.calendar_id}`,
           `Admin link: ${baseMetadata.admin_link || 'Unavailable'}`,
         ].join('\n'),
       });
@@ -91,13 +96,15 @@ Deno.serve(async (req) => {
       message,
       slotStart,
       slotEnd,
-      timezone = 'UTC',
+      timezone = TIMEZONE,
+      calendarId = ASSISTANTAI_SALES_CALENDAR_ID,
     } = payload;
 
     if (!leadId || !fullName || !email || !slotStart || !slotEnd) {
       return Response.json({ error: 'leadId, fullName, email, slotStart, and slotEnd are required' }, { status: 400 });
     }
 
+    const targetCalendarId = calendarId || ASSISTANTAI_SALES_CALENDAR_ID;
     const leadMatches = await base44.asServiceRole.entities.Lead.filter({ id: leadId }, '-updated_date', 1);
     const lead = leadMatches[0] || null;
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
@@ -112,7 +119,7 @@ Deno.serve(async (req) => {
         timeMin: slotStart,
         timeMax: slotEnd,
         timeZone: timezone,
-        items: [{ id: 'primary' }],
+        items: [{ id: targetCalendarId }],
       }),
     });
 
@@ -123,6 +130,7 @@ Deno.serve(async (req) => {
         businessName,
         email,
         message,
+        calendarId: targetCalendarId,
         eventType: 'booking_request_failed',
         uniqueKey: `booking_request_failed:${leadId}:${slotStart}`,
         title: 'Strategy call booking request failed',
@@ -134,7 +142,7 @@ Deno.serve(async (req) => {
     }
 
     const busyData = await busyResponse.json();
-    const busyWindows = busyData.calendars?.primary?.busy || [];
+    const busyWindows = busyData.calendars?.[targetCalendarId]?.busy || [];
     if (busyWindows.length > 0) {
       await notifyAdmins(base44, lead, {
         leadId,
@@ -142,6 +150,7 @@ Deno.serve(async (req) => {
         businessName,
         email,
         message,
+        calendarId: targetCalendarId,
         eventType: 'booking_request_failed',
         uniqueKey: `booking_request_failed:${leadId}:${slotStart}`,
         title: 'Strategy call slot could not be completed',
@@ -151,7 +160,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'That slot is no longer available. Please choose another time.' }, { status: 409 });
     }
 
-    const eventResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    const eventResponse = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(targetCalendarId)}/events`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -164,6 +173,7 @@ Deno.serve(async (req) => {
           email ? `Email: ${email}` : '',
           message ? `Notes: ${message}` : '',
           `Lead ID: ${leadId}`,
+          `Calendar: ${targetCalendarId}`,
         ].filter(Boolean).join('\n'),
         start: {
           dateTime: slotStart,
@@ -173,13 +183,14 @@ Deno.serve(async (req) => {
           dateTime: slotEnd,
           timeZone: timezone,
         },
-        attendees: [{ email }],
+        attendees: [{ email }, { email: ASSISTANTAI_SALES_CALENDAR_ID }],
         reminders: {
           useDefault: true,
         },
         extendedProperties: {
           private: {
             leadId,
+            calendarId: targetCalendarId,
           },
         },
       }),
@@ -192,6 +203,7 @@ Deno.serve(async (req) => {
         businessName,
         email,
         message,
+        calendarId: targetCalendarId,
         eventType: 'booking_request_failed',
         uniqueKey: `booking_request_failed:${leadId}:${slotStart}`,
         title: 'Strategy call booking could not be created',
@@ -204,7 +216,7 @@ Deno.serve(async (req) => {
 
     const event = await eventResponse.json();
     const now = new Date().toISOString();
-    const bookingNote = `[${now}] Strategy call booked via Google Calendar\nStart: ${slotStart}\nEnd: ${slotEnd}\nEvent ID: ${event.id}${event.htmlLink ? `\nEvent Link: ${event.htmlLink}` : ''}`;
+    const bookingNote = `[${now}] Strategy call booked via Google Calendar\nCalendar: ${targetCalendarId}\nStart: ${slotStart}\nEnd: ${slotEnd}\nEvent ID: ${event.id}${event.htmlLink ? `\nEvent Link: ${event.htmlLink}` : ''}`;
 
     if (lead) {
       await base44.asServiceRole.entities.Lead.update(lead.id, {
@@ -218,6 +230,7 @@ Deno.serve(async (req) => {
         booking_status: 'confirmed',
         booking_provider: 'googlecalendar',
         booking_reference: event.id,
+        calendar_id: targetCalendarId,
         last_activity_at: now,
         next_action: 'Prepare for booked strategy call.',
         notes: lead.notes ? `${lead.notes}\n\n${bookingNote}` : bookingNote,
@@ -233,6 +246,7 @@ Deno.serve(async (req) => {
         `Business: ${businessName || 'N/A'}`,
         `Email: ${email}`,
         `Phone: ${lead?.mobile_number || 'N/A'}`,
+        `Calendar: ${targetCalendarId}`,
         `Booking link: ${event.htmlLink || adminLink}`,
       ].join('\n');
       await fetch(slackWebhookUrl, {
@@ -269,13 +283,15 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       provider: 'Google Calendar',
+      calendar_id: targetCalendarId,
+      calendar_email: ASSISTANTAI_SALES_CALENDAR_ID,
       event_id: event.id,
       event_link: event.htmlLink || null,
       booking_status: 'confirmed',
       confirmed_start: slotStart,
       confirmed_end: slotEnd,
       title: 'Strategy Call Confirmed',
-      message: 'Your strategy call is confirmed and has been added to Google Calendar.',
+      message: 'Your strategy call is confirmed and has been added to the AssistantAI sales Google Calendar.',
       actionLabel: event.htmlLink ? 'Open Calendar Event' : null,
       checkout_url: event.htmlLink || null,
     });
