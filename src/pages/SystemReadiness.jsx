@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import SystemReadinessCard from '@/components/admin/system/SystemReadinessCard';
 
+const READINESS_LAST_UPDATED = '12 Jun 2026';
+const SALES_CALENDAR_ID = 'sales@assistantai.com.au';
+
 function providerState(group) {
   if (!group) return 'not connected';
   return group.ready ? 'ready' : 'action needed';
@@ -31,7 +34,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Lead Capture',
       status: supabaseReady ? 'live' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
         `Supabase operational database: ${supabaseReady ? 'ready' : 'needs configuration'}`,
         'Lead-first capture model',
@@ -46,20 +49,38 @@ function buildReadinessItems(configStatus) {
     },
     {
       title: 'Strategy Call / Booking Flow',
-      status: supabaseReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
-      dependencies: ['Lead capture', 'BookStrategyCall page', 'honest request-only fallback', 'optional external booking URL'],
+      status: supabaseReady ? 'live' : 'action needed',
+      lastUpdated: READINESS_LAST_UPDATED,
+      dependencies: [
+        'Lead capture',
+        'BookStrategyCall page',
+        `Google Calendar target: ${SALES_CALENDAR_ID}`,
+        'honest request-only fallback if live calendar access fails',
+      ],
       notes: supabaseReady
-        ? 'The strategy call path is safe in request-only mode: it captures the lead and booking intent without pretending a calendar slot is confirmed. A live calendar widget can be added later.'
+        ? `The strategy-call path now targets ${SALES_CALENDAR_ID}. Live calendar slots are used when the Base44 Google Calendar connector can access that calendar; otherwise the page falls back to request-only mode without claiming a confirmed booking.`
         : 'The booking page should not be treated as ready until lead capture is configured, because the request needs somewhere reliable to save.',
       nextAction: supabaseReady
-        ? 'Add a live calendar/booking URL when available. Until then, keep the request-only wording clear and honest.'
+        ? 'Run one live /BookStrategyCall form test and confirm the created event appears on sales@assistantai.com.au.'
         : 'Restore lead capture first, then retest the strategy call form.',
+    },
+    {
+      title: 'Sales Calendar Connection',
+      status: supabaseReady ? 'ready' : 'action needed',
+      lastUpdated: READINESS_LAST_UPDATED,
+      dependencies: [
+        `Calendar ID: ${SALES_CALENDAR_ID}`,
+        'getCalendarAvailability function',
+        'createStrategyCallBooking function',
+        'onGoogleCalendarChange sync handler',
+      ],
+      notes: `The AssistantAI booking code now reads availability from ${SALES_CALENDAR_ID}, creates confirmed booking events on that calendar, and stores the calendar ID against the lead for follow-up and sync visibility.`,
+      nextAction: 'Verify Base44 Google Calendar connector authorisation, then complete a website booking test from /BookStrategyCall.',
     },
     {
       title: 'Authentication',
       status: 'live',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Admin login gate', 'client portal shell', 'protected admin routes'],
       notes: 'Admin and client areas are separated from the public marketing site. Public visitors should not be able to trigger admin-only actions.',
       nextAction: 'Keep improving server-side session hardening, but do not block launch on cosmetic auth polish.',
@@ -67,7 +88,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Client Portal Protection',
       status: 'ready',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['ClientPortal route', 'ClientLogin route', 'client record linking fallback'],
       notes: 'The portal now opens cleanly without dead-ending users. If a live client record is not linked yet, the portal presents a safe provisional shell rather than a broken state.',
       nextAction: 'Finish live client record linking so the portal shows real billing, onboarding, and support data for paying clients.',
@@ -75,10 +96,10 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Onboarding Workflow',
       status: supabaseReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Client', 'OnboardingTask', 'IntakeForm', 'BillingStatus', 'IntegrationStatus', 'ClientNote'],
       notes: supabaseReady
-        ? 'The readiness model now reflects the canonical onboarding architecture: Client is the source of truth, with tasks, intake, billing, integrations, and notes as supporting records. No separate Onboarding entity should be treated as the operational source of truth.'
+        ? 'The readiness model reflects the canonical onboarding architecture: Client is the source of truth, with tasks, intake, billing, integrations, and notes as supporting records. No separate Onboarding entity should be treated as the operational source of truth.'
         : 'The onboarding workflow depends on Supabase. It cannot be verified as operational until the database configuration is valid.',
       nextAction: supabaseReady
         ? 'Run one manual Won Lead → Client → tasks/intake/billing/integration creation test after each major deployment.'
@@ -87,7 +108,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Billing / Stripe',
       status: stripeReady && supabaseReady ? 'live' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
         `Stripe configuration: ${providerState(status.stripe)}`,
         `Supabase records: ${supabaseReady ? 'ready' : 'needs configuration'}`,
@@ -103,7 +124,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Voice Demo / Vapi',
       status: vapiReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Vapi public key', 'Vapi assistant ID', 'browser microphone permission', 'tool-call handler'],
       notes: vapiReady
         ? 'The public voice demo is configured at the frontend level. It should be tested manually because browser microphone permission cannot be granted by server-side checks.'
@@ -115,7 +136,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'CRM / GoHighLevel',
       status: ghlReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['GHL API key', 'GHL location ID', 'lead/contact sync logic'],
       notes: ghlReady
         ? 'GoHighLevel credentials are present for lead/contact sync and CRM follow-up workflows.'
@@ -127,7 +148,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Notifications',
       status: notificationsReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
         `In-app log: ${supabaseReady ? 'ready' : 'needs Supabase'}`,
         `Email provider: ${emailReady ? 'ready' : 'not configured'}`,
@@ -143,7 +164,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Analytics / Search Console',
       status: googleReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['GA4 property', 'Search Console property', 'Google OAuth refresh token or service account'],
       notes: googleReady
         ? 'GA4 and Search Console acquisition data can be pulled into the analytics layer. Search Console should use the domain property where available.'
@@ -155,7 +176,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Admin AI Copilot',
       status: adminAiReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Groq or OpenAI provider', 'server-side admin AI route', 'safe admin action endpoint'],
       notes: adminAiReady
         ? 'The private admin AI layer has at least one configured model provider. It must remain admin-only and must not be exposed to public Crisp or client flows.'
@@ -167,7 +188,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Crisp Public Chat',
       status: crispReady ? 'ready' : 'action needed',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Crisp widget', 'Crisp webhook secret', 'public sales/support prompt'],
       notes: crispReady
         ? 'Crisp can be used for public sales/support chat. It must not be allowed to trigger admin actions or expose private records.'
@@ -179,7 +200,7 @@ function buildReadinessItems(configStatus) {
     {
       title: 'Empty State / Sample State Audit',
       status: 'live',
-      lastUpdated: '10 Jun 2026',
+      lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['portal empty states', 'public preview labels', 'proof guardrails'],
       notes: 'Protected areas should avoid fake live numbers when data is missing. Public preview/demo areas should be clearly labelled and should not impersonate real proof.',
       nextAction: 'Continue reviewing new admin and public pages so sample data never looks like fabricated production proof.',
@@ -225,7 +246,7 @@ export default function SystemReadiness() {
             {checkedAt && <Badge className="bg-green-500/10 text-green-300 border-green-500/20">Checked {new Date(checkedAt).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}</Badge>}
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Production Readiness Status</h2>
-          <p className="text-gray-400 max-w-3xl">A clean internal view of what is live, what is ready with honest fallback behaviour, and what still needs action. Stale “partial” labels have been removed so the page is operational, not vague.</p>
+          <p className="text-gray-400 max-w-3xl">A clean internal view of what is live, what is ready with honest fallback behaviour, and what still needs action. Strategy-call booking now targets the AssistantAI sales calendar instead of a generic calendar.</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {['live', 'ready', 'action needed', 'not connected'].map((key) => (
