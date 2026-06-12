@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
+
 function appendNote(notes, line) {
   return notes ? `${notes}\n\n${line}` : line;
 }
@@ -24,7 +26,7 @@ Deno.serve(async (req) => {
     }
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
-    const eventResponse = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`, {
+    const eventResponse = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(ASSISTANTAI_SALES_CALENDAR_ID)}/events/${encodeURIComponent(eventId)}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -48,8 +50,8 @@ Deno.serve(async (req) => {
 
     for (const lead of leadMatches) {
       const followUpNote = isCancelled
-        ? `[${syncTimestamp}] Google Calendar booking was cancelled. Review and follow up with the lead.`
-        : `[${syncTimestamp}] Google Calendar booking was updated. Review confirmed strategy call details.`;
+        ? `[${syncTimestamp}] Google Calendar booking was cancelled on ${ASSISTANTAI_SALES_CALENDAR_ID}. Review and follow up with the lead.`
+        : `[${syncTimestamp}] Google Calendar booking was updated on ${ASSISTANTAI_SALES_CALENDAR_ID}. Review confirmed strategy call details.`;
 
       await base44.asServiceRole.entities.Lead.update(lead.id, {
         ...lead,
@@ -57,6 +59,7 @@ Deno.serve(async (req) => {
         booking_status: isCancelled ? 'cancelled' : 'confirmed',
         booking_provider: 'googlecalendar',
         booking_reference: eventId,
+        calendar_id: ASSISTANTAI_SALES_CALENDAR_ID,
         confirmed_meeting_date: !isCancelled && event?.start?.dateTime ? event.start.dateTime.split('T')[0] : lead.confirmed_meeting_date || '',
         confirmed_meeting_time: !isCancelled && event?.start?.dateTime ? event.start.dateTime.slice(11, 16) : lead.confirmed_meeting_time || '',
         last_activity_at: syncTimestamp,
@@ -67,7 +70,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({ success: true, processed_leads: leadMatches.length, event_id: eventId, cancelled: isCancelled });
+    return Response.json({ success: true, processed_leads: leadMatches.length, event_id: eventId, cancelled: isCancelled, calendar_id: ASSISTANTAI_SALES_CALENDAR_ID });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
