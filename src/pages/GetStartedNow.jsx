@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
-import { base44 } from '@/api/base44Client';
 import CheckoutReturnCard from '@/components/pricing/CheckoutReturnCard';
 import PlanSelectionStep from '@/components/get-started/PlanSelectionStep';
 import SignupDetailsForm from '@/components/get-started/SignupDetailsForm';
@@ -29,16 +28,9 @@ async function createSupabaseSignupLead(payload) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error || 'Supabase signup lead API failed');
+    throw new Error(data?.error || 'Unable to create your signup record.');
   }
   return data?.lead;
-}
-
-async function createBase44SignupLead(payload) {
-  const leadResponse = await base44.functions.invoke('createAIQualifiedLead', payload);
-  const lead = leadResponse?.data?.lead;
-  if (!lead?.id) throw new Error('Unable to create your signup record.');
-  return lead;
 }
 
 async function createVercelCheckout({ lead, confirmedPlan, form }) {
@@ -56,27 +48,9 @@ async function createVercelCheckout({ lead, confirmedPlan, form }) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data?.checkout_url) {
-    throw new Error(data?.error || data?.message || 'Vercel checkout route failed');
+    throw new Error(data?.error || data?.message || 'Unable to start secure Stripe checkout.');
   }
   return data.checkout_url;
-}
-
-async function createBase44Checkout({ lead, confirmedPlan, form }) {
-  const checkoutResponse = await base44.functions.invoke('createCheckoutForQualifiedLead', {
-    lead_id: lead.id,
-    selected_plan: confirmedPlan.name,
-    buyer_confirmed_intent: true,
-    full_name: form.full_name,
-    business_name: form.business_name,
-    email: form.email,
-    payment_mode: 'subscription',
-  });
-
-  if (!checkoutResponse?.data?.checkout_url) {
-    throw new Error(checkoutResponse?.data?.error || 'Unable to start Stripe checkout.');
-  }
-
-  return checkoutResponse.data.checkout_url;
 }
 
 export default function GetStartedNow() {
@@ -151,24 +125,10 @@ export default function GetStartedNow() {
     };
 
     try {
-      let lead;
-      try {
-        lead = await createSupabaseSignupLead(leadPayload);
-      } catch (primaryError) {
-        console.warn('Supabase signup lead route failed, using Base44 fallback:', primaryError?.message || primaryError);
-        lead = await createBase44SignupLead(leadPayload);
-      }
-
+      const lead = await createSupabaseSignupLead(leadPayload);
       if (!lead?.id) throw new Error('Unable to create your signup record.');
 
-      let checkoutUrl;
-      try {
-        checkoutUrl = await createVercelCheckout({ lead, confirmedPlan, form });
-      } catch (primaryCheckoutError) {
-        console.warn('Vercel checkout route failed, using Base44 checkout fallback:', primaryCheckoutError?.message || primaryCheckoutError);
-        checkoutUrl = await createBase44Checkout({ lead, confirmedPlan, form });
-      }
-
+      const checkoutUrl = await createVercelCheckout({ lead, confirmedPlan, form });
       window.location.href = checkoutUrl;
     } catch (checkoutError) {
       setError(checkoutError?.response?.data?.error || checkoutError?.message || 'Unable to start secure payment.');
