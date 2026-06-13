@@ -9,14 +9,38 @@ const GROUPS = {
   google_calendar: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN']
 };
 
+const ENV_ALIASES = {
+  GOOGLE_CLIENT_ID: ['GOOGLE_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_ID'],
+  GOOGLE_CLIENT_SECRET: ['GOOGLE_CLIENT_SECRET', 'GOOGLE_OAUTH_CLIENT_SECRET'],
+  GOOGLE_REFRESH_TOKEN: ['GOOGLE_REFRESH_TOKEN', 'GOOGLE_OAUTH_REFRESH_TOKEN']
+};
+
 function rawValue(name) {
   return String(process.env[name] || '').trim();
 }
 
+function valueFor(name) {
+  const aliases = ENV_ALIASES[name] || [name];
+  for (const alias of aliases) {
+    const value = rawValue(alias);
+    if (value) return value;
+  }
+  return '';
+}
+
+function sourceFor(name) {
+  const aliases = ENV_ALIASES[name] || [name];
+  for (const alias of aliases) {
+    if (rawValue(alias)) return alias;
+  }
+  return name;
+}
+
 function maskStatus(name) {
-  const value = rawValue(name);
+  const value = valueFor(name);
   return {
     name,
+    source_name: sourceFor(name),
     present: Boolean(value),
     length: value.length,
     valid: isVariableValid(name, value)
