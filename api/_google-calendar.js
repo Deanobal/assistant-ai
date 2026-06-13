@@ -1,16 +1,18 @@
 export const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
 export const TIMEZONE = 'Australia/Melbourne';
 
-function required(name) {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is not configured`);
-  return value;
+function firstConfigured(names) {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value) return { name, value };
+  }
+  throw new Error(`${names.join(' or ')} is not configured`);
 }
 
 export async function getGoogleAccessToken() {
-  const refreshToken = required('GOOGLE_REFRESH_TOKEN');
-  const clientId = required('GOOGLE_CLIENT_ID');
-  const clientSecret = required('GOOGLE_CLIENT_SECRET');
+  const { value: refreshToken } = firstConfigured(['GOOGLE_REFRESH_TOKEN', 'GOOGLE_OAUTH_REFRESH_TOKEN']);
+  const { value: clientId } = firstConfigured(['GOOGLE_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_ID']);
+  const { value: clientSecret } = firstConfigured(['GOOGLE_CLIENT_SECRET', 'GOOGLE_OAUTH_CLIENT_SECRET']);
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
