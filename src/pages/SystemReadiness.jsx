@@ -26,7 +26,9 @@ function buildReadinessItems(configStatus) {
   const emailReady = Boolean(status.email?.ready);
   const smsReady = Boolean(status.sms?.ready);
   const notificationsReady = Boolean(status.notifications?.ready || (supabaseReady && (emailReady || smsReady)));
-  const googleReady = Boolean(status.google_acquisition?.ready || status.google_oauth?.ready || status.google_service_account?.ready);
+  const googleAcquisitionReady = Boolean(status.google_acquisition?.ready || status.google_oauth?.ready || status.google_service_account?.ready);
+  const googleCalendarReady = Boolean(status.google_calendar?.ready);
+  const bookingReady = Boolean(status.booking?.ready || (supabaseReady && googleCalendarReady));
   const adminAiReady = Boolean(status.admin_ai?.ready || status.admin_ai_groq?.ready || status.admin_ai_openai?.ready);
   const crispReady = Boolean(status.crisp?.ready);
 
@@ -37,45 +39,49 @@ function buildReadinessItems(configStatus) {
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
         `Supabase operational database: ${supabaseReady ? 'ready' : 'needs configuration'}`,
-        'Lead-first capture model',
+        'Native /api/lead-capture route',
         'Public forms, demo flows, and CRM handoff records',
       ],
       notes: supabaseReady
-        ? 'Lead capture is connected to the production data layer. Public enquiry, demo, contact, and signup flows can store real lead records instead of using demo-only state.'
+        ? 'Lead capture is connected to Supabase through native Vercel API routes. Public enquiry, demo, contact, and signup flows should no longer depend on Base44 for lead storage.'
         : `Lead capture requires the Supabase environment to be valid. Open items: ${missingList(status.supabase)}.`,
       nextAction: supabaseReady
-        ? 'Monitor new submissions and confirm source_page values are being captured cleanly.'
+        ? 'Monitor new submissions and confirm source_page values are being captured cleanly in Supabase.'
         : 'Fix Supabase configuration in Vercel, redeploy, then retest Contact, Get Started, and demo capture.',
     },
     {
       title: 'Strategy Call / Booking Flow',
-      status: supabaseReady ? 'live' : 'action needed',
+      status: bookingReady ? 'live' : 'action needed',
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
-        'Lead capture',
-        'BookStrategyCall page',
+        'Native /api/lead-capture route',
+        'Native /api/calendar-availability route',
+        'Native /api/strategy-call-booking route',
         `Google Calendar target: ${SALES_CALENDAR_ID}`,
-        'honest request-only fallback if live calendar access fails',
       ],
-      notes: supabaseReady
-        ? `The strategy-call path now targets ${SALES_CALENDAR_ID}. Live calendar slots are used when the Base44 Google Calendar connector can access that calendar; otherwise the page falls back to request-only mode without claiming a confirmed booking.`
-        : 'The booking page should not be treated as ready until lead capture is configured, because the request needs somewhere reliable to save.',
-      nextAction: supabaseReady
+      notes: bookingReady
+        ? `The strategy-call path is native Vercel + Supabase + Google Calendar. It targets ${SALES_CALENDAR_ID} without Base44.`
+        : `Booking is not fully live until Supabase and Google Calendar OAuth are configured. Calendar issues: ${missingList(status.google_calendar)}. Supabase issues: ${missingList(status.supabase)}.`,
+      nextAction: bookingReady
         ? 'Run one live /BookStrategyCall form test and confirm the created event appears on sales@assistantai.com.au.'
-        : 'Restore lead capture first, then retest the strategy call form.',
+        : 'Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN in Vercel, then redeploy and retest /BookStrategyCall.',
     },
     {
       title: 'Sales Calendar Connection',
-      status: supabaseReady ? 'ready' : 'action needed',
+      status: googleCalendarReady ? 'ready' : 'action needed',
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: [
         `Calendar ID: ${SALES_CALENDAR_ID}`,
-        'getCalendarAvailability function',
-        'createStrategyCallBooking function',
-        'onGoogleCalendarChange sync handler',
+        `Google OAuth credentials: ${providerState(status.google_calendar)}`,
+        'Native Google Calendar helper',
+        'No Base44 connector dependency',
       ],
-      notes: `The AssistantAI booking code now reads availability from ${SALES_CALENDAR_ID}, creates confirmed booking events on that calendar, and stores the calendar ID against the lead for follow-up and sync visibility.`,
-      nextAction: 'Verify Base44 Google Calendar connector authorisation, then complete a website booking test from /BookStrategyCall.',
+      notes: googleCalendarReady
+        ? `The AssistantAI booking code can authenticate directly with Google Calendar and create confirmed events on ${SALES_CALENDAR_ID}.`
+        : `Native Google Calendar credentials are not complete. Open items: ${missingList(status.google_calendar)}.`,
+      nextAction: googleCalendarReady
+        ? 'Complete a public website booking test from /BookStrategyCall.'
+        : 'Generate or add a Google OAuth refresh token for sales@assistantai.com.au in Vercel.',
     },
     {
       title: 'Authentication',
@@ -83,15 +89,15 @@ function buildReadinessItems(configStatus) {
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Admin login gate', 'client portal shell', 'protected admin routes'],
       notes: 'Admin and client areas are separated from the public marketing site. Public visitors should not be able to trigger admin-only actions.',
-      nextAction: 'Keep improving server-side session hardening, but do not block launch on cosmetic auth polish.',
+      nextAction: 'Replace any remaining Base44 auth shims with native session/auth endpoints.',
     },
     {
       title: 'Client Portal Protection',
       status: 'ready',
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['ClientPortal route', 'ClientLogin route', 'client record linking fallback'],
-      notes: 'The portal now opens cleanly without dead-ending users. If a live client record is not linked yet, the portal presents a safe provisional shell rather than a broken state.',
-      nextAction: 'Finish live client record linking so the portal shows real billing, onboarding, and support data for paying clients.',
+      notes: 'The portal opens cleanly without dead-ending users. Remaining Base44 portal reads should be replaced with Supabase-backed routes before client launch.',
+      nextAction: 'Migrate client portal data reads, file uploads, support messages, and access resolution away from Base44.',
     },
     {
       title: 'Onboarding Workflow',
@@ -99,7 +105,7 @@ function buildReadinessItems(configStatus) {
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Client', 'OnboardingTask', 'IntakeForm', 'BillingStatus', 'IntegrationStatus', 'ClientNote'],
       notes: supabaseReady
-        ? 'The readiness model reflects the canonical onboarding architecture: Client is the source of truth, with tasks, intake, billing, integrations, and notes as supporting records. No separate Onboarding entity should be treated as the operational source of truth.'
+        ? 'The readiness model reflects the canonical onboarding architecture: Client is the source of truth, with tasks, intake, billing, integrations, and notes as supporting records.'
         : 'The onboarding workflow depends on Supabase. It cannot be verified as operational until the database configuration is valid.',
       nextAction: supabaseReady
         ? 'Run one manual Won Lead → Client → tasks/intake/billing/integration creation test after each major deployment.'
@@ -163,13 +169,13 @@ function buildReadinessItems(configStatus) {
     },
     {
       title: 'Analytics / Search Console',
-      status: googleReady ? 'ready' : 'action needed',
+      status: googleAcquisitionReady ? 'ready' : 'action needed',
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['GA4 property', 'Search Console property', 'Google OAuth refresh token or service account'],
-      notes: googleReady
+      notes: googleAcquisitionReady
         ? 'GA4 and Search Console acquisition data can be pulled into the analytics layer. Search Console should use the domain property where available.'
         : 'Google acquisition reporting needs OAuth refresh-token or service-account credentials plus GA4 and Search Console identifiers.',
-      nextAction: googleReady
+      nextAction: googleAcquisitionReady
         ? 'Monitor high-intent SEO pages for impressions, clicks, CTR, average position, and conversion intent.'
         : 'Finish Google acquisition credentials before relying on the analytics dashboard for SEO decisions.',
     },
@@ -242,11 +248,11 @@ export default function SystemReadiness() {
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">System Readiness</Badge>
-            <Badge className="bg-white/5 text-gray-300 border-white/10">Internal operational status</Badge>
+            <Badge className="bg-white/5 text-gray-300 border-white/10">Native Vercel + Supabase status</Badge>
             {checkedAt && <Badge className="bg-green-500/10 text-green-300 border-green-500/20">Checked {new Date(checkedAt).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}</Badge>}
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Production Readiness Status</h2>
-          <p className="text-gray-400 max-w-3xl">A clean internal view of what is live, what is ready with honest fallback behaviour, and what still needs action. Strategy-call booking now targets the AssistantAI sales calendar instead of a generic calendar.</p>
+          <p className="text-gray-400 max-w-3xl">A clean internal view of what is live, what is ready with honest fallback behaviour, and what still needs action. Public booking and lead capture now run on native Vercel APIs, Supabase, and Google Calendar.</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {['live', 'ready', 'action needed', 'not connected'].map((key) => (
