@@ -71,41 +71,12 @@ async function getSupabasePortalAccess(user) {
   return normaliseSupabasePortalAccess(data, user);
 }
 
-async function getBase44PortalAccess(user) {
-  const result = await base44.functions.invoke('resolveClientPortalAccess', {});
-  const data = result?.data || result;
-  if (data?.success && data?.client_id) {
-    return {
-      clientId: data.client_id,
-      client: data.client || null,
-      status: data.access_method || 'linked',
-      source: 'base44',
-      provisional: false,
-    };
-  }
-  return null;
-}
-
 async function getPortalAccess(user) {
-  try {
-    const supabaseAccess = await getSupabasePortalAccess(user);
-    if (supabaseAccess && !supabaseAccess.provisional) return supabaseAccess;
-  } catch (error) {
-    console.warn('Supabase portal resolver unavailable; trying Base44 resolver.', error?.message || error);
-  }
-
-  try {
-    const base44Access = await getBase44PortalAccess(user);
-    if (base44Access) return base44Access;
-  } catch (error) {
-    console.warn('Base44 portal resolver unavailable; opening authenticated portal shell.', error?.message || error);
-  }
-
   try {
     const supabaseAccess = await getSupabasePortalAccess(user);
     if (supabaseAccess) return supabaseAccess;
   } catch (error) {
-    console.warn('Supabase provisional resolver unavailable; opening local portal shell.', error?.message || error);
+    console.warn('Supabase portal resolver unavailable; opening local portal shell.', error?.message || error);
   }
 
   return {
@@ -161,7 +132,6 @@ export default function ClientPortal() {
               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Client Portal</Badge>
               <Badge className="bg-white/5 text-gray-300 border-white/10">Private access</Badge>
               {access?.source === 'supabase' && !access?.provisional && <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20">Supabase linked</Badge>}
-              {access?.source === 'base44' && <Badge className="bg-blue-500/10 text-blue-300 border-blue-500/20">Legacy linked</Badge>}
               {access?.provisional && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Linking in progress</Badge>}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">AssistantAI Client Portal</h1>
