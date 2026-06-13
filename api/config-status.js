@@ -5,7 +5,8 @@ const GROUPS = {
   ghl: ['GHL_API_KEY', 'GHL_LOCATION_ID'],
   email: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'ADMIN_NOTIFICATION_EMAIL'],
   sms: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER', 'ADMIN_NOTIFICATION_PHONE'],
-  notifications: ['VITE_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_NOTIFICATION_EMAIL']
+  notifications: ['VITE_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_NOTIFICATION_EMAIL'],
+  google_calendar: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN']
 };
 
 function rawValue(name) {
@@ -41,6 +42,15 @@ function isVariableValid(name, value) {
   if (name === 'TWILIO_FROM_NUMBER' || name === 'ADMIN_NOTIFICATION_PHONE') {
     return /^\+?[0-9]{8,15}$/.test(value.replace(/\s+/g, ''));
   }
+  if (name === 'GOOGLE_CLIENT_ID') {
+    return value.includes('.apps.googleusercontent.com');
+  }
+  if (name === 'GOOGLE_CLIENT_SECRET') {
+    return value.length >= 20;
+  }
+  if (name === 'GOOGLE_REFRESH_TOKEN') {
+    return value.length >= 40;
+  }
   return true;
 }
 
@@ -68,9 +78,19 @@ export default function handler(req, res) {
     sms: status.sms.ready ? 'ready' : 'not_configured'
   };
 
+  status.booking = {
+    ready: status.supabase.ready && status.google_calendar.ready,
+    providers: {
+      lead_storage: status.supabase.ready ? 'supabase' : 'not_configured',
+      calendar: status.google_calendar.ready ? 'google_calendar_native' : 'not_configured'
+    },
+    calendar_email: 'sales@assistantai.com.au'
+  };
+
   return res.status(200).json({
     ok: true,
     service: 'assistantai-config-status',
+    runtime: 'native-vercel-supabase',
     warning: 'This route reports presence and validity only. It never returns secret values.',
     timestamp: new Date().toISOString(),
     status
