@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, ArrowRight, ShieldCheck, Clock3, BriefcaseBusiness } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Clock3, BriefcaseBusiness } from 'lucide-react';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { base44 } from '@/api/base44Client';
 import { STRATEGY_CALL_BOOKING_MODE, STRATEGY_CALL_BOOKING_URL } from '@/lib/booking';
 
 function getQueryValue(key) {
@@ -46,11 +45,16 @@ export default function ThankYou() {
 
     let cancelled = false;
     const checkStatus = async () => {
-      const response = await base44.functions.invoke('getStripeCheckoutStatus', { sessionId });
-      if (cancelled) return;
-      const ready = !!response.data?.client_id && response.data?.onboarding_status !== 'pending';
-      setOnboardingReady(ready);
-      setCheckingOnboarding(!ready);
+      try {
+        const response = await fetch(`/api/stripe-checkout-status?sessionId=${encodeURIComponent(sessionId)}`);
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        const ready = response.ok && !!data?.client_id && data?.onboarding_status !== 'pending';
+        setOnboardingReady(ready);
+        setCheckingOnboarding(!ready);
+      } catch (_error) {
+        if (!cancelled) setCheckingOnboarding(false);
+      }
     };
 
     checkStatus();
