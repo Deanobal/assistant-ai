@@ -1,19 +1,3 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
-
-const configuredBackendUrl = (
-  import.meta.env.VITE_BASE44_FUNCTION_BASE_URL ||
-  import.meta.env.VITE_BASE44_APP_BASE_URL ||
-  ''
-).replace(/\/$/, '').replace(/\/functions$/, '');
-
-const serverUrl =
-  typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('server_url') ||
-      configuredBackendUrl ||
-      window.location.origin
-    : configuredBackendUrl;
-
 const nativeAdminUser = {
   id: 'assistantai-native-admin',
   role: 'admin',
@@ -25,38 +9,55 @@ function hasNativeAdminSession() {
   return typeof window !== 'undefined' && localStorage.getItem('assistantai_admin_session') === 'granted';
 }
 
-export const base44 = createClient({
-  appId: appParams.appId,
-  token: appParams.token,
-  functionsVersion: appParams.functionsVersion,
-  serverUrl,
-  requiresAuth: false,
-  appBaseUrl: appParams.appBaseUrl,
-});
+function unsupportedBase44Call(area) {
+  throw new Error(`${area} is no longer available. AssistantAI now uses native Vercel and Supabase APIs.`);
+}
 
-const originalAuthMe = base44.auth.me.bind(base44.auth);
-const originalAuthIsAuthenticated = base44.auth.isAuthenticated.bind(base44.auth);
-const originalAuthLogout = base44.auth.logout.bind(base44.auth);
-
-base44.auth.me = async (...args) => {
-  if (hasNativeAdminSession()) return nativeAdminUser;
-  return originalAuthMe(...args);
-};
-
-base44.auth.isAuthenticated = async (...args) => {
-  if (hasNativeAdminSession()) return true;
-  return originalAuthIsAuthenticated(...args);
-};
-
-base44.auth.logout = async (...args) => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('assistantai_admin_session');
-  }
-  return originalAuthLogout(...args).catch(() => null);
+export const base44 = {
+  auth: {
+    async me() {
+      if (hasNativeAdminSession()) return nativeAdminUser;
+      return null;
+    },
+    async isAuthenticated() {
+      return hasNativeAdminSession();
+    },
+    async logout() {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('assistantai_admin_session');
+      }
+      return null;
+    },
+    async redirectToLogin(nextUrl = '/AdminLogin') {
+      if (typeof window !== 'undefined') {
+        window.location.href = nextUrl;
+      }
+      return null;
+    },
+  },
+  entities: new Proxy({}, {
+    get(_target, entityName) {
+      return new Proxy({}, {
+        get() {
+          return () => unsupportedBase44Call(`Base44 entity ${String(entityName)}`);
+        }
+      });
+    }
+  }),
+  functions: {
+    invoke(name) {
+      return unsupportedBase44Call(`Base44 function ${name}`);
+    }
+  },
+  integrations: new Proxy({}, {
+    get(_target, integrationName) {
+      return () => unsupportedBase44Call(`Base44 integration ${String(integrationName)}`);
+    }
+  })
 };
 
 export function prewarmBase44Client() {
-  // no-op: kept for compatibility with main.jsx import
+  // no-op: legacy import kept temporarily while remaining app areas are migrated.
 }
 
 export async function authMe() {
@@ -75,11 +76,10 @@ export async function authIsAuthenticated() {
   return base44.auth.isAuthenticated();
 }
 
-export async function invokeFunction(name, payload) {
-  return base44.functions.invoke(name, payload);
+export async function invokeFunction(name) {
+  return unsupportedBase44Call(`Base44 function ${name}`);
 }
 
-// Compatibility shim: some files import getBase44Client expecting a client instance
 export function getBase44Client() {
   return base44;
 }
