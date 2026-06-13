@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { base44 } from '@/api/base44Client';
 
 const helpOptions = [
   { value: 'missed_calls', label: 'Missed calls' },
@@ -25,20 +24,9 @@ async function submitToSupabaseApi(payload) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error || 'Supabase contact API failed');
+    throw new Error(data?.error || data?.details || 'Contact API failed');
   }
   return data;
-}
-
-async function submitToBase44Fallback(payload) {
-  return base44.functions.invoke('submitContactLead', {
-    full_name: payload.full_name,
-    business_name: payload.business_name,
-    email: payload.email,
-    mobile_number: payload.mobile_number,
-    help_type: payload.enquiry_type,
-    message: payload.message,
-  });
 }
 
 export default function ContactForm() {
@@ -75,16 +63,10 @@ export default function ContactForm() {
     };
 
     try {
-      try {
-        await submitToSupabaseApi(payload);
-      } catch (primaryError) {
-        console.warn('Supabase contact route failed, using Base44 fallback:', primaryError?.message || primaryError);
-        await submitToBase44Fallback(payload);
-      }
-
+      await submitToSupabaseApi(payload);
       setSuccess(true);
     } catch (submitError) {
-      setError(submitError?.response?.data?.error || submitError?.message || 'Something went wrong. Please try again or email sales@assistantai.com.au.');
+      setError(submitError?.message || 'Something went wrong. Please try again or email sales@assistantai.com.au.');
     } finally {
       setSubmitting(false);
     }
