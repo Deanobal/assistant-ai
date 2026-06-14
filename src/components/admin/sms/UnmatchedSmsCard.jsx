@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link2, Loader2, ShieldCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Link2, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +9,6 @@ import SuggestedLeadMatches from '@/components/admin/sms/SuggestedLeadMatches';
 import { getResolutionState, getSuggestedLeadMatches } from '@/lib/smsMatching';
 
 export default function UnmatchedSmsCard({ log, leads, outboundLogs }) {
-  const queryClient = useQueryClient();
   const [selectedLeadId, setSelectedLeadId] = useState('');
   const tags = log.metadata?.reply_intent_tags || [];
   const senderNumber = log.metadata?.sender_number || 'Unknown';
@@ -19,25 +16,8 @@ export default function UnmatchedSmsCard({ log, leads, outboundLogs }) {
   const resolvedLeadId = log.metadata?.resolved_lead_id || '';
   const resolvedLeadName = log.metadata?.resolved_lead_name || '';
   const resolutionState = getResolutionState(log);
-  const isResolved = resolutionState !== 'open';
   const suggestions = useMemo(() => getSuggestedLeadMatches(log, leads, outboundLogs || []), [log, leads, outboundLogs]);
   const suggestedLeadIds = suggestions.map((item) => item.lead.id);
-
-  const matchMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('manualMatchUnmatchedSms', { action: 'match', unmatchedLogId: log.id, leadId: selectedLeadId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unmatched-sms-inbox'] });
-      queryClient.invalidateQueries({ queryKey: ['lead-sms-trail', selectedLeadId] });
-      queryClient.invalidateQueries({ queryKey: ['lead-detail', selectedLeadId] });
-    },
-  });
-
-  const noMatchMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('manualMatchUnmatchedSms', { action: 'review_no_match', unmatchedLogId: log.id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unmatched-sms-inbox'] });
-    },
-  });
 
   return (
     <Card className="bg-[#12121a] border-white/5">
@@ -108,37 +88,15 @@ export default function UnmatchedSmsCard({ log, leads, outboundLogs }) {
               <SearchableLeadLookup leads={leads} selectedLeadId={selectedLeadId} onSelect={setSelectedLeadId} suggestedLeadIds={suggestedLeadIds} />
             </div>
             <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
-              <Button
-                onClick={() => matchMutation.mutate()}
-                disabled={!selectedLeadId || matchMutation.isPending || noMatchMutation.isPending}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50"
-              >
-                {matchMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Attach to selected lead
+              <Button disabled className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50">
+                Attach to selected lead disabled
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => noMatchMutation.mutate()}
-                disabled={matchMutation.isPending || noMatchMutation.isPending}
-                className="border-white/10 text-white hover:bg-white/5"
-              >
-                {noMatchMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Mark reviewed / no match
+              <Button variant="outline" disabled className="border-white/10 text-white hover:bg-white/5 disabled:opacity-50">
+                Mark reviewed disabled
               </Button>
             </div>
+            <p className="text-xs text-amber-300">Manual matching is disabled until the native matching endpoint is connected.</p>
           </div>
-        )}
-
-        {(matchMutation.isError || matchMutation.data?.data?.success || noMatchMutation.isError || noMatchMutation.data?.data?.success) && (
-          <p className="text-xs text-gray-400">
-            {matchMutation.isError
-              ? (matchMutation.error?.response?.data?.error || matchMutation.error?.message || 'Manual match failed.')
-              : noMatchMutation.isError
-                ? (noMatchMutation.error?.response?.data?.error || noMatchMutation.error?.message || 'No-match review failed.')
-                : matchMutation.data?.data?.success
-                  ? 'Manual match saved and copied into the selected lead trail.'
-                  : 'SMS marked as reviewed with no safe lead match.'}
-          </p>
         )}
       </CardContent>
     </Card>
