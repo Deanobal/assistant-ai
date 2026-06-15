@@ -1,8 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
-import { SmilePlus, Frown, Meh, Clock, User, Phone } from 'lucide-react';
+import { SmilePlus, Frown, Meh, Clock, User, Phone, FileText } from 'lucide-react';
 import AudioPlayer from '@/components/calls/AudioPlayer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,37 +50,71 @@ const labelColors = {
   'Hot Lead': 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20',
   Qualified: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
   'Needs Review': 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
+  Completed: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 };
 
-export default function CallRecordings({ mode = 'live', clientAccountId = null }) {
+function formatDuration(seconds) {
+  const total = Number(seconds || 0);
+  if (!total) return '0:00';
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function titleCase(value) {
+  return String(value || 'neutral')
+    .replace(/[_-]/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function sentimentScore(sentiment) {
+  if (sentiment === 'positive') return 0.82;
+  if (sentiment === 'negative') return 0.28;
+  return 0.5;
+}
+
+async function fetchClientCallRecordings({ clientAccountId, userEmail }) {
+  const response = await fetch('/api/client-call-recordings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: clientAccountId, email: userEmail }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || data?.details || 'Unable to load call recordings');
+  }
+
+  return data.calls || [];
+}
+
+export default function CallRecordings({ mode = 'live', clientAccountId = null, userEmail = '', portalAccess = null }) {
   const isSample = mode === 'sample';
 
-  const { data: records = [], isLoading } = useQuery({
-    queryKey: ['call-recordings', clientAccountId || 'all', mode],
-    queryFn: () => clientAccountId
-      ? base44.entities.CallRecord.filter({ client_account_id: clientAccountId }, '-timestamp', 100)
-      : base44.entities.CallRecord.list('-timestamp', 100),
+  const { data: records = [], isLoading, error } = useQuery({
+    queryKey: ['client-call-recordings', clientAccountId || 'none', userEmail || 'none', mode],
+    queryFn: () => fetchClientCallRecordings({ clientAccountId, userEmail }),
     initialData: [],
-    enabled: !isSample,
+    enabled: !isSample && Boolean(clientAccountId || userEmail),
   });
 
   const callRecordings = isSample
     ? sampleCallRecordings
     : records.map((record) => ({
         id: record.id,
-        caller: record.caller_name,
-        phone: record.caller_phone,
-        duration: `${Math.floor((record.duration || 0) / 60)}:${String((record.duration || 0) % 60).padStart(2, '0')}`,
+        caller: record.caller_name || 'Unknown caller',
+        phone: record.caller_phone || '',
+        duration: formatDuration(record.duration_seconds),
         timestamp: record.timestamp ? new Date(record.timestamp).toLocaleString() : 'Unknown',
-        sentiment: record.sentiment,
-        sentimentScore: record.sentiment === 'positive' ? 0.8 : record.sentiment === 'negative' ? 0.3 : 0.5,
-        summary: record.ai_summary,
+        sentiment: record.sentiment || 'neutral',
+        sentimentScore: sentimentScore(record.sentiment),
+        summary: record.ai_summary || 'No summary captured yet.',
+        transcript: record.transcript || '',
         topics: [record.enquiry_category, record.outcome_label].filter(Boolean),
-        outcome: record.outcome_label || record.status,
-        urgency: record.enquiry_category === 'urgent service' ? 'Urgent' : 'Standard',
+        outcome: record.outcome_label || record.status || 'Completed',
+        urgency: record.enquiry_category === 'urgent service' || record.enquiry_category === 'urgent' ? 'Urgent' : 'Standard',
         followUpStatus: record.follow_up_required ? 'Follow-up required' : 'No follow-up needed',
         leadQuality: record.lead_id ? 'Qualified' : 'Needs Review',
         recording_url: record.recording_url || null,
+        vapi_call_id: record.vapi_call_id || null,
       }));
 
   const getSentimentIcon = (sentiment) => {
@@ -108,12 +141,34 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
     );
   }
 
+  if (!isSample && error) {
+    return (
+      <Card className="bg-red-500/10 border-red-500/20">
+        <CardContent className="p-8 text-center space-y-2">
+          <h2 className="text-xl font-bold text-white">Call recordings could not be loaded</h2>
+          <p className="text-red-100 text-sm">{error.message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isSample && portalAccess?.provisional) {
+    return (
+      <Card className="bg-[#12121a] border-white/5">
+        <CardContent className="p-10 text-center space-y-3">
+          <h2 className="text-2xl font-bold text-white">Call Recordings Linking In Progress</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Once your live client record is linked, Vapi calls, recordings, summaries, and transcripts will appear here automatically.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!isSample && callRecordings.length === 0) {
     return (
       <Card className="bg-[#12121a] border-white/5">
         <CardContent className="p-10 text-center space-y-3">
           <h2 className="text-2xl font-bold text-white">No Call Recordings Yet</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Once live calls are stored for this client, recordings, summaries, sentiment, and follow-up states will appear here automatically.</p>
+          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">Once the AI receptionist handles calls for this client, Vapi recordings, summaries, transcripts, sentiment, and follow-up states will appear here automatically.</p>
         </CardContent>
       </Card>
     );
@@ -124,10 +179,10 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-white">Call Recordings</h2>
-          <p className="text-gray-400 text-sm mt-1">{isSample ? 'Demo call examples showing how summaries, labels, and sentiment can appear inside the client portal.' : 'Live call records and AI summaries for this client account.'}</p>
+          <p className="text-gray-400 text-sm mt-1">{isSample ? 'Demo call examples showing how summaries, labels, and sentiment can appear inside the client portal.' : 'Vapi AI call records, recordings, transcripts, and summaries for this client.'}</p>
         </div>
         <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
-          {isSample ? `${callRecordings.length} Sample Calls` : `${callRecordings.length} Live Calls`}
+          {isSample ? `${callRecordings.length} Sample Calls` : `${callRecordings.length} Client Calls`}
         </Badge>
       </div>
 
@@ -150,19 +205,20 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
                     <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Phone className="w-3 h-3" />
-                        {call.phone}
+                        {call.phone || 'No phone captured'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {call.duration}
                       </span>
                       <span>{call.timestamp}</span>
+                      {call.vapi_call_id && <span className="text-gray-600">Vapi ID: {call.vapi_call_id}</span>}
                     </div>
                   </div>
                 </div>
                 <div className={`px-3 py-1.5 rounded-full border flex items-center gap-2 ${getSentimentColor(call.sentiment)}`}>
                   {getSentimentIcon(call.sentiment)}
-                  <span className="text-xs font-medium capitalize">{call.sentiment}</span>
+                  <span className="text-xs font-medium capitalize">{titleCase(call.sentiment)}</span>
                 </div>
               </div>
             </CardHeader>
@@ -174,6 +230,16 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
                 <p className="text-gray-400 text-sm leading-relaxed">{call.summary}</p>
               </div>
 
+              {call.transcript && (
+                <details className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-cyan-300" />
+                    View Transcript
+                  </summary>
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-400">{call.transcript}</p>
+                </details>
+              )}
+
               <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-3">
                 <Badge className={labelColors[call.outcome] || 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}>{call.outcome}</Badge>
                 <Badge className={labelColors[call.urgency] || 'bg-white/5 text-gray-300 border-white/10'}>{call.urgency}</Badge>
@@ -181,16 +247,18 @@ export default function CallRecordings({ mode = 'live', clientAccountId = null }
                 <Badge className={labelColors[call.leadQuality] || 'bg-white/5 text-gray-300 border-white/10'}>{call.leadQuality}</Badge>
               </div>
 
-              <div>
-                <h4 className="text-white text-sm font-semibold mb-2">Topics Discussed</h4>
-                <div className="flex flex-wrap gap-2">
-                  {call.topics.map((topic) => (
-                    <Badge key={topic} className="bg-white/5 text-gray-400 border-white/10">
-                      {topic}
-                    </Badge>
-                  ))}
+              {call.topics.length > 0 && (
+                <div>
+                  <h4 className="text-white text-sm font-semibold mb-2">Topics Discussed</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {call.topics.map((topic) => (
+                      <Badge key={topic} className="bg-white/5 text-gray-400 border-white/10">
+                        {topic}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <div className="flex items-center justify-between mb-2">
