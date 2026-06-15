@@ -10,7 +10,12 @@ function valueOrEmpty(value) {
 }
 
 function getTokenFromUrl(routeToken) {
-  const queryToken = new URLSearchParams(window.location.search).get('t') || '';
+  const params = new URLSearchParams(window.location.search);
+  const queryToken =
+    params.get('token') ||
+    params.get('access_token') ||
+    params.get('t') ||
+    '';
   return routeToken || queryToken || '';
 }
 
