@@ -159,7 +159,7 @@ export default function ClientPortal() {
           </TabsList>
           <TabsContent value="overview"><ClientOverviewSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
           <TabsContent value="leads"><ClientLeadsSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
-          <TabsContent value="calls"><CallRecordings clientAccountId={clientId} portalAccess={access} /></TabsContent>
+          <TabsContent value="calls"><CallRecordings clientAccountId={clientId} userEmail={user?.email || client?.email || ''} portalAccess={access} /></TabsContent>
           <TabsContent value="analytics"><AnalyticsSection clientAccountId={clientId} portalAccess={access} /></TabsContent>
           <TabsContent value="billing"><BillingSection clientId={clientId} portalAccess={access} /></TabsContent>
           <TabsContent value="integrations"><PortalIntegrations clientAccountId={clientId} portalAccess={access} /></TabsContent>
