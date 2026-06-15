@@ -24,6 +24,15 @@ function normalisePhone(phone) {
   return String(phone || '').replace(/\s+/g, '').trim();
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function buildEmailHtml({ title, message, metadata }) {
   const rows = Object.entries(metadata || {})
     .filter(([, value]) => value !== null && value !== undefined && value !== '')
@@ -41,36 +50,20 @@ function buildEmailHtml({ title, message, metadata }) {
         <p style="font-size:16px;line-height:1.7;margin:0 0 20px;white-space:pre-wrap;">${escapeHtml(message)}</p>
         ${rows ? `<table style="border-collapse:collapse;width:100%;font-size:14px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">${rows}</table>` : ''}
       </div>
-      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#64748b;font-size:12px;">
-        Sent by AssistantAI system notifications.
-      </div>
+      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#64748b;font-size:12px;">Sent by AssistantAI system notifications.</div>
     </div>
   `;
-}
-
-function escapeHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 async function sendResendEmail({ to, subject, message, metadata }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
 
-  if (!apiKey || !from || !to) {
-    return { status: 'not_configured' };
-  }
+  if (!apiKey || !from || !to) return { status: 'not_configured' };
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from,
       to: [to],
@@ -81,21 +74,8 @@ async function sendResendEmail({ to, subject, message, metadata }) {
   });
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    return {
-      status: 'failed',
-      provider: 'resend',
-      error: data?.message || data?.error || JSON.stringify(data),
-      provider_response: data
-    };
-  }
-
-  return {
-    status: 'sent',
-    provider: 'resend',
-    provider_response: data,
-    provider_message_id: data?.id || null
-  };
+  if (!response.ok) return { status: 'failed', provider: 'resend', error: data?.message || data?.error || JSON.stringify(data), provider_response: data };
+  return { status: 'sent', provider: 'resend', provider_response: data, provider_message_id: data?.id || null };
 }
 
 async function sendTwilioSms({ to, message }) {
@@ -103,9 +83,7 @@ async function sendTwilioSms({ to, message }) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_FROM_NUMBER;
 
-  if (!accountSid || !authToken || !from || !to) {
-    return { status: 'not_configured' };
-  }
+  if (!accountSid || !authToken || !from || !to) return { status: 'not_configured' };
 
   const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
   const params = new URLSearchParams();
@@ -115,29 +93,13 @@ async function sendTwilioSms({ to, message }) {
 
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
     method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
+    headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString()
   });
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    return {
-      status: 'failed',
-      provider: 'twilio',
-      error: data?.message || data?.error_message || JSON.stringify(data),
-      provider_response: data
-    };
-  }
-
-  return {
-    status: 'sent',
-    provider: 'twilio',
-    provider_response: data,
-    provider_message_id: data?.sid || null
-  };
+  if (!response.ok) return { status: 'failed', provider: 'twilio', error: data?.message || data?.error_message || JSON.stringify(data), provider_response: data };
+  return { status: 'sent', provider: 'twilio', provider_response: data, provider_message_id: data?.sid || null };
 }
 
 function shouldSendEmail({ requestedChannel, body }) {
@@ -156,17 +118,12 @@ function deriveDeliveryStatus({ emailResult, smsResult, emailRequested, smsReque
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const url = process.env.VITE_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!url || !key) {
-      return res.status(500).json({ error: 'Server database configuration missing' });
-    }
+    if (!url || !key) return res.status(500).json({ error: 'Server database configuration missing' });
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
     const eventType = String(body.eventType || body.event_type || '').trim();
@@ -186,13 +143,8 @@ export default async function handler(req, res) {
     const emailRequested = shouldSendEmail({ requestedChannel, body });
     const smsRequested = shouldSendSms({ requestedChannel, body });
 
-    const emailResult = emailRequested
-      ? await sendResendEmail({ to: recipientEmail, subject: title, message, metadata })
-      : { status: 'not_requested' };
-
-    const smsResult = smsRequested
-      ? await sendTwilioSms({ to: recipientPhone, message: `${title}: ${message}` })
-      : { status: 'not_requested' };
+    const emailResult = emailRequested ? await sendResendEmail({ to: recipientEmail, subject: title, message, metadata }) : { status: 'not_requested' };
+    const smsResult = smsRequested ? await sendTwilioSms({ to: recipientPhone, message: `${title}: ${message}` }) : { status: 'not_requested' };
 
     const deliveryStatus = deriveDeliveryStatus({ emailResult, smsResult, emailRequested, smsRequested });
     const providerErrors = [emailResult.error, smsResult.error].filter(Boolean).join(' | ') || null;
@@ -204,22 +156,22 @@ export default async function handler(req, res) {
       entity_name: entityName,
       entity_id: entityId,
       client_id: body.client_id || null,
-      lead_id: body.lead_id || null,
       recipient_role: body.recipient_role || 'admin',
       recipient_email: recipientEmail,
-      recipient_phone: recipientPhone,
       channel: requestedChannel,
       delivery_status: deliveryStatus,
       provider_name: activeProvider,
       provider_message: providerErrors,
       provider_message_id: activeProviderId,
-      provider_status: deliveryStatus,
-      provider_error_message: providerErrors,
       title,
       message,
       actor_email: body.actor_email || null,
       metadata: {
         ...metadata,
+        lead_id: body.lead_id || null,
+        recipient_phone: recipientPhone,
+        provider_status: deliveryStatus,
+        provider_error_message: providerErrors,
         email_requested: emailRequested,
         email_provider: emailRequested ? 'resend' : null,
         email_result: emailResult.status,
