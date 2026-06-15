@@ -62,6 +62,10 @@ function firstValue(...values) {
   return null;
 }
 
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+}
+
 function normalisePhone(phone) {
   return String(phone || '').replace(/[\s()\-.]/g, '').trim();
 }
@@ -87,7 +91,7 @@ function getNestedMetadata(body, message, call) {
 
 async function resolveClient(url, key, payload) {
   const explicitClientId = String(payload.client_id || '').trim();
-  if (explicitClientId) {
+  if (isUuid(explicitClientId)) {
     const clients = await supabaseRequest(url, key, 'clients', `id=eq.${encodeURIComponent(explicitClientId)}&limit=1`);
     if (clients[0]) return clients[0];
   }
@@ -176,7 +180,7 @@ function extractCallPayload(body) {
 }
 
 async function upsertCallRecording(url, key, record) {
-  const response = await fetch(`${url}/rest/v1/client_call_recordings`, {
+  const response = await fetch(`${url}/rest/v1/client_call_recordings?on_conflict=vapi_call_id`, {
     method: 'POST',
     headers: {
       apikey: key,
@@ -235,9 +239,10 @@ export default async function handler(req, res) {
       });
     }
 
+    const safeLeadId = isUuid(extracted.lead_id) ? extracted.lead_id : null;
     const record = {
       client_id: client.id,
-      lead_id: extracted.lead_id || null,
+      lead_id: safeLeadId,
       vapi_call_id: extracted.vapi_call_id || `vapi-${Date.now()}`,
       assistant_id: extracted.assistant_id || null,
       phone_number: normalisePhone(extracted.phone),
