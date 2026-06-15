@@ -20,11 +20,40 @@ function getConfig() {
   return { url, key };
 }
 
+function getHeader(req, name) {
+  const target = String(name || '').toLowerCase();
+  const headers = req.headers || {};
+  return String(headers[target] || headers[name] || '').trim();
+}
+
+function getBearerToken(req) {
+  const authorization = getHeader(req, 'authorization');
+  if (!authorization) return '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return String(match ? match[1] : authorization).trim();
+}
+
+function getExpectedWebhookSecret() {
+  return String(
+    process.env.VAPI_WEBHOOK_SECRET ||
+    process.env.SECURE_SETUP_WEBHOOK_SECRET ||
+    ''
+  ).trim();
+}
+
 function isAuthorised(req) {
-  const expected = String(process.env.VAPI_WEBHOOK_SECRET || '').trim();
+  const expected = getExpectedWebhookSecret();
   if (!expected) return true;
-  const received = String(req.headers['x-webhook-secret'] || req.headers['X-Webhook-Secret'] || '').trim();
-  return received === expected;
+
+  const candidates = [
+    getHeader(req, 'x-webhook-secret'),
+    getHeader(req, 'x-vapi-webhook-secret'),
+    getHeader(req, 'x-vapi-secret'),
+    getHeader(req, 'x-assistantai-webhook-secret'),
+    getBearerToken(req),
+  ].filter(Boolean);
+
+  return candidates.some((candidate) => candidate === expected);
 }
 
 function parseArgs(raw) {
@@ -157,7 +186,7 @@ async function createSecureSetup(body) {
     throw new Error('A mobile/phone number is required to send the secure setup form link');
   }
 
-  const setupUrl = `${baseUrl}/secure-setup?t=${encodeURIComponent(token)}`;
+  const setupUrl = `${baseUrl}/secure-setup?token=${encodeURIComponent(token)}`;
 
   const payload = {
     token,
@@ -206,9 +235,22 @@ async function createSecureSetup(body) {
     sms_provider_message_id: sms.provider_message_id || null,
     sms_error: sms.error || null,
     next_step: sms.status === 'sent'
-      ? 'Secure setup form link sent by SMS. Tell the caller the link has been sent.'
-      : 'Secure setup form was created, but SMS was not confirmed. Give the caller the secure setup link verbally if suitable and flag the SMS issue.',
+      ? 'Secure setup form link sent by SMS. Tell the caller the unique secure link has been sent.'
+      : 'Secure setup form was created, but SMS was not confirmed. Give the caller only the returned secure_setup_url and flag the SMS issue for human follow-up.',
     record
+  };
+}
+
+function unauthorisedToolResults(toolCalls) {
+  return {
+    results: toolCalls.map((toolCall) => ({
+      toolCallId: toolCall.toolCallId,
+      result: {
+        success: false,
+        error: 'Unauthorised secure setup tool call. The Vapi tool must send the configured webhook secret in x-webhook-secret, x-vapi-webhook-secret, x-vapi-secret, x-assistantai-webhook-secret, or Authorization: Bearer.',
+        next_step: 'Do not provide a generic secure setup link. Tell the caller the secure form could not be generated automatically and request human follow-up.'
+      }
+    }))
   };
 }
 
@@ -221,7 +263,15 @@ export default async function handler(req, res) {
       service_role_key_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
       twilio_configured: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER),
       twilio_from_number_present: Boolean(process.env.TWILIO_FROM_NUMBER),
-      webhook_secret_required: Boolean(process.env.VAPI_WEBHOOK_SECRET),
+      webhook_secret_required: Boolean(getExpectedWebhookSecret()),
+      accepted_auth_headers: [
+        'x-webhook-secret',
+        'x-vapi-webhook-secret',
+        'x-vapi-secret',
+        'x-assistantai-webhook-secret',
+        'Authorization: Bearer <secret>'
+      ],
+      secure_setup_url_param: 'token',
       supports_vapi_tool_results: true
     });
   }
@@ -230,12 +280,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!isAuthorised(req)) {
-    return res.status(401).json({ error: 'Unauthorised secure setup tool call' });
-  }
-
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
   const toolCalls = extractVapiToolCalls(body);
+
+  if (!isAuthorised(req)) {
+    if (toolCalls.length > 0) {
+      return res.status(200).json(unauthorisedToolResults(toolCalls));
+    }
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorised secure setup tool call',
+      accepted_auth_headers: [
+        'x-webhook-secret',
+        'x-vapi-webhook-secret',
+        'x-vapi-secret',
+        'x-assistantai-webhook-secret',
+        'Authorization: Bearer <secret>'
+      ]
+    });
+  }
 
   if (toolCalls.length > 0) {
     const results = [];
@@ -252,7 +315,7 @@ export default async function handler(req, res) {
           result: {
             success: false,
             error: error.message,
-            next_step: 'Tell the caller the secure setup link could not be sent automatically and a team member will follow up.'
+            next_step: 'Tell the caller the secure setup link could not be sent automatically and a team member will follow up. Do not provide the generic secure setup page.'
           }
         });
       }
