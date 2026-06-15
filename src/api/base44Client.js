@@ -41,6 +41,17 @@ function entityClient(entity) {
   };
 }
 
+function localFunction(name) {
+  if (name !== 'generateOnboardingInsights') return null;
+  return {
+    insights: {
+      summary: 'Native onboarding review is available. Check incomplete intake fields, blocked onboarding tasks, billing state, and integration connection status before go-live.',
+      blockers: [],
+      next_actions: ['Confirm intake completeness', 'Review billing status', 'Check integration tasks', 'Confirm go-live readiness'],
+    },
+  };
+}
+
 export const base44 = {
   auth: {
     async me() {
@@ -67,6 +78,8 @@ export const base44 = {
   }),
   functions: {
     async invoke(name, payload = {}) {
+      const local = localFunction(name);
+      if (local) return { data: local };
       const response = await postJson('/api/native-function', { name, payload });
       return { data: response.data };
     },
