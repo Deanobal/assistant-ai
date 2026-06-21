@@ -71,7 +71,7 @@ const highIntentLinks = [
   {
     title: 'AI Receptionist for Professional Services',
     description: 'For consultants, advisors, and service firms that need structured enquiry capture and follow-up.',
-    href: '/ai-receptionist-for-law-firms',
+    href: '/Services',
     icon: BriefcaseBusiness,
   },
 ];
