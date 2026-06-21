@@ -15,7 +15,7 @@ import ROICalculator from '../components/home/ROICalculator';
 import RevenueSystemSection from '../components/home/RevenueSystemSection';
 import HighIntentLinks from '../components/seo/HighIntentLinks';
 
-const HERO_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/9541496d0_generated_bc3bb2a9.png';
+const HERO_IMAGE = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/Hero.png';
 const HERO_IMAGE_ALT = 'AssistantAI AI receptionist for Australian service businesses';
 
 const structuredData = [
