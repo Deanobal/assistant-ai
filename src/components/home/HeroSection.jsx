@@ -7,7 +7,7 @@ export default function HeroSection() {
     <section className="relative overflow-hidden pt-4">
       <div className="absolute inset-0 z-0">
         <img
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/6bac2678b_FuturisticglowingAIwithdigitalelements.png"
+          src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/Hero.png"
           alt="AssistantAI background"
           className="h-full w-full object-cover opacity-20" />
 
