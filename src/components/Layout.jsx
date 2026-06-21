@@ -44,7 +44,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 xl:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png"
+            src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
             alt="AssistantAI Logo"
             className="w-9 h-9" />
 
@@ -134,7 +134,7 @@ function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
               <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69b3622e4aaa6acc06c2547f/161e273df_FuturisticAIneuralnetworklogo.png"
+                src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
                 alt="AssistantAI Logo"
                 className="w-9 h-9" />
 
