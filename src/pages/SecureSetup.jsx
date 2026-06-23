@@ -22,6 +22,7 @@ function getTokenFromUrl(routeToken) {
 export default function SecureSetup() {
   const params = useParams();
   const token = useMemo(() => getTokenFromUrl(params.token), [params.token]);
+  const hasToken = Boolean(token);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -129,6 +130,19 @@ export default function SecureSetup() {
             </div>
           )}
 
+          {!loading && !hasToken && (
+            <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-50">
+              <Lock className="mb-4 h-10 w-10 text-red-200" />
+              <h2 className="text-2xl font-bold">Secure setup link required</h2>
+              <p className="mt-3 leading-7 text-red-100">
+                This page cannot be completed from a bare secure setup URL. For security, each setup form needs a unique access token in the link.
+              </p>
+              <p className="mt-3 leading-7 text-red-100">
+                Use the fresh SMS link sent by AssistantAI, or ask the AI receptionist/team to send a new secure setup link.
+              </p>
+            </div>
+          )}
+
           {!loading && submitted && (
             <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-6">
               <CheckCircle2 className="mb-4 h-10 w-10 text-emerald-300" />
@@ -137,7 +151,7 @@ export default function SecureSetup() {
             </div>
           )}
 
-          {!loading && !submitted && (
+          {!loading && hasToken && !submitted && (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-100">
