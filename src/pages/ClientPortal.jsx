@@ -12,6 +12,11 @@ import {
   Phone,
   Clock,
   ShieldCheck,
+  PlugZap,
+  MessageSquareText,
+  TrendingUp,
+  CalendarCheck,
+  Flag,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
@@ -45,16 +50,47 @@ function formatDuration(seconds) {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
+function percent(value, total) {
+  if (!total) return 0;
+  return Math.round((value / total) * 100);
+}
+
+function compactLabel(value, fallback = 'Unknown') {
+  return String(value || fallback).replace(/_/g, ' ');
+}
+
 function statusBadge(status) {
   const clean = String(status || 'Unknown');
   const lower = clean.toLowerCase();
 
-  if (lower.includes('active') || lower.includes('paid') || lower.includes('live')) {
+  if (lower.includes('active') || lower.includes('paid') || lower.includes('live') || lower.includes('connected') || lower.includes('booked')) {
     return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
   }
 
-  if (lower.includes('pending') || lower.includes('draft') || lower.includes('onboarding')) {
+  if (lower.includes('pending') || lower.includes('draft') || lower.includes('onboarding') || lower.includes('planned')) {
     return 'bg-amber-500/10 text-amber-300 border-amber-500/20';
+  }
+
+  if (lower.includes('error') || lower.includes('failed') || lower.includes('blocked')) {
+    return 'bg-red-500/10 text-red-300 border-red-500/20';
+  }
+
+  return 'bg-white/5 text-gray-300 border-white/10';
+}
+
+function sentimentBadge(sentiment) {
+  const lower = String(sentiment || '').toLowerCase();
+
+  if (lower.includes('positive') || lower.includes('happy') || lower.includes('good')) {
+    return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
+  }
+
+  if (lower.includes('negative') || lower.includes('angry') || lower.includes('poor')) {
+    return 'bg-red-500/10 text-red-300 border-red-500/20';
+  }
+
+  if (lower.includes('neutral')) {
+    return 'bg-slate-500/10 text-slate-300 border-slate-500/20';
   }
 
   return 'bg-white/5 text-gray-300 border-white/10';
@@ -77,13 +113,16 @@ async function loadPortalData() {
       client: null,
       billing: null,
       calls: [],
+      callRecords: [],
       intake: null,
       tasks: [],
       secureSetupRequests: [],
+      integrations: [],
+      notes: [],
     };
   }
 
-  const [billingResult, callsResult, intakeResult, tasksResult, setupResult] = await Promise.all([
+  const [billingResult, callsResult, callRecordsResult, intakeResult, tasksResult, setupResult, integrationsResult, notesResult] = await Promise.all([
     supabase.from('billing_status').select('*').eq('client_id', client.id).limit(1),
     supabase
       .from('client_call_recordings')
@@ -92,6 +131,13 @@ async function loadPortalData() {
       .order('started_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false, nullsFirst: false })
       .limit(50),
+    supabase
+      .from('call_records')
+      .select('*')
+      .eq('client_id', client.id)
+      .order('timestamp', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(100),
     supabase.from('intake_forms').select('*').eq('client_id', client.id).limit(1),
     supabase
       .from('onboarding_tasks')
@@ -106,9 +152,23 @@ async function loadPortalData() {
       .eq('client_id', client.id)
       .order('created_at', { ascending: false })
       .limit(10),
+    supabase
+      .from('integration_status')
+      .select('*')
+      .eq('client_id', client.id)
+      .order('integration_type', { ascending: true, nullsFirst: false })
+      .order('integration_name', { ascending: true })
+      .limit(50),
+    supabase
+      .from('client_notes')
+      .select('*')
+      .eq('client_id', client.id)
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
 
-  for (const result of [billingResult, callsResult, intakeResult, tasksResult, setupResult]) {
+  for (const result of [billingResult, callsResult, callRecordsResult, intakeResult, tasksResult, setupResult, integrationsResult, notesResult]) {
     if (result.error) throw result.error;
   }
 
@@ -116,9 +176,12 @@ async function loadPortalData() {
     client,
     billing: billingResult.data?.[0] || null,
     calls: callsResult.data || [],
+    callRecords: callRecordsResult.data || [],
     intake: intakeResult.data?.[0] || null,
     tasks: tasksResult.data || [],
     secureSetupRequests: setupResult.data || [],
+    integrations: integrationsResult.data || [],
+    notes: notesResult.data || [],
   };
 }
 
@@ -177,14 +240,52 @@ export default function ClientPortal() {
   const client = portalData?.client || null;
   const billing = portalData?.billing || null;
   const calls = portalData?.calls || [];
+  const callRecords = portalData?.callRecords || [];
   const tasks = portalData?.tasks || [];
   const secureSetupRequests = portalData?.secureSetupRequests || [];
+  const integrations = portalData?.integrations || [];
+  const notes = portalData?.notes || [];
 
   const progress = useMemo(() => {
     if (!tasks.length) return 0;
     const completed = tasks.filter((task) => task.completed).length;
     return Math.round((completed / tasks.length) * 100);
   }, [tasks]);
+
+  const callAnalytics = useMemo(() => {
+    const total = callRecords.length;
+    const appointments = callRecords.filter((call) => call.appointment_booked).length;
+    const followUps = callRecords.filter((call) => call.follow_up_required).length;
+
+    const sentimentCounts = callRecords.reduce((acc, call) => {
+      const key = compactLabel(call.sentiment, 'Unknown');
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    const outcomeCounts = callRecords.reduce((acc, call) => {
+      const key = compactLabel(call.outcome_label || call.call_status || call.status, 'Unknown');
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      total,
+      appointments,
+      appointmentRate: percent(appointments, total),
+      followUps,
+      followUpRate: percent(followUps, total),
+      sentimentCounts,
+      outcomeCounts,
+    };
+  }, [callRecords]);
+
+  const integrationSummary = useMemo(() => {
+    const connected = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('connected')).length;
+    const planned = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('planned')).length;
+    const errors = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('error')).length;
+    return { connected, planned, errors };
+  }, [integrations]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -221,7 +322,7 @@ export default function ClientPortal() {
 
             <p className="text-gray-400">
               {client?.business_name
-                ? `Review billing, setup progress, and AI call activity for ${client.business_name}.`
+                ? `Review billing, setup progress, integrations, updates, and AI call activity for ${client.business_name}.`
                 : 'Your login is active, but no AssistantAI client record is linked to this email yet.'}
             </p>
           </div>
@@ -314,9 +415,17 @@ export default function ClientPortal() {
                   <Headphones className="mr-2 h-4 w-4" />
                   Call Activity
                 </TabsTrigger>
+                <TabsTrigger value="integrations">
+                  <PlugZap className="mr-2 h-4 w-4" />
+                  Integrations
+                </TabsTrigger>
                 <TabsTrigger value="setup">
                   <ClipboardList className="mr-2 h-4 w-4" />
                   Setup
+                </TabsTrigger>
+                <TabsTrigger value="updates">
+                  <MessageSquareText className="mr-2 h-4 w-4" />
+                  Updates
                 </TabsTrigger>
               </TabsList>
 
@@ -376,6 +485,98 @@ export default function ClientPortal() {
 
               <TabsContent value="calls">
                 <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <div className="mb-2 flex items-center gap-2 text-gray-400">
+                          <Headphones className="h-4 w-4" />
+                          Analysed calls
+                        </div>
+                        <p className="text-2xl font-semibold text-white">{callAnalytics.total}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <div className="mb-2 flex items-center gap-2 text-gray-400">
+                          <CalendarCheck className="h-4 w-4" />
+                          Appointments
+                        </div>
+                        <p className="text-2xl font-semibold text-white">{callAnalytics.appointmentRate}%</p>
+                        <p className="mt-1 text-sm text-gray-500">{callAnalytics.appointments} booked</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <div className="mb-2 flex items-center gap-2 text-gray-400">
+                          <Flag className="h-4 w-4" />
+                          Follow-up
+                        </div>
+                        <p className="text-2xl font-semibold text-white">{callAnalytics.followUpRate}%</p>
+                        <p className="mt-1 text-sm text-gray-500">{callAnalytics.followUps} flagged</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <div className="mb-2 flex items-center gap-2 text-gray-400">
+                          <TrendingUp className="h-4 w-4" />
+                          Top outcome
+                        </div>
+                        <p className="text-lg font-semibold text-white">
+                          {Object.entries(callAnalytics.outcomeCounts).sort((a, b) => b[1] - a[1])?.[0]?.[0] || '—'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {callRecords.length > 0 && (
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardHeader>
+                        <CardTitle className="text-white">Call analytics dashboard</CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid gap-6 lg:grid-cols-2">
+                        <Breakdown title="Sentiment" items={callAnalytics.sentimentCounts} />
+                        <Breakdown title="Outcomes" items={callAnalytics.outcomeCounts} />
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {callRecords.length > 0 && (
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardHeader>
+                        <CardTitle className="text-white">Call outcomes</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {callRecords.map((record) => (
+                          <div key={record.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                              <div>
+                                <p className="font-semibold text-white">{record.caller_name || 'Unknown caller'}</p>
+                                <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-500">
+                                  <span>{record.caller_phone || 'No phone captured'}</span>
+                                  <span>{formatDate(record.timestamp || record.created_at)}</span>
+                                  <span>{record.enquiry_category || 'Uncategorised'}</span>
+                                  <span>{formatDuration(record.call_duration_seconds || record.duration)}</span>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge className={sentimentBadge(record.sentiment)}>{compactLabel(record.sentiment, 'No sentiment')}</Badge>
+                                <Badge className={statusBadge(record.outcome_label || record.call_status || record.status)}>
+                                  {compactLabel(record.outcome_label || record.call_status || record.status, 'No outcome')}
+                                </Badge>
+                                {record.appointment_booked && <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300">Appointment booked</Badge>}
+                                {record.follow_up_required && <Badge className="border-amber-500/20 bg-amber-500/10 text-amber-300">Follow-up required</Badge>}
+                              </div>
+                            </div>
+                            <p className="mt-3 text-sm leading-7 text-gray-400">{record.ai_summary || 'No AI summary captured.'}</p>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {calls.length === 0 && (
                     <Card className="border-white/5 bg-[#12121a]">
                       <CardContent className="p-8 text-center text-gray-400">
@@ -438,6 +639,57 @@ export default function ClientPortal() {
                 </div>
               </TabsContent>
 
+              <TabsContent value="integrations">
+                <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <p className="text-sm text-gray-500">Connected</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">{integrationSummary.connected}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <p className="text-sm text-gray-500">Planned</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">{integrationSummary.planned}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-white/5 bg-[#12121a]">
+                      <CardContent className="p-5">
+                        <p className="text-sm text-gray-500">Needs attention</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">{integrationSummary.errors}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="border-white/5 bg-[#12121a]">
+                    <CardHeader>
+                      <CardTitle className="text-white">Connected services</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {integrations.length === 0 && <p className="text-gray-400">No integrations are visible yet.</p>}
+
+                      {integrations.map((integration) => (
+                        <div key={integration.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <p className="font-semibold text-white">{integration.integration_name || 'Integration'}</p>
+                              <p className="mt-1 text-sm text-gray-500">
+                                {compactLabel(integration.integration_type, 'Service')} {integration.last_sync ? `• Last sync ${formatDate(integration.last_sync)}` : ''}
+                              </p>
+                              {integration.notes && <p className="mt-3 text-sm leading-7 text-gray-400">{integration.notes}</p>}
+                            </div>
+                            <Badge className={statusBadge(integration.connection_status)}>
+                              {compactLabel(integration.connection_status, 'Not connected')}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
               <TabsContent value="setup">
                 <div className="space-y-5">
                   <Card className="border-white/5 bg-[#12121a]">
@@ -489,9 +741,51 @@ export default function ClientPortal() {
                   </Card>
                 </div>
               </TabsContent>
+
+              <TabsContent value="updates">
+                <Card className="border-white/5 bg-[#12121a]">
+                  <CardHeader>
+                    <CardTitle className="text-white">Client updates</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {notes.length === 0 && <p className="text-gray-400">No client updates are visible yet.</p>}
+
+                    {notes.map((note) => (
+                      <div key={note.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
+                            {compactLabel(note.note_type, 'Update')}
+                          </Badge>
+                          <span className="text-sm text-gray-500">{formatDate(note.created_at)}</span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-7 text-gray-300">{note.content || 'No update content.'}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function Breakdown({ title, items }) {
+  const entries = Object.entries(items || {}).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div>
+      <h4 className="mb-3 text-sm font-semibold text-white">{title}</h4>
+      <div className="space-y-2">
+        {entries.length === 0 && <p className="text-sm text-gray-500">No data yet.</p>}
+        {entries.map(([label, count]) => (
+          <div key={label} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
+            <span className="text-sm text-gray-300">{label}</span>
+            <span className="text-sm font-semibold text-white">{count}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
