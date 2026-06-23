@@ -595,7 +595,9 @@ export default function ClientPortal() {
                   {calls.length === 0 && (
                     <Card className="border-white/5 bg-[#12121a]">
                       <CardContent className="p-8 text-center text-gray-400">
-                        No AI call recordings have been captured for this client yet.
+                        {callRecords.length > 0
+                          ? 'Call analytics are available, but no playable audio recording has been attached to this client yet.'
+                          : 'No AI call recordings have been captured for this client yet.'}
                       </CardContent>
                     </Card>
                   )}
