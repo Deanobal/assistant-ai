@@ -1,7 +1,7 @@
 const CIC_CLIENT_ID = 'e1ef2110-58e6-4abb-9ac0-24d3d0abbddc';
 const CIC_PHONE_NUMBER_ID = '09f37f50-6550-4d81-be85-d05c4b65ee3b';
 const CIC_PHONE_NUMBER = '+13618852186';
-const CIC_CURRENT_ASSISTANT_ID = 'cbd73d14-2515-4633-a01c-928b3ccdbadb';
+const CIC_CURRENT_ASSISTANT_ID = '8452ae19-09ee-4457-8379-8f46ecb6996e';
 
 function getHeader(req, name) {
   const target = String(name || '').toLowerCase();
@@ -159,6 +159,7 @@ export default async function handler(req, res) {
       cic_client_id: CIC_CLIENT_ID,
       cic_phone_number_id: CIC_PHONE_NUMBER_ID,
       cic_phone_number: CIC_PHONE_NUMBER,
+      cic_assistant_id: CIC_CURRENT_ASSISTANT_ID,
       secured: Boolean(getExpectedSecret()),
     });
   }
