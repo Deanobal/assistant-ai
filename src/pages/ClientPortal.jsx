@@ -97,7 +97,7 @@ async function loadPortalData() {
       .from('onboarding_tasks')
       .select('*')
       .eq('client_id', client.id)
-      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('task_phase', { ascending: true })
       .order('created_at', { ascending: true })
       .limit(100),
     supabase
