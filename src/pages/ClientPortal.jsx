@@ -59,20 +59,32 @@ function compactLabel(value, fallback = 'Unknown') {
   return String(value || fallback).replace(/_/g, ' ');
 }
 
-function statusBadge(status) {
-  const clean = String(status || 'Unknown');
-  const lower = clean.toLowerCase();
+function normalizeStatus(value) {
+  return String(value || '').toLowerCase().replace(/[\s-]+/g, '_');
+}
 
-  if (lower.includes('active') || lower.includes('paid') || lower.includes('live') || lower.includes('connected') || lower.includes('booked')) {
+function isConnectedStatus(value) {
+  const clean = normalizeStatus(value);
+  return clean.includes('connected') && !clean.includes('not_connected') && !clean.includes('disconnected');
+}
+
+function statusBadge(status) {
+  const clean = normalizeStatus(status);
+
+  if (clean.includes('error') || clean.includes('failed') || clean.includes('blocked')) {
+    return 'bg-red-500/10 text-red-300 border-red-500/20';
+  }
+
+  if (clean.includes('not_connected') || clean.includes('disconnected')) {
+    return 'bg-white/5 text-gray-300 border-white/10';
+  }
+
+  if (clean.includes('active') || clean.includes('paid') || clean.includes('live') || isConnectedStatus(clean) || clean.includes('booked')) {
     return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
   }
 
-  if (lower.includes('pending') || lower.includes('draft') || lower.includes('onboarding') || lower.includes('planned')) {
+  if (clean.includes('pending') || clean.includes('draft') || clean.includes('onboarding') || clean.includes('planned')) {
     return 'bg-amber-500/10 text-amber-300 border-amber-500/20';
-  }
-
-  if (lower.includes('error') || lower.includes('failed') || lower.includes('blocked')) {
-    return 'bg-red-500/10 text-red-300 border-red-500/20';
   }
 
   return 'bg-white/5 text-gray-300 border-white/10';
@@ -281,9 +293,12 @@ export default function ClientPortal() {
   }, [callRecords]);
 
   const integrationSummary = useMemo(() => {
-    const connected = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('connected')).length;
-    const planned = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('planned')).length;
-    const errors = integrations.filter((item) => String(item.connection_status || '').toLowerCase().includes('error')).length;
+    const connected = integrations.filter((item) => isConnectedStatus(item.connection_status)).length;
+    const planned = integrations.filter((item) => normalizeStatus(item.connection_status).includes('planned')).length;
+    const errors = integrations.filter((item) => {
+      const clean = normalizeStatus(item.connection_status);
+      return clean.includes('error') || clean.includes('failed') || clean.includes('blocked');
+    }).length;
     return { connected, planned, errors };
   }, [integrations]);
 
