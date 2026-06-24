@@ -2,6 +2,17 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), geolocation=(), microphone=(self), payment=(self)" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/careproof", "destination": "/careproof.html" },
     { "source": "/api/blog-posts", "destination": "/api/cms?resource=blog-posts" },
@@ -16,6 +27,26 @@
     { "source": "/api/faq-items", "destination": "/api/cms?resource=faq-items" },
     { "source": "/api/navigation-items", "destination": "/api/cms?resource=navigation-items" },
     { "source": "/api/lead-forms", "destination": "/api/cms?resource=lead-forms" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/Dashboard", "destination": "/" },
+    { "source": "/AdminLogin", "destination": "/" },
+    { "source": "/admin/:path*", "destination": "/" },
+    { "source": "/Analytics", "destination": "/" },
+    { "source": "/ActionInbox", "destination": "/" },
+    { "source": "/LeadDashboard", "destination": "/" },
+    { "source": "/LeadDetail", "destination": "/" },
+    { "source": "/ClientManager", "destination": "/" },
+    { "source": "/ClientConnectors", "destination": "/" },
+    { "source": "/ClientWorkspace", "destination": "/" },
+    { "source": "/ClientLogin", "destination": "/" },
+    { "source": "/ClientPortal", "destination": "/" },
+    { "source": "/Onboarding", "destination": "/" },
+    { "source": "/OnboardingIntake", "destination": "/" },
+    { "source": "/OnboardingSettings", "destination": "/" },
+    { "source": "/SupportInbox", "destination": "/" },
+    { "source": "/UnmatchedSmsInbox", "destination": "/" },
+    { "source": "/TeamAccess", "destination": "/" },
+    { "source": "/SystemReadiness", "destination": "/" },
+    { "source": "/secure-setup/:path*", "destination": "/" },
+    { "source": "/lp/:path*", "destination": "/" }
   ]
 }
