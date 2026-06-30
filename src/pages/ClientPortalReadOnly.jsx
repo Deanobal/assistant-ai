@@ -73,7 +73,7 @@ export default function ClientPortalReadOnly() {
     followUps: calls.filter((call) => call.follow_up_required).length,
     sentiments: countBy(calls, 'sentiment', 'No sentiment'),
     outcomes: countBy(calls, (call) => call.outcome_label || call.call_status || call.status, 'No outcome'),
-    categories: countBy(calls, (call) => call.enquiry_category || call.category, 'Uncategorised'),
+    categories: countBy(calls, (call) => call.enquiry_category, 'Uncategorised'),
   }), [calls]);
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] p-8 text-white">Loading client portal...</div>;
@@ -85,7 +85,7 @@ export default function ClientPortalReadOnly() {
     {!client && <Card className="border-amber-500/20 bg-amber-500/10"><CardContent className="p-6">No linked client record for {session.user.email}.</CardContent></Card>}
     {client && <Tabs defaultValue="overview"><TabsList className="mb-6 flex h-auto flex-wrap gap-2 bg-[#12121a] p-2"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="billing">Billing</TabsTrigger><TabsTrigger value="calls">Call Activity</TabsTrigger><TabsTrigger value="integrations">Integrations</TabsTrigger><TabsTrigger value="setup">Setup</TabsTrigger><TabsTrigger value="updates">Updates</TabsTrigger></TabsList>
       <TabsContent value="overview"><Grid title="Overview"><Field k="Business" v={client.business_name} /><Field k="Email" v={client.email || session.user.email} /><Field k="Phone" v={client.phone || client.mobile_number} /><Field k="Status" v={client.status || client.lifecycle_state} /></Grid></TabsContent>
-      <TabsContent value="billing"><Grid title="Billing"><Field k="Plan" v={billing?.plan || client.plan} /><Field k="Billing status" v={billing?.billing_status} /><Field k="Setup fee" v={billing?.setup_fee} /><Field k="Monthly fee" v={billing?.monthly_fee} /></Grid></TabsContent>
+      <TabsContent value="billing"><Grid title="Billing"><Field k="Plan" v={billing?.plan || client.plan} /><Field k="Billing status" v={billing?.billing_status} /><Field k="Setup fee" v={billing?.setup_fee} /><Field k="Monthly fee" v={billing?.monthly_fee} /><Field k="Renewal date" v={billing?.renewal_date} /></Grid></TabsContent>
       <TabsContent value="calls"><Calls calls={calls} recordings={portal.recordings} stats={stats} /></TabsContent>
       <TabsContent value="integrations"><List title="Integrations" note="Read-only from integration_status. No portal writes are performed." rows={portal.integrations} render={(row) => <><div className="flex items-center justify-between gap-3"><strong>{row.integration_name || 'Integration'}</strong><Badge>{label(row.connection_status, 'Not connected')}</Badge></div><p className="mt-1 text-sm text-gray-500">{label(row.integration_type, 'Service')} - last sync {fmtDate(row.last_sync || row.last_checked_at)}</p>{row.notes && <p className="mt-3 text-gray-300">{row.notes}</p>}</>} /></TabsContent>
       <TabsContent value="setup"><div className="space-y-5"><List title="Setup tasks" rows={portal.tasks} render={(row) => <><strong>{row.task_name}</strong><p className="mt-1 text-sm text-gray-500">{row.task_phase || 'Setup'} {row.due_date ? `- Due ${row.due_date}` : ''}</p></>} /><List title="Secure setup requests" rows={portal.requests} render={(row) => <><strong>{row.corrected_business_name || row.captured_business_name || 'Setup request'}</strong><p className="mt-1 text-sm text-gray-500">Status {label(row.status, 'pending')} - created {fmtDate(row.created_at)}</p></>} /></div></TabsContent>
