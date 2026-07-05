@@ -13,35 +13,35 @@ const benefits = [
 
 export default function BenefitsSection() {
   return (
-    <section className="relative py-16 md:py-20 bg-[#0c0c14]">
+    <section className="relative bg-[#0c0c14] py-14 sm:py-16 md:py-20">
       <div className="bg-radial-glow absolute inset-0" />
-      <div className="relative max-w-7xl mx-auto px-6">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="mb-10 text-center sm:mb-12"
         >
-          <p className="text-cyan-400 mb-3 text-lg font-medium">WHY ASSISTANTAI</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Why It Matters for Lead Capture, Speed, and Growth</h2>
+          <p className="mb-3 text-sm font-medium uppercase tracking-[0.22em] text-cyan-400 sm:text-base md:text-lg">WHY ASSISTANTAI</p>
+          <h2 className="mx-auto max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">Why It Matters for Lead Capture, Speed, and Growth</h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-8">
           {benefits.map((benefit, index) => (
             <motion.div
               key={benefit.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="flex gap-4"
+              transition={{ delay: index * 0.06 }}
+              className="flex gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-4 sm:min-h-[150px] sm:p-5 lg:border-transparent lg:bg-transparent lg:p-0"
             >
-              <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/10 flex items-center justify-center">
-                <benefit.icon className="w-5 h-5 text-cyan-400" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+                <benefit.icon className="h-5 w-5 text-cyan-400" />
               </div>
-              <div>
-                <h3 className="text-white font-semibold mb-1">{benefit.title}</h3>
-                <p className="text-gray-500 text-base leading-relaxed">{benefit.desc}</p>
+              <div className="min-w-0">
+                <h3 className="mb-1 font-semibold text-white">{benefit.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-500 sm:text-base">{benefit.desc}</p>
               </div>
             </motion.div>
           ))}
