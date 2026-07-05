@@ -65,17 +65,38 @@ export default function AdminLayout() {
 
   useEffect(() => {
     if (isLoading) return undefined;
+
     const refreshCounts = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-support-unread-count'] });
       queryClient.invalidateQueries({ queryKey: ['admin-unmatched-sms-count'] });
     };
 
-    const unsubscribeConversation = base44.entities.SupportConversation.subscribe(refreshCounts);
-    const unsubscribeNotification = base44.entities.NotificationLog.subscribe(refreshCounts);
+    const subscriptions = [];
+
+    try {
+      const supportSubscribe = base44?.entities?.SupportConversation?.subscribe;
+      if (typeof supportSubscribe === 'function') {
+        const unsubscribe = supportSubscribe(refreshCounts);
+        if (typeof unsubscribe === 'function') subscriptions.push(unsubscribe);
+      }
+
+      const notificationSubscribe = base44?.entities?.NotificationLog?.subscribe;
+      if (typeof notificationSubscribe === 'function') {
+        const unsubscribe = notificationSubscribe(refreshCounts);
+        if (typeof unsubscribe === 'function') subscriptions.push(unsubscribe);
+      }
+    } catch (error) {
+      console.warn('Admin realtime subscriptions unavailable:', error);
+    }
 
     return () => {
-      unsubscribeConversation?.();
-      unsubscribeNotification?.();
+      subscriptions.forEach((unsubscribe) => {
+        try {
+          unsubscribe?.();
+        } catch (error) {
+          console.warn('Admin realtime unsubscribe failed:', error);
+        }
+      });
     };
   }, [isLoading, queryClient]);
 
