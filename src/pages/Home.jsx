@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
@@ -94,7 +96,7 @@ export default function Home() {
         image={HERO_IMAGE}
         imageAlt={HERO_IMAGE_ALT}
       />
-      <div>
+      <div className="pb-24 md:pb-0">
         <HeroSection />
         <TrustStrip />
         <ProblemSection />
@@ -110,6 +112,15 @@ export default function Home() {
         <PlatformPreviewSection />
         <PricingPreview />
         <CTASection />
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0a0a0f]/92 px-4 py-3 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden">
+        <Link
+          to="/GetStartedNow"
+          className="mx-auto flex min-h-[3.25rem] max-w-md items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/20"
+        >
+          Sign Up Now
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </>
   );
