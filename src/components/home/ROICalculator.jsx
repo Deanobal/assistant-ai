@@ -16,33 +16,33 @@ export default function ROICalculator() {
   const yearlyRevenue = monthlyRevenue * 12;
 
   const resultCards = [
-  { label: 'Example enquiries captured', value: captured, helper: 'Adjustable estimate' },
-  { label: 'Example new jobs', value: newJobs, helper: 'Adjustable estimate' },
-  { label: 'Example monthly value', value: `$${monthlyRevenue.toLocaleString()}`, helper: 'Based on your inputs' },
-  { label: 'Example yearly value', value: `$${yearlyRevenue.toLocaleString()}`, helper: 'Based on your inputs' }];
-
+    { label: 'Enquiries captured', value: captured, helper: 'Example estimate' },
+    { label: 'New jobs', value: newJobs, helper: 'Example estimate' },
+    { label: 'Monthly value', value: `$${monthlyRevenue.toLocaleString()}`, helper: 'Based on inputs' },
+    { label: 'Yearly value', value: `$${yearlyRevenue.toLocaleString()}`, helper: 'Based on inputs' },
+  ];
 
   return (
-    <section className="relative bg-[#070a12] py-16 md:py-24">
-      <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 60%, rgba(34,211,238,0.06) 0%, transparent 65%)' }} />
+    <section className="relative bg-[#070a12] py-14 sm:py-16 md:py-24">
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-20 sm:opacity-30" />
+      <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 60%, rgba(34,211,238,0.05) 0%, transparent 65%)' }} />
 
-      <div className="relative mx-auto max-w-5xl px-6 lg:px-8">
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-12 text-center">
-          
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-4 py-1.5">
+          className="mb-9 text-center sm:mb-12"
+        >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-4 py-1.5 sm:mb-5">
             <Calculator className="h-3.5 w-3.5 text-cyan-400" />
             <span className="text-sm font-medium text-cyan-300">Revenue Calculator</span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mx-auto max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-4xl">
             Estimate What Missed Calls Could Be Worth
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-400 text-lg text-center">Move the sliders to estimate how much potential revenue AssistantAI.com.au could help capture by answering missed calls, qualifying leads, and moving customers to the next step.
-
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base md:text-lg">
+            Move the sliders to estimate how much potential revenue AssistantAI could help capture by answering missed calls and qualifying leads.
           </p>
         </motion.div>
 
@@ -51,95 +51,110 @@ export default function ROICalculator() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0f18]/90 shadow-[0_24px_90px_rgba(6,182,212,0.08)] backdrop-blur-xl">
-          
+          className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0f18]/90 shadow-[0_24px_90px_rgba(6,182,212,0.08)] backdrop-blur-xl sm:rounded-[28px]"
+        >
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
 
           <div className="grid divide-y divide-white/8 md:grid-cols-2 md:divide-x md:divide-y-0">
-            <div className="p-8 md:p-10">
-              <h3 className="mb-6 font-semibold text-white text-xl">Your numbers</h3>
+            <div className="p-5 sm:p-7 md:p-10">
+              <h3 className="mb-5 text-lg font-semibold text-white sm:text-xl md:mb-6">Your numbers</h3>
 
-              <div className="space-y-8">
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <label className="text-sm font-medium text-slate-300">Monthly missed calls</label>
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm font-semibold text-cyan-300">{missedCalls}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <PhoneCall className="h-4 w-4 text-slate-500" />
-                    <input
-                      type="range"
-                      min="0"
-                      max="200"
-                      step="1"
-                      value={missedCalls}
-                      onChange={(event) => setMissedCalls(Number(event.target.value))}
-                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-400" />
-                    
-                  </div>
-                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span className="text-lg">0</span><span className="text-lg">200</span></div>
-                </div>
+              <div className="space-y-7 sm:space-y-8">
+                <SliderField
+                  icon={PhoneCall}
+                  label="Monthly missed calls"
+                  value={missedCalls}
+                  display={missedCalls}
+                  min="0"
+                  max="200"
+                  step="1"
+                  minLabel="0"
+                  maxLabel="200"
+                  onChange={setMissedCalls}
+                />
 
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <label className="text-sm font-medium text-slate-300">Average job value</label>
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm font-semibold text-cyan-300">${avgJobValue.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="h-4 w-4 text-slate-500" />
-                    <input
-                      type="range"
-                      min="100"
-                      max="5000"
-                      step="50"
-                      value={avgJobValue}
-                      onChange={(event) => setAvgJobValue(Number(event.target.value))}
-                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-400" />
-                    
-                  </div>
-                  <div className="mt-2 flex justify-between text-xs text-slate-600"><span className="text-lg">$100</span><span className="text-lg">$5,000</span></div>
-                </div>
+                <SliderField
+                  icon={DollarSign}
+                  label="Average job value"
+                  value={avgJobValue}
+                  display={`$${avgJobValue.toLocaleString()}`}
+                  min="100"
+                  max="5000"
+                  step="50"
+                  minLabel="$100"
+                  maxLabel="$5,000"
+                  onChange={setAvgJobValue}
+                />
 
-                <p className="rounded-xl border border-white/5 bg-white/[0.02] p-4 leading-6 text-slate-500 text-lg">Adjust the values above to see the potential revenue captured when more missed calls are answered and qualified by your AI receptionist.
-
+                <p className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm leading-7 text-slate-500 sm:text-base">
+                  Adjust the values above to see the potential value of answering and qualifying more missed calls.
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col p-8 md:p-10">
-              <h3 className="mb-6 font-semibold text-white text-xl">Potential with AssistantAI.com.au</h3>
+            <div className="flex flex-col p-5 sm:p-7 md:p-10">
+              <h3 className="mb-5 text-lg font-semibold text-white sm:text-xl md:mb-6">Potential with AssistantAI</h3>
 
-              <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                {resultCards.map((card) =>
-                <div key={card.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                    <p className="mb-2 text-slate-500 text-base">{card.label}</p>
-                    <p className="text-2xl font-bold text-white">{card.value}</p>
-                    <p className="mt-1 text-slate-600 text-base">{card.helper}</p>
+              <div className="grid flex-1 grid-cols-2 gap-3">
+                {resultCards.map((card) => (
+                  <div key={card.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:p-5">
+                    <p className="mb-2 text-xs leading-5 text-slate-500 sm:text-sm">{card.label}</p>
+                    <p className="text-xl font-bold text-white sm:text-2xl">{card.value}</p>
+                    <p className="mt-1 text-xs text-slate-600 sm:text-sm">{card.helper}</p>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="mt-5 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-5">
-                <p className="text-white/70 text-base">Example value of captured enquiries</p>
-                <p className="mt-1 text-3xl font-bold text-white">${monthlyRevenue.toLocaleString()}<span className="text-lg font-normal text-white/70">/mo</span></p>
-                <p className="mt-1 text-white/60 text-sm">${yearlyRevenue.toLocaleString()} per year</p>
+                <p className="text-sm text-white/70 sm:text-base">Example captured value</p>
+                <p className="mt-1 text-3xl font-bold text-white">
+                  ${monthlyRevenue.toLocaleString()}<span className="text-base font-normal text-white/70 sm:text-lg">/mo</span>
+                </p>
+                <p className="mt-1 text-sm text-white/60">${yearlyRevenue.toLocaleString()} per year</p>
               </div>
 
               <Link
                 to="/GetStartedNow"
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-white transition-colors hover:bg-white/[0.08] font-medium text-base">Get Started Now
-
-
-
+                className="mt-5 inline-flex min-h-[3.25rem] w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-base font-medium text-white transition-colors hover:bg-white/[0.08]"
+              >
+                Get Started Now
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </motion.div>
 
-        <p className="mt-4 text-center leading-6 text-slate-600 text-sm">This calculator is an example only. Results depend on call volume, job value, follow-up speed, and your sales process.
-
+        <p className="mt-4 text-center text-xs leading-6 text-slate-600 sm:text-sm">
+          This calculator is an example only. Results depend on call volume, job value, follow-up speed, and your sales process.
         </p>
       </div>
-    </section>);
+    </section>
+  );
+}
 
+function SliderField({ icon: Icon, label, value, display, min, max, step, minLabel, maxLabel, onChange }) {
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <label className="text-sm font-medium text-slate-300">{label}</label>
+        <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm font-semibold text-cyan-300">{display}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Icon className="h-4 w-4 shrink-0 text-slate-500" />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-400"
+        />
+      </div>
+      <div className="mt-2 flex justify-between text-xs text-slate-600 sm:text-sm">
+        <span>{minLabel}</span>
+        <span>{maxLabel}</span>
+      </div>
+    </div>
+  );
 }
