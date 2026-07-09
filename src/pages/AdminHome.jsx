@@ -77,6 +77,29 @@ function money(value) {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(value || 0);
 }
 
+function moneyByCurrency(value, currency = 'AUD') {
+  return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'en-AU', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value || 0);
+}
+
+function formatSeconds(value) {
+  if (!Number.isFinite(Number(value))) return 'Not connected';
+  const seconds = Math.round(Number(value));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
+}
+
+function formatAiCost(metric) {
+  if (!metric?.connected) return 'Not connected';
+  return moneyByCurrency(metric.value, metric.currency || 'AUD');
+}
+
+function formatLatency(metric) {
+  if (!metric?.connected || !Number.isFinite(Number(metric.value_ms))) return 'Not connected';
+  return `${Math.round(Number(metric.value_ms))}ms`;
+}
+
 function dateLabel(value) {
   if (!value) return 'Date unavailable';
   const date = new Date(value);
@@ -186,8 +209,21 @@ export default function AdminHome() {
   const { data: tasks = [], isFetching: tasksFetching } = useQuery({ queryKey: ['admin-home-tasks'], queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
   const { data: billingRecords = [], isFetching: billingFetching } = useQuery({ queryKey: ['admin-home-billing'], queryFn: () => base44.entities.BillingStatus.list('-updated_date', 300), initialData: [] });
   const { data: configStatus = null, isFetching: configFetching } = useQuery({ queryKey: ['admin-home-config-status'], queryFn: () => fetch('/api/config-status').then((response) => response.json()), initialData: null });
+  const { data: adminAiMetrics = null, isFetching: adminAiFetching } = useQuery({
+    queryKey: ['admin-ai-metrics'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin-ai-metrics', { cache: 'no-store' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.details || json?.error || 'Admin AI metrics unavailable');
+      return json;
+    },
+    initialData: null,
+    refetchInterval: 30000,
+    retry: false,
+    staleTime: 0,
+  });
 
-  const isRefreshing = leadsFetching || clientsFetching || conversationsFetching || tasksFetching || billingFetching || configFetching;
+  const isRefreshing = leadsFetching || clientsFetching || conversationsFetching || tasksFetching || billingFetching || configFetching || adminAiFetching;
 
   const metrics = useMemo(() => {
     const openConversations = conversations.filter((item) => !['resolved', 'closed'].includes(item.status));
@@ -231,6 +267,22 @@ export default function AdminHome() {
   const recentClientRows = clients.slice(0, 5);
   const recentLeadRows = leads.slice(0, 5);
   const recentTaskRows = tasks.filter((task) => !task.completed).slice(0, 5);
+  const aiOperationalMetrics = adminAiMetrics?.metrics || {};
+  const aiCalls24h = aiOperationalMetrics.calls_24h || 0;
+  const aiCostMetric = aiOperationalMetrics.ai_cost_24h || {};
+  const aiLatencyMetric = aiOperationalMetrics.p95_latency || {};
+  const aiDurationMetric = aiOperationalMetrics.p95_call_duration || {};
+  const aiCostConnected = Boolean(aiCostMetric.connected);
+  const aiLatencyConnected = Boolean(aiLatencyMetric.connected);
+  const aiDurationConnected = Boolean(aiDurationMetric.connected);
+  const aiCostSubtitle = aiCostConnected
+    ? `From ${aiCostMetric.field} across ${aiCalls24h} call records in 24h`
+    : `${aiCalls24h} call records checked; no real cost field connected`;
+  const aiLatencySubtitle = aiLatencyConnected
+    ? `From ${aiLatencyMetric.field} on call_records`
+    : aiDurationConnected
+      ? `No latency field yet. P95 call duration is ${formatSeconds(aiDurationMetric.value_seconds)}`
+      : `${aiCalls24h} call records checked; no latency field connected`;
 
   return (
     <div className="space-y-8 text-slate-950">
@@ -244,7 +296,7 @@ export default function AdminHome() {
                 <Badge className={`rounded-full border-0 px-4 py-2 shadow-sm ${isRefreshing ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>{isRefreshing ? 'Refreshing live data' : 'Live data loaded'}</Badge>
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">AssistantAI admin console</h1>
-              <p className="mt-2 text-sm text-slate-600">Live Base44 records, first-party analytics and configuration status. Widgets stay visible; unavailable sources are marked as not connected instead of guessed.</p>
+              <p className="mt-2 text-sm text-slate-600">Live Base44 records, first-party analytics and configuration status. AI cost and latency widgets now check live call_records and only show values when real source fields exist.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/Onboarding" className="rounded-full border border-white/70 bg-white/50 px-5 py-3 text-sm font-bold text-slate-800 shadow-sm backdrop-blur-xl">New client</Link>
@@ -273,9 +325,9 @@ export default function AdminHome() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <LiveMetricCard title="24h Intake" value={money(metrics.intake24h)} subtitle={`${metrics.billing24h.length} billing records updated or created in 24h`} icon={DollarSign} tone="green" />
-              <LiveMetricCard title="24h AI Cost" value="Not connected" subtitle="No live AI cost usage table/API is wired yet" icon={Zap} tone="amber" badge="Source needed" />
+              <LiveMetricCard title="24h AI Cost" value={formatAiCost(aiCostMetric)} subtitle={aiCostSubtitle} icon={Zap} tone={aiCostConnected ? 'green' : 'amber'} badge={aiCostConnected ? 'Live' : 'Source needed'} />
               <LiveMetricCard title="Success Rate" value={`${metrics.conversionRate}%`} subtitle={`${metrics.wonLeads.length} won leads from ${leads.length} lead records`} icon={TrendingUp} tone="green" />
-              <LiveMetricCard title="P95 Latency" value="Not connected" subtitle="No live latency source is wired yet" icon={Radio} tone="amber" badge="Source needed" />
+              <LiveMetricCard title="P95 Latency" value={formatLatency(aiLatencyMetric)} subtitle={aiLatencySubtitle} icon={Radio} tone={aiLatencyConnected ? 'green' : 'amber'} badge={aiLatencyConnected ? 'Live' : 'Source needed'} />
             </div>
 
             <ReadinessPanel score={metrics.readinessScore} readinessGroups={metrics.readinessGroups} />
