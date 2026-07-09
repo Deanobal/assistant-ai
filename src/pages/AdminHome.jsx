@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, DollarSign, FileText, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, DollarSign, FileText, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Radio, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import HomeAnalyticsPanel from '@/components/admin/HomeAnalyticsPanel';
@@ -55,6 +55,10 @@ function percentage(value, total) {
   return Math.round((value / total) * 100);
 }
 
+function recordDate(record) {
+  return record?.created_at || record?.created_date || record?.updated_at || record?.updated_date;
+}
+
 function isRecent(dateValue, days = 7) {
   if (!dateValue) return false;
   const date = new Date(dateValue).getTime();
@@ -78,6 +82,18 @@ function dateLabel(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Date unavailable';
   return date.toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function relativeTime(value) {
+  if (!value) return 'Date unavailable';
+  const date = new Date(value).getTime();
+  if (Number.isNaN(date)) return 'Date unavailable';
+  const minutes = Math.max(0, Math.floor((Date.now() - date) / 60000));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function StatusPill({ ready }) {
@@ -112,17 +128,17 @@ function MiniLink({ item }) {
   );
 }
 
-function LiveMetricCard({ title, value, subtitle, icon: Icon, tone = 'slate' }) {
+function LiveMetricCard({ title, value, subtitle, icon: Icon, tone = 'slate', badge = 'Live' }) {
   const toneClass = tone === 'red' ? 'bg-red-50 text-red-700' : tone === 'amber' ? 'bg-amber-50 text-amber-700' : tone === 'green' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700';
   return (
     <div className="rounded-[26px] border border-white/55 bg-white/70 p-5 shadow-sm backdrop-blur-2xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <div className="flex items-center gap-2"><p className="text-sm font-medium text-slate-500">{title}</p><Badge className={`border-0 ${toneClass}`}>{badge}</Badge></div>
           <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">{value}</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">{subtitle}</p>
         </div>
-        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${toneClass}`}><Icon className="h-5 w-5" /></div>
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${toneClass}`}><Icon className="h-5 w-5" /></div>
       </div>
     </div>
   );
@@ -151,6 +167,18 @@ function LiveRecordsPanel({ title, rows, emptyText, renderRow, icon: Icon }) {
   );
 }
 
+function LiveRunsTable({ rows }) {
+  return (
+    <div className="rounded-[26px] border border-white/55 bg-white/70 p-5 shadow-sm backdrop-blur-2xl">
+      <div className="mb-4 flex items-center justify-between"><h3 className="font-bold text-slate-950"><span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-500" />Live Runs Stream</h3><Badge className="border-0 bg-emerald-50 text-emerald-700">Live records</Badge></div>
+      <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70">
+        <div className="grid grid-cols-4 px-4 py-3 text-xs font-semibold text-slate-500"><span>Source</span><span>Record</span><span>Updated</span><span className="text-right">Status</span></div>
+        {rows.length === 0 ? <div className="border-t border-slate-200/70 px-4 py-4 text-sm text-slate-500">No recent live records.</div> : rows.map((row) => <div key={row.key} className="grid grid-cols-4 border-t border-slate-200/70 px-4 py-3 text-sm text-slate-700"><span className="font-medium text-slate-900">{row.source}</span><span className="truncate">{row.name}</span><span>{row.time}</span><span className="text-right"><span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{row.status}</span></span></div>)}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminHome() {
   const { data: leads = [], isFetching: leadsFetching } = useQuery({ queryKey: ['admin-home-leads'], queryFn: () => base44.entities.Lead.list('-updated_date', 200), initialData: [] });
   const { data: clients = [], isFetching: clientsFetching } = useQuery({ queryKey: ['admin-home-clients'], queryFn: () => base44.entities.Client.list('-updated_date', 200), initialData: [] });
@@ -166,8 +194,7 @@ export default function AdminHome() {
     const unreadConversations = conversations.filter((item) => item.unread_for_admin && !['resolved', 'closed'].includes(item.status));
     const newLeads = leads.filter((lead) => lead.status === 'New Lead');
     const wonLeads = leads.filter((lead) => lead.status === 'Won');
-    const recentLeads = leads.filter((lead) => isRecent(lead.created_at || lead.created_date || lead.updated_date));
-    const leads24h = leads.filter((lead) => isWithinHours(lead.created_at || lead.created_date || lead.updated_date, 24));
+    const leads24h = leads.filter((lead) => isWithinHours(recordDate(lead), 24));
     const onboardingClients = clients.filter((client) => client.lifecycle_state !== 'live' && client.status !== 'Live');
     const liveClients = clients.filter((client) => client.lifecycle_state === 'live' || client.status === 'Live');
     const overdueTasks = tasks.filter((task) => task.due_date && !task.completed && new Date(task.due_date) < new Date());
@@ -180,9 +207,17 @@ export default function AdminHome() {
     const taskCompletion = tasks.length ? percentage(completedTasks.length, tasks.length) : 0;
     const conversionRate = leads.length ? percentage(wonLeads.length, leads.length) : 0;
     const activeBilling = billingRecords.filter((item) => item.billing_status === 'active');
+    const billing24h = billingRecords.filter((item) => isWithinHours(recordDate(item), 24));
     const setupRecorded = activeBilling.reduce((sum, item) => sum + Number(item.setup_fee || 0), 0);
     const monthlyRecurring = activeBilling.reduce((sum, item) => sum + Number(item.monthly_fee || 0), 0);
-    return { openConversations, unreadConversations, newLeads, wonLeads, recentLeads, leads24h, onboardingClients, liveClients, overdueTasks, completedTasks, requiredTasks, blockedTasks, readinessGroups, readyGroups, readinessScore, taskCompletion, conversionRate, activeBilling, setupRecorded, monthlyRecurring };
+    const intake24h = billing24h.reduce((sum, item) => sum + Number(item.setup_fee || 0) + Number(item.monthly_fee || 0), 0);
+    const liveRows = [
+      ...leads.slice(0, 4).map((lead) => ({ key: `lead-${lead.id || recordDate(lead)}`, source: 'Lead', name: lead.full_name || lead.name || lead.business_name || 'Unnamed lead', time: relativeTime(recordDate(lead)), status: lead.status || 'Open' })),
+      ...clients.slice(0, 4).map((client) => ({ key: `client-${client.id || recordDate(client)}`, source: 'Client', name: client.business_name || client.full_name || 'Unnamed client', time: relativeTime(recordDate(client)), status: client.status || client.lifecycle_state || 'Active' })),
+      ...tasks.slice(0, 4).map((task) => ({ key: `task-${task.id || task.task_name}`, source: 'Task', name: task.task_name || 'Unnamed task', time: relativeTime(recordDate(task)), status: task.completed ? 'Done' : task.blocked ? 'Blocked' : 'Open' })),
+      ...conversations.slice(0, 4).map((conversation) => ({ key: `conversation-${conversation.id || recordDate(conversation)}`, source: 'Support', name: conversation.subject || conversation.customer_name || 'Conversation', time: relativeTime(recordDate(conversation)), status: conversation.status || 'Open' })),
+    ].sort((a, b) => String(a.time).localeCompare(String(b.time))).slice(0, 8);
+    return { openConversations, unreadConversations, newLeads, wonLeads, leads24h, onboardingClients, liveClients, overdueTasks, completedTasks, requiredTasks, blockedTasks, readinessGroups, readyGroups, readinessScore, taskCompletion, conversionRate, activeBilling, billing24h, setupRecorded, monthlyRecurring, intake24h, liveRows };
   }, [leads, clients, conversations, tasks, billingRecords, configStatus]);
 
   const criticalAlerts = [
@@ -209,7 +244,7 @@ export default function AdminHome() {
                 <Badge className={`rounded-full border-0 px-4 py-2 shadow-sm ${isRefreshing ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>{isRefreshing ? 'Refreshing live data' : 'Live data loaded'}</Badge>
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">AssistantAI admin console</h1>
-              <p className="mt-2 text-sm text-slate-600">Live Base44 records, first-party analytics and configuration status. Forecasts and placeholder metrics have been removed.</p>
+              <p className="mt-2 text-sm text-slate-600">Live Base44 records, first-party analytics and configuration status. Widgets stay visible; unavailable sources are marked as not connected instead of guessed.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/Onboarding" className="rounded-full border border-white/70 bg-white/50 px-5 py-3 text-sm font-bold text-slate-800 shadow-sm backdrop-blur-xl">New client</Link>
@@ -232,18 +267,23 @@ export default function AdminHome() {
                   ['Live clients present', metrics.liveClients.length > 0],
                   ['Billing records present', billingRecords.length > 0],
                   ['Required onboarding tasks complete', metrics.requiredTasks.length ? metrics.requiredTasks.every((task) => task.completed) : false],
-                ].map(([label, done]) => <div key={label} className="flex items-center gap-3 text-sm text-slate-700">{done ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-slate-400" />}{label}</div>)}
+                ].map(([text, done]) => <div key={text} className="flex items-center gap-3 text-sm text-slate-700">{done ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-slate-400" />}{text}</div>)}
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <LiveMetricCard title="Leads" value={leads.length} subtitle={`${metrics.leads24h.length} created or updated in the last 24h`} icon={BarChart3} tone="green" />
-              <LiveMetricCard title="Open conversations" value={metrics.openConversations.length} subtitle={`${metrics.unreadConversations.length} unread and unresolved`} icon={Inbox} tone={metrics.unreadConversations.length ? 'amber' : 'green'} />
-              <LiveMetricCard title="Live clients" value={metrics.liveClients.length} subtitle={`${metrics.onboardingClients.length} clients still onboarding`} icon={BriefcaseBusiness} tone="slate" />
-              <LiveMetricCard title="Overdue tasks" value={metrics.overdueTasks.length} subtitle={`${metrics.blockedTasks.length} blocked tasks`} icon={AlertTriangle} tone={metrics.overdueTasks.length || metrics.blockedTasks.length ? 'red' : 'green'} />
+              <LiveMetricCard title="24h Intake" value={money(metrics.intake24h)} subtitle={`${metrics.billing24h.length} billing records updated or created in 24h`} icon={DollarSign} tone="green" />
+              <LiveMetricCard title="24h AI Cost" value="Not connected" subtitle="No live AI cost usage table/API is wired yet" icon={Zap} tone="amber" badge="Source needed" />
+              <LiveMetricCard title="Success Rate" value={`${metrics.conversionRate}%`} subtitle={`${metrics.wonLeads.length} won leads from ${leads.length} lead records`} icon={TrendingUp} tone="green" />
+              <LiveMetricCard title="P95 Latency" value="Not connected" subtitle="No live latency source is wired yet" icon={Radio} tone="amber" badge="Source needed" />
             </div>
 
             <ReadinessPanel score={metrics.readinessScore} readinessGroups={metrics.readinessGroups} />
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+            <LiveMetricCard title="30-day Intake" value={money(metrics.monthlyRecurring)} subtitle="Current monthly recurring total from active billing records" icon={DollarSign} tone="green" />
+            <LiveRunsTable rows={metrics.liveRows} />
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
@@ -285,7 +325,7 @@ export default function AdminHome() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <LiveRecordsPanel title="Recent lead records" rows={recentLeadRows} emptyText="No lead records yet." icon={BarChart3} renderRow={(lead) => <Link key={lead.id} to={`/LeadDetail?id=${lead.id}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50"><div><p className="font-bold text-slate-950">{lead.full_name || lead.name || lead.business_name || 'Unnamed lead'}</p><p className="text-sm text-slate-500">{lead.status || 'Status pending'} · {dateLabel(lead.created_at || lead.created_date || lead.updated_date)}</p></div><ArrowUpRight className="h-4 w-4 text-slate-400" /></Link>} />
+        <LiveRecordsPanel title="Recent lead records" rows={recentLeadRows} emptyText="No lead records yet." icon={BarChart3} renderRow={(lead) => <Link key={lead.id} to={`/LeadDetail?id=${lead.id}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50"><div><p className="font-bold text-slate-950">{lead.full_name || lead.name || lead.business_name || 'Unnamed lead'}</p><p className="text-sm text-slate-500">{lead.status || 'Status pending'} · {dateLabel(recordDate(lead))}</p></div><ArrowUpRight className="h-4 w-4 text-slate-400" /></Link>} />
         <LiveRecordsPanel title="Open onboarding tasks" rows={recentTaskRows} emptyText="No open onboarding tasks." icon={ClipboardList} renderRow={(task) => <div key={task.id || task.task_name} className="rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{task.task_name || 'Unnamed task'}</p><p className="text-sm text-slate-500">{task.task_phase || 'Setup'} · {task.due_date ? `Due ${task.due_date}` : 'No due date'}</p></div>{task.blocked && <Badge className="border-0 bg-red-50 text-red-700">Blocked</Badge>}</div></div>} />
       </section>
 
