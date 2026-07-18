@@ -89,7 +89,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
 
   const handleStart = async () => {
     if (!isReady) {
-      setMessage('The live demo is not configured in this deployment yet.');
+      setMessage('The live voice demo is still being connected. You can get started or leave your details and we’ll send access.');
       return;
     }
 
@@ -121,7 +121,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
           callStartedRef.current = false;
           window.clearTimeout(timeoutRef.current);
           setStatus('idle');
-          setMessage(`Vapi error: ${formatError(error)}`);
+          setMessage('The voice demo had trouble starting. Please try again, or use Get Started Now to continue.');
           console.error('[AssistantAI Vapi demo error]', error);
         });
 
@@ -144,10 +144,10 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
 
       const detail = error?.name === 'NotAllowedError'
         ? 'Microphone permission was blocked. Allow microphone access in your browser and try again.'
-        : `Vapi start failed: ${formatError(error)}`;
+        : 'The voice demo could not start in this browser. Please try again shortly, or use Get Started Now to continue.';
 
       setMessage(detail);
-      console.error('[AssistantAI Vapi demo start failed]', error);
+      console.error('[AssistantAI Vapi demo start failed]', error, formatError(error));
     }
   };
 
