@@ -24,7 +24,7 @@ async function submitToSupabaseApi(payload) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error || data?.details || 'Contact API failed');
+    throw new Error(data?.error || data?.details || 'We could not submit your message right now. Please try again or email sales@assistantai.com.au.');
   }
   return data;
 }
@@ -58,7 +58,7 @@ export default function ContactForm() {
       service_needed: form.enquiry_type || 'general_enquiry',
       message: form.message,
       lead_source: 'website',
-      source_page: '/contact',
+      source_page: '/Contact',
       buyer_intent: form.enquiry_type === 'pricing' ? 'pricing_interest' : 'researching',
     };
 
