@@ -2,20 +2,20 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": [
-    { "source": "/careproof", "destination": "/careproof.html" },
-    { "source": "/api/blog-posts", "destination": "/api/cms?resource=blog-posts" },
-    { "source": "/api/content-blocks", "destination": "/api/cms?resource=content-blocks" },
-    { "source": "/api/site-settings", "destination": "/api/cms?resource=site-settings" },
-    { "source": "/api/media-assets", "destination": "/api/cms?resource=media-assets" },
-    { "source": "/api/media-upload", "destination": "/api/cms?resource=media-upload" },
-    { "source": "/api/content-drafts", "destination": "/api/cms?resource=content-drafts" },
-    { "source": "/api/landing-pages", "destination": "/api/cms?resource=landing-pages" },
-    { "source": "/api/offers-pricing", "destination": "/api/cms?resource=offers-pricing" },
-    { "source": "/api/social-proof", "destination": "/api/cms?resource=social-proof" },
-    { "source": "/api/faq-items", "destination": "/api/cms?resource=faq-items" },
-    { "source": "/api/navigation-items", "destination": "/api/cms?resource=navigation-items" },
-    { "source": "/api/lead-forms", "destination": "/api/cms?resource=lead-forms" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
