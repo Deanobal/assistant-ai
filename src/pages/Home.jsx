@@ -17,49 +17,75 @@ import ROICalculator from '../components/home/ROICalculator';
 import RevenueSystemSection from '../components/home/RevenueSystemSection';
 import HighIntentLinks from '../components/seo/HighIntentLinks';
 
+const SITE_URL = 'https://www.assistantai.com.au';
 const HERO_IMAGE = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/Hero.png';
 const HERO_IMAGE_ALT = 'AssistantAI AI receptionist for Australian service businesses';
+const LOGO_URL = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png';
 
 const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
     name: 'AssistantAI',
-    url: 'https://assistantai.com.au/',
-    logo: 'https://assistantai.com.au/icons/admin-inbox-icon.svg',
+    url: `${SITE_URL}/`,
+    logo: LOGO_URL,
+    email: 'sales@assistantai.com.au',
+    areaServed: 'AU',
     description: 'AssistantAI helps Australian service businesses answer missed calls, capture new enquiries, support bookings, and follow up faster.',
-    areaServed: {
-      '@type': 'Country',
-      name: 'Australia',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: 'AssistantAI AI Receptionist',
-    provider: {
-      '@type': 'Organization',
-      name: 'AssistantAI',
-      url: 'https://assistantai.com.au/',
-    },
-    serviceType: 'AI receptionist, enquiry capture, booking support, and follow-up for service businesses',
-    areaServed: {
-      '@type': 'Country',
-      name: 'Australia',
-    },
-    audience: {
-      '@type': 'Audience',
-      audienceType: 'Australian service businesses',
-    },
-    url: 'https://assistantai.com.au/',
-    description: 'AssistantAI helps Australian cleaning, trades, property, and other service businesses answer calls, capture enquiries, reduce admin, and follow up faster with an AI receptionist.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
     name: 'AssistantAI',
-    url: 'https://assistantai.com.au/',
+    url: `${SITE_URL}/`,
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    inLanguage: 'en-AU',
     description: 'AI receptionist and enquiry follow-up support for Australian service businesses.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${SITE_URL}/#ai-receptionist-service`,
+    name: 'AssistantAI AI Receptionist',
+    provider: { '@id': `${SITE_URL}/#organization` },
+    serviceType: 'AI receptionist, enquiry capture, booking support, CRM follow-up automation, and service business call answering',
+    areaServed: 'AU',
+    audience: {
+      '@type': 'BusinessAudience',
+      audienceType: 'Australian service businesses',
+    },
+    url: `${SITE_URL}/`,
+    description: 'AssistantAI helps Australian cleaning, trades, property, clinic, legal, real estate, and service businesses answer calls, capture enquiries, reduce admin, and follow up faster with an AI receptionist.',
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'AssistantAI plans',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          name: 'Starter',
+          price: '497',
+          priceCurrency: 'AUD',
+          url: `${SITE_URL}/GetStartedNow?plan=starter`,
+          description: 'AI receptionist setup for missed-call coverage, lead capture, and simple follow-up. Setup fee applies.',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Growth',
+          price: '1500',
+          priceCurrency: 'AUD',
+          url: `${SITE_URL}/GetStartedNow?plan=growth`,
+          description: 'AI call handling, booking support, customer updates, and SMS/email follow-up. Setup fee applies.',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Enterprise',
+          url: `${SITE_URL}/Contact`,
+          description: 'Custom AI receptionist and workflow automation review for multi-location, complex routing, and advanced integrations.',
+        },
+      ],
+    },
   },
   {
     '@context': 'https://schema.org',
@@ -78,7 +104,15 @@ const structuredData = [
         name: 'Who is AssistantAI built for?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'AssistantAI is built for Australian service-based businesses including cleaning, trades, property, and other service providers that want faster response times and less admin.',
+          text: 'AssistantAI is built for Australian service-based businesses including cleaning, trades, clinics, property, real estate, legal, and other service providers that want faster response times and less admin.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can AssistantAI help recover missed calls?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. AssistantAI can answer enquiries, capture caller details, identify urgency, and support follow-up workflows so fewer high-intent leads are lost.',
         },
       },
     ],
