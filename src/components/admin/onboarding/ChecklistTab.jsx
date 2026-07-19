@@ -3,11 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { TASK_PHASES, getProgressFromTasks } from './onboardingConfig';
+import { TASK_PHASES, getProgressFromTasks, getTaskPhase, isRequiredTask } from './onboardingConfig';
 import { getSmartPriorityTask } from './smartPriority';
 
 export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, onUpdateDueDate, client }) {
   const progress = getProgressFromTasks(tasks);
+  const billingLocked = client?.status === 'Awaiting Payment' || client?.workflow_phase === 'Payment';
 
   return (
     <div className="space-y-6">
@@ -23,11 +24,21 @@ export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, onU
           <div className="h-3 rounded-full bg-white/5 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: `${progress}%` }} />
           </div>
+          {billingLocked && (
+            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm leading-6 text-amber-100">
+              Checklist actions are locked until billing is active. Use the Billing tab to send a payment link or apply an admin billing override.
+            </div>
+          )}
+          {!tasks.length && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-gray-400">
+              No onboarding tasks exist for this client yet.
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {TASK_PHASES.map((phase) => {
-        const phaseTasks = tasks.filter((task) => task.task_phase === phase);
+        const phaseTasks = tasks.filter((task) => getTaskPhase(task) === phase);
         if (!phaseTasks.length) return null;
 
         return (
@@ -37,35 +48,37 @@ export default function ChecklistTab({ tasks, onToggleTask, onToggleBlocked, onU
               <div className="space-y-3">
                 {phaseTasks.map((task) => {
                   const smartTask = getSmartPriorityTask(task, client);
+                  const required = isRequiredTask(task);
 
                   return (
-                  <div key={task.id} className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-white font-medium">{task.task_name}</p>
-                        <Badge className={task.required ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-white/5 text-gray-300 border-white/10'}>{task.required ? 'Required' : 'Optional'}</Badge>
-                        {task.blocked && <Badge className="bg-red-500/10 text-red-400 border-red-500/20">Blocked</Badge>}
-                        {smartTask.days_overdue > 0 && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Overdue</Badge>}
-                        {smartTask.smart_priority && <Badge className="bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20">Smart Priority</Badge>}
+                    <div key={task.id} className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-white font-medium">{task.task_name}</p>
+                          <Badge className={required ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-white/5 text-gray-300 border-white/10'}>{required ? 'Required' : 'Optional'}</Badge>
+                          {task.blocked && <Badge className="bg-red-500/10 text-red-400 border-red-500/20">Blocked</Badge>}
+                          {smartTask.days_overdue > 0 && <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20">Overdue</Badge>}
+                          {smartTask.smart_priority && <Badge className="bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20">Smart Priority</Badge>}
+                        </div>
+                        <p className="text-sm text-gray-400 mt-1">Owner: {task.assigned_to || 'Unassigned'}{task.due_date ? ` • Due ${task.due_date}` : ''}{smartTask.smart_priority ? ` • Score ${smartTask.priority_score}` : ''}</p>
+                        {task.notes && <p className="text-sm text-gray-500 mt-2">{task.notes}</p>}
                       </div>
-                      <p className="text-sm text-gray-400 mt-1">Owner: {task.assigned_to || 'Unassigned'}{task.due_date ? ` • Due ${task.due_date}` : ''}{smartTask.smart_priority ? ` • Score ${smartTask.priority_score}` : ''}</p>
-                      {task.notes && <p className="text-sm text-gray-500 mt-2">{task.notes}</p>}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <Input
+                          type="date"
+                          value={task.due_date || ''}
+                          disabled={billingLocked}
+                          onChange={(e) => onUpdateDueDate(task, e.target.value)}
+                          className="w-full sm:w-[170px] bg-transparent border-white/10 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <Button size="sm" variant={task.completed ? 'secondary' : 'outline'} disabled={billingLocked} onClick={() => onToggleTask(task)} className="border-white/10 bg-transparent text-white hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50">
+                          {task.completed ? 'Completed' : 'Mark Complete'}
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={billingLocked} onClick={() => onToggleBlocked(task)} className="border-white/10 bg-transparent text-white hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50">
+                          {task.blocked ? 'Unblock' : 'Mark Blocked'}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <Input
-                        type="date"
-                        value={task.due_date || ''}
-                        onChange={(e) => onUpdateDueDate(task, e.target.value)}
-                        className="w-full sm:w-[170px] bg-transparent border-white/10 text-white"
-                      />
-                      <Button size="sm" variant={task.completed ? 'secondary' : 'outline'} onClick={() => onToggleTask(task)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                        {task.completed ? 'Completed' : 'Mark Complete'}
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => onToggleBlocked(task)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                        {task.blocked ? 'Unblock' : 'Mark Blocked'}
-                      </Button>
-                    </div>
-                  </div>
                   );
                 })}
               </div>
