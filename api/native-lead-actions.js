@@ -1,7 +1,7 @@
 const PLAN_PRICING = {
-  Starter: { setup_fee: 1500, monthly_fee: 550 },
-  Growth: { setup_fee: 2500, monthly_fee: 950 },
-  Pro: { setup_fee: 4500, monthly_fee: 1550 },
+  Starter: { setup_fee: 1500, monthly_fee: 497 },
+  Growth: { setup_fee: 3000, monthly_fee: 1500 },
+  Enterprise: { setup_fee: 7500, monthly_fee: 3000 },
 };
 
 function getConfig() {
@@ -45,6 +45,13 @@ function cleanPhone(value) {
   if (digits.startsWith('4') && digits.length === 9) return `+61${digits}`;
   if (String(value || '').trim().startsWith('+')) return `+${digits}`;
   return '';
+}
+
+function normalizePlan(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (raw.includes('enterprise')) return 'Enterprise';
+  if (raw.includes('growth')) return 'Growth';
+  return 'Starter';
 }
 
 async function notify(req, payload) {
@@ -99,7 +106,7 @@ async function convertWonLeadToOnboarding(payload) {
     if (existing) return { client: existing, alreadyExists: true };
   }
 
-  const plan = currentLead.selected_plan || currentLead.likely_plan_fit || 'Starter';
+  const plan = normalizePlan(currentLead.selected_plan || currentLead.likely_plan_fit || 'Starter');
   const pricing = PLAN_PRICING[plan] || PLAN_PRICING.Starter;
   const now = new Date().toISOString();
 
@@ -128,7 +135,7 @@ async function convertWonLeadToOnboarding(payload) {
 
   await db('leads', { method: 'PATCH', query: `id=eq.${encode(currentLead.id)}`, body: { status: 'Onboarding', client_id: client.id, updated_at: now } });
   await db('billing_status', { method: 'POST', body: [{ client_id: client.id, plan, setup_fee: pricing.setup_fee, monthly_fee: pricing.monthly_fee, billing_status: 'awaiting_payment' }] }).catch(() => null);
-  await db('client_notes', { method: 'POST', body: [{ client_id: client.id, note_type: 'conversion', content: 'Client created from won lead.', created_by: 'native-lead-actions' }] }).catch(() => null);
+  await db('client_notes', { method: 'POST', body: [{ client_id: client.id, note_type: 'conversion', content: `Client created from won lead on ${plan} plan.`, created_by: 'native-lead-actions' }] }).catch(() => null);
 
   return { client };
 }
