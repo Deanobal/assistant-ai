@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -12,6 +12,7 @@ import { getBlockers, getNextActionFromTasks, getProgressFromTasks, getWorkflowP
 
 export default function OnboardingIntake() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const clientId = new URLSearchParams(window.location.search).get('id');
   const [clientDraft, setClientDraft] = useState(null);
   const [intakeDraft, setIntakeDraft] = useState(null);
@@ -32,6 +33,11 @@ export default function OnboardingIntake() {
     };
     checkAccess();
   }, []);
+
+  const handleReturnHome = async () => {
+    await base44.auth.logout();
+    navigate('/', { replace: true });
+  };
 
   const { data: clients = [] } = useQuery({
     queryKey: ['onboarding-intake-client', clientId],
@@ -125,7 +131,7 @@ export default function OnboardingIntake() {
 
   const hasAccess = currentUser?.role === 'admin' || currentUser?.client_record_id === clientId;
   if (!hasAccess) {
-    return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6 py-24"><Card className="bg-[#12121a] border-white/5 max-w-md w-full"><CardContent className="p-8 text-center space-y-4"><div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center"><Lock className="w-7 h-7 text-cyan-400" /></div><div><h1 className="text-2xl font-bold text-white mb-2">Access Restricted</h1><p className="text-gray-400">This intake form is only available to the linked client account and AssistantAI admins.</p></div><Button variant="outline" onClick={() => base44.auth.logout('/')} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">Return to Website</Button></CardContent></Card></div>;
+    return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6 py-24"><Card className="bg-[#12121a] border-white/5 max-w-md w-full"><CardContent className="p-8 text-center space-y-4"><div className="w-14 h-14 rounded-2xl mx-auto bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center"><Lock className="w-7 h-7 text-cyan-400" /></div><div><h1 className="text-2xl font-bold text-white mb-2">Access Restricted</h1><p className="text-gray-400">This intake form is only available to the linked client account and AssistantAI admins.</p></div><Button variant="outline" onClick={handleReturnHome} className="w-full border-white/10 bg-transparent text-white hover:bg-white/5">Return to Website</Button></CardContent></Card></div>;
   }
 
   const isReadOnly = !!clientDraft.onboarding_archived;
