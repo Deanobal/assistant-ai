@@ -12,9 +12,20 @@ const statusStyles = {
   upgrade_required: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
 };
 
+const actionLabels = {
+  connected: 'Mark Connected',
+  pending: 'Mark Pending',
+  planned: 'Plan',
+  not_included: 'Not Included',
+  upgrade_required: 'Upgrade Required',
+};
+
 export default function IntegrationsTab({ integrations, onUpdate }) {
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-gray-300">
+        These buttons update the onboarding status record. They do not complete third-party OAuth or API authentication by themselves.
+      </div>
       {Object.entries(INTEGRATION_LIBRARY).map(([group, names]) => (
         <div key={group} className="space-y-4">
           <h3 className="text-white font-semibold">{group}</h3>
@@ -29,7 +40,7 @@ export default function IntegrationsTab({ integrations, onUpdate }) {
                         <p className="text-white font-medium">{integration.integration_name}</p>
                         <p className="text-sm text-gray-400 mt-1">Type: {integration.integration_type}</p>
                       </div>
-                      <Badge className={statusStyles[integration.connection_status]}>{integration.connection_status.replaceAll('_', ' ')}</Badge>
+                      <Badge className={statusStyles[integration.connection_status] || statusStyles.planned}>{String(integration.connection_status || 'planned').replaceAll('_', ' ')}</Badge>
                     </div>
                     <div className="space-y-2 text-sm text-gray-400">
                       <p>Last sync: <span className="text-white">{integration.last_sync || 'Not synced yet'}</span></p>
@@ -38,7 +49,7 @@ export default function IntegrationsTab({ integrations, onUpdate }) {
                     <div className="flex flex-wrap gap-2">
                       {['connected', 'pending', 'planned', 'not_included', 'upgrade_required'].map((status) => (
                         <Button key={status} size="sm" variant="outline" onClick={() => onUpdate(integration, status)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
-                          {status === 'connected' ? 'Connect' : status === 'pending' ? 'Mark Pending' : status === 'planned' ? 'Plan' : status === 'not_included' ? 'Not Included' : 'Upgrade Required'}
+                          {actionLabels[status]}
                         </Button>
                       ))}
                     </div>
