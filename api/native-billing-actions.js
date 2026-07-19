@@ -144,7 +144,17 @@ async function overrideBilling({ clientId, billingStatus = 'active' }) {
   const record = billing?.id
     ? first(await db('billing_status', { method: 'PATCH', query: `id=eq.${encode(billing.id)}`, body: patch }))
     : first(await db('billing_status', { method: 'POST', body: [{ client_id: client.id, payment_method: 'admin_override', invoice_reference: '', renewal_date: null, stripe_customer_id: null, stripe_subscription_id: null, stripe_checkout_session_id: null, created_at: now, ...patch }] }));
-  await db('clients', { method: 'PATCH', query: `id=eq.${encode(client.id)}`, body: { last_activity: 'Billing marked active by admin override', updated_at: now } });
+  await db('clients', {
+    method: 'PATCH',
+    query: `id=eq.${encode(client.id)}`,
+    body: {
+      status: client.status === 'Awaiting Payment' ? 'Onboarding' : client.status,
+      workflow_phase: client.workflow_phase === 'Payment' ? 'Kickoff' : client.workflow_phase,
+      next_action: client.next_action === 'Complete: confirm setup payment received' ? 'Complete: complete business intake' : client.next_action,
+      last_activity: 'Billing marked active by admin override',
+      updated_at: now,
+    },
+  });
   return { success: true, billing: record };
 }
 
