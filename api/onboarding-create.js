@@ -156,18 +156,33 @@ function planPricing(plan) {
 }
 
 function taskTemplates(plan) {
-  const core = [
-    'Confirm setup payment received',
-    'Complete business intake',
-    'Collect knowledge base and website details',
-    'Configure voice assistant',
-    'Configure SMS and email notifications',
-    'Run test call and secure setup test',
-    'Approve go-live handover'
+  const starter = [
+    { task_name: 'confirm signed approval', task_phase: 'Lead / Qualification', task_type: 'approval', required: true },
+    { task_name: 'confirm setup payment received', task_phase: 'Payment', task_type: 'billing', required: true, priority: 'high' },
+    { task_name: 'complete business intake', task_phase: 'Kickoff', task_type: 'intake', required: true },
+    { task_name: 'collect services, service areas, hours and FAQs', task_phase: 'Asset Collection', task_type: 'intake', required: true },
+    { task_name: 'confirm call handling and escalation rules', task_phase: 'Workflow Mapping', task_type: 'setup', required: true },
+    { task_name: 'configure voice assistant', task_phase: 'Build', task_type: 'setup', required: true },
+    { task_name: 'configure SMS and email notifications', task_phase: 'Integrations', task_type: 'setup', required: true },
+    { task_name: 'run test call and secure setup test', task_phase: 'Testing', task_type: 'testing', required: true },
+    { task_name: 'client approval', task_phase: 'Approval', task_type: 'approval', required: true },
+    { task_name: 'approve go-live handover', task_phase: 'Go Live', task_type: 'launch', required: true },
+    { task_name: '7-day review', task_phase: 'Optimisation', task_type: 'review', required: true },
   ];
-  if (plan === 'Growth' || plan === 'Enterprise') core.splice(4, 0, 'Connect CRM workflow');
-  if (plan === 'Enterprise') core.splice(5, 0, 'Configure custom escalation and reporting rules');
-  return core;
+  const growth = [
+    { task_name: 'connect CRM workflow', task_phase: 'Integrations', task_type: 'integration', required: true },
+    { task_name: 'configure booking and follow-up workflow', task_phase: 'Workflow Mapping', task_type: 'setup', required: true },
+    { task_name: '14-day optimisation review', task_phase: 'Optimisation', task_type: 'review', required: true },
+  ];
+  const enterprise = [
+    { task_name: 'technical discovery complete', task_phase: 'Kickoff', task_type: 'discovery', required: true },
+    { task_name: 'configure custom escalation and reporting rules', task_phase: 'Integrations', task_type: 'integration', required: true },
+    { task_name: 'security/compliance review complete', task_phase: 'Approval', task_type: 'approval', required: true },
+    { task_name: '30-day executive review booked', task_phase: 'Optimisation', task_type: 'review', required: true },
+  ];
+  if (plan === 'Enterprise') return [...starter, ...growth, ...enterprise];
+  if (plan === 'Growth') return [...starter, ...growth];
+  return starter;
 }
 
 function integrationTemplates(plan) {
@@ -261,11 +276,10 @@ export default async function handler(req, res) {
       updated_date: now
     }, 'Intake form');
 
-    const tasks = taskTemplates(plan).map((task_name, index) => ({
+    const tasks = taskTemplates(plan).map((task, index) => ({
       client_id: clientId,
-      task_name,
-      task_type: index === 0 ? 'billing' : index < 3 ? 'intake' : 'setup',
-      priority: index === 0 ? 'high' : 'normal',
+      ...task,
+      priority: task.priority || 'normal',
       completed: false,
       due_date: null,
       assigned_to: 'Onboarding',
