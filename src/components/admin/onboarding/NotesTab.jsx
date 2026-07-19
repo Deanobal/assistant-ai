@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -9,6 +8,7 @@ const noteTypes = ['onboarding_note', 'client_request', 'support_note', 'issue',
 
 export default function NotesTab({ notes, onCreate }) {
   const [form, setForm] = useState({ note_type: 'onboarding_note', content: '' });
+  const canSave = form.content.trim().length > 0;
 
   return (
     <div className="space-y-6">
@@ -20,8 +20,8 @@ export default function NotesTab({ notes, onCreate }) {
           ) : notes.map((note) => (
             <div key={note.id} className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-4">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-white font-medium">{note.note_type.replaceAll('_', ' ')}</p>
-                <p className="text-xs text-gray-500">{note.created_at}</p>
+                <p className="text-white font-medium">{String(note.note_type || 'note').replaceAll('_', ' ')}</p>
+                <p className="text-xs text-gray-500">{note.created_at || 'Date unavailable'}</p>
               </div>
               <p className="text-sm text-gray-300 mt-2">{note.content}</p>
             </div>
@@ -36,13 +36,19 @@ export default function NotesTab({ notes, onCreate }) {
             <SelectTrigger className="bg-white/[0.03] border-white/10 text-white"><SelectValue /></SelectTrigger>
             <SelectContent>{noteTypes.map((type) => <SelectItem key={type} value={type}>{type.replaceAll('_', ' ')}</SelectItem>)}</SelectContent>
           </Select>
-          <Textarea value={form.content} onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))} className="bg-white/[0.03] border-white/10 text-white min-h-[120px]" />
+          <Textarea value={form.content} onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))} className="bg-white/[0.03] border-white/10 text-white min-h-[120px]" placeholder="Enter an onboarding note..." />
           <div className="flex justify-end">
-            <Button onClick={() => {
-              if (!form.content) return;
-              onCreate(form);
-              setForm({ note_type: 'onboarding_note', content: '' });
-            }} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">Save Note</Button>
+            <Button
+              disabled={!canSave}
+              onClick={() => {
+                if (!canSave) return;
+                onCreate({ ...form, content: form.content.trim() });
+                setForm({ note_type: 'onboarding_note', content: '' });
+              }}
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Save Note
+            </Button>
           </div>
         </CardContent>
       </Card>
