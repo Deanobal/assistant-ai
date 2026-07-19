@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-const DEFAULT_ORIGIN = 'https://assistantai.com.au';
+const DEFAULT_ORIGIN = 'https://www.assistantai.com.au';
 
 function upsertMeta(selector, attributes) {
   let element = document.head.querySelector(selector);
@@ -27,7 +27,7 @@ function upsertLink(selector, attributes) {
 
 export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image, imageAlt }) {
   React.useEffect(() => {
-    const origin = window.location.origin || DEFAULT_ORIGIN;
+    const origin = window.location.hostname === 'localhost' ? DEFAULT_ORIGIN : window.location.origin || DEFAULT_ORIGIN;
     const canonicalUrl = new URL(canonicalPath, origin).toString();
 
     document.title = title;
