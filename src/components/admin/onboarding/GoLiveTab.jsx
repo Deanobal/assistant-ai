@@ -1,10 +1,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { getTaskPhase } from './onboardingConfig';
 
 export default function GoLiveTab({ client, tasks }) {
   const readiness = client.progress_percentage || 0;
-  const approvalDone = tasks.some((task) => task.task_phase === 'Approval' && task.completed);
-  const goLiveDone = tasks.some((task) => task.task_name === 'go live' && task.completed);
+  const approvalDone = tasks.some((task) => getTaskPhase(task) === 'Approval' && task.completed);
+  const goLiveDone = tasks.some((task) => getTaskPhase(task) === 'Go Live' && task.completed);
 
   return (
     <div className="space-y-6">
