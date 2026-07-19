@@ -70,6 +70,35 @@ export function getTasksForPlan(plan) {
   return TASK_LIBRARY.filter((task) => isTaskVisibleForPlan(task.plan_scope, plan));
 }
 
+export function getTaskPhase(task = {}) {
+  if (task.task_phase && TASK_PHASES.includes(task.task_phase)) return task.task_phase;
+  const type = String(task.task_type || '').toLowerCase();
+  if (type === 'billing') return 'Payment';
+  if (type === 'intake') return 'Kickoff';
+  if (type === 'integration') return 'Integrations';
+  if (type === 'testing') return 'Testing';
+  if (type === 'approval') return 'Approval';
+  if (type === 'launch') return 'Go Live';
+  if (type === 'review') return 'Optimisation';
+  if (type === 'discovery') return 'Kickoff';
+
+  const name = String(task.task_name || '').toLowerCase();
+  if (name.includes('payment') || name.includes('billing')) return 'Payment';
+  if (name.includes('signed') || name.includes('approval')) return 'Approval';
+  if (name.includes('intake') || name.includes('business description')) return 'Kickoff';
+  if (name.includes('knowledge') || name.includes('website') || name.includes('services') || name.includes('hours') || name.includes('faq') || name.includes('asset')) return 'Asset Collection';
+  if (name.includes('workflow') || name.includes('rules') || name.includes('channel')) return 'Workflow Mapping';
+  if (name.includes('crm') || name.includes('sms') || name.includes('email') || name.includes('integration') || name.includes('calendar')) return 'Integrations';
+  if (name.includes('test')) return 'Testing';
+  if (name.includes('go live') || name.includes('handover')) return 'Go Live';
+  if (name.includes('review') || name.includes('optimisation')) return 'Optimisation';
+  return 'Build';
+}
+
+export function isRequiredTask(task = {}) {
+  return task.required !== false;
+}
+
 export function getProgressFromTasks(tasks = []) {
   if (!tasks.length) return 0;
   const completed = tasks.filter((task) => task.completed).length;
@@ -102,14 +131,14 @@ export function getClientLifecycleLabel(client) {
 export function getWorkflowPhaseFromTasks(tasks = []) {
   const incompleteRequired = TASK_PHASES.map((phase) => ({
     phase,
-    items: tasks.filter((task) => task.task_phase === phase && task.required && !task.completed),
+    items: tasks.filter((task) => getTaskPhase(task) === phase && isRequiredTask(task) && !task.completed),
   })).find((group) => group.items.length > 0);
 
   return incompleteRequired?.phase || 'Go Live';
 }
 
 export function getNextActionFromTasks(tasks = []) {
-  const nextRequiredTask = TASK_PHASES.flatMap((phase) => tasks.filter((task) => task.task_phase === phase && task.required && !task.completed))[0];
+  const nextRequiredTask = TASK_PHASES.flatMap((phase) => tasks.filter((task) => getTaskPhase(task) === phase && isRequiredTask(task) && !task.completed))[0];
   return nextRequiredTask ? `Complete: ${nextRequiredTask.task_name}` : 'All required onboarding tasks completed';
 }
 
@@ -130,6 +159,6 @@ export function getBlockers({ intake, integrations = [], billing, tasks = [] }) 
 }
 
 export function isGoLiveReady(tasks = []) {
-  const requiredTasks = tasks.filter((task) => task.required);
+  const requiredTasks = tasks.filter(isRequiredTask);
   return requiredTasks.length > 0 && requiredTasks.every((task) => task.completed);
 }
