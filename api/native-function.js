@@ -21,6 +21,8 @@ const ROUTES = {
   manualMatchUnmatchedSms: '/api/native-lead-actions',
   createCampaign: '/api/native-campaigns',
   sendCampaign: '/api/native-campaigns',
+  adminCreateStripeCheckout: '/api/native-billing-actions',
+  adminOverrideBillingStatus: '/api/native-billing-actions',
   getOneSignalConfig: '/api/native-config',
 };
 
