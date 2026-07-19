@@ -3,6 +3,12 @@ import { ArrowRight, Bot, BriefcaseBusiness, Building2, CalendarCheck, Gavel, Me
 
 const highIntentLinks = [
   {
+    title: 'AI Assistant Australia',
+    description: 'Core money page for businesses searching for an AI assistant that handles calls, leads, bookings, and follow-up.',
+    href: '/ai-assistant-australia',
+    icon: Bot,
+  },
+  {
     title: 'AI Receptionist Australia',
     description: 'Core money page for Australian service businesses comparing AI reception and call answering systems.',
     href: '/ai-receptionist-australia',
@@ -82,7 +88,7 @@ export default function HighIntentLinks({ compact = false }) {
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Buyer-intent solutions</p>
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Find the exact AI receptionist system your business needs</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Find the exact AI assistant system your business needs</h2>
           <p className="mt-4 text-base leading-7 text-slate-400">
             Built around high-intent service-business problems: missed calls, slow follow-up, booking friction, lead leakage, and admin overload.
           </p>
