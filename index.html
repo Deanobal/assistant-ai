@@ -36,6 +36,85 @@
     <meta name="twitter:title" content="AssistantAI | AI Receptionist & Lead Capture for Australian Service Businesses" />
     <meta name="twitter:description" content="AssistantAI helps Australian service businesses answer calls, capture leads, automate bookings, and streamline follow-up workflows with AI receptionist and automated lead capture." />
     <link rel="canonical" href="https://www.assistantai.com.au/" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://www.assistantai.com.au/#organization",
+            "name": "AssistantAI",
+            "url": "https://www.assistantai.com.au/",
+            "logo": "https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png",
+            "email": "sales@assistantai.com.au",
+            "areaServed": "AU",
+            "description": "AssistantAI provides AI receptionist, lead capture, booking support, and follow-up automation for Australian service businesses."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.assistantai.com.au/#website",
+            "url": "https://www.assistantai.com.au/",
+            "name": "AssistantAI",
+            "publisher": { "@id": "https://www.assistantai.com.au/#organization" },
+            "inLanguage": "en-AU"
+          },
+          {
+            "@type": "Service",
+            "@id": "https://www.assistantai.com.au/#ai-receptionist-service",
+            "name": "AI receptionist and lead capture service",
+            "serviceType": "AI receptionist, call answering, lead capture, booking support, CRM follow-up automation",
+            "provider": { "@id": "https://www.assistantai.com.au/#organization" },
+            "areaServed": "AU",
+            "audience": {
+              "@type": "BusinessAudience",
+              "audienceType": "Australian service businesses"
+            },
+            "description": "AssistantAI answers enquiries, captures lead details, qualifies intent, supports booking workflows, and helps service businesses follow up faster.",
+            "offers": {
+              "@type": "AggregateOffer",
+              "priceCurrency": "AUD",
+              "lowPrice": "497",
+              "highPrice": "3000",
+              "offerCount": "3",
+              "url": "https://www.assistantai.com.au/Pricing"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "AssistantAI plans",
+              "itemListElement": [
+                {
+                  "@type": "Offer",
+                  "name": "Starter",
+                  "price": "497",
+                  "priceCurrency": "AUD",
+                  "url": "https://www.assistantai.com.au/GetStartedNow?plan=starter",
+                  "description": "AI receptionist setup for missed-call coverage, lead capture, and simple follow-up. Setup fee applies."
+                },
+                {
+                  "@type": "Offer",
+                  "name": "Growth",
+                  "price": "1500",
+                  "priceCurrency": "AUD",
+                  "url": "https://www.assistantai.com.au/GetStartedNow?plan=growth",
+                  "description": "AI call handling, booking support, customer updates, and SMS/email follow-up. Setup fee applies."
+                },
+                {
+                  "@type": "Offer",
+                  "name": "Enterprise",
+                  "priceSpecification": {
+                    "@type": "PriceSpecification",
+                    "priceCurrency": "AUD",
+                    "minPrice": "3000"
+                  },
+                  "url": "https://www.assistantai.com.au/Contact",
+                  "description": "Custom AI receptionist and workflow automation review for multi-location, complex routing, and advanced integrations."
+                }
+              ]
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
