@@ -19,7 +19,7 @@ import HighIntentLinks from '../components/seo/HighIntentLinks';
 
 const SITE_URL = 'https://www.assistantai.com.au';
 const HERO_IMAGE = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/Hero.png';
-const HERO_IMAGE_ALT = 'AssistantAI AI receptionist for Australian service businesses';
+const HERO_IMAGE_ALT = 'AssistantAI AI assistant and AI receptionist for Australian service businesses';
 const LOGO_URL = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png';
 
 const structuredData = [
@@ -32,7 +32,7 @@ const structuredData = [
     logo: LOGO_URL,
     email: 'sales@assistantai.com.au',
     areaServed: 'AU',
-    description: 'AssistantAI helps Australian service businesses answer missed calls, capture new enquiries, support bookings, and follow up faster.',
+    description: 'AssistantAI helps Australian service businesses use an AI assistant to answer missed calls, capture new enquiries, support bookings, and follow up faster.',
   },
   {
     '@context': 'https://schema.org',
@@ -42,22 +42,22 @@ const structuredData = [
     url: `${SITE_URL}/`,
     publisher: { '@id': `${SITE_URL}/#organization` },
     inLanguage: 'en-AU',
-    description: 'AI receptionist and enquiry follow-up support for Australian service businesses.',
+    description: 'AI assistant, AI receptionist and enquiry follow-up support for Australian service businesses.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    '@id': `${SITE_URL}/#ai-receptionist-service`,
-    name: 'AssistantAI AI Receptionist',
+    '@id': `${SITE_URL}/#ai-assistant-service`,
+    name: 'AssistantAI AI Assistant and AI Receptionist',
     provider: { '@id': `${SITE_URL}/#organization` },
-    serviceType: 'AI receptionist, enquiry capture, booking support, CRM follow-up automation, and service business call answering',
+    serviceType: 'AI assistant, AI receptionist, enquiry capture, booking support, CRM follow-up automation, and service business call answering',
     areaServed: 'AU',
     audience: {
       '@type': 'BusinessAudience',
       audienceType: 'Australian service businesses',
     },
     url: `${SITE_URL}/`,
-    description: 'AssistantAI helps Australian cleaning, trades, property, clinic, legal, real estate, and service businesses answer calls, capture enquiries, reduce admin, and follow up faster with an AI receptionist.',
+    description: 'AssistantAI helps Australian cleaning, trades, property, clinic, legal, real estate, and service businesses answer calls, capture enquiries, reduce admin, and follow up faster with an AI assistant and AI receptionist system.',
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
       name: 'AssistantAI plans',
@@ -68,7 +68,7 @@ const structuredData = [
           price: '497',
           priceCurrency: 'AUD',
           url: `${SITE_URL}/GetStartedNow?plan=starter`,
-          description: 'AI receptionist setup for missed-call coverage, lead capture, and simple follow-up. Setup fee applies.',
+          description: 'AI assistant and receptionist setup for missed-call coverage, lead capture, and simple follow-up. Setup fee applies.',
         },
         {
           '@type': 'Offer',
@@ -82,7 +82,7 @@ const structuredData = [
           '@type': 'Offer',
           name: 'Enterprise',
           url: `${SITE_URL}/Contact`,
-          description: 'Custom AI receptionist and workflow automation review for multi-location, complex routing, and advanced integrations.',
+          description: 'Custom AI assistant, receptionist and workflow automation review for multi-location, complex routing, and advanced integrations.',
         },
       ],
     },
@@ -96,7 +96,7 @@ const structuredData = [
         name: 'What does AssistantAI do for service businesses?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'AssistantAI provides an AI receptionist that answers calls, captures enquiries, supports bookings, and helps Australian service businesses follow up faster.',
+          text: 'AssistantAI provides an AI assistant and AI receptionist that answers calls, captures enquiries, supports bookings, and helps Australian service businesses follow up faster.',
         },
       },
       {
@@ -123,8 +123,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="AI Receptionist for Australian Service Businesses | AssistantAI"
-        description="AssistantAI helps Australian service businesses answer missed calls, capture new enquiries, support bookings, follow up faster, and turn more leads into paying clients."
+        title="AI Assistant & AI Receptionist for Australian Businesses | AssistantAI"
+        description="AssistantAI gives Australian service businesses an AI assistant that answers calls, captures leads, supports bookings, follows up faster, and turns more enquiries into paying clients."
         canonicalPath="/"
         structuredData={structuredData}
         image={HERO_IMAGE}
