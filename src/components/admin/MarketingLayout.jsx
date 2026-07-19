@@ -70,12 +70,12 @@ export default function MarketingLayout() {
           </nav>
 
           <div className="pt-6 border-t border-white/10">
-            <a
-              href="/Dashboard"
+            <Link
+              to="/admin"
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors text-sm"
             >
-              ← Back to Dashboard
-            </a>
+              ← Back to Admin Home
+            </Link>
           </div>
         </div>
       </aside>
