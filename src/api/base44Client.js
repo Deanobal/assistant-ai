@@ -38,6 +38,9 @@ function entityClient(entity) {
       const response = await postJson('/api/native-entity', { entity, action: 'delete', id });
       return response.data || { success: true };
     },
+    subscribe() {
+      return () => {};
+    },
   };
 }
 
