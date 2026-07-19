@@ -42,6 +42,13 @@ function normaliseManualForm(form) {
   };
 }
 
+function getLeadPlan(lead) {
+  const raw = String(lead?.selected_plan || lead?.likely_plan_fit || lead?.plan || '').toLowerCase();
+  if (raw.includes('enterprise')) return 'Enterprise';
+  if (raw.includes('growth')) return 'Growth';
+  return 'Starter';
+}
+
 function validateOnboardingPayload(payload) {
   if (!payload.business_name && !payload.full_name) throw new Error('Business name or contact name is required.');
   if (!payload.email && !payload.mobile_number && !payload.phone) throw new Error('Email or phone number is required.');
@@ -73,7 +80,7 @@ export default function OnboardingDashboard() {
   const [onboardingNotice, setOnboardingNotice] = useState(null);
 
   const invalidateOnboardingQueries = () => {
-    ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'client-manager-clients', 'connector-clients', 'admin-home-clients'].forEach((key) => {
+    ['onboarding-clients', 'onboarding-leads', 'onboarding-tasks', 'onboarding-notes', 'client-manager-clients', 'connector-clients', 'admin-home-clients', 'admin-leads'].forEach((key) => {
       queryClient.invalidateQueries({ queryKey: [key] });
     });
   };
@@ -104,6 +111,8 @@ export default function OnboardingDashboard() {
       setOnboardingError(null);
       setOnboardingNotice(null);
       return createOnboarding({
+        source_lead_id: lead.id,
+        lead_id: lead.id,
         full_name: lead.full_name || lead.contact_name || '',
         business_name: lead.business_name || lead.company || lead.full_name || '',
         email: lead.email || '',
@@ -111,7 +120,7 @@ export default function OnboardingDashboard() {
         industry: lead.industry || 'other',
         website: lead.website || '',
         source: lead.source_page || lead.source || 'sold_lead',
-        plan: lead.plan || 'Starter',
+        plan: getLeadPlan(lead),
       });
     },
     onSuccess: (result) => {
@@ -123,7 +132,7 @@ export default function OnboardingDashboard() {
 
   const preLiveClients = clients.filter((client) => client.lifecycle_state !== 'live' && !client.onboarding_archived);
   const liveClients = clients.filter((client) => client.lifecycle_state === 'live' || client.status === 'Live');
-  const readyLeads = leads.filter((lead) => !lead.client_account_id && !clients.some((client) => client.source_lead_id === lead.id));
+  const readyLeads = leads.filter((lead) => !lead.client_account_id && !lead.client_id && !clients.some((client) => client.source_lead_id === lead.id));
   const taskMap = useMemo(() => tasks.reduce((acc, task) => { acc[task.client_id] = acc[task.client_id] || []; acc[task.client_id].push(task); return acc; }, {}), [tasks]);
 
   const filteredClients = preLiveClients.filter((client) => {
@@ -168,7 +177,7 @@ export default function OnboardingDashboard() {
               <Badge className="border-0 bg-emerald-50 text-emerald-700">Live = Client Manager</Badge>
             </div>
             <h2 className="mb-2 text-3xl font-bold text-slate-950">Operational onboarding system for sold AssistantAI clients</h2>
-            <p className="admin-muted max-w-4xl">Creates client workspaces through the AssistantAI Supabase API, avoiding the missing Base44 conversion app.</p>
+            <p className="admin-muted max-w-4xl">Creates client workspaces through the AssistantAI Supabase API, with linked intake, billing, integration and task records.</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Button onClick={() => setIsNewOnboardingOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800"><Rocket className="mr-2 h-4 w-4" />+ New Onboarding</Button>
             </div>
