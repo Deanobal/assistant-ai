@@ -1,5 +1,10 @@
 import { Mail, MessageSquare, BarChart3 } from 'lucide-react';
 
+function asNumber(value) {
+  const parsed = Number(value || 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export default function CampaignCard({ campaign, onView }) {
   const getTypeIcon = () => {
     if (campaign.type === 'email') return <Mail className="h-4 w-4" />;
@@ -22,9 +27,10 @@ export default function CampaignCard({ campaign, onView }) {
     }
   };
 
-  const campaignScore = Math.round(
-    (campaign.open_rate * 0.4 + campaign.click_rate * 0.4 + campaign.reply_rate * 0.2)
-  );
+  const openRate = asNumber(campaign.open_rate);
+  const clickRate = asNumber(campaign.click_rate);
+  const replyRate = asNumber(campaign.reply_rate);
+  const campaignScore = Math.round(openRate * 0.4 + clickRate * 0.4 + replyRate * 0.2);
 
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5 hover:border-cyan-400/20 transition-colors cursor-pointer" onClick={() => onView(campaign)}>
@@ -32,12 +38,12 @@ export default function CampaignCard({ campaign, onView }) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             {getTypeIcon()}
-            <h3 className="text-sm font-semibold text-white">{campaign.name}</h3>
+            <h3 className="text-sm font-semibold text-white">{campaign.name || 'Untitled campaign'}</h3>
           </div>
-          <p className="text-xs text-slate-500">{campaign.subject}</p>
+          <p className="text-xs text-slate-500">{campaign.subject || 'No subject set'}</p>
         </div>
         <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor()}`}>
-          {campaign.status}
+          {campaign.status || 'draft'}
         </span>
       </div>
 
@@ -53,11 +59,11 @@ export default function CampaignCard({ campaign, onView }) {
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
                 <p className="text-slate-500 mb-1">Opens</p>
-                <p className="text-cyan-400 font-semibold">{campaign.open_rate?.toFixed(1)}%</p>
+                <p className="text-cyan-400 font-semibold">{openRate.toFixed(1)}%</p>
               </div>
               <div>
                 <p className="text-slate-500 mb-1">Clicks</p>
-                <p className="text-cyan-400 font-semibold">{campaign.click_rate?.toFixed(1)}%</p>
+                <p className="text-cyan-400 font-semibold">{clickRate.toFixed(1)}%</p>
               </div>
               <div>
                 <p className="text-slate-500 mb-1">Score</p>
