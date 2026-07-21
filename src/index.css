@@ -110,9 +110,8 @@
 @layer components {
   .public-site {
     --site-bg: #060a12;
-    --site-bg-alt: #070c16;
-    --site-surface: #080f1c;
-    --site-surface-strong: #0b1524;
+    --site-surface: #080d17;
+    --site-surface-strong: #0b1422;
     --site-border: rgba(125, 158, 235, 0.15);
     --site-border-strong: rgba(145, 177, 255, 0.27);
     --site-accent: #5276ff;
@@ -143,12 +142,9 @@
   .public-site section[class*="bg-[#0a0a0f]"],
   .public-site section[class*="bg-[#070710]"],
   .public-site section[class*="bg-[#070a12]"],
-  .public-site section[class*="bg-[#06080d]"] {
+  .public-site section[class*="bg-[#06080d]"],
+  .public-site section[class*="bg-[#080c14]"] {
     background-color: var(--site-bg) !important;
-  }
-
-  .public-site section:nth-of-type(even):not(:first-child) {
-    background-color: var(--site-bg-alt);
   }
 
   .public-site h1,
@@ -197,7 +193,7 @@
 
   .public-site [class*="bg-[#12121a]"],
   .public-site [class*="bg-[#11111a]"] {
-    background-color: rgba(8, 15, 28, 0.94) !important;
+    background-color: rgba(8, 13, 23, 0.96) !important;
   }
 
   .public-site article,
@@ -220,7 +216,7 @@
   .public-site textarea,
   .public-site select {
     border-color: var(--site-border);
-    background-color: rgba(8, 15, 28, 0.94);
+    background-color: rgba(8, 13, 23, 0.96);
     color: var(--site-text);
   }
 
