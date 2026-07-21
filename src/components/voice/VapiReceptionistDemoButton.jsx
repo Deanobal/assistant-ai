@@ -180,6 +180,11 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
       : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25';
   const shapeClass = isHero ? 'rounded-[14px]' : 'rounded-full';
   const sizeClass = isHero ? 'min-h-[3.75rem] px-7 py-4 text-lg' : 'min-h-[3.5rem] px-6 py-4 text-base';
+  const buttonIcon = status === 'listening'
+    ? <PhoneOff className="h-5 w-5" />
+    : status === 'connecting' || isHero
+      ? <Phone className="h-5 w-5" />
+      : <Mic className="h-5 w-5" />;
 
   return (
     <div className={className} data-build={PRODUCTION_REBUILD_MARK}>
@@ -189,7 +194,7 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
         disabled={status === 'ending'}
         className={`inline-flex w-full items-center justify-center gap-2.5 font-semibold transition-all sm:w-auto ${shapeClass} ${sizeClass} ${baseClass}`}
       >
-        {status === 'listening' ? <PhoneOff className="h-5 w-5" /> : status === 'connecting' ? <Phone className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+        {buttonIcon}
         {getButtonLabel(status)}
       </Button>
 
