@@ -32,7 +32,7 @@ const footerSolutionLinks = [
 
 const mobileNavLinks = [
   ...navLinks,
-  { label: 'Client Login', path: '/ClientLogin' }
+  { label: 'Client Login', path: '/ClientLogin' },
 ];
 
 function Navbar() {
@@ -40,25 +40,30 @@ function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 xl:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-blue-200/[0.08] bg-[#060a12]/88 shadow-[0_10px_40px_rgba(2,7,18,0.28)] backdrop-blur-xl">
+      <div className="mx-auto flex h-20 max-w-[88rem] items-center justify-between px-5 sm:px-8 lg:px-10">
+        <Link
+          to="/"
+          className="flex min-h-11 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          aria-label="AssistantAI home"
+        >
           <img
             src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
             alt="AssistantAI Logo"
-            className="w-9 h-9" />
-
-          <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
+            className="h-10 w-10"
+          />
+          <span className="text-xl font-semibold tracking-[-0.025em] text-white">AssistantAI</span>
         </Link>
 
-        <div className="hidden min-[1101px]:flex items-center justify-end gap-3 xl:gap-4 flex-1 min-w-0">
-          <div className="flex items-center gap-3 xl:gap-4 min-w-0">
-            {navLinks.map((link) =>
-              link.path.includes('#') ? (
+        <div className="hidden min-[1101px]:flex flex-1 items-center justify-end gap-5 xl:gap-6">
+          <div className="flex min-w-0 items-center gap-5 xl:gap-6">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return link.path.includes('#') ? (
                 <a
                   key={link.path}
                   href={link.path}
-                  className="text-sm font-medium whitespace-nowrap text-gray-400 transition-colors hover:text-cyan-400"
+                  className="text-sm font-medium whitespace-nowrap text-slate-300 transition-colors hover:text-[#7196ff]"
                 >
                   {link.label}
                 </a>
@@ -67,95 +72,102 @@ function Navbar() {
                   key={link.path}
                   to={link.path}
                   className={`text-sm font-medium whitespace-nowrap transition-colors ${
-                    location.pathname === link.path ?
-                    'text-cyan-400' :
-                    'text-gray-400 hover:text-cyan-400'}`
-                  }>
+                    isActive ? 'text-[#7196ff]' : 'text-slate-300 hover:text-[#7196ff]'
+                  }`}
+                >
                   {link.label}
                 </Link>
-              )
-            )}
+              );
+            })}
           </div>
 
           <Link
             to="/ClientLogin"
-            className="shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20 hover:text-white">
-
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-blue-300/25 bg-blue-500/10 px-5 py-2.5 text-sm font-semibold text-blue-100 transition hover:border-blue-300/45 hover:bg-blue-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          >
             Client Login
           </Link>
         </div>
 
         <button
-          className="min-[1101px]:hidden text-white"
-          onClick={() => setMobileOpen(!mobileOpen)}>
-
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          type="button"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.035] text-white transition hover:border-blue-300/30 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 min-[1101px]:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        >
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {mobileOpen &&
-        <div className="min-[1101px]:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
-
-            <div className="px-6 py-4 space-y-3">
-              {mobileNavLinks.map((link) =>
-                link.path.includes('#') ? (
-                  <a
-                    key={link.path}
-                    href={link.path}
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-sm font-medium text-gray-400"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={`block py-2 text-sm font-medium ${
-                    location.pathname === link.path ? 'text-cyan-400' : 'text-gray-400'}`
-                    }>
-                    {link.label}
-                  </Link>
-                )
-            )}
-            </div>
+      {mobileOpen && (
+        <div className="border-t border-blue-200/[0.08] bg-[#060a12]/98 shadow-2xl backdrop-blur-xl min-[1101px]:hidden">
+          <div className="space-y-1 px-5 py-5 sm:px-8">
+            {mobileNavLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return link.path.includes('#') ? (
+                <a
+                  key={link.path}
+                  href={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center rounded-xl px-3 text-base font-medium text-slate-300 hover:bg-blue-500/10 hover:text-blue-100"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex min-h-11 items-center rounded-xl px-3 text-base font-medium transition ${
+                    isActive
+                      ? 'bg-blue-500/10 text-[#7196ff]'
+                      : 'text-slate-300 hover:bg-blue-500/10 hover:text-blue-100'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
-        }
-    </nav>);
-
+        </div>
+      )}
+    </nav>
+  );
 }
 
 function Footer() {
   return (
-    <footer className="bg-[#070710] border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-6 py-16">
+    <footer className="border-t border-blue-200/[0.08] bg-[#050912]">
+      <div className="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10 lg:py-20">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12 lg:grid-cols-5">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2.5 mb-4">
+            <div className="mb-5 flex items-center gap-3">
               <img
                 src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
                 alt="AssistantAI Logo"
-                className="w-9 h-9" />
-
-              <span className="text-white font-semibold text-lg">AssistantAI</span>
+                className="h-10 w-10"
+              />
+              <span className="text-xl font-semibold tracking-[-0.025em] text-white">AssistantAI</span>
             </div>
-            <p className="max-w-sm text-base leading-7 text-gray-500">Premium AI reception and follow-up for Australian service businesses, designed to answer calls, capture enquiries, reduce admin, and help more leads become paying clients.
-
+            <p className="max-w-md text-base leading-7 text-slate-300">
+              Premium AI reception and follow-up for Australian service businesses, designed to answer calls, capture enquiries, reduce admin, and help more leads become paying clients.
             </p>
-            <p className="mt-4 text-base leading-7 text-gray-600">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
+            <p className="mt-4 max-w-md text-base leading-7 text-slate-400">
+              Built for trades, clinics, real estate, law firms, and service businesses across Australia.
+            </p>
           </div>
 
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Company</h4>
-            <div className="space-y-2.5">
+            <h4 className="mb-5 text-sm font-semibold uppercase tracking-[0.1em] text-blue-200">Company</h4>
+            <div className="space-y-3">
               {footerCompanyLinks.map((link) =>
                 link.path.includes('#') ? (
-                  <a key={link.path} href={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                  <a key={link.path} href={link.path} className="block text-sm text-slate-400 transition hover:text-[#7196ff]">
                     {link.label}
                   </a>
                 ) : (
-                  <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                  <Link key={link.path} to={link.path} className="block text-sm text-slate-400 transition hover:text-[#7196ff]">
                     {link.label}
                   </Link>
                 )
@@ -164,10 +176,10 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Solutions</h4>
-            <div className="space-y-2.5">
+            <h4 className="mb-5 text-sm font-semibold uppercase tracking-[0.1em] text-blue-200">Solutions</h4>
+            <div className="space-y-3">
               {footerSolutionLinks.map((link) => (
-                <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
+                <Link key={link.path} to={link.path} className="block text-sm text-slate-400 transition hover:text-[#7196ff]">
                   {link.label}
                 </Link>
               ))}
@@ -175,34 +187,36 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Contact</h4>
-            <div className="space-y-2.5 text-gray-500 text-sm">
-              <p className="text-base">sales@assistantai.com.au</p>
-              <Link to="/Platform" className="text-base block hover:text-cyan-400 transition-colors">Platform Preview</Link>
-              <Link to="/Resources" className="text-base block hover:text-cyan-400 transition-colors">AI Receptionist Resources</Link>
-              <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
+            <h4 className="mb-5 text-sm font-semibold uppercase tracking-[0.1em] text-blue-200">Contact</h4>
+            <div className="space-y-3 text-sm text-slate-400">
+              <a href="mailto:sales@assistantai.com.au" className="block text-base transition hover:text-[#7196ff]">
+                sales@assistantai.com.au
+              </a>
+              <Link to="/Platform" className="block text-base transition hover:text-[#7196ff]">Platform Preview</Link>
+              <Link to="/Resources" className="block text-base transition hover:text-[#7196ff]">AI Receptionist Resources</Link>
+              <Link to="/ClientLogin" className="block transition hover:text-[#7196ff]">Client Login</Link>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-12 pt-8 text-center">
-          <p className="text-gray-600 text-sm">© 2026 AssistantAI. All rights reserved.</p>
+        <div className="mt-12 border-t border-blue-200/[0.08] pt-8 text-center">
+          <p className="text-sm text-slate-500">© 2026 AssistantAI. All rights reserved.</p>
         </div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 }
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="public-site min-h-screen bg-[#060a12] text-white">
       <SiteAnalyticsTracker />
       <Navbar />
-      <main className="pt-16">
+      <main className="pt-20">
         <Outlet />
       </main>
       <Footer />
       <CrispChat />
-    </div>);
-
+    </div>
+  );
 }
