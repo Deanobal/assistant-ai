@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import HeroSection from '../components/home/HeroSection';
-import TrustStrip from '../components/home/TrustStrip';
+import IntegrationStrip from '../components/home/IntegrationStrip';
 import ProblemSection from '../components/home/ProblemSection';
 import HowItWorksSection from '../components/home/HowItWorksSection';
 import PrivacyDataSection from '../components/home/PrivacyDataSection';
@@ -133,7 +133,7 @@ export default function Home() {
       />
       <div className="pb-24 md:pb-0">
         <HeroSection />
-        <TrustStrip />
+        <IntegrationStrip />
         <ProblemSection />
         <ROICalculator />
         <RevenueSystemSection />
