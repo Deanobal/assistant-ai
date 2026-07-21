@@ -5,6 +5,7 @@ import HeroSection from '../components/home/HeroSection';
 import TrustStrip from '../components/home/TrustStrip';
 import ProblemSection from '../components/home/ProblemSection';
 import HowItWorksSection from '../components/home/HowItWorksSection';
+import PrivacyDataSection from '../components/home/PrivacyDataSection';
 import CredibilitySection from '../components/home/CredibilitySection';
 import ServicesPreview from '../components/home/ServicesPreview';
 import AdvancedAIFeatures from '../components/home/AdvancedAIFeatures';
@@ -138,6 +139,7 @@ export default function Home() {
         <RevenueSystemSection />
         <HighIntentLinks compact />
         <HowItWorksSection />
+        <PrivacyDataSection />
         <CredibilitySection />
         <ServicesPreview />
         <AdvancedAIFeatures />
