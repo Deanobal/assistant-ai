@@ -1,3 +1,13 @@
+async function parseResponse(response, url) {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.success === false) {
+    const error = new Error(data.details || data.error || `Request failed: ${url}`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
 async function postJson(url, payload) {
   const response = await fetch(url, {
     method: 'POST',
@@ -5,11 +15,16 @@ async function postJson(url, payload) {
     credentials: 'include',
     body: JSON.stringify(payload || {}),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.success === false) {
-    throw new Error(data.details || data.error || `Request failed: ${url}`);
-  }
-  return data;
+  return parseResponse(response, url);
+}
+
+async function getJson(url) {
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  return parseResponse(response, url);
 }
 
 function entityClient(entity) {
@@ -58,15 +73,27 @@ function localFunction(name) {
 export const base44 = {
   auth: {
     async me() {
-      return localStorage.getItem('assistantai_admin_session') === 'granted'
-        ? { id: 'native-admin', role: 'admin', full_name: 'AssistantAI Admin', email: 'admin@assistantai.com.au' }
-        : null;
+      try {
+        const session = await getJson('/api/admin-session');
+        return session.authenticated
+          ? { id: 'native-admin', role: 'admin', full_name: 'AssistantAI Admin', email: 'admin@assistantai.com.au' }
+          : null;
+      } catch (error) {
+        if (error.status === 401) return null;
+        throw error;
+      }
     },
     async isAuthenticated() {
-      return localStorage.getItem('assistantai_admin_session') === 'granted';
+      try {
+        const session = await getJson('/api/admin-session');
+        return Boolean(session.authenticated);
+      } catch (error) {
+        if (error.status === 401) return false;
+        throw error;
+      }
     },
     async logout() {
-      localStorage.removeItem('assistantai_admin_session');
+      await postJson('/api/admin-logout', {});
       return null;
     },
     async redirectToLogin(nextUrl = '/AdminLogin') {
