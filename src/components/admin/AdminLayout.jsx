@@ -41,12 +41,23 @@ export default function AdminLayout() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const hasSession = localStorage.getItem('assistantai_admin_session') === 'granted';
-    if (!hasSession) {
-      navigate(`/AdminLogin?from=${location.pathname}`);
-      return;
+    let cancelled = false;
+
+    async function verifySession() {
+      try {
+        const authenticated = await base44.auth.isAuthenticated();
+        if (!authenticated) {
+          navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
+          return;
+        }
+        if (!cancelled) setIsLoading(false);
+      } catch {
+        navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
+      }
     }
-    setIsLoading(false);
+
+    verifySession();
+    return () => { cancelled = true; };
   }, [navigate, location.pathname]);
 
   const { data: unreadConversations = [] } = useQuery({
@@ -109,9 +120,12 @@ export default function AdminLayout() {
     return groups;
   }, {});
 
-  const handleLogout = () => {
-    localStorage.removeItem('assistantai_admin_session');
-    navigate('/AdminLogin');
+  const handleLogout = async () => {
+    try {
+      await base44.auth.logout();
+    } finally {
+      navigate('/AdminLogin', { replace: true });
+    }
   };
 
   if (isLoading) {
