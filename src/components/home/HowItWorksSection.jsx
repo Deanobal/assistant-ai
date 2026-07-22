@@ -29,7 +29,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="site-section border-y border-blue-200/[0.07]">
+    <section id="how-it-works" className="site-section scroll-mt-24 border-y border-blue-200/[0.07]">
       <div className="site-container">
         <div className="site-section-head site-section-head-center">
           <p className="site-kicker">How it works</p>
