@@ -172,9 +172,19 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
     handleStart();
   };
 
+  const isHero = variant === 'hero';
   const baseClass = variant === 'secondary'
     ? 'border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]'
-    : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25';
+    : isHero
+      ? 'border border-blue-300/30 bg-gradient-to-r from-[#304cff] via-[#386cff] to-[#5c9dff] text-white shadow-[0_12px_34px_rgba(49,93,255,0.34)] hover:brightness-110 hover:shadow-[0_14px_38px_rgba(49,93,255,0.42)]'
+      : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25';
+  const shapeClass = isHero ? 'rounded-[14px]' : 'rounded-full';
+  const sizeClass = isHero ? 'min-h-[3.75rem] px-7 py-4 text-lg' : 'min-h-[3.5rem] px-6 py-4 text-base';
+  const buttonIcon = status === 'listening'
+    ? <PhoneOff className="h-5 w-5" />
+    : status === 'connecting' || isHero
+      ? <Phone className="h-5 w-5" />
+      : <Mic className="h-5 w-5" />;
 
   return (
     <div className={className} data-build={PRODUCTION_REBUILD_MARK}>
@@ -182,22 +192,22 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
         type="button"
         onClick={handleClick}
         disabled={status === 'ending'}
-        className={`inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold transition-all sm:w-auto ${baseClass}`}
+        className={`inline-flex w-full items-center justify-center gap-2.5 font-semibold transition-all sm:w-auto ${shapeClass} ${sizeClass} ${baseClass}`}
       >
-        {status === 'listening' ? <PhoneOff className="h-4 w-4" /> : status === 'connecting' ? <Phone className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+        {buttonIcon}
         {getButtonLabel(status)}
       </Button>
 
       {status === 'connecting' && (
-        <p className="mt-3 max-w-sm text-sm leading-6 text-cyan-300">Requesting microphone access and starting the live demo...</p>
+        <p className="mt-3 max-w-sm text-sm leading-6 text-blue-200">Requesting microphone access and starting the live demo...</p>
       )}
 
       {status === 'listening' && (
-        <p className="mt-3 max-w-sm text-sm leading-6 text-cyan-300">Listening...</p>
+        <p className="mt-3 max-w-sm text-sm leading-6 text-blue-200">Listening...</p>
       )}
 
       {(showFallbackText || message) && message && (
-        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">{message || FALLBACK_MESSAGE}</p>
+        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300">{message || FALLBACK_MESSAGE}</p>
       )}
     </div>
   );

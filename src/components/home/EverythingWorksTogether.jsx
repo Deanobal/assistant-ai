@@ -11,25 +11,22 @@ const outcomes = [
 
 export default function EverythingWorksTogether() {
   return (
-    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-cyan-400 mb-3 text-lg font-medium">WHY IT MATTERS</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-balance">This is a revenue system, not just a receptionist.</h2>
+    <section className="site-section">
+      <div className="site-container">
+        <div className="site-section-head site-section-head-center">
+          <p className="site-kicker">Why it matters</p>
+          <h2>This is a revenue system, not just a receptionist.</h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {outcomes.map((item, index) => (
-            <div
-              key={item.title}
-              className="p-6 rounded-2xl border border-white/5 bg-[#12121a]"
-            >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
-                <item.icon className="w-5 h-5 text-cyan-400" />
-              </div>
-              <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-              <p className="text-gray-400 text-base leading-relaxed">{item.desc}</p>
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {outcomes.map((item) => (
+            <article key={item.title} className="site-card min-h-[14rem] p-5 sm:p-6">
+              <span className="site-icon">
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h3 className="site-card-title mt-6">{item.title}</h3>
+              <p className="site-card-copy mt-3">{item.desc}</p>
+            </article>
           ))}
         </div>
       </div>
