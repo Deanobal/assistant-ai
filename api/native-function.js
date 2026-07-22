@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 async function callInternal(req, route, payload) {
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   const host = req.headers.host;
@@ -28,6 +30,8 @@ const ROUTES = {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
+  res.setHeader('Cache-Control', 'private, no-store');
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
