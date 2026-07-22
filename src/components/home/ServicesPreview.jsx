@@ -11,25 +11,22 @@ const cards = [
 
 export default function ServicesPreview() {
   return (
-    <section className="relative py-18 md:py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-cyan-400 text-lg font-medium mb-3">CORE FEATURES</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">AI That Answers, Qualifies, Follows Up, and Helps Buyers Start</h2>
+    <section className="site-section">
+      <div className="site-container">
+        <div className="site-section-head site-section-head-center">
+          <p className="site-kicker">Core features</p>
+          <h2>AI that answers, qualifies, follows up, and helps buyers start.</h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cards.map((card, index) => (
-            <div
-              key={card.title}
-              className="p-6 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
-                <card.icon className="w-5 h-5 text-cyan-400" />
-              </div>
-              <h3 className="text-white font-semibold mb-2">{card.title}</h3>
-              <p className="text-gray-400 text-base leading-relaxed">{card.desc}</p>
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => (
+            <article key={card.title} className="site-card min-h-[15.5rem] p-5 sm:p-6">
+              <span className="site-icon">
+                <card.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h3 className="site-card-title mt-6">{card.title}</h3>
+              <p className="site-card-copy mt-3">{card.desc}</p>
+            </article>
           ))}
         </div>
       </div>
