@@ -2,56 +2,53 @@ import { Link } from 'react-router-dom';
 import { Wrench, HeartPulse, Building2, Briefcase, ArrowRight } from 'lucide-react';
 
 const industries = [
-{ icon: Wrench, title: 'Trades', desc: 'Capture urgent jobs, quote requests, and after-hours enquiries faster.' },
-{ icon: HeartPulse, title: 'Clinics', desc: 'Handle appointments, reschedules, and patient enquiries with less front-desk pressure.' },
-{ icon: Building2, title: 'Real Estate', desc: 'Respond quickly to listings, rental enquiries, and high-intent buyer calls.' },
-{ icon: Briefcase, title: 'Professional Services', desc: 'Make sure valuable new business enquiries get answered and followed up properly.' }];
-
+  { icon: Wrench, title: 'Trades', desc: 'Capture urgent jobs, quote requests, and after-hours enquiries faster.' },
+  { icon: HeartPulse, title: 'Clinics', desc: 'Handle appointments, reschedules, and patient enquiries with less front-desk pressure.' },
+  { icon: Building2, title: 'Real Estate', desc: 'Respond quickly to listings, rental enquiries, and high-intent buyer calls.' },
+  { icon: Briefcase, title: 'Professional Services', desc: 'Make sure valuable new business enquiries get answered and followed up properly.' },
+];
 
 export default function UseCasesPreview() {
   return (
-    <section className="relative py-18 md:py-24 bg-[#0c0c14]">
-      <div className="bg-radial-glow absolute inset-0" />
-      <div className="relative max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-cyan-400 mb-3 text-lg font-medium">INDUSTRIES / USE CASES</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built for the Businesses Where Speed Matters</h2>
+    <section className="site-section border-y border-blue-200/[0.07]">
+      <div className="site-container">
+        <div className="site-section-head site-section-head-center">
+          <p className="site-kicker">Industries and use cases</p>
+          <h2>Built for the businesses where speed matters.</h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {industries.map((item, index) =>
-          <div
-            key={item.title}
-            className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
-            
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-4">
-                <item.icon className="w-5 h-5 text-cyan-400" />
-              </div>
-              <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-              <p className="text-gray-400 leading-relaxed text-lg">{item.desc}</p>
-            </div>
-          )}
+        <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {industries.map((item) => (
+            <article key={item.title} className="site-card min-h-[15rem] p-5 sm:p-6">
+              <span className="site-icon">
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h3 className="site-card-title mt-6">{item.title}</h3>
+              <p className="site-card-copy mt-3">{item.desc}</p>
+            </article>
+          ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
-            <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Sample Use Case</p>
-            <h3 className="text-white text-xl font-semibold mb-3">Missed Calls Turn Into Paid Clients</h3>
-            <p className="text-gray-400 leading-relaxed text-lg">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, recommends a plan, and moves ready buyers toward secure signup.</p>
-          </div>
-          <div className="rounded-[28px] border border-white/5 bg-white/[0.03] p-6 md:p-7">
-            <p className="text-cyan-400 text-sm font-medium uppercase tracking-[0.18em] mb-3">Example Outcome</p>
-            <h3 className="text-white text-xl font-semibold mb-3">Secure Signup Starts Setup</h3>
-            <p className="text-gray-400 leading-relaxed text-lg">Once payment is complete, your setup details are prepared so we can start building your AI receptionist.</p>
-          </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="site-card p-5 sm:p-7">
+            <p className="site-kicker">Sample use case</p>
+            <h3 className="site-card-title">Missed calls turn into paid clients</h3>
+            <p className="site-card-copy mt-3">When the team is busy on-site, AssistantAI answers instantly, qualifies the lead, recommends a plan, and moves ready buyers toward secure signup.</p>
+          </article>
+          <article className="site-card p-5 sm:p-7">
+            <p className="site-kicker">Example outcome</p>
+            <h3 className="site-card-title">Secure signup starts setup</h3>
+            <p className="site-card-copy mt-3">Once payment is complete, your setup details are prepared so we can start building your AI receptionist.</p>
+          </article>
         </div>
 
-        <div className="mt-10 text-center">
-          <Link to="/CaseStudies" className="text-cyan-400 font-medium inline-flex items-center gap-2 hover:text-cyan-300 transition-colors text-lg">See More Use Cases
-
+        <div className="mt-8 text-center">
+          <Link to="/CaseStudies" className="site-button-secondary">
+            See more use cases
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }
