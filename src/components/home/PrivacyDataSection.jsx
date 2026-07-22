@@ -20,7 +20,7 @@ const privacyPoints = [
 
 export default function PrivacyDataSection() {
   return (
-    <section id="privacy-and-data" className="site-section border-y border-blue-200/[0.07]">
+    <section id="privacy-and-data" className="site-section scroll-mt-24 border-y border-blue-200/[0.07]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(43,94,255,0.08),transparent_28rem)]" />
 
       <div className="site-container relative">
