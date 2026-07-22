@@ -22,18 +22,13 @@ export default function AdminLogin() {
     try {
       const response = await fetch('/api/admin-login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ password }),
       });
 
       if (response.ok) {
-        // Set session in localStorage
-        localStorage.setItem('assistantai_admin_session', 'granted');
-        
-        // Redirect to requested page or admin
-        navigate(fromUrl);
+        navigate(fromUrl, { replace: true });
       } else if (response.status === 401) {
         setError('Invalid password. Please try again.');
         setPassword('');
@@ -52,7 +47,6 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-6">
       <Card className="w-full max-w-md border-slate-200 bg-white shadow-xl shadow-slate-200/50">
         <CardContent className="space-y-6 p-8">
-          {/* Header */}
           <div className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg">
@@ -63,7 +57,6 @@ export default function AdminLogin() {
             <p className="text-sm text-slate-500">Admin Operations</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3">
               <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
@@ -71,12 +64,9 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-slate-900">
-                Admin Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-900">Admin Password</label>
               <div className="relative">
                 <input
                   id="password"
@@ -100,27 +90,13 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={!password || isLoading}
-              className="w-full rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white shadow-md hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                'Sign In'
-              )}
+            <Button type="submit" disabled={!password || isLoading} className="w-full rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white shadow-md hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors">
+              {isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Verifying...</> : 'Sign In'}
             </Button>
           </form>
 
-          {/* Info */}
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs text-slate-600 text-center">
-              This is a restricted admin area. Contact your system administrator for access.
-            </p>
+            <p className="text-xs text-slate-600 text-center">This is a restricted admin area. Contact your system administrator for access.</p>
           </div>
         </CardContent>
       </Card>
