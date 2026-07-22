@@ -7,14 +7,29 @@ export default function AdminSessionGate({ children }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const hasSession = localStorage.getItem('assistantai_admin_session') === 'granted';
+    let cancelled = false;
 
-    if (!hasSession) {
-      navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
-      return;
+    async function verifySession() {
+      try {
+        const response = await fetch('/api/admin-session', {
+          method: 'GET',
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+          navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
+          return;
+        }
+
+        if (!cancelled) setIsChecking(false);
+      } catch {
+        navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
+      }
     }
 
-    setIsChecking(false);
+    verifySession();
+    return () => { cancelled = true; };
   }, [location.pathname, navigate]);
 
   if (isChecking) {
