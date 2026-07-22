@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 const TABLES = {
   Lead: 'leads',
   Client: 'clients',
@@ -72,6 +74,8 @@ async function supabase(table, { method = 'GET', query = '', body, prefer } = {}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
+  res.setHeader('Cache-Control', 'private, no-store');
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
