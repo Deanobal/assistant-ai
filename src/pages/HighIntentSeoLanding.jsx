@@ -269,6 +269,8 @@ function LandingSection({ page }) {
           primaryLabel="Get Started"
           secondaryTo="/BookStrategyCall"
           secondaryLabel="Book a Strategy Call"
+          visual="solution"
+          visualData={{ title: page.h1, items: page.outcomes, icon: page.icon }}
         />
         <Section id="page-content" className="bg-[#040b14]">
           <SectionHeading title="Built around the enquiry, not a generic script" description={page.pain} />

@@ -43,6 +43,8 @@ export default function Integrations() {
           primaryLabel="Plan Your Integrations"
           secondaryTo="/Platform"
           secondaryLabel="View Platform"
+          visual="integrations"
+          visualData={{ items: integrations }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">

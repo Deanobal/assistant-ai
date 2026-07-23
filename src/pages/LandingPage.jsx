@@ -61,6 +61,8 @@ export default function LandingPage() {
           primaryLabel={page.cta_label || 'Get Started'}
           secondaryTo="/Contact"
           secondaryLabel="Talk to Our Team"
+          visual="offer"
+          visualData={{ offer: page.offer, sections }}
         >
           {page.offer ? <p className="mt-6 border-l-2 border-[#347cff] pl-4 text-sm leading-7 text-[#d0d7e0]">{page.offer}</p> : null}
         </PageHero>

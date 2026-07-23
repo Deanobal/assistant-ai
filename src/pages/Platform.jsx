@@ -32,6 +32,7 @@ export default function Platform() {
           secondaryTo="/ClientLogin"
           secondaryLabel="Client Login"
           footnote="Public preview using sample data only"
+          visual="platform"
         />
         <Section id="page-content" className="bg-[#040b14]">
           <div className="mb-10">

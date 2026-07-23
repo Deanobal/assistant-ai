@@ -81,6 +81,7 @@ export default function AiAssistantAustralia() {
           primaryLabel="Get Started"
           secondaryTo="/BookStrategyCall"
           secondaryLabel="Book a Strategy Call"
+          visual="assistant"
         />
         <Section id="page-content" className="bg-[#040b14]">
           <CapabilityRail items={capabilities} />

@@ -48,6 +48,7 @@ export default function Services() {
         <PageHero
           title={<>AI reception that turns every call into <AccentText>action.</AccentText></>}
           description="AssistantAI answers calls, qualifies enquiries, supports bookings and keeps follow-up moving — built around the way Australian service businesses work."
+          visual="workflow"
         />
 
         <Section id="page-content" className="bg-[#040b14]">

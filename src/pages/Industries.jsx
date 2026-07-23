@@ -38,6 +38,8 @@ export default function Industries() {
           primaryLabel="Map Your Call Workflow"
           secondaryTo="/Services"
           secondaryLabel="Explore Services"
+          visual="industries"
+          visualData={{ items: industries }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">

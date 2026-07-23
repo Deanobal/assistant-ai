@@ -63,6 +63,8 @@ export default function Blog() {
           description="Clear guides for improving call handling, enquiry capture, booking workflows and follow-up — written for Australian operators, not AI researchers."
           secondaryTo="/Resources"
           secondaryLabel="Browse Resources"
+          visual="blog"
+          visualData={{ items: posts.map(({ title, category }) => ({ title, category })) }}
         />
         <Section id="page-content" className="bg-[#040b14]">
           <SectionHeading

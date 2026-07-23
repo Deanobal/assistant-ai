@@ -77,6 +77,8 @@ export default function Pricing() {
           secondaryTo="/BookStrategyCall"
           secondaryLabel="Talk Through Your Needs"
           footnote="Done-for-you implementation and Australian support"
+          visual="pricing"
+          visualData={{ plans }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">

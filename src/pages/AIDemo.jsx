@@ -41,6 +41,8 @@ export default function AIDemo() {
           secondaryTo="/GetStartedNow"
           secondaryLabel="Get Started"
           footnote="Browser microphone permission is required for the live demo"
+          visual="workflow"
+          visualData={{ title: 'Live browser voice demo' }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">

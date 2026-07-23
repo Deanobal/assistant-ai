@@ -58,6 +58,8 @@ export default function CaseStudies() {
           primaryLabel="Map Your Use Case"
           secondaryTo="/Industries"
           secondaryLabel="Explore Industries"
+          visual="outcomes"
+          visualData={{ items: scenarios }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">

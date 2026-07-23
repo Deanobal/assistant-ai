@@ -9,7 +9,6 @@ import {
   PageShell,
   Section,
   SectionHeading,
-  VoiceWorkflowPanel,
 } from '@/components/marketing/PremiumMarketing';
 
 const principles = [
@@ -39,6 +38,7 @@ export default function About() {
         <PageHero
           title={<>Australian-built AI reception for businesses that cannot afford to <AccentText>miss a call.</AccentText></>}
           description="AssistantAI exists to give Australian service businesses a reliable front door for calls, enquiries, bookings and follow-up — without adding more pressure to the people doing the work."
+          visual="principles"
         />
 
         <Section id="page-content" className="bg-[#040b14]">
@@ -52,7 +52,14 @@ export default function About() {
               'A measured path from call answering to connected automation',
             ]}
           >
-            <VoiceWorkflowPanel title="How the workflow connects" />
+            <OutcomeList
+              items={[
+                'Start with the operating problem, not the technology.',
+                'Keep sensitive decisions and exceptions with people.',
+                'Launch with clear ownership, testing and support.',
+                'Measure whether the workflow improves the customer response.',
+              ]}
+            />
           </FeatureSplit>
         </Section>
 

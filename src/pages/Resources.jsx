@@ -53,6 +53,8 @@ export default function Resources() {
           description="Use these resources to compare providers, understand workflow design and assess the real operational value of faster call handling and follow-up."
           secondaryTo="/Blog"
           secondaryLabel="Browse the Blog"
+          visual="resources"
+          visualData={{ items: resources }}
         />
 
         <Section id="page-content" className="bg-[#040b14]">
