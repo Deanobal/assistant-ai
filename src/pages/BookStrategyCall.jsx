@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import LeadForm from '@/components/LeadForm';
 import BookingSupportPanel from '@/components/contact/BookingSupportPanel';
@@ -10,6 +9,11 @@ import {
   STRATEGY_CALL_BOOKING_EMBED_URL,
   STRATEGY_CALL_BOOKING_MODE,
 } from '@/lib/booking';
+import {
+  AccentText,
+  PageShell,
+  Section,
+} from '@/components/marketing/PremiumMarketing';
 
 const ASSISTANTAI_SALES_CALENDAR_ID = 'sales@assistantai.com.au';
 
@@ -29,36 +33,26 @@ export default function BookStrategyCall() {
         description="Request a strategy call with AssistantAI to map the right AI receptionist, lead capture, booking, CRM follow-up, and automation setup for your business."
         canonicalPath="/BookStrategyCall"
       />
-      <div>
-        <section className="relative py-24 md:py-28 bg-grid">
-          <div className="bg-radial-glow absolute inset-0" />
-          <div className="relative max-w-7xl mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-14"
-            >
-              <p className="text-cyan-400 mb-3 text-base font-medium">STRATEGY CALL</p>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-                Request a Strategy Call
+      <PageShell>
+        <Section className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_16%,rgba(31,111,255,0.13),transparent_32%)]" />
+          <div className="relative">
+            <div className="mb-12 max-w-4xl">
+              <h1 className="text-balance text-[2.75rem] font-[720] leading-[1.02] tracking-[-0.052em] text-white sm:text-[3.7rem] lg:text-[4.15rem]">
+                Map the right AI receptionist <AccentText>for your business.</AccentText>
               </h1>
-              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-                Tell us what you want to improve and we’ll help map the right AssistantAI setup for your business.
+              <p className="mt-6 max-w-2xl text-base leading-8 text-[#aeb8c6] sm:text-lg">
+                Tell us what you want to improve and we’ll help map the call flow, handoffs and integrations that make sense.
               </p>
               {!hasLiveBooking && (
-                <p className="mx-auto mt-4 max-w-2xl rounded-2xl border border-cyan-400/15 bg-cyan-400/5 px-4 py-3 text-sm text-cyan-100">
+                <p className="mt-5 max-w-2xl border-l-2 border-[#347cff] pl-4 text-sm leading-7 text-[#c7d8f4]">
                   Submit your details and we’ll contact you to confirm the best time.
                 </p>
               )}
-            </motion.div>
+            </div>
 
             <div className="grid lg:grid-cols-5 gap-10">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="lg:col-span-3 p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#12121a]"
-              >
+              <div className="rounded-[16px] border border-[#2a394f] bg-[#07121f] p-6 shadow-[0_28px_80px_rgba(0,0,0,0.22)] sm:p-8 lg:col-span-3">
                 <StrategyCallAvailability
                   selectedSlot={selectedSlot}
                   onSelectSlot={setSelectedSlot}
@@ -117,14 +111,9 @@ export default function BookStrategyCall() {
                     return data;
                   } : undefined}
                 />
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="lg:col-span-2"
-              >
+              <div className="lg:col-span-2">
                 <BookingSupportPanel
                   bookingUrl={hasGoogleCalendarLive ? 'googlecalendar-live' : STRATEGY_CALL_BOOKING_URL || STRATEGY_CALL_BOOKING_EMBED_URL}
                   bookingMode={hasGoogleCalendarLive ? 'calendar' : STRATEGY_CALL_BOOKING_MODE}
@@ -140,11 +129,11 @@ export default function BookStrategyCall() {
                       ? 'We’ll confirm your booking details after you choose a suitable time.'
                       : 'Monday to Friday, 9:00am–5:00pm Melbourne time.'}
                 />
-              </motion.div>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
+        </Section>
+      </PageShell>
     </>
   );
 }

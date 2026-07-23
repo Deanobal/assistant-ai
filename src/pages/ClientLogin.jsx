@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Lock, Mail, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import SEO from '@/components/SEO';
+import { PageShell, Section } from '@/components/marketing/PremiumMarketing';
 
 export default function ClientLogin() {
   const navigate = useNavigate();
@@ -48,6 +49,10 @@ export default function ClientLogin() {
       setError('Enter your email address.');
       return;
     }
+    if (!isSupabaseConfigured) {
+      setError('Client login is not configured in this preview environment.');
+      return;
+    }
 
     setSubmitting(true);
 
@@ -70,20 +75,17 @@ export default function ClientLogin() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0f] px-6 py-24 text-white">
-      <div className="absolute inset-0 bg-grid opacity-30" />
-      <div className="absolute inset-0 bg-radial-glow" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative mx-auto w-full max-w-xl"
-      >
-        <Card className="border-white/8 bg-[#12121a]/95 shadow-2xl shadow-cyan-500/5">
+    <>
+      <SEO title="Client Login | AssistantAI" description="Securely access your AssistantAI client portal." canonicalPath="/ClientLogin" noIndex />
+      <PageShell>
+      <Section className="relative min-h-[760px] overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(31,111,255,0.13),transparent_34%)]" />
+      <div className="relative mx-auto w-full max-w-xl">
+        <Card className="rounded-[16px] border-[#2a394f] bg-[#07121f] shadow-[0_32px_90px_rgba(0,0,0,0.34)]">
           <CardContent className="p-7 md:p-9">
             <div className="mb-7 text-center">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
-                <Lock className="h-6 w-6 text-cyan-300" />
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[#2e5caa] bg-[#10284c]">
+                <Lock className="h-6 w-6 text-[#74a7ff]" />
               </div>
 
               <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
@@ -95,7 +97,7 @@ export default function ClientLogin() {
               </p>
             </div>
 
-            <div className="mb-6 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 text-sm leading-6 text-cyan-100">
+            <div className="mb-6 rounded-[11px] border border-[#29405f] bg-[#081727] p-4 text-sm leading-6 text-[#c7d8f4]">
               Use the email address linked to your AssistantAI client account. We’ll send a secure login link.
             </div>
 
@@ -124,7 +126,7 @@ export default function ClientLogin() {
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@business.com.au"
                     autoComplete="email"
-                    className="border-white/10 bg-white/5 pl-10 text-white placeholder:text-gray-600"
+                    className="border-[#2d3d54] bg-[#081522] pl-10 text-white placeholder:text-[#9aa8ba]"
                   />
                 </div>
               </div>
@@ -132,7 +134,7 @@ export default function ClientLogin() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="min-h-12 w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-white hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-60"
+                className="min-h-12 w-full rounded-[10px] border border-[#347cff] bg-[#0b4dbb] font-semibold text-white shadow-[0_12px_30px_rgba(31,111,255,0.2)] hover:bg-[#0a45aa] disabled:opacity-60"
               >
                 {submitting ? 'Sending secure link...' : 'Send Secure Login Link'}
                 <ArrowRight className="h-4 w-4" />
@@ -147,7 +149,9 @@ export default function ClientLogin() {
             </p>
           </CardContent>
         </Card>
-      </motion.div>
-    </div>
+      </div>
+      </Section>
+      </PageShell>
+    </>
   );
 }

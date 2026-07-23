@@ -1,148 +1,95 @@
-import React from 'react';
+import { Building2, Car, HeartPulse, Home, Scale, Stethoscope, Store, Wrench } from 'lucide-react';
 import SEO from '../components/SEO';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Wrench, Home, Heart, Stethoscope, Scale, Car, UtensilsCrossed, Building2, ArrowRight } from 'lucide-react';
+import {
+  AccentText,
+  ConversionCTA,
+  FeatureSplit,
+  OutcomeList,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+} from '@/components/marketing/PremiumMarketing';
 
 const industries = [
-  {
-    icon: Wrench,
-    name: 'Trades',
-    problem: 'Calls come in while the team is on-site, on the tools, or driving between jobs.',
-    solution: 'AI can answer enquiries, capture job details, and keep the lead flow moving while the team stays focused on delivery.',
-    fit: 'Common fit: urgent call handling, job intake, and lead capture.',
-  },
-  {
-    icon: Home,
-    name: 'Real Estate',
-    problem: 'Agents can be in inspections, appraisals, or meetings when buyer and seller enquiries come in.',
-    solution: 'AI can respond quickly, capture key details, and help route enquiries into the right follow-up workflow.',
-    fit: 'Common fit: enquiry capture, inspection booking, and after-hours response.',
-  },
-  {
-    icon: Heart,
-    name: 'Medical Clinics',
-    problem: 'Front-desk teams juggle calls, schedules, and patient questions at the same time.',
-    solution: 'AI can support appointment flow, common questions, and structured enquiry capture without adding pressure to staff.',
-    fit: 'Common fit: appointment handling and patient enquiry support.',
-  },
-  {
-    icon: Stethoscope,
-    name: 'Dental Clinics',
-    problem: 'Booking requests, reschedules, and missed enquiries create admin load for reception teams.',
-    solution: 'AI can help manage appointment requests, confirmations, and follow-up while staff stay focused on patients.',
-    fit: 'Common fit: booking support and follow-up automation.',
-  },
-  {
-    icon: Scale,
-    name: 'Law Firms',
-    problem: 'Potential clients expect prompt responses even when the team is in meetings, court, or deep work.',
-    solution: 'AI can handle first contact professionally, capture case details, and move qualified enquiries into the right intake flow.',
-    fit: 'Common fit: consultation intake and lead qualification.',
-  },
-  {
-    icon: Car,
-    name: 'Automotive',
-    problem: 'Service and sales teams miss opportunities when phones ring during busy workshop periods.',
-    solution: 'AI can help capture booking intent, answer common questions, and push enquiries into the next step faster.',
-    fit: 'Common fit: service bookings, sales follow-up, and enquiry triage.',
-  },
-  {
-    icon: UtensilsCrossed,
-    name: 'Hospitality',
-    problem: 'Venues and restaurants can miss reservations and event enquiries during peak periods.',
-    solution: 'AI can support reservation flow, event enquiries, and customer communication when the team is busy on the floor.',
-    fit: 'Common fit: reservations, function enquiries, and follow-up.',
-  },
-  {
-    icon: Building2,
-    name: 'Service Businesses',
-    problem: 'Service-based teams often handle enquiries while also doing the work, creating delays and missed follow-up.',
-    solution: 'AI can create a more reliable front-end workflow for calls, bookings, and customer details.',
-    fit: 'Common fit: lead capture, booking support, and workflow automation.',
-  },
+  { icon: Wrench, name: 'Trades', challenge: 'Calls arrive while the team is on-site, driving or working on the tools.', outcome: 'Capture job type, location, timing and urgency without interrupting delivery.' },
+  { icon: Home, name: 'Property', challenge: 'Buyer, seller and tenant enquiries arrive during inspections and appointments.', outcome: 'Collect the right details and route each enquiry into the appropriate next step.' },
+  { icon: HeartPulse, name: 'Medical clinics', challenge: 'Front-desk teams juggle patients, schedules and incoming calls.', outcome: 'Support common questions and structured appointment requests while staff stay focused.' },
+  { icon: Stethoscope, name: 'Dental clinics', challenge: 'Bookings, reschedules and missed calls add pressure to reception.', outcome: 'Capture appointment intent, preferred times and follow-up details consistently.' },
+  { icon: Scale, name: 'Professional services', challenge: 'The team may be in meetings, court or deep work when prospects call.', outcome: 'Handle first contact professionally and prepare qualified enquiries for review.' },
+  { icon: Car, name: 'Automotive', challenge: 'Workshop and service teams miss calls during their busiest periods.', outcome: 'Capture service-booking intent and get the enquiry ready for the next action.' },
+  { icon: Store, name: 'Hospitality', challenge: 'Peak service makes it difficult to respond to reservations and event enquiries.', outcome: 'Support booking intent, function details and customer follow-up when staff are busy.' },
+  { icon: Building2, name: 'Other service businesses', challenge: 'The people answering enquiries are often also responsible for doing the work.', outcome: 'Create a reliable front door for calls, bookings and customer details.' },
 ];
 
 export default function Industries() {
   return (
     <>
       <SEO
-        title="Industries | AI Assistant and AI Receptionist for Service Businesses | AssistantAI"
-        description="See how AssistantAI supports Australian cleaning, trades, property, medical, dental, legal, automotive, and other service businesses with lead capture, CRM integration, and service business automation."
+        title="Industries | AI Receptionist for Australian Service Businesses | AssistantAI"
+        description="See how AssistantAI supports Australian trades, property, medical, dental, automotive and other service businesses."
         canonicalPath="/Industries"
       />
-      <div>
-        <section className="relative py-24 md:py-32 bg-grid">
-          <div className="bg-radial-glow absolute inset-0" />
-          <div className="relative max-w-7xl mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-20"
-            >
-              <p className="text-cyan-400 text-sm font-medium mb-3">INDUSTRIES</p>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                AI Assistant and AI Receptionist Workflows for <span className="text-gradient">Australian Service Industries</span>
-              </h1>
-              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-                See how AssistantAI can be tailored for cleaning, trades, property, and other service-based businesses that need better lead capture, job booking, CRM integration, and service business automation.
-              </p>
-            </motion.div>
+      <PageShell>
+        <PageHero
+          title={<>Built for industries that keep <AccentText>Australia moving.</AccentText></>}
+          description="AssistantAI adapts to the way your business handles calls, enquiries and bookings — so customers receive a useful response even when your team is busy."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Map Your Call Workflow"
+          secondaryTo="/Services"
+          secondaryLabel="Explore Services"
+        />
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {industries.map((ind, i) => (
-                <motion.div
-                  key={ind.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="p-8 rounded-2xl border border-white/5 bg-[#12121a] card-hover"
-                >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-                      <ind.icon className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <h2 className="text-xl font-bold text-white">{ind.name}</h2>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">Challenge</p>
-                      <p className="text-gray-400 text-sm leading-relaxed">{ind.problem}</p>
-                    </div>
-                    <div>
-                      <p className="text-cyan-400/70 text-xs font-medium uppercase tracking-wider mb-1">How AI Helps</p>
-                      <p className="text-gray-300 text-sm leading-relaxed">{ind.solution}</p>
-                    </div>
-                    <div className="pt-4 border-t border-white/5">
-                      <p className="text-cyan-400 text-sm font-medium">{ind.fit}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mt-20 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
-            >
-              <h3 className="text-2xl font-bold text-white mb-3">See How AssistantAI Would Work in Your Business</h3>
-              <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-                Map the right workflow for your industry, team, and enquiry process.
-              </p>
-              <Link
-                to="/Contact"
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-              >
-                Book Your Free Strategy Call
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </motion.div>
+        <Section id="page-content" className="bg-[#040b14]">
+          <SectionHeading
+            title="Different industries. One costly problem."
+            description="The details change, but the pattern is consistent: when a call goes unanswered or follow-up starts too late, a real opportunity can disappear."
+          />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-[16px] border border-[#26364d] bg-[#26364d] md:grid-cols-2">
+            {industries.map(({ icon: Icon, name, challenge, outcome }) => (
+              <article key={name} className="bg-[#07121f] p-6 sm:p-7">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#10284c] text-[#74a7ff]">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h2 className="text-xl font-semibold text-white">{name}</h2>
+                </div>
+                <p className="mt-5 text-sm leading-7 text-[#9eaabb]">{challenge}</p>
+                <p className="mt-4 border-l-2 border-[#347cff] pl-4 text-sm leading-7 text-[#d0d7e0]">{outcome}</p>
+              </article>
+            ))}
           </div>
-        </section>
-      </div>
+        </Section>
+
+        <Section>
+          <FeatureSplit
+            title={<>A workflow designed around <AccentText>your front line.</AccentText></>}
+            description="We map the questions, handoffs and follow-up that matter in your industry, then configure AssistantAI around those requirements."
+            points={[
+              'Industry-specific call prompts and terminology',
+              'Clear boundaries for sensitive or urgent enquiries',
+              'Structured capture fields for your service workflow',
+              'Human escalation where judgement is required',
+            ]}
+          >
+            <OutcomeList
+              items={[
+                'Answer every eligible call with a consistent business introduction.',
+                'Understand what the caller needs before sending the enquiry to your team.',
+                'Prepare booking or follow-up information while the caller is engaged.',
+                'Keep humans in control of exceptions, approvals and sensitive conversations.',
+              ]}
+            />
+          </FeatureSplit>
+        </Section>
+
+        <ConversionCTA
+          title="See how AssistantAI would work in your industry."
+          description="We’ll map your call flow, identify the highest-value automation opportunities and show you a practical rollout path."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Book a Strategy Call"
+        />
+      </PageShell>
     </>
   );
 }

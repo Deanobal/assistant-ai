@@ -4,49 +4,49 @@ import { ArrowRight, Bot, BriefcaseBusiness, Building2, CalendarCheck, Gavel, Me
 const highIntentLinks = [
   {
     title: 'AI Assistant Australia',
-    description: 'Core money page for businesses searching for an AI assistant that handles calls, leads, bookings, and follow-up.',
+    description: 'Connect calls, lead capture, booking support and follow-up in one practical business workflow.',
     href: '/ai-assistant-australia',
     icon: Bot,
   },
   {
     title: 'AI Receptionist Australia',
-    description: 'Core money page for Australian service businesses comparing AI reception and call answering systems.',
+    description: 'Explore 24/7 call answering, enquiry capture and escalation for Australian service businesses.',
     href: '/ai-receptionist-australia',
     icon: PhoneCall,
   },
   {
     title: 'AI Phone Assistant for Small Business',
-    description: 'For smaller operators that need calls answered, details captured, and follow-up handled faster.',
+    description: 'Give a small team reliable call coverage, structured details and clearer follow-up.',
     href: '/ai-phone-assistant-small-business',
     icon: Bot,
   },
   {
     title: 'Missed Call Automation Australia',
-    description: 'Problem-led page for businesses losing paid leads and referral enquiries through unanswered calls.',
+    description: 'Recover valuable enquiries when your team cannot answer immediately.',
     href: '/missed-call-automation-australia',
     icon: Target,
   },
   {
     title: 'AI Lead Follow-Up Automation',
-    description: 'Targets buyers searching for faster lead response, qualification, SMS/email follow-up, and pipeline visibility.',
+    description: 'Move qualified enquiries into faster SMS, email and human follow-up.',
     href: '/ai-lead-follow-up-automation',
     icon: MessageSquareText,
   },
   {
     title: 'AI Appointment Booking Assistant',
-    description: 'For clinics, consultants, home services, and appointment-based operators that need booking intent captured.',
+    description: 'Capture service, timing and contact details before the booking handoff.',
     href: '/ai-appointment-booking-assistant',
     icon: CalendarCheck,
   },
   {
     title: 'AI Receptionist for Trades',
-    description: 'Industry wedge for plumbers, electricians, cleaners, maintenance, HVAC, and field-service teams.',
+    description: 'Capture jobs while plumbers, electricians and other field-service teams stay on the tools.',
     href: '/ai-receptionist-for-trades',
     icon: ShieldCheck,
   },
   {
     title: 'AI Receptionist for Clinics',
-    description: 'For appointment-based teams that need enquiry capture, booking intent, and careful human escalation.',
+    description: 'Support appointment enquiries while keeping sensitive decisions with clinic staff.',
     href: '/ai-receptionist-for-clinics',
     icon: CalendarCheck,
   },
@@ -76,7 +76,7 @@ const highIntentLinks = [
   },
   {
     title: 'AI Receptionist for Professional Services',
-    description: 'For consultants, advisors, and service firms that need structured enquiry capture and follow-up.',
+    description: 'Give consultants, advisers and service firms a more consistent first response.',
     href: '/Services',
     icon: BriefcaseBusiness,
   },
@@ -84,29 +84,28 @@ const highIntentLinks = [
 
 export default function HighIntentLinks({ compact = false }) {
   return (
-    <section className={`relative ${compact ? 'py-14 md:py-18' : 'py-20 md:py-24'}`}>
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Buyer-intent solutions</p>
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Find the exact AI assistant system your business needs</h2>
-          <p className="mt-4 text-base leading-7 text-slate-400">
-            Built around high-intent service-business problems: missed calls, slow follow-up, booking friction, lead leakage, and admin overload.
+    <section className={`relative border-y border-[#152238] bg-[#040b14] ${compact ? 'py-14 md:py-16' : 'py-16 md:py-24'}`}>
+      <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
+        <div className="max-w-3xl">
+          <h2 className="text-balance text-3xl font-[700] tracking-[-0.04em] text-white md:text-4xl">Find the workflow that fits your business</h2>
+          <p className="mt-5 text-base leading-7 text-[#aab4c3]">
+            Explore the call-handling, follow-up and industry scenarios AssistantAI can be configured to support.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-10 grid gap-px overflow-hidden rounded-[16px] border border-[#26364d] bg-[#26364d] md:grid-cols-2 xl:grid-cols-3">
           {highIntentLinks.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={`${item.href}-${item.title}`} to={item.href} className="group rounded-[28px] border border-white/8 bg-white/[0.035] p-6 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-white/[0.06]">
+              <Link key={`${item.href}-${item.title}`} to={item.href} className="group bg-[#07121f] p-6 transition hover:bg-[#091827]">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
-                    <Icon className="h-5 w-5 text-cyan-300" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#10284c]">
+                    <Icon className="h-5 w-5 text-[#74a7ff]" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white group-hover:text-cyan-100">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">{item.description}</p>
-                    <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                    <h3 className="text-lg font-semibold text-white group-hover:text-[#dbe7ff]">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#9eaabb]">{item.description}</p>
+                    <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#76a7ff]">
                       View solution
                       <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                     </div>

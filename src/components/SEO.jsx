@@ -25,13 +25,14 @@ function upsertLink(selector, attributes) {
   });
 }
 
-export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image = '', imageAlt = '' }) {
+export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image = '', imageAlt = '', noIndex = false }) {
   React.useEffect(() => {
     const origin = window.location.hostname === 'localhost' ? DEFAULT_ORIGIN : window.location.origin || DEFAULT_ORIGIN;
     const canonicalUrl = new URL(canonicalPath, origin).toString();
 
     document.title = title;
     upsertMeta('meta[name="description"]', { name: 'description', content: description });
+    upsertMeta('meta[name="robots"]', { name: 'robots', content: noIndex ? 'noindex, nofollow' : 'index, follow' });
     upsertMeta('meta[property="og:title"]', { property: 'og:title', content: title });
     upsertMeta('meta[property="og:description"]', { property: 'og:description', content: description });
     upsertMeta('meta[property="og:type"]', { property: 'og:type', content: 'website' });
@@ -68,7 +69,7 @@ export default function SEO({ title, description, canonicalPath = '/', structure
     return () => {
       document.head.querySelectorAll('script[data-seo-ld="true"]').forEach((node) => node.remove());
     };
-  }, [title, description, canonicalPath, structuredData, image, imageAlt]);
+  }, [title, description, canonicalPath, structuredData, image, imageAlt, noIndex]);
 
   return null;
 }

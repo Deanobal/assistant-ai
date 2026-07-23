@@ -69,7 +69,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
   }, [onAvailabilityStateChange]);
 
   return (
-    <Card className="mb-6 bg-[#0f1016] border-white/10">
+    <Card className="mb-6 rounded-[14px] border-[#26364d] bg-[#081522]">
       <CardContent className="p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
@@ -82,7 +82,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-6 flex items-center gap-3 text-gray-300">
+          <div className="flex items-center gap-3 rounded-[11px] border border-[#26364d] bg-[#07121f] px-4 py-6 text-gray-300">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading available slots…
           </div>
@@ -100,7 +100,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
                     type="button"
                     variant="outline"
                     onClick={() => onSelectSlot(slot)}
-                    className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
+                    className={`h-auto justify-start border-[#31435e] bg-transparent px-4 py-3 text-left text-white hover:bg-[#0a1725] ${isSelected ? 'border-[#347cff] bg-[#0b203c] text-[#dbe7ff]' : ''}`}
                   >
                     <div>
                       <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', day: 'numeric', month: 'short' })}</div>
@@ -113,7 +113,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
           </>
         ) : availability.slots?.length ? (
           <>
-            <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 px-4 py-3 text-sm text-cyan-100">
+            <div className="rounded-[11px] border border-[#29405f] bg-[#081727] px-4 py-3 text-sm text-[#c7d8f4]">
               Provider: {availability.provider}. Confirmed bookings are added to the AssistantAI Google Calendar for sales@assistantai.com.au.
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -125,7 +125,7 @@ export default function StrategyCallAvailability({ selectedSlot, onSelectSlot, o
                     type="button"
                     variant="outline"
                     onClick={() => onSelectSlot(slot)}
-                    className={`justify-start h-auto py-3 px-4 border-white/10 bg-transparent text-left text-white hover:bg-white/5 ${isSelected ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : ''}`}
+                    className={`h-auto justify-start border-[#31435e] bg-transparent px-4 py-3 text-left text-white hover:bg-[#0a1725] ${isSelected ? 'border-[#347cff] bg-[#0b203c] text-[#dbe7ff]' : ''}`}
                   >
                     <div>
                       <div className="font-medium">{new Date(slot.start).toLocaleDateString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', day: 'numeric', month: 'short' })}</div>

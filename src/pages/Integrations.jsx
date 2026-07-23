@@ -1,53 +1,96 @@
-import * as React from 'react';
+import { Bell, CalendarDays, CheckCircle2, ClipboardList, CreditCard, MessageSquare, Users } from 'lucide-react';
 import SEO from '../components/SEO';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, CalendarDays, CreditCard, ClipboardList, MessageSquare, Users, Bell } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AccentText,
+  CapabilityRail,
+  ConversionCTA,
+  FeatureSplit,
+  OutcomeList,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+} from '@/components/marketing/PremiumMarketing';
 
-const coreIntegrations = [
-  { icon: CreditCard, title: 'Secure Signup', desc: 'Starter and Growth buyers can move through secure checkout when they are ready.' },
-  { icon: Users, title: 'Customer Details', desc: 'Names, contact details, notes, and next steps stay organised for your team.' },
-  { icon: CalendarDays, title: 'Calendar Support', desc: 'Bookings, availability, reminders, and appointment workflows can be connected.' },
-  { icon: MessageSquare, title: 'SMS + Email', desc: 'Follow-up, confirmations, reminders, and customer messages help keep leads warm.' },
-  { icon: ClipboardList, title: 'Setup Details', desc: 'After signup, the information needed for setup is prepared so work can begin.' },
+const integrations = [
+  { icon: CalendarDays, title: 'Calendars', description: 'Connect availability, booking requests, confirmations and reminders.' },
+  { icon: Users, title: 'Customer systems', description: 'Keep contact details, notes and next steps organised for your team.' },
+  { icon: MessageSquare, title: 'SMS and email', description: 'Prepare useful confirmations and follow-up after the conversation.' },
+  { icon: CreditCard, title: 'Secure signup', description: 'Move ready customers into a secure, server-owned payment flow.' },
 ];
 
-const paymentWorkflow = ['Secure signup', 'Buyer confirmed', 'Details prepared', 'Setup underway', 'Team notified', 'Follow-up ready'];
+const workflow = [
+  'The call is answered and the caller’s need is understood.',
+  'Contact details and relevant service information are captured.',
+  'Booking, follow-up or human escalation is selected.',
+  'The connected system receives the right information for the next action.',
+  'Your team keeps visibility without manually re-entering the conversation.',
+];
 
 export default function Integrations() {
   return (
     <>
-      <SEO title="Integrations | Calendar, Follow-Up & Secure Signup | AssistantAI" description="AssistantAI can connect calendar support, customer details, SMS/email follow-up, and secure signup so enquiries are handled faster." canonicalPath="/Integrations" />
-      <div>
-        <section className="relative py-24 md:py-32 bg-grid">
-          <div className="bg-radial-glow absolute inset-0" />
-          <div className="relative max-w-7xl mx-auto px-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-              <p className="text-cyan-400 mb-3 text-lg font-medium">INTEGRATIONS</p>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto text-white">Connect the Tools That Help You Respond Faster</h1>
-              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">AssistantAI can connect the tools that help you answer enquiries, organise customer details, follow up quickly, and begin setup after signup.</p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/Platform" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">View Platform Preview <ArrowRight className="w-4 h-4" /></Link>
-                <Link to="/GetStartedNow" className="inline-flex items-center justify-center px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all text-sm">Get Started Now</Link>
+      <SEO
+        title="Integrations | Calendar, Follow-Up & Secure Signup | AssistantAI"
+        description="Connect AssistantAI with calendars, customer systems, SMS, email and secure signup workflows."
+        canonicalPath="/Integrations"
+      />
+      <PageShell>
+        <PageHero
+          title={<>Your calls and tools, <AccentText>working together.</AccentText></>}
+          description="AssistantAI connects the first conversation to the systems your team already relies on, so customer details and next steps do not get lost between platforms."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Plan Your Integrations"
+          secondaryTo="/Platform"
+          secondaryLabel="View Platform"
+        />
+
+        <Section id="page-content" className="bg-[#040b14]">
+          <CapabilityRail items={integrations} />
+        </Section>
+
+        <Section>
+          <FeatureSplit
+            title={<>From first ring to <AccentText>next action.</AccentText></>}
+            description="A useful integration is more than moving data. It should preserve the intent of the conversation and make the next step obvious."
+            points={[
+              'Only capture the information the workflow actually needs',
+              'Keep payment and privileged actions on the server',
+              'Use clear failure and human-review paths',
+              'Maintain visibility across calls, bookings and follow-up',
+            ]}
+          >
+            <OutcomeList items={workflow} />
+          </FeatureSplit>
+        </Section>
+
+        <Section className="bg-[#040b14]">
+          <SectionHeading
+            title="A practical integration layer"
+            description="Your final setup depends on the tools you use and the actions you want AssistantAI to support."
+          />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-[16px] border border-[#26364d] bg-[#26364d] md:grid-cols-3">
+            {[
+              { icon: ClipboardList, title: 'Capture', body: 'Structure names, numbers, service details, notes and consent around your operating process.' },
+              { icon: Bell, title: 'Trigger', body: 'Create the right booking, message, notification or review task after the call.' },
+              { icon: CheckCircle2, title: 'Confirm', body: 'Give both the caller and your team a clear view of what happens next.' },
+            ].map(({ icon: Icon, title, body }) => (
+              <div key={title} className="bg-[#07121f] p-7">
+                <Icon className="h-6 w-6 text-[#4b8cff]" aria-hidden="true" />
+                <h2 className="mt-5 text-xl font-semibold text-white">{title}</h2>
+                <p className="mt-3 text-sm leading-7 text-[#aab4c3]">{body}</p>
               </div>
-            </motion.div>
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-              {coreIntegrations.map((item) => <Card key={item.title} className="bg-[#12121a] border-white/5"><CardContent className="p-6"><div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 flex items-center justify-center mb-5"><item.icon className="w-5 h-5 text-cyan-400" /></div><h2 className="text-white font-semibold text-lg">{item.title}</h2><p className="mt-3 text-gray-400 text-sm leading-relaxed">{item.desc}</p></CardContent></Card>)}
-            </div>
-
-            <Card className="mt-10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
-              <CardHeader>
-                <div className="flex items-center gap-3"><div className="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center"><Bell className="w-5 h-5 text-cyan-300" /></div><div><CardTitle className="text-white text-2xl">From Secure Signup to Setup</CardTitle><p className="text-white/70 text-sm mt-1">When a customer completes checkout, your setup details can be prepared and your team can see the next steps clearly.</p></div></div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">{paymentWorkflow.map((step, index) => <div key={step} className="rounded-2xl border border-white/10 bg-[#0a0a0f]/50 p-5"><p className="text-cyan-300 text-xs font-medium mb-3">STEP {index + 1}</p><p className="text-white font-medium leading-relaxed">{step}</p></div>)}</div>
-              </CardContent>
-            </Card>
+            ))}
           </div>
-        </section>
-      </div>
+        </Section>
+
+        <ConversionCTA
+          title="Connect AssistantAI to the way your business already works."
+          description="Tell us which systems matter, and we’ll map the cleanest path from call to outcome."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Map Your Workflow"
+        />
+      </PageShell>
     </>
   );
 }

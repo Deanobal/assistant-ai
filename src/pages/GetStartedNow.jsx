@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import CheckoutReturnCard from '@/components/pricing/CheckoutReturnCard';
 import PlanSelectionStep from '@/components/get-started/PlanSelectionStep';
 import SignupDetailsForm from '@/components/get-started/SignupDetailsForm';
 import SignupReviewStep from '@/components/get-started/SignupReviewStep';
 import { getPlanFromUrl, getPlanByName } from '@/components/get-started/planConfig';
+import {
+  AccentText,
+  PageShell,
+  Section,
+} from '@/components/marketing/PremiumMarketing';
 
 const initialForm = {
   full_name: '',
@@ -135,19 +139,18 @@ export default function GetStartedNow() {
         description="Choose a Starter or Growth AssistantAI plan, confirm your business details, and proceed to secure signup for AI receptionist setup."
         canonicalPath="/GetStartedNow"
       />
-      <div>
-        <section className="relative py-24 md:py-28 bg-grid">
-          <div className="bg-radial-glow absolute inset-0" />
-          <div className="relative max-w-7xl mx-auto px-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
-              <p className="text-cyan-400 mb-3 text-base font-medium">START YOUR ASSISTANTAI SETUP</p>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">
-                {isCheckoutReturn ? 'Checkout Update' : selectedPlan ? `Start with the ${selectedPlan.name} Plan` : 'Choose Your Plan First'}
+      <PageShell>
+        <Section className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_16%,rgba(31,111,255,0.13),transparent_32%)]" />
+          <div className="relative">
+            <div className="mb-12 max-w-4xl">
+              <h1 className="text-balance text-[2.75rem] font-[720] leading-[1.02] tracking-[-0.052em] text-white sm:text-[3.7rem] lg:text-[4.15rem]">
+                {isCheckoutReturn ? 'Checkout update.' : selectedPlan ? <>Start with the <AccentText>{selectedPlan.name}</AccentText> plan.</> : <>Choose your <AccentText>starting plan.</AccentText></>}
               </h1>
-              <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
+              <p className="mt-6 max-w-2xl text-base leading-8 text-[#aeb8c6] sm:text-lg">
                 Select Starter or Growth, confirm your details, then proceed to secure payment only when you’re ready. Prices are in AUD and exclude GST unless stated otherwise.
               </p>
-            </motion.div>
+            </div>
 
             {isCheckoutReturn ? (
               <div className="max-w-4xl mx-auto">
@@ -186,8 +189,8 @@ export default function GetStartedNow() {
               </div>
             )}
           </div>
-        </section>
-      </div>
+        </Section>
+      </PageShell>
     </>
   );
 }

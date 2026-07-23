@@ -2,7 +2,7 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 
 function Row({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+    <div className="rounded-[11px] border border-[#26364d] bg-[#081522] p-4">
       <p className="text-sm text-gray-500">{label}</p>
       <p className="mt-1 font-medium text-white">{value || '—'}</p>
     </div>
@@ -11,8 +11,8 @@ function Row({ label, value }) {
 
 export default function SignupReviewStep({ selectedPlan, form, error, submitting, onBackToForm, onChangePlan, onProceed }) {
   return (
-    <div className="rounded-[28px] border border-white/5 bg-[#12121a] p-7 md:p-9">
-      <div className="mb-7 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-[16px] border border-[#2a394f] bg-[#07121f] p-7 shadow-[0_28px_80px_rgba(0,0,0,0.22)] md:p-9">
+      <div className="mb-7 flex flex-col gap-4 rounded-[11px] border border-[#29405f] bg-[#081727] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.18em] text-cyan-300">Step 3 — Review before payment</p>
           <p className="mt-1 text-xl font-semibold text-white">{selectedPlan.name}: {selectedPlan.setupLabel} + {selectedPlan.monthlyLabel}</p>
@@ -40,10 +40,10 @@ export default function SignupReviewStep({ selectedPlan, form, error, submitting
       )}
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <button type="button" onClick={onBackToForm} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-6 font-semibold text-white hover:bg-white/[0.06]">
+        <button type="button" onClick={onBackToForm} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[10px] border border-[#425067] bg-[#081522] px-6 font-semibold text-white hover:border-[#66748a] hover:bg-[#0a1725]">
           Back to Details
         </button>
-        <button type="button" onClick={onProceed} disabled={submitting} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 font-semibold text-white disabled:opacity-60">
+        <button type="button" onClick={onProceed} disabled={submitting} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-6 font-semibold text-white hover:bg-[#0a45aa] disabled:opacity-60">
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Proceed to Secure Payment <ArrowRight className="h-4 w-4" /></>}
         </button>
       </div>

@@ -124,6 +124,14 @@
   color-scheme: dark;
   background: #030812;
   font-feature-settings: 'ss01' 1, 'cv02' 1, 'cv03' 1;
+  --aai-bg: #030812;
+  --aai-surface: #07121f;
+  --aai-surface-strong: #091725;
+  --aai-border: #26364d;
+  --aai-border-muted: #17253a;
+  --aai-text: #ffffff;
+  --aai-copy: #aab4c3;
+  --aai-blue: #347cff;
 }
 
 .public-site ::selection {
@@ -133,6 +141,55 @@
 
 .aai-deferred-section {
   contain: layout paint;
+}
+
+.public-site .bg-grid {
+  background-color: #030812;
+  background-image:
+    linear-gradient(rgba(79, 140, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 140, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.public-site .bg-radial-glow {
+  background:
+    radial-gradient(circle at 76% 18%, rgba(31, 111, 255, 0.11), transparent 34%),
+    radial-gradient(circle at 18% 72%, rgba(23, 104, 236, 0.055), transparent 30%);
+}
+
+.public-site .text-gradient {
+  background: none;
+  color: #347cff;
+  -webkit-text-fill-color: currentColor;
+}
+
+.public-site input,
+.public-site textarea,
+.public-site button,
+.public-site select {
+  font: inherit;
+}
+
+.public-site input,
+.public-site textarea,
+.public-site [role='combobox'] {
+  min-height: 3rem;
+  border-color: #2d3d54;
+  border-radius: 10px;
+  background: #081522;
+  color: #ffffff;
+}
+
+.public-site input:focus,
+.public-site textarea:focus,
+.public-site [role='combobox']:focus {
+  border-color: #4b8cff;
+  box-shadow: 0 0 0 3px rgba(75, 140, 255, 0.16);
+}
+
+.public-site input::placeholder,
+.public-site textarea::placeholder {
+  color: #9aa8ba;
 }
 
 @keyframes aai-wave {
