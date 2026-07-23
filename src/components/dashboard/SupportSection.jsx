@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { getRuntimeDataEnv, isPreviewTestMode } from '@/lib/runtimeDataEnv';
 import { Badge } from '@/components/ui/badge';
 import ClientSupportConversationList from './support/ClientSupportConversationList';
@@ -15,7 +15,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
   const { data: conversations = [] } = useQuery({
     queryKey: ['client-support-conversations', clientAccountId],
     queryFn: async () => {
-      const response = await base44.functions.invoke('listClientSupportConversations', { runtimeDataEnv });
+      const response = await assistantApi.functions.invoke('listClientSupportConversations', { runtimeDataEnv });
       return response.data.conversations || [];
     },
     initialData: [],
@@ -37,7 +37,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
   const { data: thread = { conversation: null, messages: [] } } = useQuery({
     queryKey: ['client-support-thread', selectedConversationId],
     queryFn: async () => {
-      const response = await base44.functions.invoke('getClientSupportConversation', { conversationId: selectedConversationId, runtimeDataEnv });
+      const response = await assistantApi.functions.invoke('getClientSupportConversation', { conversationId: selectedConversationId, runtimeDataEnv });
       return response.data;
     },
     enabled: !!selectedConversationId,
@@ -51,7 +51,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
 
   const createConversationMutation = useMutation({
     mutationFn: async ({ subject, messageBody }) => {
-      const response = await base44.functions.invoke('startClientSupportConversation', {
+      const response = await assistantApi.functions.invoke('startClientSupportConversation', {
         subject,
         message: messageBody,
         sourcePage: '/ClientPortal',
@@ -67,7 +67,7 @@ export default function SupportSection({ clientAccountId, currentUser }) {
 
   const replyMutation = useMutation({
     mutationFn: async ({ messageBody }) => {
-      const response = await base44.functions.invoke('replyClientSupportConversation', {
+      const response = await assistantApi.functions.invoke('replyClientSupportConversation', {
         conversationId: selectedConversationId,
         message: messageBody,
         sourcePage: '/ClientPortal',

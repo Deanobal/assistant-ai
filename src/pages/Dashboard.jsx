@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -14,13 +13,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      const authenticated = await base44.auth.isAuthenticated();
+      const authenticated = await assistantApi.auth.isAuthenticated();
       if (!authenticated) {
         setIsLoading(false);
         return;
       }
 
-      const user = await base44.auth.me();
+      const user = await assistantApi.auth.me();
       setIsAuthenticated(true);
       setIsAdmin(user?.role === 'admin');
       setIsLoading(false);
@@ -30,7 +29,7 @@ export default function Dashboard() {
   }, []);
 
   const handleReturnHome = async () => {
-    await base44.auth.logout();
+    await assistantApi.auth.logout();
     navigate('/', { replace: true });
   };
 

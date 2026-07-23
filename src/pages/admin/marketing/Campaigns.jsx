@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, Loader2, Send, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Button } from '@/components/ui/button';
 import CampaignForm from '@/components/admin/marketing/CampaignForm';
 import CampaignCard from '@/components/admin/marketing/CampaignCard';
@@ -45,7 +45,7 @@ export default function Campaigns() {
     const fetchCampaigns = async () => {
       try {
         setLoading(true);
-        const data = await base44.entities.Campaign.list('-created_date', 50);
+        const data = await assistantApi.entities.Campaign.list('-created_date', 50);
         setCampaigns(data || []);
       } catch (err) {
         setError(err.message);
@@ -63,7 +63,7 @@ export default function Campaigns() {
       setError(null);
       setWarning(null);
       try {
-        const result = await base44.functions.invoke('createCampaign', {
+        const result = await assistantApi.functions.invoke('createCampaign', {
           name: formData.name,
           type: formData.type,
           template: formData.template,
@@ -87,7 +87,7 @@ export default function Campaigns() {
         setWarning('Campaign function is not deployed yet. Saved as a database draft instead.');
       }
 
-      const draft = await base44.entities.Campaign.create(makeDraft(formData));
+      const draft = await assistantApi.entities.Campaign.create(makeDraft(formData));
       setCampaigns((prev) => [draft, ...prev]);
       setSelectedCampaign(draft);
       setShowForm(false);
@@ -103,7 +103,7 @@ export default function Campaigns() {
       setIsSending(true);
       setError(null);
       setWarning(null);
-      const result = await base44.functions.invoke('sendCampaign', { campaignId });
+      const result = await assistantApi.functions.invoke('sendCampaign', { campaignId });
       const campaign = result?.data?.campaign;
       if (campaign) {
         setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? campaign : c)));

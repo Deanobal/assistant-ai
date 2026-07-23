@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link2, Loader2, ShieldCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +23,7 @@ export default function UnmatchedSmsCard({ log, leads, outboundLogs }) {
   const suggestedLeadIds = suggestions.map((item) => item.lead.id);
 
   const matchMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('manualMatchUnmatchedSms', { action: 'match', unmatchedLogId: log.id, leadId: selectedLeadId }),
+    mutationFn: () => assistantApi.functions.invoke('manualMatchUnmatchedSms', { action: 'match', unmatchedLogId: log.id, leadId: selectedLeadId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unmatched-sms-inbox'] });
       queryClient.invalidateQueries({ queryKey: ['lead-sms-trail', selectedLeadId] });
@@ -32,7 +32,7 @@ export default function UnmatchedSmsCard({ log, leads, outboundLogs }) {
   });
 
   const noMatchMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('manualMatchUnmatchedSms', { action: 'review_no_match', unmatchedLogId: log.id }),
+    mutationFn: () => assistantApi.functions.invoke('manualMatchUnmatchedSms', { action: 'review_no_match', unmatchedLogId: log.id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unmatched-sms-inbox'] });
     },

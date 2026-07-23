@@ -74,8 +74,8 @@ export default function ContactForm() {
 
   if (success) {
     return (
-      <div className="rounded-[28px] border border-cyan-400/20 bg-cyan-400/5 p-8 text-center">
-        <CheckCircle className="mx-auto mb-4 h-10 w-10 text-cyan-300" />
+      <div className="rounded-[16px] border border-[#2a3b55] bg-[#071421] p-8 text-center">
+        <CheckCircle className="mx-auto mb-4 h-10 w-10 text-[#62d895]" />
         <h2 className="text-2xl font-bold text-white">Thanks — we’ve received your message.</h2>
         <p className="mt-3 text-gray-300">We’ll contact you shortly.</p>
       </div>
@@ -83,42 +83,42 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[28px] border border-white/8 bg-[#12121a] p-6 text-left md:p-8">
+    <form onSubmit={handleSubmit} className="rounded-[16px] border border-[#2a394f] bg-[#07121f] p-6 text-left shadow-[0_28px_80px_rgba(0,0,0,0.24)] md:p-8">
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-gray-300">Full Name *</Label>
-          <Input required value={form.full_name} onChange={(event) => update('full_name', event.target.value)} className="border-white/10 bg-white/5 text-white" placeholder="John Smith" />
+          <Input required value={form.full_name} onChange={(event) => update('full_name', event.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="John Smith" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-300">Business Name</Label>
-          <Input value={form.business_name} onChange={(event) => update('business_name', event.target.value)} className="border-white/10 bg-white/5 text-white" placeholder="Your business" />
+          <Input value={form.business_name} onChange={(event) => update('business_name', event.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="Your business" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-300">Email *</Label>
-          <Input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} className="border-white/10 bg-white/5 text-white" placeholder="you@business.com.au" />
+          <Input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="you@business.com.au" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-300">Mobile Number</Label>
-          <Input type="tel" value={form.mobile_number} onChange={(event) => update('mobile_number', event.target.value)} className="border-white/10 bg-white/5 text-white" placeholder="+61 4XX XXX XXX" />
+          <Input type="tel" value={form.mobile_number} onChange={(event) => update('mobile_number', event.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="+61 4XX XXX XXX" />
         </div>
       </div>
 
       <div className="mt-5 space-y-2">
         <Label className="text-gray-300">What do you need help with?</Label>
         <Select value={form.enquiry_type} onValueChange={(value) => update('enquiry_type', value)}>
-          <SelectTrigger className="border-white/10 bg-white/5 text-white"><SelectValue placeholder="Choose one" /></SelectTrigger>
+          <SelectTrigger className="border-[#2d3d54] bg-[#081522] text-white"><SelectValue placeholder="Choose one" /></SelectTrigger>
           <SelectContent>{helpOptions.map((option) => <SelectItem key={option.label} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
         </Select>
       </div>
 
       <div className="mt-5 space-y-2">
         <Label className="text-gray-300">Message *</Label>
-        <Textarea required value={form.message} onChange={(event) => update('message', event.target.value)} className="min-h-32 border-white/10 bg-white/5 text-white" placeholder="Tell us what you want AssistantAI to help with." />
+        <Textarea required value={form.message} onChange={(event) => update('message', event.target.value)} className="min-h-32 border-[#2d3d54] bg-[#081522] text-white" placeholder="Tell us what you want AssistantAI to help with." />
       </div>
 
       {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
-      <button type="submit" disabled={submitting} className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={submitting} className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-8 font-semibold text-white shadow-[0_12px_30px_rgba(31,111,255,0.2)] transition hover:bg-[#0a45aa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7faaff] disabled:opacity-60">
         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Send Message <ArrowRight className="h-4 w-4" /></>}
       </button>
     </form>

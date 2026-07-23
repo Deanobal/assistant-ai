@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export default function LeadDetail() {
 
   const { data: leads = [] } = useQuery({
     queryKey: ['lead-detail', leadId],
-    queryFn: () => base44.entities.Lead.filter({ id: leadId }, '-updated_date', 1),
+    queryFn: () => assistantApi.entities.Lead.filter({ id: leadId }, '-updated_date', 1),
     initialData: [],
   });
 
@@ -35,7 +35,7 @@ export default function LeadDetail() {
   }, [lead]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Lead.update(leadId, data),
+    mutationFn: (data) => assistantApi.entities.Lead.update(leadId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lead-detail', leadId] });
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] });

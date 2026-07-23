@@ -1,39 +1,37 @@
-**Welcome to your Base44 project** 
+# AssistantAI
 
-**About**
+AssistantAI is the Australian AI receptionist website, operations console and client portal.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Architecture
 
-This project contains everything you need to run your app locally.
+- Vite + React frontend deployed on Vercel
+- Vercel Functions in `api/`
+- Supabase Postgres, Auth and Storage
+- Stripe Checkout and signed webhooks
+- Vapi voice-agent integrations
+- Twilio, Resend, GoHighLevel, Crisp and Google integrations
 
-**Edit the code in your local development environment**
+## Local development
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and replace every placeholder required for the flow you are testing.
+3. Run `npm run dev`.
 
-**Prerequisites:** 
+Useful checks:
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
+```sh
+npm test
+npm run lint
+npm run typecheck
+npm run build
 ```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
 
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
-```
+## Database migrations
 
-Run the app: `npm run dev`
+Supabase migrations live in `supabase/migrations`. Apply them through the Supabase CLI for the intended project and verify row-level security before enabling client access.
 
-**Publish your changes**
+## Production deployment
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+Vercel must contain all server-only environment variables. Never prefix a secret with `VITE_`; Vite exposes those values to the browser bundle. Set `ADMIN_SESSION_SECRET` to an independent, high-entropy value and keep it separate from `ADMIN_ACCESS_PASSWORD`.
 
-**Docs & Support**
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+Production changes should pass the test, lint, typecheck and build commands before deployment.

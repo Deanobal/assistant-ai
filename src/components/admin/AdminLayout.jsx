@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Bell, BriefcaseBusiness, ExternalLink, Home, Inbox, LogOut, MessageSquare, PlugZap, Radio, Rocket, Search, ShieldCheck, TrendingUp } from 'lucide-react';
@@ -45,7 +45,7 @@ export default function AdminLayout() {
 
     async function verifySession() {
       try {
-        const authenticated = await base44.auth.isAuthenticated();
+        const authenticated = await assistantApi.auth.isAuthenticated();
         if (!authenticated) {
           navigate(`/AdminLogin?from=${encodeURIComponent(location.pathname)}`, { replace: true });
           return;
@@ -62,14 +62,14 @@ export default function AdminLayout() {
 
   const { data: unreadConversations = [] } = useQuery({
     queryKey: ['admin-support-unread-count'],
-    queryFn: () => base44.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
+    queryFn: () => assistantApi.entities.SupportConversation.filter({ unread_for_admin: true }, '-updated_at', 200),
     initialData: [],
     enabled: !isLoading,
   });
 
   const { data: unmatchedSms = [] } = useQuery({
     queryKey: ['admin-unmatched-sms-count'],
-    queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
+    queryFn: () => assistantApi.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
     initialData: [],
     enabled: !isLoading,
   });
@@ -85,13 +85,13 @@ export default function AdminLayout() {
     const subscriptions = [];
 
     try {
-      const supportSubscribe = base44?.entities?.SupportConversation?.subscribe;
+      const supportSubscribe = assistantApi?.entities?.SupportConversation?.subscribe;
       if (typeof supportSubscribe === 'function') {
         const unsubscribe = supportSubscribe(refreshCounts);
         if (typeof unsubscribe === 'function') subscriptions.push(unsubscribe);
       }
 
-      const notificationSubscribe = base44?.entities?.NotificationLog?.subscribe;
+      const notificationSubscribe = assistantApi?.entities?.NotificationLog?.subscribe;
       if (typeof notificationSubscribe === 'function') {
         const unsubscribe = notificationSubscribe(refreshCounts);
         if (typeof unsubscribe === 'function') subscriptions.push(unsubscribe);
@@ -122,7 +122,7 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try {
-      await base44.auth.logout();
+      await assistantApi.auth.logout();
     } finally {
       navigate('/AdminLogin', { replace: true });
     }

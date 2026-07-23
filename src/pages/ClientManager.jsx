@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import OnboardingKpiGrid from '@/components/admin/onboarding/OnboardingKpiGrid';
 import OnboardingClientsTable from '@/components/admin/onboarding/OnboardingClientsTable';
@@ -69,7 +69,7 @@ function ClientRow({ client }) {
 export default function ClientManager() {
   const { data: clients = [] } = useQuery({
     queryKey: ['client-manager-clients'],
-    queryFn: () => base44.entities.Client.list('-updated_date', 200),
+    queryFn: () => assistantApi.entities.Client.list('-updated_date', 200),
     initialData: [],
   });
 

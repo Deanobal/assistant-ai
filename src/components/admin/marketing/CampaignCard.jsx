@@ -1,4 +1,4 @@
-import { Mail, MessageSquare, BarChart3 } from 'lucide-react';
+import { Mail, MessageSquare } from 'lucide-react';
 
 function asNumber(value) {
   const parsed = Number(value || 0);

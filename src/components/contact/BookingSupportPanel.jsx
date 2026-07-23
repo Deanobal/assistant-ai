@@ -1,8 +1,7 @@
-import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Mail, Phone, Clock3, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request', bookingProvider = 'Live Calendar', heading = 'What Happens Next?', intro, responseText, adminWarning }) {
+export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request', bookingProvider = 'Live Calendar', heading = 'What Happens Next?', intro = '', responseText = '', adminWarning = '' }) {
   const hasLiveBooking = bookingMode === 'calendar' || (bookingMode !== 'request' && !!bookingUrl);
   const steps = hasLiveBooking
     ? [
@@ -22,14 +21,14 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[#12121a] border-white/5">
+      <Card className="rounded-[16px] border-[#2a394f] bg-[#07121f]">
         <CardContent className="p-6 space-y-4">
           <h3 className="text-white font-semibold text-lg">{heading}</h3>
           {intro && <p className="text-gray-400 leading-relaxed">{intro}</p>}
           <ol className="space-y-4">
             {steps.map((step, index) => (
               <li key={step} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0 text-xs font-bold text-white">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1768ec] text-xs font-bold text-white">
                   {index + 1}
                 </div>
                 <p className="text-gray-300 leading-relaxed">{step}</p>
@@ -40,7 +39,7 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
       </Card>
 
       {hasLiveBooking ? (
-        <Card className="bg-gradient-to-b from-cyan-500/10 to-transparent border-cyan-500/20">
+        <Card className="rounded-[16px] border-[#29405f] bg-[#081727]">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -51,13 +50,13 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
                 <p className="text-sm text-gray-400">{bookingMode === 'embed' ? `You can choose a time after the form step.` : bookingMode === 'calendar' ? 'Available strategy call times are shown on this page.' : `After submitting the short form, continue to ${bookingProvider} to choose a time.`}</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
+            <div className="rounded-[11px] border border-[#26364d] bg-[#081522] px-4 py-3 text-sm text-gray-300">
               Monday to Friday, 9:00am–5:00pm Melbourne time.
             </div>
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-gradient-to-b from-white/[0.04] to-transparent border-white/10">
+        <Card className="rounded-[16px] border-[#2a394f] bg-[#07121f]">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -68,7 +67,7 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
                 <p className="text-sm text-gray-400">Submit the form and our team will arrange the next step for your strategy call.</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0f]/40 px-4 py-3 text-sm text-gray-300">
+            <div className="rounded-[11px] border border-[#26364d] bg-[#081522] px-4 py-3 text-sm text-gray-300">
               Submit your details and we’ll contact you to confirm the best time.
             </div>
 
@@ -76,7 +75,7 @@ export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request
         </Card>
       )}
 
-      <Card className="bg-[#12121a] border-white/5">
+      <Card className="rounded-[16px] border-[#2a394f] bg-[#07121f]">
         <CardContent className="p-6 space-y-4">
           <h3 className="text-white font-semibold">Contact Details</h3>
           <div className="flex items-start gap-3 text-gray-300 text-sm">

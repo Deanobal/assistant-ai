@@ -1,8 +1,18 @@
 import React from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowRight, Bot, CalendarCheck, CheckCircle2, Clock3, MessageSquareText, PhoneCall, ShieldCheck, Sparkles, Target, Zap } from 'lucide-react';
+import { Navigate, useParams } from 'react-router-dom';
+import { Bot, CalendarCheck, Clock3, MessageSquareText, PhoneCall, ShieldCheck, Sparkles, Target } from 'lucide-react';
 import SEO from '../components/SEO';
-import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
+import PremiumHomeExperience from '@/components/home/PremiumHomeExperience';
+import {
+  ConversionCTA,
+  FAQRows,
+  FeatureSplit,
+  OutcomeList,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+} from '@/components/marketing/PremiumMarketing';
 
 const landingPages = {
   'ai-receptionist-australia': {
@@ -217,7 +227,7 @@ const landingPages = {
 };
 
 function LandingSection({ page }) {
-  const Icon = page.icon || Sparkles;
+  const isFlagshipReceptionistPage = page.canonicalPath === '/ai-receptionist-australia';
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -228,7 +238,7 @@ function LandingSection({ page }) {
       serviceType: page.primaryKeyword,
       description: page.description,
     },
-    {
+    ...(!isFlagshipReceptionistPage ? [{
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
       mainEntity: page.faq.map(([question, answer]) => ({
@@ -236,87 +246,62 @@ function LandingSection({ page }) {
         name: question,
         acceptedAnswer: { '@type': 'Answer', text: answer },
       })),
-    }
+    }] : [])
   ];
+
+  if (isFlagshipReceptionistPage) {
+    return (
+      <>
+        <SEO title={page.title} description={page.description} canonicalPath={page.canonicalPath} structuredData={structuredData} />
+        <PremiumHomeExperience />
+      </>
+    );
+  }
 
   return (
     <>
       <SEO title={page.title} description={page.description} canonicalPath={page.canonicalPath} structuredData={structuredData} />
-      <section className="relative overflow-hidden py-24 md:py-32 bg-grid">
-        <div className="absolute inset-0 bg-radial-glow" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-                <Icon className="h-4 w-4" />
-                {page.eyebrow}
-              </div>
-              <h1 className="mt-6 max-w-4xl text-4xl font-bold tracking-tight text-white md:text-6xl">{page.h1}</h1>
-              <p className="mt-6 max-w-3xl text-lg leading-8 text-gray-300">{page.intro}</p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/GetStartedNow" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-sm font-semibold text-white transition hover:shadow-lg hover:shadow-cyan-500/25">
-                  Get Started Now
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <VapiReceptionistDemoButton variant="secondary" className="min-h-0 px-8 py-4 text-sm" showFallbackText />
-              </div>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-[#11111a]/90 p-6 shadow-2xl shadow-cyan-950/20 md:p-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Search intent target</p>
-              <h2 className="mt-3 text-2xl font-bold text-white">{page.primaryKeyword}</h2>
-              <p className="mt-4 text-gray-400 leading-7">{page.pain}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {page.secondary.map((keyword) => <span key={keyword} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">{keyword}</span>)}
-              </div>
-            </div>
+      <PageShell>
+        <PageHero
+          title={page.h1}
+          description={page.intro}
+          primaryTo="/GetStartedNow"
+          primaryLabel="Get Started"
+          secondaryTo="/BookStrategyCall"
+          secondaryLabel="Book a Strategy Call"
+          visual="solution"
+          visualData={{ title: page.h1, items: page.outcomes, icon: page.icon }}
+        />
+        <Section id="page-content" className="bg-[#040b14]">
+          <SectionHeading title="Built around the enquiry, not a generic script" description={page.pain} />
+          <div className="mt-10">
+            <OutcomeList items={page.outcomes} />
           </div>
-
-          <div className="mt-20 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {page.outcomes.map((outcome) => (
-              <div key={outcome} className="rounded-2xl border border-white/5 bg-[#12121a] p-6">
-                <CheckCircle2 className="h-6 w-6 text-cyan-400" />
-                <p className="mt-4 text-base leading-7 text-gray-300">{outcome}</p>
-              </div>
-            ))}
+        </Section>
+        <Section>
+          <FeatureSplit
+            title="Designed around real enquiry flow"
+            description="AssistantAI connects the first response with structured capture, clear routing and practical follow-up, so your team can act with better context."
+            points={page.outcomes}
+          >
+            <OutcomeList items={page.useCases} />
+          </FeatureSplit>
+        </Section>
+        <Section className="bg-[#040b14]">
+          <SectionHeading title="Frequently asked questions" />
+          <div className="mt-10">
+            <FAQRows items={page.faq} />
           </div>
-
-          <div className="mt-16 grid gap-8 lg:grid-cols-2">
-            <div className="rounded-3xl border border-white/5 bg-[#12121a] p-8">
-              <Target className="h-8 w-8 text-cyan-400" />
-              <h2 className="mt-4 text-3xl font-bold text-white">Built for buying intent, not vanity traffic</h2>
-              <p className="mt-4 text-gray-400 leading-8">These pages are written for prospects already looking for a practical AI reception, missed-call, booking, or follow-up system. The goal is to capture commercial search demand and move visitors toward a demo or setup conversation.</p>
-            </div>
-            <div className="rounded-3xl border border-white/5 bg-[#12121a] p-8">
-              <Zap className="h-8 w-8 text-cyan-400" />
-              <h2 className="mt-4 text-3xl font-bold text-white">Best-fit use cases</h2>
-              <ul className="mt-5 space-y-4">
-                {page.useCases.map((item) => <li key={item} className="flex items-start gap-3 text-gray-300 leading-7"><span className="mt-2 h-2 w-2 rounded-full bg-cyan-400" />{item}</li>)}
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-16 rounded-3xl border border-cyan-500/20 bg-cyan-500/5 p-8 md:p-10">
-            <h2 className="text-3xl font-bold text-white">Frequently asked questions</h2>
-            <div className="mt-8 grid gap-5 md:grid-cols-3">
-              {page.faq.map(([question, answer]) => (
-                <div key={question} className="rounded-2xl border border-white/10 bg-black/20 p-6">
-                  <h3 className="font-bold text-white">{question}</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-400">{answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-16 text-center">
-            <h2 className="text-3xl font-bold text-white">Ready to capture more high-intent enquiries?</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">Start with AssistantAI’s AI receptionist and lead capture system, then connect booking, follow-up, payments, and reporting as your workflow matures.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link to="/Pricing" className="inline-flex items-center justify-center rounded-full border border-white/10 px-8 py-4 text-sm font-semibold text-white hover:bg-white/5">View Pricing</Link>
-              <Link to="/BookStrategyCall" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-semibold text-slate-950 hover:bg-cyan-100">Book Strategy Call <ArrowRight className="h-4 w-4" /></Link>
-            </div>
-          </div>
-        </div>
-      </section>
+        </Section>
+        <ConversionCTA
+          title="Ready to capture more high-intent enquiries?"
+          description="Start with reliable call answering and lead capture, then connect booking, follow-up and reporting around your workflow."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Book a Strategy Call"
+          secondaryLabel="View Pricing"
+          secondaryTo="/Pricing"
+        />
+      </PageShell>
     </>
   );
 }

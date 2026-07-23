@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AlertCircle, ArrowUpRight, CalendarCheck, CheckCircle2, ClipboardList, Clock, CreditCard, Headphones, HelpCircle, Loader2, LogOut, Mail, MessageSquareText, Phone, PlugZap, ShieldCheck, TrendingUp, User, Zap } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CalendarCheck, CheckCircle2, ClipboardList, Clock, CreditCard, Headphones, HelpCircle, Loader2, LogOut, Mail, MessageSquareText, PlugZap, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

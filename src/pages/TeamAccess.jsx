@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import InviteMemberCard from '@/components/admin/team/InviteMemberCard';
 import TeamMembersCard from '@/components/admin/team/TeamMembersCard';
@@ -14,17 +14,17 @@ export default function TeamAccess() {
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => assistantApi.auth.me(),
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['team-members'],
-    queryFn: () => base44.entities.User.list('-created_date', 100),
+    queryFn: () => assistantApi.entities.User.list('-created_date', 100),
     initialData: [],
   });
 
   const inviteMutation = useMutation({
-    mutationFn: ({ email, role }) => base44.users.inviteUser(email, role),
+    mutationFn: ({ email, role }) => assistantApi.users.inviteUser(email, role),
     onSuccess: (_, variables) => {
       setLastInvitedEmail(variables.email);
       setEmail('');
@@ -34,14 +34,14 @@ export default function TeamAccess() {
   });
 
   const roleMutation = useMutation({
-    mutationFn: ({ userId, role }) => base44.entities.User.update(userId, { role }),
+    mutationFn: ({ userId, role }) => assistantApi.entities.User.update(userId, { role }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
     },
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: (targetEmail) => base44.auth.resetPasswordRequest(targetEmail),
+    mutationFn: (targetEmail) => assistantApi.auth.resetPasswordRequest(targetEmail),
     onSuccess: (_, targetEmail) => {
       setLastResetEmail(targetEmail);
     },

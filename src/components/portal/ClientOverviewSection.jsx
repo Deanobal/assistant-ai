@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Phone, Calendar, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,7 +14,7 @@ const statConfig = [
 export default function ClientOverviewSection({ clientAccountId }) {
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['client-portal-overview', clientAccountId],
-    queryFn: () => base44.entities.ClientAccount.filter({ id: clientAccountId }, '-updated_date', 1),
+    queryFn: () => assistantApi.entities.ClientAccount.filter({ id: clientAccountId }, '-updated_date', 1),
     initialData: [],
     enabled: !!clientAccountId,
   });

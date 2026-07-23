@@ -149,7 +149,7 @@ export default function LeadForm({
         </div>
 
         {hasConfirmedBooking && (
-          <div className="mt-8 max-w-2xl mx-auto rounded-[28px] border border-cyan-500/20 bg-cyan-500/5 p-6 text-left space-y-3">
+          <div className="mx-auto mt-8 max-w-2xl space-y-3 rounded-[16px] border border-[#29405f] bg-[#081727] p-6 text-left">
             <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Confirmed Booking</p>
             {confirmedStart && (
               <div>
@@ -169,17 +169,17 @@ export default function LeadForm({
 
         {primaryActionHref && primaryActionLabel && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <a href={primaryActionHref} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+            <a href={primaryActionHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-8 py-3.5 font-medium text-white transition hover:bg-[#0a45aa]">
               {primaryActionLabel}
               <ArrowRight className="w-4 h-4" />
             </a>
             {successSecondaryActionHref && successSecondaryActionLabel && (
-              <Link to={successSecondaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-white/[0.03] text-white font-medium rounded-full hover:bg-white/[0.05] transition-all">
+              <Link to={successSecondaryActionHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#425067] bg-[#081522] px-8 py-3.5 font-medium text-white transition hover:border-[#66748a] hover:bg-[#0a1725]">
                 {successSecondaryActionLabel}
               </Link>
             )}
             {successTertiaryActionHref && successTertiaryActionLabel && (
-              <Link to={successTertiaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-transparent text-gray-300 font-medium rounded-full hover:bg-white/[0.03] transition-all">
+              <Link to={successTertiaryActionHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#425067] bg-transparent px-8 py-3.5 font-medium text-gray-300 transition hover:bg-[#0a1725]">
                 {successTertiaryActionLabel}
               </Link>
             )}
@@ -189,12 +189,12 @@ export default function LeadForm({
         {!primaryActionHref && (successSecondaryActionHref || successTertiaryActionHref) && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {successSecondaryActionHref && successSecondaryActionLabel && (
-              <Link to={successSecondaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+              <Link to={successSecondaryActionHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-8 py-3.5 font-medium text-white transition hover:bg-[#0a45aa]">
                 {successSecondaryActionLabel}
               </Link>
             )}
             {successTertiaryActionHref && successTertiaryActionLabel && (
-              <Link to={successTertiaryActionHref} className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 bg-white/[0.03] text-white font-medium rounded-full hover:bg-white/[0.05] transition-all">
+              <Link to={successTertiaryActionHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-[#425067] bg-[#081522] px-8 py-3.5 font-medium text-white transition hover:border-[#66748a] hover:bg-[#0a1725]">
                 {successTertiaryActionLabel}
               </Link>
             )}
@@ -360,7 +360,7 @@ export default function LeadForm({
       <button
         type="submit"
         disabled={submitting || isSubmitDisabled}
-        className="w-full flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-8 py-3.5 font-medium text-white transition hover:bg-[#0a45aa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7faaff] disabled:opacity-50"
       >
         {submitting ? (
           <Loader2 className="w-4 h-4 animate-spin" />

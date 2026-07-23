@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function getConfig() {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -110,6 +112,7 @@ async function replyConversation(payload) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};

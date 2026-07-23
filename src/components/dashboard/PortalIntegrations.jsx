@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { buildIntegrationSummary, mergeIntegrationState } from './integrations/integrationsData';
@@ -14,8 +14,8 @@ export default function PortalIntegrations({ clientAccountId = null, mode = 'liv
   const { data: records = [], isLoading } = useQuery({
     queryKey: ['integration-connections', clientAccountId || 'all', mode],
     queryFn: () => clientAccountId
-      ? base44.entities.IntegrationConnection.filter({ client_account_id: clientAccountId }, '-updated_date', 100)
-      : base44.entities.IntegrationConnection.list('-updated_date', 100),
+      ? assistantApi.entities.IntegrationConnection.filter({ client_account_id: clientAccountId }, '-updated_date', 100)
+      : assistantApi.entities.IntegrationConnection.list('-updated_date', 100),
     initialData: [],
     enabled: !isSample,
   });
@@ -45,13 +45,13 @@ export default function PortalIntegrations({ clientAccountId = null, mode = 'liv
       };
 
       if (existing) {
-        return base44.entities.IntegrationConnection.update(existing.id, {
+        return assistantApi.entities.IntegrationConnection.update(existing.id, {
           ...existing,
           ...nextData,
         });
       }
 
-      return base44.entities.IntegrationConnection.create(nextData);
+      return assistantApi.entities.IntegrationConnection.create(nextData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integration-connections', clientAccountId || 'all', mode] });

@@ -27,8 +27,8 @@ export default function SignupDetailsForm({ form, selectedPlan, onChange, onBack
   const update = (field, value) => onChange({ ...form, [field]: value });
 
   return (
-    <form onSubmit={onContinue} className="rounded-[28px] border border-white/5 bg-[#12121a] p-7 md:p-9">
-      <div className="mb-7 flex flex-col gap-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <form onSubmit={onContinue} className="rounded-[16px] border border-[#2a394f] bg-[#07121f] p-7 shadow-[0_28px_80px_rgba(0,0,0,0.22)] md:p-9">
+      <div className="mb-7 flex flex-col gap-4 rounded-[11px] border border-[#29405f] bg-[#081727] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.18em] text-cyan-300">Step 1 — Plan selected</p>
           <p className="mt-1 text-xl font-semibold text-white">{selectedPlan.name}: {selectedPlan.setupLabel} + {selectedPlan.monthlyLabel}</p>
@@ -46,53 +46,53 @@ export default function SignupDetailsForm({ form, selectedPlan, onChange, onBack
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-gray-400">Full name *</Label>
-          <Input required value={form.full_name} onChange={(e) => update('full_name', e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="John Smith" />
+          <Input required value={form.full_name} onChange={(e) => update('full_name', e.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="John Smith" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Business name *</Label>
-          <Input required value={form.business_name} onChange={(e) => update('business_name', e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="Smith's Plumbing" />
+          <Input required value={form.business_name} onChange={(e) => update('business_name', e.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="Smith's Plumbing" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Email *</Label>
-          <Input required type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="john@business.com.au" />
+          <Input required type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="john@business.com.au" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Mobile number *</Label>
-          <Input required type="tel" value={form.mobile_number} onChange={(e) => update('mobile_number', e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="+61 4XX XXX XXX" />
+          <Input required type="tel" value={form.mobile_number} onChange={(e) => update('mobile_number', e.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="+61 4XX XXX XXX" />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Industry *</Label>
           <Select value={form.industry} onValueChange={(value) => update('industry', value)}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white"><SelectValue placeholder="Select industry" /></SelectTrigger>
+            <SelectTrigger className="border-[#2d3d54] bg-[#081522] text-white"><SelectValue placeholder="Select industry" /></SelectTrigger>
             <SelectContent>{industries.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Website optional</Label>
-          <Input value={form.website} onChange={(e) => update('website', e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="https://yourbusiness.com.au" />
+          <Input value={form.website} onChange={(e) => update('website', e.target.value)} className="border-[#2d3d54] bg-[#081522] text-white" placeholder="https://yourbusiness.com.au" />
         </div>
       </div>
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-gray-400">What do you want help with? *</Label>
-          <Textarea required value={form.service_needed} onChange={(e) => update('service_needed', e.target.value)} className="min-h-28 bg-white/5 border-white/10 text-white" placeholder="Missed calls, lead capture, bookings, CRM updates..." />
+          <Textarea required value={form.service_needed} onChange={(e) => update('service_needed', e.target.value)} className="min-h-28 border-[#2d3d54] bg-[#081522] text-white" placeholder="Missed calls, lead capture, bookings, CRM updates..." />
         </div>
         <div className="space-y-2">
           <Label className="text-gray-400">Current call/enquiry problem *</Label>
-          <Textarea required value={form.current_call_handling} onChange={(e) => update('current_call_handling', e.target.value)} className="min-h-28 bg-white/5 border-white/10 text-white" placeholder="Tell us what happens now when calls or enquiries come in." />
+          <Textarea required value={form.current_call_handling} onChange={(e) => update('current_call_handling', e.target.value)} className="min-h-28 border-[#2d3d54] bg-[#081522] text-white" placeholder="Tell us what happens now when calls or enquiries come in." />
         </div>
       </div>
 
       <div className="mt-5 space-y-2">
         <Label className="text-gray-400">Monthly enquiry volume optional</Label>
         <Select value={form.monthly_enquiry_volume} onValueChange={(value) => update('monthly_enquiry_volume', value)}>
-          <SelectTrigger className="bg-white/5 border-white/10 text-white"><SelectValue placeholder="Select volume" /></SelectTrigger>
+          <SelectTrigger className="border-[#2d3d54] bg-[#081522] text-white"><SelectValue placeholder="Select volume" /></SelectTrigger>
           <SelectContent>{volumes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
         </Select>
       </div>
 
-      <button type="submit" className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 font-semibold text-white transition-all hover:shadow-lg hover:shadow-cyan-500/25">
+      <button type="submit" className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-8 py-3.5 font-semibold text-white transition hover:bg-[#0a45aa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7faaff]">
         Review Details
         <ArrowRight className="h-4 w-4" />
       </button>

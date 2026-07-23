@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDownLeft, ArrowUpRight, MessageSquare } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import LeadSmsReplyBox from '@/components/admin/leads/LeadSmsReplyBox';
@@ -23,7 +23,7 @@ function getHighIntentTags(log) {
 export default function LeadSmsTrail({ leadId, mobileNumber, fullName }) {
   const { data: logs = [] } = useQuery({
     queryKey: ['lead-sms-trail', leadId],
-    queryFn: () => base44.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 50),
+    queryFn: () => assistantApi.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 50),
     initialData: [],
   });
 

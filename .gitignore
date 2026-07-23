@@ -15,6 +15,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.playwright-cli/
+/output/playwright/
+/public/images/assistantai-*.png
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +31,6 @@ dist-ssr
 *.sw?
 
 .env
+
+.vercel
+.env*

@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 const PLAN_CONFIG = {
   Starter: { key: 'starter', name: 'Starter', setupFee: 1500, monthlyFee: 497 },
   Growth: { key: 'growth', name: 'Growth', setupFee: 3000, monthlyFee: 1500 },
@@ -160,6 +162,7 @@ async function overrideBilling({ clientId, billingStatus = 'active' }) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
     let data;

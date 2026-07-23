@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') return JSON.parse(req.body || '{}');
@@ -84,6 +86,7 @@ function intakePatch(intake, clientId) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
     const body = parseBody(req);

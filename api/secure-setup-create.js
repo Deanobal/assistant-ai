@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { requireAdmin } from './_native-auth.js';
 
 function makeToken() {
   return crypto.randomBytes(24).toString('base64url');
@@ -256,6 +257,7 @@ function unauthorisedToolResults(toolCalls) {
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
+    if (!requireAdmin(req, res)) return;
     return res.status(200).json({
       success: true,
       service: 'assistantai-secure-setup-create',

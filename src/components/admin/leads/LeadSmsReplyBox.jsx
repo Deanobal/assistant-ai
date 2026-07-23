@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Send } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -38,7 +38,7 @@ export default function LeadSmsReplyBox({ leadId, mobileNumber, fullName }) {
   const hasValidPhone = !!normalizedPhone;
 
   const replyMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('sendLeadSmsReply', { leadId, message: message.trim() }),
+    mutationFn: () => assistantApi.functions.invoke('sendLeadSmsReply', { leadId, message: message.trim() }),
     onSuccess: () => {
       setMessage('');
       queryClient.invalidateQueries({ queryKey: ['lead-sms-trail', leadId] });

@@ -6,8 +6,9 @@ export default function handler(req, res) {
   }
 
   res.setHeader('Cache-Control', 'private, no-store');
-  return res.status(isAdminRequest(req) ? 200 : 401).json({
-    success: isAdminRequest(req),
-    authenticated: isAdminRequest(req),
+  const authenticated = isAdminRequest(req);
+  return res.status(authenticated ? 200 : 401).json({
+    success: authenticated,
+    authenticated,
   });
 }

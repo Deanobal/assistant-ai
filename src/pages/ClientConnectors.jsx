@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { AdminEmptyState } from '@/components/admin/AdminState';
 import { ArrowUpRight, Bot, BriefcaseBusiness, CheckCircle2, CreditCard, DatabaseZap, FileText, Globe, Mail, MessageSquare, PhoneCall, Rocket, Sparkles, Workflow, XCircle } from 'lucide-react';
@@ -80,11 +80,11 @@ function MissingAction({ item, clientId }) {
 
 export default function ClientConnectors() {
   const [selectedClientId, setSelectedClientId] = useState('');
-  const { data: clients = [] } = useQuery({ queryKey: ['connector-clients'], queryFn: () => base44.entities.Client.list('-updated_date', 200), initialData: [] });
+  const { data: clients = [] } = useQuery({ queryKey: ['connector-clients'], queryFn: () => assistantApi.entities.Client.list('-updated_date', 200), initialData: [] });
   const activeClientId = selectedClientId || clients[0]?.id || '';
   const client = clients.find((item) => item.id === activeClientId) || null;
-  const { data: integrations = [] } = useQuery({ queryKey: ['connector-integrations', activeClientId], queryFn: () => base44.entities.IntegrationStatus.filter({ client_id: activeClientId }, '-updated_date', 100), initialData: [], enabled: Boolean(activeClientId) });
-  const { data: billingRecords = [] } = useQuery({ queryKey: ['connector-billing', activeClientId], queryFn: () => base44.entities.BillingStatus.filter({ client_id: activeClientId }, '-updated_date', 10), initialData: [], enabled: Boolean(activeClientId) });
+  const { data: integrations = [] } = useQuery({ queryKey: ['connector-integrations', activeClientId], queryFn: () => assistantApi.entities.IntegrationStatus.filter({ client_id: activeClientId }, '-updated_date', 100), initialData: [], enabled: Boolean(activeClientId) });
+  const { data: billingRecords = [] } = useQuery({ queryKey: ['connector-billing', activeClientId], queryFn: () => assistantApi.entities.BillingStatus.filter({ client_id: activeClientId }, '-updated_date', 10), initialData: [], enabled: Boolean(activeClientId) });
   const billing = billingRecords[0] || null;
 
   const readiness = useMemo(() => {

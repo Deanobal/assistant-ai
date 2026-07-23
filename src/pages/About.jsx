@@ -1,152 +1,113 @@
-import * as React from 'react';
+import { Headphones, MapPin, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import SEO from '../components/SEO';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Target, Eye, Zap, Shield, CheckCircle2 } from 'lucide-react';
+import {
+  AccentText,
+  ConversionCTA,
+  FeatureSplit,
+  OutcomeList,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+} from '@/components/marketing/PremiumMarketing';
 
-const values = [
-{ icon: Target, title: 'Results-Driven', desc: 'Every system is designed to support better lead handling, smoother workflows, and faster response times.' },
-{ icon: Eye, title: 'Transparent', desc: 'Clear pricing, practical recommendations, and a simple explanation of how the automation works.' },
-{ icon: Zap, title: 'Practical AI', desc: 'We focus on useful automations for calls, bookings, CRM updates, and follow-up instead of hype.' },
-{ icon: Shield, title: 'Ongoing Support', desc: 'Launch is only the start. We keep refining the workflow with monitoring, optimisation, and support.' }];
+const principles = [
+  { icon: Headphones, title: 'Human-first conversations', body: 'The receptionist should sound clear, polite and useful, with a simple path to a person when judgement is needed.' },
+  { icon: ShieldCheck, title: 'Reliable by design', body: 'Permissions, integrations and sensitive actions are handled deliberately so the workflow remains safe and predictable.' },
+  { icon: SlidersHorizontal, title: 'Configured around the business', body: 'Questions, handoffs and follow-up are shaped around your services rather than forced into a generic script.' },
+  { icon: Sparkles, title: 'Results over novelty', body: 'We focus on useful actions after the call: capture, qualification, booking, follow-up and team visibility.' },
+];
 
-
-const reasons = [
-'Practical AI systems',
-'Fast setup',
-'Local business focus',
-'No hype',
-'Ongoing optimisation',
-'Real business outcomes'];
-
+const implementation = [
+  'Discover — understand your services, callers and existing process.',
+  'Configure — design the receptionist, questions, rules and integrations.',
+  'Test — review real scenarios and refine the conversation flow.',
+  'Go live — launch with clear monitoring and human escalation.',
+  'Optimise — improve the system as your team learns what works.',
+];
 
 export default function About() {
   return (
     <>
       <SEO
-        title="About | AI Automation System for Australian Service Businesses | AssistantAI"
-        description="Learn how AssistantAI helps Australian service businesses use an AI assistant and AI receptionist to improve lead capture, CRM integration, service business automation, and response times."
+        title="About | Australian AI Receptionist for Service Businesses | AssistantAI"
+        description="Learn how AssistantAI builds practical AI reception and follow-up workflows for Australian service businesses."
         canonicalPath="/About"
       />
-      <div>
-      <section className="relative py-24 md:py-32 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16">
+      <PageShell>
+        <PageHero
+          title={<>Australian-built AI reception for businesses that cannot afford to <AccentText>miss a call.</AccentText></>}
+          description="AssistantAI exists to give Australian service businesses a reliable front door for calls, enquiries, bookings and follow-up — without adding more pressure to the people doing the work."
+          visual="principles"
+        />
 
-            <p className="text-cyan-400 mb-3 text-lg font-medium">ABOUT US</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">AssistantAI Helps Australian Service Businesses Automate Smarter
-            </h1>
-          </motion.div>
+        <Section id="page-content" className="bg-[#040b14]">
+          <FeatureSplit
+            title={<>Built in Australia. For <AccentText>Australian businesses.</AccentText></>}
+            description="We saw the same operational problem across service businesses: calls arrive when teams are already busy, and valuable enquiries cool down before anyone can respond."
+            points={[
+              'Practical implementation grounded in real service workflows',
+              'Australian English, local context and business hours',
+              'Clear support before, during and after launch',
+              'A measured path from call answering to connected automation',
+            ]}
+          >
+            <OutcomeList
+              items={[
+                'Start with the operating problem, not the technology.',
+                'Keep sensitive decisions and exceptions with people.',
+                'Launch with clear ownership, testing and support.',
+                'Measure whether the workflow improves the customer response.',
+              ]}
+            />
+          </FeatureSplit>
+        </Section>
 
-          <div className="max-w-3xl mx-auto mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="space-y-5 text-gray-400 leading-relaxed text-lg">
-
-              <p>AssistantAI was built to help Australian cleaning, trades, property, and other service businesses stop losing leads to missed calls, slow response times, and disconnected admin workflows.</p>
-              <p>
-                We focus on practical service business automation with an AI receptionist that answers calls, qualifies buyers, recommends the right plan, creates secure checkout for ready Starter and Growth customers, updates systems, and triggers onboarding after payment.
-              </p>
-              <p>
-                The goal is simple: help businesses qualify leads while they are live, secure payment instantly for standard plans, and stop hot buyers from cooling down while admin catches up.
-              </p>
-            </motion.div>
+        <Section>
+          <SectionHeading
+            title="How we think about AI reception"
+            description="A good system should feel calm to the caller, useful to the team and transparent to the business owner."
+          />
+          <div className="mt-10 overflow-hidden rounded-[16px] border border-[#26364d] bg-[#07121f]">
+            {principles.map(({ icon: Icon, title, body }, index) => (
+              <div key={title} className={`grid gap-4 px-5 py-6 sm:px-7 md:grid-cols-[0.38fr_0.62fr] md:items-center md:gap-10 ${index ? 'border-t border-[#1d2b3e]' : ''}`}>
+                <div className="flex items-center gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#10284c] text-[#74a7ff]">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                </div>
+                <p className="text-sm leading-7 text-[#aab4c3]">{body}</p>
+              </div>
+            ))}
           </div>
+        </Section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-20">
+        <Section className="bg-[#040b14]">
+          <FeatureSplit
+            reverse
+            title="Fast implementation. Supported all the way."
+            description="We keep the rollout understandable: define the workflow, test it carefully, launch with visibility and improve from real conversations."
+          >
+            <OutcomeList items={implementation} />
+          </FeatureSplit>
+        </Section>
 
-            <h2 className="text-2xl font-bold text-white text-center mb-12">Our Approach</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {values.map((v, i) =>
-              <motion.div
-                key={v.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl border border-white/5 bg-[#12121a] text-center">
-
-                  <div className="bg-gradient-to-br mx-auto my-1 px-1 rounded-2xl w-12 h-12 from-cyan-500/10 to-blue-500/10 flex items-center justify-center">
-                    <v.icon className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <h3 className="text-white font-semibold mb-2">{v.title}</h3>
-                  <p className="text-gray-500 text-base leading-relaxed">{v.desc}</p>
-                </motion.div>
-              )}
+        <Section>
+          <div className="flex flex-col items-start justify-between gap-6 rounded-[16px] border border-[#2a3b55] bg-[#071421] p-7 sm:p-9 md:flex-row md:items-center">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-[#76a7ff]">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                Australia-wide
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">Built for the businesses customers rely on every day.</h2>
             </div>
-          </motion.div>
+            <p className="max-w-xl text-sm leading-7 text-[#aab4c3]">From trades and clinics to property and professional services, the system is tailored to the calls and next steps that matter in your business.</p>
+          </div>
+        </Section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12 p-8 md:p-10 rounded-2xl border border-white/5 bg-[#12121a]">
-
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">What We Actually Build</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-              'AI call handling',
-              'Lead capture automation',
-              'CRM sync',
-              'Secure payment flow',
-              'Onboarding automation'].
-              map((item) =>
-              <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-4 text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>{item}</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-20 p-8 md:p-10 rounded-2xl border border-white/5 bg-[#12121a]">
-
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">Why Businesses Choose AssistantAI.com.au</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {reasons.map((reason) =>
-              <div key={reason} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0a0a0f] px-4 py-4 text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>{reason}</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
-
-            <h3 className="text-2xl font-bold text-white mb-3">Ready to See What AI Could Look Like in Your Business?</h3>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Talk to the AI receptionist or choose a plan to start your AI receptionist setup.
-            </p>
-            <Link
-              to="/GetStartedNow"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
-
-              Get Started Now
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-      </div>
-    </>);
-
+        <ConversionCTA />
+      </PageShell>
+    </>
+  );
 }

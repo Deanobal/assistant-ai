@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 
 const SDK_URL = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
 
@@ -34,7 +34,7 @@ function loadOneSignalSdk() {
 
 async function getOneSignalConfig() {
   if (!configPromise) {
-    configPromise = base44.functions.invoke('getOneSignalConfig', {}).then((response) => response.data);
+    configPromise = assistantApi.functions.invoke('getOneSignalConfig', {}).then((response) => response.data);
   }
   return configPromise;
 }

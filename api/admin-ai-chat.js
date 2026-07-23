@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') return JSON.parse(req.body || '{}');
@@ -25,7 +27,7 @@ function buildLocalAnswer(message, context = {}, aiError = '') {
 
   if (lower.includes('intake') || lower.includes('onboarding')) {
     return {
-      reply: `Onboarding operator mode for ${page}: create or load the client, complete Intake, save once, check blockers, confirm payment, connect tools, run a test call, then move to go-live. If saving fails, the likely fault is a missing Supabase column or old Base44 write path.${statusLine}`,
+      reply: `Onboarding operator mode for ${page}: create or load the client, complete Intake, save once, check blockers, confirm payment, connect tools, run a test call, then move to go-live. If saving fails, check the Supabase schema and native API response.${statusLine}`,
       actions: [
         { label: 'Open Onboarding', href: '/Onboarding' },
         { label: 'Open Clients', href: '/ClientManager' }
@@ -65,7 +67,7 @@ function buildLocalAnswer(message, context = {}, aiError = '') {
 
   if (lower.includes('error') || lower.includes('broken') || lower.includes('not working')) {
     return {
-      reply: `Error triage for ${page}: capture the exact red error, browser console error, and failed Network request. Then check whether it is frontend, API, Supabase, Vercel env, Vapi, Stripe, Twilio, Crisp, or old Base44 dependency.${statusLine}`,
+      reply: `Error triage for ${page}: capture the exact red error, browser console error, and failed Network request. Then check whether it is frontend, API, Supabase, Vercel env, Vapi, Stripe, Twilio, or Crisp.${statusLine}`,
       actions: [
         { label: 'Open System Readiness', href: '/SystemReadiness' }
       ]
@@ -90,7 +92,7 @@ Rules:
 - Do not say "I will check", "I'll verify", "please check the browser console", or ask the user to test basic UI behaviour unless no better path exists.
 - You cannot see the DOM, console, database or network panel unless the user provides those details. Be honest about that.
 - Give the most likely diagnosis and the next concrete admin action.
-- For ClientManager, focus on client loading, filtering, archived/live status, Supabase vs Base44 mismatch, onboarding handoff, and workspace links.
+- For ClientManager, focus on client loading, filtering, archived/live status, Supabase schema alignment, onboarding handoff, and workspace links.
 - For ClientWorkspace, focus on /api/client-workspace, /api/intake-save, intake persistence, temporary fallback records, billing state, checklist, integrations and go-live blockers.
 - For Onboarding, focus on /api/onboarding-create, client creation, intake forms, billing records and secure setup submissions.
 - For Secure Setup, focus on /api/secure-setup-create, /api/secure-setup-prefill, /api/secure-setup-submit, token links, Twilio SMS and onboarding creation.
@@ -154,6 +156,9 @@ async function getHostedAIAnswer(message, context) {
 }
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
+
   if (req.method === 'GET') {
     return res.status(200).json({
       success: true,
@@ -164,8 +169,6 @@ export default async function handler(req, res) {
       groq_admin_ai_model: process.env.GROQ_ADMIN_AI_MODEL || 'llama-3.3-70b-versatile'
     });
   }
-
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const body = parseBody(req);

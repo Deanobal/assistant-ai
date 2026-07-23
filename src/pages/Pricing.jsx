@@ -1,253 +1,153 @@
-import * as React from 'react';
-import SEO from '../components/SEO';
+import { ArrowRight, Check, Compass, Rocket, Settings2, TestTube2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Check, ArrowRight, HelpCircle } from 'lucide-react';
+import SEO from '../components/SEO';
+import {
+  AccentText,
+  ConversionCTA,
+  FAQRows,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+  premiumButton,
+  premiumButtonSecondary,
+} from '@/components/marketing/PremiumMarketing';
 
 const plans = [
-{
-  name: 'Starter',
-  slug: 'starter',
-  setup: '$1,500 setup AUD ex. GST',
-  monthly: '$497/month AUD ex. GST',
-  desc: 'For missed-call coverage, lead capture, and simple follow-up.',
-  valueLine: 'Best for missed-call coverage, lead capture, and simple follow-up.',
-  features: [
-  'Done-for-you setup',
-  'Missed-call coverage',
-  'Lead capture',
-  'Simple follow-up',
-  'Support included'],
-
-  featured: false,
-  directStart: false,
-  primaryCtaLabel: 'Choose Starter',
-  primaryCtaTo: '/GetStartedNow?plan=starter',
-  secondaryHelper: 'Choose Starter and review your details before payment.'
+  {
+    name: 'Starter',
+    monthly: '$497/month',
+    setup: '$1,500 setup',
+    description: 'For missed-call coverage, lead capture and simple follow-up.',
+    features: ['Done-for-you setup', 'Missed-call coverage', 'Lead capture', 'Simple follow-up', 'Support included'],
+    cta: 'Choose Starter',
+    to: '/GetStartedNow?plan=starter',
   },
-{
-  name: 'Growth',
-  slug: 'growth',
-  setup: '$3,000 setup AUD ex. GST',
-  monthly: '$1,500/month AUD ex. GST',
-  desc: 'For call handling, booking support, customer updates, and SMS/email follow-up.',
-  valueLine: 'Best for call handling, booking support, customer updates, and SMS/email follow-up.',
-  features: [
-  'Done-for-you setup',
-  'AI call handling',
-  'Booking support',
-  'Customer details stay organised',
-  'SMS/email follow-up'],
-
-  featured: true,
-  directStart: true,
-  primaryCtaLabel: 'Choose Growth',
-  primaryCtaTo: '/GetStartedNow?plan=growth',
-  secondaryHelper: 'Choose Growth and review your details before payment.'
+  {
+    name: 'Growth',
+    monthly: '$1,500/month',
+    setup: '$3,000 setup',
+    description: 'For active call handling, booking support and connected follow-up.',
+    features: ['Everything in Starter', 'AI call handling', 'Booking support', 'Customer details organised', 'SMS and email follow-up'],
+    cta: 'Choose Growth',
+    to: '/GetStartedNow?plan=growth',
+    featured: true,
   },
-{
-  name: 'Enterprise',
-  slug: 'enterprise',
-  setup: 'From $7,500 setup AUD ex. GST',
-  monthly: 'From $3,000/month AUD ex. GST',
-  desc: 'For multi-location, custom workflows, advanced integrations, or complex routing.',
-  valueLine: 'Best for multiple locations, custom workflows, advanced integrations, or complex routing.',
-  features: [
-  'Custom setup',
-  'Multi-location support',
-  'Advanced integrations',
-  'Complex routing',
-  'Custom review'],
-
-  featured: false,
-  directStart: false,
-  primaryCtaLabel: 'Request Custom Review',
-  primaryCtaTo: '/Contact',
-  secondaryHelper: 'Enterprise and complex builds are reviewed before setup.'
-  }];
-
+  {
+    name: 'Enterprise',
+    monthly: 'From $3,000/month',
+    setup: 'From $7,500 setup',
+    description: 'For multiple locations, complex routing and custom integrations.',
+    features: ['Custom implementation', 'Multi-location support', 'Advanced integrations', 'Complex call routing', 'Architecture review'],
+    cta: 'Request a Review',
+    to: '/Contact',
+  },
+];
 
 const faqs = [
-{
-  q: 'How long does setup take?',
-  a: 'Most setups can be scoped and launched quickly, depending on how complex your call flow and integrations are.'
-},
-{
-  q: 'Do I need to change my phone number?',
-  a: 'Usually no. AssistantAI.com.au is designed to work with your existing call workflow wherever possible.'
-},
-{
-  q: 'Can the AI transfer calls to staff?',
-  a: 'Yes. Call routing can be configured so urgent or specific enquiries go to the right person when needed.'
-},
-{
-  q: 'Can it book appointments?',
-  a: 'Yes. We can connect appointment workflows to your calendar and booking process.'
-},
-{
-q: 'What tools can it work with?',
-a: 'Common setups include customer management tools, Google or Outlook Calendar, and SMS follow-up tools.'
-},
-{
-  q: 'Can I upgrade later?',
-  a: 'Yes. Plans can scale as your workflow becomes more advanced.'
-},
-{
-  q: 'Do you offer support and optimisation?',
-  a: 'Yes. Support, reporting, and ongoing optimisation are built into the service model.'
-}];
+  ['How long does setup take?', 'Timing depends on your call flow and integrations. We confirm the scope and rollout plan before implementation begins.'],
+  ['Do I need to change my phone number?', 'Usually no. We design the call routing around your existing number and operating requirements where possible.'],
+  ['Can the AI transfer calls?', 'Yes. Human handoff can be configured for urgent, sensitive or specifically qualified enquiries.'],
+  ['Can it support appointments?', 'Yes. Booking support can connect to the calendar or scheduling process you already use.'],
+  ['Can I upgrade later?', 'Yes. The workflow can expand as your call volume, team and integration needs change.'],
+  ['Are prices in Australian dollars?', 'Yes. Prices shown are in AUD and exclude GST unless stated otherwise.'],
+];
 
+const implementation = [
+  { icon: Compass, title: 'Discover', body: 'Map the calls, services and outcomes that matter.' },
+  { icon: Settings2, title: 'Configure', body: 'Build the receptionist, rules and integrations.' },
+  { icon: TestTube2, title: 'Test', body: 'Review realistic scenarios and refine the flow.' },
+  { icon: Rocket, title: 'Go live', body: 'Launch with monitoring, support and clear ownership.' },
+];
 
 export default function Pricing() {
   return (
     <>
       <SEO
         title="Pricing | AI Receptionist Plans for Service Businesses | AssistantAI"
-        description="Review AssistantAI pricing for missed-call coverage, lead capture, booking support, follow-up, and secure signup."
+        description="Review AssistantAI pricing for missed-call coverage, call handling, booking support and connected follow-up."
         canonicalPath="/Pricing"
       />
-      <div>
-      <section className="relative py-24 md:py-32 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-20">
+      <PageShell>
+        <PageHero
+          title={<>Simple pricing. Serious <AccentText>call coverage.</AccentText></>}
+          description="Choose the level of call handling and workflow support that fits your business. All prices are in AUD and exclude GST unless stated otherwise."
+          primaryTo="/GetStartedNow"
+          primaryLabel="Choose a Plan"
+          secondaryTo="/BookStrategyCall"
+          secondaryLabel="Talk Through Your Needs"
+          footnote="Done-for-you implementation and Australian support"
+          visual="pricing"
+          visualData={{ plans }}
+        />
 
-            <p className="text-cyan-400 mb-3 text-lg font-medium">PRICING</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Clear Pricing. Done-For-You Setup.
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              Choose Starter or Growth to begin secure signup, or request a custom review for Enterprise and complex workflows. Prices are in AUD and exclude GST unless stated otherwise.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-24">
-            {plans.map((plan, i) =>
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative p-8 rounded-2xl border card-hover ${
-              plan.featured ?
-              'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-[#12121a] glow-border' :
-              'border-white/5 bg-[#12121a]'}`
-              }>
-
-                {plan.featured &&
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-medium text-white">
-                    Most Popular
-                  </div>
-              }
-
-                <div className="min-h-[8.5rem]">
-                  <h3 className="text-white font-semibold text-xl">{plan.name}</h3>
-                  <p className="text-gray-400 mt-2 text-base leading-relaxed">{plan.desc}</p>
+        <Section id="page-content" className="bg-[#040b14]">
+          <div className="grid gap-5 lg:grid-cols-3">
+            {plans.map((plan) => (
+              <article
+                key={plan.name}
+                className={`relative flex h-full flex-col overflow-hidden rounded-[16px] border bg-[#07121f] p-6 sm:p-8 ${plan.featured ? 'border-[#347cff] shadow-[0_24px_70px_rgba(31,111,255,0.13)]' : 'border-[#2b3a50]'}`}
+              >
+                {plan.featured ? <div className="absolute inset-x-0 top-0 h-1 bg-[#347cff]" /> : null}
+                <div className="min-h-[126px]">
+                  <p className="text-sm font-semibold text-[#76a7ff]">{plan.name}</p>
+                  <h2 className="mt-3 text-3xl font-[700] tracking-[-0.04em] text-white">{plan.monthly}</h2>
+                  <p className="mt-2 text-sm text-[#95a3b5]">{plan.setup} · AUD ex. GST</p>
                 </div>
-
-                <div className="mb-2 mt-2 min-h-[5.5rem]">
-                  <div className="flex flex-wrap items-end gap-2">
-                    <span className="text-3xl font-bold text-white">{plan.monthly}</span>
-                  </div>
-                  <p className="mt-2 text-base text-gray-500">{plan.setup}</p>
-                </div>
-                <p className="min-h-[4.5rem] text-sm leading-relaxed text-gray-300 mt-3 mb-8">{plan.valueLine}</p>
-
-                <ul className="space-y-3 mb-8 min-h-[13rem]">
-                  {plan.features.map((f) =>
-                <li key={f} className="flex items-center gap-2.5 text-sm text-gray-400">
-                      <Check className="w-4 h-4 text-cyan-400 shrink-0" />
-                      {f}
+                <p className="mt-5 min-h-[76px] border-t border-[#1d2b3e] pt-5 text-sm leading-7 text-[#aab4c3]">{plan.description}</p>
+                <ul className="mt-6 flex-1 space-y-3.5">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-sm text-[#c8d0da]">
+                      <Check className="h-4 w-4 shrink-0 text-[#4b8cff]" aria-hidden="true" />
+                      {feature}
                     </li>
-                )}
+                  ))}
                 </ul>
-
-                <div className="mt-auto space-y-3">
-                  {plan.primaryCtaTo.includes('#') ? (
-                    <a
-                      href={plan.primaryCtaTo}
-                      className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
-                      plan.featured ?
-                      'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
-                      'border border-white/10 text-white hover:bg-white/5'}`
-                      }
-                    >
-                      {plan.primaryCtaLabel}
-                    </a>
-                  ) : (
-                    <Link
-                      to={plan.primaryCtaTo}
-                      className={`block w-full rounded-full py-3.5 text-center text-sm font-medium transition-all ${
-                      plan.featured ?
-                      'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/20' :
-                      'border border-white/10 text-white hover:bg-white/5'}`
-                      }
-                    >
-                      {plan.primaryCtaLabel}
-                    </Link>
-                  )}
-
-                  <p className="px-2 text-center text-xs leading-relaxed text-gray-500">
-                    {plan.secondaryHelper}
-                  </p>
-                </div>
-              </motion.div>
-            )}
+                <Link to={plan.to} className={`${plan.featured ? premiumButton : premiumButtonSecondary} mt-8 w-full`}>
+                  {plan.cta}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </article>
+            ))}
           </div>
+          <p className="mt-6 text-center text-sm leading-6 text-[#95a3b5]">Enterprise and complex implementations are reviewed before work begins.</p>
+        </Section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-3">Not sure which plan fits?</h2>
-            <p className="mx-auto max-w-3xl text-gray-300 leading-relaxed">Send us a few details and we’ll help confirm the right plan for your business.</p>
-            <div className="mt-6 flex justify-center"><Link to="/Contact" className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-3.5 text-sm font-medium text-white">Contact Us</Link></div>
-          </motion.div>
+        <Section>
+          <SectionHeading
+            title="Fast, deliberate implementation"
+            description="The goal is to launch confidently — with a call flow your team understands and your customers can use."
+            align="center"
+          />
+          <div className="relative mt-12 grid gap-px overflow-hidden rounded-[16px] border border-[#26364d] bg-[#26364d] md:grid-cols-4">
+            {implementation.map(({ icon: Icon, title, body }, index) => (
+              <div key={title} className="relative bg-[#07121f] p-6 text-center sm:p-7">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#2e5caa] bg-[#10284c] text-[#74a7ff]">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#76a7ff]">Step {index + 1}</p>
+                <h3 className="mt-2 text-lg font-semibold text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#9eaabb]">{body}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}>
+        <Section className="bg-[#040b14]">
+          <SectionHeading title="Pricing questions, answered" align="center" />
+          <div className="mt-10">
+            <FAQRows items={faqs} />
+          </div>
+        </Section>
 
-            <h2 className="text-2xl font-bold text-white text-center mb-10">Frequently Asked Questions</h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              {faqs.map((faq, i) =>
-              <div key={i} className="p-6 rounded-2xl border border-white/5 bg-[#12121a]">
-                  <div className="flex items-start gap-3">
-                    <HelpCircle className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-white mb-2 text-base font-medium">{faq.q}</h4>
-                      <p className="text-gray-500 text-base leading-relaxed">{faq.a}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-20 text-center">
-
-            <p className="text-gray-400 mb-4">Ready to choose your plan and begin secure signup?</p>
-            <Link
-              to="/GetStartedNow"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
-
-              Get Started Now
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-      </div>
-    </>);
-
+        <ConversionCTA
+          title="Not sure which plan fits?"
+          description="Tell us how your calls work today and we’ll help you identify the most practical starting point."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Book a Strategy Call"
+          secondaryLabel="Start Secure Signup"
+        />
+      </PageShell>
+    </>
+  );
 }

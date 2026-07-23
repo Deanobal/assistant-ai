@@ -1,34 +1,22 @@
-# AssistantAI Supabase Migration
+# AssistantAI Supabase operations
 
-This document tracks the controlled migration away from Base44.
+Supabase is the production data, authentication and storage platform for AssistantAI.
 
 ## Target architecture
 
-- Vercel: public frontend and API routes
-- Supabase: database, auth, storage, realtime
+- Vercel: frontend and serverless API routes
+- Supabase: Postgres, Auth, Storage and row-level security
 - Stripe: checkout and billing
 - Vapi: voice assistant tool calls
-- GoHighLevel: CRM/follow-up
-- Resend/Twilio: notifications
-
-## Supabase project
-
-Project URL: https://rygyswsngskbdpgeqloy.supabase.co
-Project ref: rygyswsngskbdpgeqloy
+- GoHighLevel: CRM and follow-up
+- Resend and Twilio: notifications
 
 ## Security
 
-Do not commit service-role keys, database passwords, Stripe secrets, Vapi secrets, GoHighLevel secrets, Twilio secrets, or Resend keys.
+Do not commit service-role keys, database passwords, Stripe secrets, Vapi secrets, GoHighLevel secrets, Twilio secrets or Resend keys.
 
-## Cutover rule
+Client access requires the portal RLS migration. A confirmed Supabase user may claim only the client record matching their email, and authenticated browser roles receive read access only to rows owned by that client.
 
-Base44 must remain as fallback until the following pass on the new backend:
+## Launch verification
 
-1. Contact form
-2. Starter checkout
-3. Growth checkout
-4. Stripe webhook
-5. Onboarding record creation
-6. Admin notification
-7. Vapi tool-call checkout
-8. Client portal login
+Verify contact capture, Starter and Growth checkout, Stripe webhook idempotency, onboarding creation, admin notifications, Vapi tools and client portal isolation against the production deployment before paid acquisition.

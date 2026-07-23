@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, BriefcaseBusiness, Rocket } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -85,10 +85,10 @@ export default function OnboardingDashboard() {
     });
   };
 
-  const { data: clients = [] } = useQuery({ queryKey: ['onboarding-clients'], queryFn: () => base44.entities.Client.list('-updated_date', 200), initialData: [] });
-  const { data: leads = [] } = useQuery({ queryKey: ['onboarding-leads'], queryFn: () => base44.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100), initialData: [] });
-  const { data: tasks = [] } = useQuery({ queryKey: ['onboarding-tasks'], queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
-  const { data: notes = [] } = useQuery({ queryKey: ['onboarding-notes'], queryFn: () => base44.entities.ClientNote.list('-updated_date', 500), initialData: [] });
+  const { data: clients = [] } = useQuery({ queryKey: ['onboarding-clients'], queryFn: () => assistantApi.entities.Client.list('-updated_date', 200), initialData: [] });
+  const { data: leads = [] } = useQuery({ queryKey: ['onboarding-leads'], queryFn: () => assistantApi.entities.Lead.filter({ status: 'Won' }, '-updated_date', 100), initialData: [] });
+  const { data: tasks = [] } = useQuery({ queryKey: ['onboarding-tasks'], queryFn: () => assistantApi.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
+  const { data: notes = [] } = useQuery({ queryKey: ['onboarding-notes'], queryFn: () => assistantApi.entities.ClientNote.list('-updated_date', 500), initialData: [] });
 
   const createManualOnboardingMutation = useMutation({
     mutationFn: async (form) => {

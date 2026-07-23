@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
@@ -7,76 +7,94 @@ import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout';
 import AdminSessionGate from './components/admin/AdminSessionGate';
 import Home from './pages/Home';
-import Services from './pages/Services';
-import Industries from './pages/Industries';
-import Pricing from './pages/Pricing';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import BookStrategyCall from './pages/BookStrategyCall';
-import GetStartedNow from './pages/GetStartedNow';
-import SecureSetup from './pages/SecureSetup';
-import CaseStudies from './pages/CaseStudies';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import LandingPage from './pages/LandingPage';
-import HighIntentSeoLanding from './pages/HighIntentSeoLanding';
-import AiAssistantAustralia from './pages/AiAssistantAustralia';
-import Integrations from './pages/Integrations';
-import Platform from './pages/Platform';
-import AIDemo from './pages/AIDemo';
-import Resources from './pages/Resources';
-import ClientLogin from './pages/ClientLogin';
-import ClientPortal from './pages/ClientPortal';
-import ThankYou from './pages/ThankYou';
-import Dashboard from './pages/Dashboard';
-import AdminHome from './pages/AdminHome';
 import AdminLogin from './pages/AdminLogin';
-import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import ClientManager from './pages/ClientManager';
-import ClientConnectors from './pages/ClientConnectors';
-import ClientWorkspace from './pages/ClientWorkspace';
-import LeadDashboard from './pages/LeadDashboard';
-import LeadDetail from './pages/LeadDetail';
-import OnboardingDashboard from './pages/OnboardingDashboard';
-import OnboardingIntake from './pages/OnboardingIntake';
-import OnboardingSettings from './pages/OnboardingSettings';
-import TeamAccess from './pages/TeamAccess';
-import SystemReadiness from './pages/SystemReadiness';
-import SupportInbox from './pages/SupportInbox';
-import ActionInbox from './pages/ActionInbox';
-import UnmatchedSmsInbox from './pages/UnmatchedSmsInbox';
 import AdminLayout from './components/admin/AdminLayout';
 import MarketingLayout from './components/admin/MarketingLayout';
-import SeoDashboard from './pages/admin/marketing/SeoDashboard';
-import ContentStudio from './pages/admin/marketing/ContentStudio';
-import LandingPageBuilder from './pages/admin/marketing/LandingPageBuilder';
-import PricingManager from './pages/admin/marketing/PricingManager';
-import SocialProofManager from './pages/admin/marketing/SocialProofManager';
-import FaqManager from './pages/admin/marketing/FaqManager';
-import NavigationManager from './pages/admin/marketing/NavigationManager';
-import FormBuilder from './pages/admin/marketing/FormBuilder';
-import BlogManager from './pages/admin/marketing/BlogManager';
-import ContentManager from './pages/admin/marketing/ContentManager';
-import MediaLibrary from './pages/admin/marketing/MediaLibrary';
-import SiteSettings from './pages/admin/marketing/SiteSettings';
-import Campaigns from './pages/admin/marketing/Campaigns';
-import MarketingSettings from './pages/admin/marketing/Settings';
+
+const ClientLogin = lazy(() => import('./pages/ClientLogin'));
+const ClientPortal = lazy(() => import('./pages/ClientPortal'));
+const Services = lazy(() => import('./pages/Services'));
+const Industries = lazy(() => import('./pages/Industries'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const BookStrategyCall = lazy(() => import('./pages/BookStrategyCall'));
+const GetStartedNow = lazy(() => import('./pages/GetStartedNow'));
+const SecureSetup = lazy(() => import('./pages/SecureSetup'));
+const CaseStudies = lazy(() => import('./pages/CaseStudies'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const HighIntentSeoLanding = lazy(() => import('./pages/HighIntentSeoLanding'));
+const AiAssistantAustralia = lazy(() => import('./pages/AiAssistantAustralia'));
+const Integrations = lazy(() => import('./pages/Integrations'));
+const Platform = lazy(() => import('./pages/Platform'));
+const AIDemo = lazy(() => import('./pages/AIDemo'));
+const Resources = lazy(() => import('./pages/Resources'));
+const ThankYou = lazy(() => import('./pages/ThankYou'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AdminHome = lazy(() => import('./pages/AdminHome'));
+const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
+const ClientManager = lazy(() => import('./pages/ClientManager'));
+const ClientConnectors = lazy(() => import('./pages/ClientConnectors'));
+const ClientWorkspace = lazy(() => import('./pages/ClientWorkspace'));
+const LeadDashboard = lazy(() => import('./pages/LeadDashboard'));
+const LeadDetail = lazy(() => import('./pages/LeadDetail'));
+const OnboardingDashboard = lazy(() => import('./pages/OnboardingDashboard'));
+const OnboardingIntake = lazy(() => import('./pages/OnboardingIntake'));
+const OnboardingSettings = lazy(() => import('./pages/OnboardingSettings'));
+const TeamAccess = lazy(() => import('./pages/TeamAccess'));
+const SystemReadiness = lazy(() => import('./pages/SystemReadiness'));
+const SupportInbox = lazy(() => import('./pages/SupportInbox'));
+const ActionInbox = lazy(() => import('./pages/ActionInbox'));
+const UnmatchedSmsInbox = lazy(() => import('./pages/UnmatchedSmsInbox'));
+const SeoDashboard = lazy(() => import('./pages/admin/marketing/SeoDashboard'));
+const ContentStudio = lazy(() => import('./pages/admin/marketing/ContentStudio'));
+const LandingPageBuilder = lazy(() => import('./pages/admin/marketing/LandingPageBuilder'));
+const PricingManager = lazy(() => import('./pages/admin/marketing/PricingManager'));
+const SocialProofManager = lazy(() => import('./pages/admin/marketing/SocialProofManager'));
+const FaqManager = lazy(() => import('./pages/admin/marketing/FaqManager'));
+const NavigationManager = lazy(() => import('./pages/admin/marketing/NavigationManager'));
+const FormBuilder = lazy(() => import('./pages/admin/marketing/FormBuilder'));
+const BlogManager = lazy(() => import('./pages/admin/marketing/BlogManager'));
+const ContentManager = lazy(() => import('./pages/admin/marketing/ContentManager'));
+const MediaLibrary = lazy(() => import('./pages/admin/marketing/MediaLibrary'));
+const SiteSettings = lazy(() => import('./pages/admin/marketing/SiteSettings'));
+const Campaigns = lazy(() => import('./pages/admin/marketing/Campaigns'));
+const MarketingSettings = lazy(() => import('./pages/admin/marketing/Settings'));
+
+function LazyRoute({ children }) {
+  return <Suspense fallback={<div className="min-h-screen bg-[#07070d]" />}>{children}</Suspense>;
+}
 
 function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
     if (hash) {
-      window.setTimeout(() => {
+      let cancelled = false;
+      let attempts = 0;
+
+      const scrollToHash = () => {
+        if (cancelled) return;
         const target = document.getElementById(hash.replace('#', ''));
         if (target) {
           target.scrollIntoView({ block: 'start', behavior: 'auto' });
+          return;
         }
-      }, 0);
-      return;
+
+        attempts += 1;
+        if (attempts < 120) window.requestAnimationFrame(scrollToHash);
+      };
+
+      window.requestAnimationFrame(scrollToHash);
+      return () => {
+        cancelled = true;
+      };
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    return undefined;
   }, [pathname, search, hash]);
 
   return null;
@@ -93,69 +111,69 @@ function ProtectedMarketingLayout() {
 function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollToTop />
         <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/Home" element={<Navigate to="/" replace />} />
-              <Route path="/Services" element={<Services />} />
-              <Route path="/Industries" element={<Industries />} />
-              <Route path="/Pricing" element={<Pricing />} />
-              <Route path="/About" element={<About />} />
-              <Route path="/Contact" element={<Contact />} />
-              <Route path="/BookStrategyCall" element={<BookStrategyCall />} />
-              <Route path="/GetStartedNow" element={<GetStartedNow />} />
-              <Route path="/secure-setup" element={<SecureSetup />} />
-              <Route path="/secure-setup/:token" element={<SecureSetup />} />
-              <Route path="/CaseStudies" element={<CaseStudies />} />
-              <Route path="/Blog" element={<Blog />} />
-              <Route path="/Blog/:slug" element={<BlogPost />} />
-              <Route path="/lp/:slug" element={<LandingPage />} />
-              <Route path="/ai-assistant-australia" element={<AiAssistantAustralia />} />
-              <Route path="/:slug" element={<HighIntentSeoLanding />} />
-              <Route path="/Integrations" element={<Integrations />} />
-              <Route path="/Platform" element={<Platform />} />
-              <Route path="/AIDemo" element={<AIDemo />} />
-              <Route path="/Resources" element={<Resources />} />
-              <Route path="/ClientLogin" element={<ClientLogin />} />
-              <Route path="/ClientPortal" element={<ClientPortal />} />
-              <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/Services" element={<LazyRoute><Services /></LazyRoute>} />
+              <Route path="/Industries" element={<LazyRoute><Industries /></LazyRoute>} />
+              <Route path="/Pricing" element={<LazyRoute><Pricing /></LazyRoute>} />
+              <Route path="/About" element={<LazyRoute><About /></LazyRoute>} />
+              <Route path="/Contact" element={<LazyRoute><Contact /></LazyRoute>} />
+              <Route path="/BookStrategyCall" element={<LazyRoute><BookStrategyCall /></LazyRoute>} />
+              <Route path="/GetStartedNow" element={<LazyRoute><GetStartedNow /></LazyRoute>} />
+              <Route path="/secure-setup" element={<LazyRoute><SecureSetup /></LazyRoute>} />
+              <Route path="/secure-setup/:token" element={<LazyRoute><SecureSetup /></LazyRoute>} />
+              <Route path="/CaseStudies" element={<LazyRoute><CaseStudies /></LazyRoute>} />
+              <Route path="/Blog" element={<LazyRoute><Blog /></LazyRoute>} />
+              <Route path="/Blog/:slug" element={<LazyRoute><BlogPost /></LazyRoute>} />
+              <Route path="/lp/:slug" element={<LazyRoute><LandingPage /></LazyRoute>} />
+              <Route path="/ai-assistant-australia" element={<LazyRoute><AiAssistantAustralia /></LazyRoute>} />
+              <Route path="/:slug" element={<LazyRoute><HighIntentSeoLanding /></LazyRoute>} />
+              <Route path="/Integrations" element={<LazyRoute><Integrations /></LazyRoute>} />
+              <Route path="/Platform" element={<LazyRoute><Platform /></LazyRoute>} />
+              <Route path="/AIDemo" element={<LazyRoute><AIDemo /></LazyRoute>} />
+              <Route path="/Resources" element={<LazyRoute><Resources /></LazyRoute>} />
+              <Route path="/ClientLogin" element={<LazyRoute><ClientLogin /></LazyRoute>} />
+              <Route path="/ClientPortal" element={<LazyRoute><ClientPortal /></LazyRoute>} />
+              <Route path="/thank-you" element={<LazyRoute><ThankYou /></LazyRoute>} />
             </Route>
-            <Route path="/Dashboard" element={<Dashboard />} />
+            <Route path="/Dashboard" element={<LazyRoute><Dashboard /></LazyRoute>} />
             <Route path="/AdminLogin" element={<AdminLogin />} />
             <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<AdminHome />} />
-              <Route path="/Analytics" element={<AnalyticsDashboard />} />
-              <Route path="/ActionInbox" element={<ActionInbox />} />
-              <Route path="/LeadDashboard" element={<LeadDashboard />} />
-              <Route path="/LeadDetail" element={<LeadDetail />} />
-              <Route path="/ClientManager" element={<ClientManager />} />
-              <Route path="/ClientConnectors" element={<ClientConnectors />} />
-              <Route path="/ClientWorkspace" element={<ClientWorkspace />} />
-              <Route path="/Onboarding" element={<OnboardingDashboard />} />
-              <Route path="/OnboardingIntake" element={<OnboardingIntake />} />
-              <Route path="/OnboardingSettings" element={<OnboardingSettings />} />
-              <Route path="/SupportInbox" element={<SupportInbox />} />
-              <Route path="/UnmatchedSmsInbox" element={<UnmatchedSmsInbox />} />
-              <Route path="/TeamAccess" element={<TeamAccess />} />
-              <Route path="/SystemReadiness" element={<SystemReadiness />} />
+              <Route path="/admin" element={<LazyRoute><AdminHome /></LazyRoute>} />
+              <Route path="/Analytics" element={<LazyRoute><AnalyticsDashboard /></LazyRoute>} />
+              <Route path="/ActionInbox" element={<LazyRoute><ActionInbox /></LazyRoute>} />
+              <Route path="/LeadDashboard" element={<LazyRoute><LeadDashboard /></LazyRoute>} />
+              <Route path="/LeadDetail" element={<LazyRoute><LeadDetail /></LazyRoute>} />
+              <Route path="/ClientManager" element={<LazyRoute><ClientManager /></LazyRoute>} />
+              <Route path="/ClientConnectors" element={<LazyRoute><ClientConnectors /></LazyRoute>} />
+              <Route path="/ClientWorkspace" element={<LazyRoute><ClientWorkspace /></LazyRoute>} />
+              <Route path="/Onboarding" element={<LazyRoute><OnboardingDashboard /></LazyRoute>} />
+              <Route path="/OnboardingIntake" element={<LazyRoute><OnboardingIntake /></LazyRoute>} />
+              <Route path="/OnboardingSettings" element={<LazyRoute><OnboardingSettings /></LazyRoute>} />
+              <Route path="/SupportInbox" element={<LazyRoute><SupportInbox /></LazyRoute>} />
+              <Route path="/UnmatchedSmsInbox" element={<LazyRoute><UnmatchedSmsInbox /></LazyRoute>} />
+              <Route path="/TeamAccess" element={<LazyRoute><TeamAccess /></LazyRoute>} />
+              <Route path="/SystemReadiness" element={<LazyRoute><SystemReadiness /></LazyRoute>} />
             </Route>
             <Route element={<ProtectedMarketingLayout />}>
-              <Route path="/admin/marketing/seo-dashboard" element={<SeoDashboard />} />
-              <Route path="/admin/marketing/content-studio" element={<ContentStudio />} />
-              <Route path="/admin/marketing/landing-pages" element={<LandingPageBuilder />} />
-              <Route path="/admin/marketing/pricing" element={<PricingManager />} />
-              <Route path="/admin/marketing/social-proof" element={<SocialProofManager />} />
-              <Route path="/admin/marketing/faqs" element={<FaqManager />} />
-              <Route path="/admin/marketing/navigation" element={<NavigationManager />} />
-              <Route path="/admin/marketing/forms" element={<FormBuilder />} />
-              <Route path="/admin/marketing/blog" element={<BlogManager />} />
-              <Route path="/admin/marketing/content" element={<ContentManager />} />
-              <Route path="/admin/marketing/media" element={<MediaLibrary />} />
-              <Route path="/admin/marketing/site-settings" element={<SiteSettings />} />
-              <Route path="/admin/marketing/campaigns" element={<Campaigns />} />
-              <Route path="/admin/marketing/settings" element={<MarketingSettings />} />
+              <Route path="/admin/marketing/seo-dashboard" element={<LazyRoute><SeoDashboard /></LazyRoute>} />
+              <Route path="/admin/marketing/content-studio" element={<LazyRoute><ContentStudio /></LazyRoute>} />
+              <Route path="/admin/marketing/landing-pages" element={<LazyRoute><LandingPageBuilder /></LazyRoute>} />
+              <Route path="/admin/marketing/pricing" element={<LazyRoute><PricingManager /></LazyRoute>} />
+              <Route path="/admin/marketing/social-proof" element={<LazyRoute><SocialProofManager /></LazyRoute>} />
+              <Route path="/admin/marketing/faqs" element={<LazyRoute><FaqManager /></LazyRoute>} />
+              <Route path="/admin/marketing/navigation" element={<LazyRoute><NavigationManager /></LazyRoute>} />
+              <Route path="/admin/marketing/forms" element={<LazyRoute><FormBuilder /></LazyRoute>} />
+              <Route path="/admin/marketing/blog" element={<LazyRoute><BlogManager /></LazyRoute>} />
+              <Route path="/admin/marketing/content" element={<LazyRoute><ContentManager /></LazyRoute>} />
+              <Route path="/admin/marketing/media" element={<LazyRoute><MediaLibrary /></LazyRoute>} />
+              <Route path="/admin/marketing/site-settings" element={<LazyRoute><SiteSettings /></LazyRoute>} />
+              <Route path="/admin/marketing/campaigns" element={<LazyRoute><Campaigns /></LazyRoute>} />
+              <Route path="/admin/marketing/settings" element={<LazyRoute><MarketingSettings /></LazyRoute>} />
             </Route>
             <Route path="*" element={<PageNotFound />} />
         </Routes>

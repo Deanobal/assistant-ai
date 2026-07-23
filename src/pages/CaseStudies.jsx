@@ -1,174 +1,125 @@
-import * as React from 'react';
-import SEO from '../components/SEO';
+import { ArrowRight, CheckCircle2, Wrench, Scale, Home, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, TrendingUp, CheckCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import SEO from '../components/SEO';
+import {
+  AccentText,
+  ConversionCTA,
+  PageHero,
+  PageShell,
+  Section,
+  SectionHeading,
+  premiumButtonSecondary,
+} from '@/components/marketing/PremiumMarketing';
 
-const caseStudies = [
-{
-  industry: 'Trades & Services',
-  company: 'Sample Client Scenario',
-  logo: '🔧',
-  challenge: 'Calls come in while the team is on-site, so new enquiries are easy to miss or follow up too late.',
-  solution: 'AssistantAI.com.au answers the call, captures job details, and routes the next step into the business workflow automatically.',
-  results: [
-  'Faster first response',
-  'Cleaner lead capture',
-  'Better booking flow',
-  'Less manual admin for the team']
-
-},
-{
-  industry: 'Legal Services',
-  company: 'Example Use Case',
-  logo: '⚖️',
-  challenge: 'Potential clients need a fast first response, but the team can be unavailable during meetings, court, or focused work.',
-  solution: 'The AI handles initial contact, captures key information, and sends qualified enquiries into a more structured intake process.',
-  results: [
-  'More consistent first contact',
-  'Improved enquiry qualification',
-  'Better follow-up visibility',
-  'Smoother handoff to staff']
-
-},
-{
-  industry: 'Real Estate',
-  company: 'Sample Outcome Example',
-  logo: '🏡',
-  challenge: 'Buyer and seller enquiries can arrive outside inspection times or while agents are already with clients.',
-  solution: 'AssistantAI.com.au can capture enquiry details, support inspection booking, and help keep follow-up moving after the conversation.',
-  results: [
-  'After-hours enquiry coverage',
-  'Faster inspection follow-up',
-  'Better lead routing',
-  'Cleaner CRM updates']
-
-},
-{
-  industry: 'Medical & Dental',
-  company: 'Sample Client Scenario',
-  logo: '🦷',
-  challenge: 'Front-desk teams can be stretched between appointments, patients, and incoming calls.',
-  solution: 'The AI supports appointment flow, enquiry capture, and reminders so the team can stay focused on the people in front of them.',
-  results: [
-  'Better booking support',
-  'Less front-desk admin',
-  'Clearer enquiry capture',
-  'Smoother patient communication']
-
-}];
-
+const scenarios = [
+  {
+    icon: Wrench,
+    industry: 'Trades and field services',
+    challenge: 'Calls arrive while the team is on-site, driving or working on the tools.',
+    workflow: 'Answer the caller, capture the job, location and urgency, then prepare the booking or follow-up action.',
+    outcomes: ['Faster first response', 'Consistent job-detail capture', 'Clearer booking handoff', 'Less interruption for technicians'],
+  },
+  {
+    icon: Scale,
+    industry: 'Professional services',
+    challenge: 'Potential clients expect a prompt first response while the team may be in meetings or focused work.',
+    workflow: 'Handle first contact professionally, capture relevant intake details and route the enquiry for human review.',
+    outcomes: ['Consistent first contact', 'Structured enquiry qualification', 'Better handoff context', 'Clear follow-up ownership'],
+  },
+  {
+    icon: Home,
+    industry: 'Property services',
+    challenge: 'Buyer, seller and tenant enquiries can arrive during inspections, appointments and after hours.',
+    workflow: 'Understand the enquiry type, capture the property context and prepare the correct next step.',
+    outcomes: ['After-hours coverage', 'Faster enquiry routing', 'Cleaner contact records', 'More consistent follow-up'],
+  },
+  {
+    icon: Stethoscope,
+    industry: 'Clinics and appointments',
+    challenge: 'Front-desk teams balance patients, schedules and incoming calls at the same time.',
+    workflow: 'Support common questions and appointment requests while keeping sensitive decisions with staff.',
+    outcomes: ['Clear booking intent', 'Reduced repetitive admin', 'Structured enquiry capture', 'Human control where required'],
+  },
+];
 
 export default function CaseStudies() {
   return (
     <>
       <SEO
-        title="Case Studies | AI Automation Use Cases & Outcomes | AssistantAI"
-        description="Explore AssistantAI case studies and sample outcomes across trades, legal, real estate, medical, and other service businesses using AI automation."
+        title="Case Studies | AI Receptionist Use Cases | AssistantAI"
+        description="Explore transparent AssistantAI workflow scenarios for Australian trades, professional services, property and clinics."
         canonicalPath="/CaseStudies"
       />
-      <div>
-      <section className="relative py-24 md:py-32 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16">
+      <PageShell>
+        <PageHero
+          title={<>Real workflows. Clear <AccentText>business outcomes.</AccentText></>}
+          description="Explore representative scenarios showing how AssistantAI can connect call answering, enquiry capture, booking support and follow-up. These are examples, not invented customer claims."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Map Your Use Case"
+          secondaryTo="/Industries"
+          secondaryLabel="Explore Industries"
+          visual="outcomes"
+          visualData={{ items: scenarios }}
+        />
 
-            <p className="text-cyan-400 mb-3 text-lg font-medium">USE CASES</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Use Cases &{' '}
-              <span className="text-gradient">Sample Outcomes</span>
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              These are example use cases and sample outcomes only. They show the types of business problems AssistantAI.com.au is designed to solve across calls, lead capture, booking, and follow-up.
-            </p>
-          </motion.div>
-
-          <div className="space-y-12">
-            {caseStudies.map((study, i) =>
-            <motion.div
-              key={`${study.industry}-${i}`}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}>
-
-                <Card className="bg-[#12121a] border-white/5 overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="grid lg:grid-cols-5 gap-8">
-                      <div className="lg:col-span-3 p-8 md:p-10">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="text-4xl">{study.logo}</div>
-                          <div>
-                            <p className="text-cyan-400 mb-1 text-lg font-medium uppercase tracking-[0.2em]">{study.company}</p>
-                            <h3 className="text-xl font-bold text-white">{study.industry}</h3>
-                          </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          <div>
-                            <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                              The Challenge
-                            </h4>
-                            <p className="text-gray-400 leading-relaxed">{study.challenge}</p>
-                          </div>
-
-                          <div>
-                            <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                              Example Workflow
-                            </h4>
-                            <p className="text-gray-400 leading-relaxed">{study.solution}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="lg:col-span-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-8 md:p-10">
-                        <div className="flex items-center gap-2 mb-6">
-                          <TrendingUp className="w-5 h-5 text-cyan-400" />
-                          <h4 className="text-white font-semibold">Example Outcome</h4>
-                        </div>
-                        <div className="space-y-3">
-                          {study.results.map((result, idx) =>
-                        <div key={idx} className="flex items-start gap-3">
-                              <CheckCircle className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                              <p className="text-white font-medium">{result}</p>
-                            </div>
-                        )}
-                        </div>
+        <Section id="page-content" className="bg-[#040b14]">
+          <SectionHeading
+            title="What the workflow can look like"
+            description="Each implementation starts with the operating problem, then connects the conversation to a useful and accountable next action."
+          />
+          <div className="mt-10 space-y-5">
+            {scenarios.map(({ icon: Icon, industry, challenge, workflow, outcomes }, index) => (
+              <article key={industry} className="overflow-hidden rounded-[16px] border border-[#26364d] bg-[#07121f]">
+                <div className="grid lg:grid-cols-[0.62fr_0.38fr]">
+                  <div className="p-6 sm:p-8">
+                    <div className="flex items-center gap-4">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#10284c] text-[#74a7ff]">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#76a7ff]">Scenario {String(index + 1).padStart(2, '0')}</p>
+                        <h2 className="mt-1 text-xl font-semibold text-white sm:text-2xl">{industry}</h2>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+                    <div className="mt-7 grid gap-6 md:grid-cols-2">
+                      <div>
+                        <h3 className="text-sm font-semibold text-white">The challenge</h3>
+                        <p className="mt-3 text-sm leading-7 text-[#aab4c3]">{challenge}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-white">The connected workflow</h3>
+                        <p className="mt-3 text-sm leading-7 text-[#aab4c3]">{workflow}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border-t border-[#1d2b3e] bg-[#081727] p-6 sm:p-8 lg:border-l lg:border-t-0">
+                    <h3 className="text-sm font-semibold text-white">Potential operational outcomes</h3>
+                    <ul className="mt-5 space-y-3">
+                      {outcomes.map((outcome) => (
+                        <li key={outcome} className="flex items-center gap-3 text-sm text-[#c8d0da]">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#4b8cff]" aria-hidden="true" />
+                          {outcome}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/BookStrategyCall" className={`${premiumButtonSecondary} mt-7 w-full`}>
+                      Discuss this workflow
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
+        </Section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-16 p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
-
-            <h3 className="text-2xl font-bold text-white mb-3">Want to See What This Could Look Like in Your Business?</h3>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Book a free strategy call and we’ll map out the right workflow for your industry, team, and enquiry process.
-            </p>
-            <Link
-              to="/BookStrategyCall"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm">
-
-              Book Free Strategy Call
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-      </div>
-    </>);
-
+        <ConversionCTA
+          title="Your workflow should be built from your real calls."
+          description="We’ll map the customer journey, identify the right handoffs and show you what a credible first version looks like."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Book a Strategy Call"
+        />
+      </PageShell>
+    </>
+  );
 }

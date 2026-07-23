@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { enableOneSignalPush, initOneSignal } from '@/lib/onesignal';
 import ActionInboxList from './ActionInboxList';
@@ -114,11 +114,11 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
     };
   }, [config.views]);
 
-  const { data: currentAdmin = null } = useQuery({ queryKey: ['action-inbox-me'], queryFn: () => base44.auth.me(), initialData: null });
-  const { data: conversations = [] } = useQuery({ queryKey: ['action-inbox-conversations'], queryFn: () => base44.entities.SupportConversation.list('-updated_at', 200), initialData: [] });
-  const { data: admins = [] } = useQuery({ queryKey: ['action-inbox-admin-users'], queryFn: () => base44.entities.User.list('-created_date', 200), initialData: [] });
-  const { data: leads = [] } = useQuery({ queryKey: ['action-inbox-leads'], queryFn: () => base44.entities.Lead.list('-updated_date', 200), initialData: [] });
-  const { data: notifications = [] } = useQuery({ queryKey: ['action-inbox-notifications'], queryFn: () => base44.entities.NotificationLog.filter({ recipient_role: 'admin' }, '-created_date', 300), initialData: [], enabled: config.includeLeadAlerts });
+  const { data: currentAdmin = null } = useQuery({ queryKey: ['action-inbox-me'], queryFn: () => assistantApi.auth.me(), initialData: null });
+  const { data: conversations = [] } = useQuery({ queryKey: ['action-inbox-conversations'], queryFn: () => assistantApi.entities.SupportConversation.list('-updated_at', 200), initialData: [] });
+  const { data: admins = [] } = useQuery({ queryKey: ['action-inbox-admin-users'], queryFn: () => assistantApi.entities.User.list('-created_date', 200), initialData: [] });
+  const { data: leads = [] } = useQuery({ queryKey: ['action-inbox-leads'], queryFn: () => assistantApi.entities.Lead.list('-updated_date', 200), initialData: [] });
+  const { data: notifications = [] } = useQuery({ queryKey: ['action-inbox-notifications'], queryFn: () => assistantApi.entities.NotificationLog.filter({ recipient_role: 'admin' }, '-created_date', 300), initialData: [], enabled: config.includeLeadAlerts });
 
   React.useEffect(() => {
     const refreshQueue = () => {
@@ -127,9 +127,9 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
       queryClient.invalidateQueries({ queryKey: ['action-inbox-notifications'] });
     };
 
-    const unsubscribeConversation = base44.entities.SupportConversation.subscribe(refreshQueue);
-    const unsubscribeLead = base44.entities.Lead.subscribe(refreshQueue);
-    const unsubscribeNotification = config.includeLeadAlerts ? base44.entities.NotificationLog.subscribe(refreshQueue) : () => {};
+    const unsubscribeConversation = assistantApi.entities.SupportConversation.subscribe(refreshQueue);
+    const unsubscribeLead = assistantApi.entities.Lead.subscribe(refreshQueue);
+    const unsubscribeNotification = config.includeLeadAlerts ? assistantApi.entities.NotificationLog.subscribe(refreshQueue) : () => {};
 
     return () => {
       unsubscribeConversation?.();
@@ -141,7 +141,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   React.useEffect(() => {
     if (!selectedKey?.startsWith('conversation:')) return undefined;
     const selectedConversationId = selectedKey.replace('conversation:', '');
-    return base44.entities.SupportMessage.subscribe((event) => {
+    return assistantApi.entities.SupportMessage.subscribe((event) => {
       if (event.data?.conversation_id === selectedConversationId) {
         queryClient.invalidateQueries({ queryKey: ['action-inbox-messages', selectedConversationId] });
       }
@@ -224,7 +224,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
       .forEach((item) => {
         queryClient.prefetchQuery({
           queryKey: ['action-inbox-messages', item.entityId],
-          queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: item.entityId }, 'created_at', 200),
+          queryFn: () => assistantApi.entities.SupportMessage.filter({ conversation_id: item.entityId }, 'created_at', 200),
           staleTime: 15000,
         });
       });
@@ -305,7 +305,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   };
 
   const updateConversationMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SupportConversation.update(id, data),
+    mutationFn: ({ id, data }) => assistantApi.entities.SupportConversation.update(id, data),
     onSuccess: refreshAll,
   });
 
@@ -323,7 +323,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
 
   const { data: messages = [] } = useQuery({
     queryKey: ['action-inbox-messages', selectedConversation?.id],
-    queryFn: () => base44.entities.SupportMessage.filter({ conversation_id: selectedConversation.id }, 'created_at', 200),
+    queryFn: () => assistantApi.entities.SupportMessage.filter({ conversation_id: selectedConversation.id }, 'created_at', 200),
     initialData: [],
     enabled: !!selectedConversation,
     staleTime: 15000,
@@ -332,7 +332,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
   const replyMutation = useMutation({
     mutationFn: async ({ messageBody, isInternalNote }) => {
       const now = new Date().toISOString();
-      await base44.entities.SupportMessage.create({
+      await assistantApi.entities.SupportMessage.create({
         conversation_id: selectedConversation.id,
         sender_type: 'admin',
         sender_user_id: currentAdmin?.id || null,
@@ -344,7 +344,7 @@ export default function ActionInboxWorkspace({ mode = 'action' }) {
         is_internal_note: isInternalNote,
       });
 
-      return base44.entities.SupportConversation.update(selectedConversation.id, {
+      return assistantApi.entities.SupportConversation.update(selectedConversation.id, {
         ...selectedConversation,
         updated_at: now,
         status: isInternalNote ? selectedConversation.status : 'waiting_on_customer',

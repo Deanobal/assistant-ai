@@ -1,8 +1,5 @@
 import React from 'react';
 import SEO from '../components/SEO';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import OverviewPreview from '../components/portal/OverviewPreview';
 import CallRecordings from '../components/dashboard/CallRecordings';
@@ -10,6 +7,13 @@ import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import BillingSection from '../components/dashboard/BillingSection';
 import PortalIntegrations from '../components/dashboard/PortalIntegrations';
 import SupportSection from '../components/dashboard/SupportSection';
+import {
+  AccentText,
+  ConversionCTA,
+  PageHero,
+  PageShell,
+  Section,
+} from '@/components/marketing/PremiumMarketing';
 
 export default function Platform() {
   return (
@@ -19,44 +23,19 @@ export default function Platform() {
         description="Preview how AssistantAI helps Australian service businesses see calls, enquiries, bookings, follow-up, setup progress, and support in one place."
         canonicalPath="/Platform"
       />
-      <div>
-      <section className="relative py-24 md:py-28 bg-grid">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-5">
-              <Eye className="w-4 h-4 text-cyan-400" />
-              <span className="text-cyan-400 text-xs font-medium">Platform Preview</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-4xl mx-auto">
-              Example Preview of the <span className="text-gradient">AssistantAI Enquiry Experience</span>
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-3xl mx-auto">
-              See what the client experience can look like across instant call answering, enquiry capture, booking support, follow-up, setup progress, and support for Australian service businesses.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/GetStartedNow"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-              >
-                Get Started Now
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/ClientLogin"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all"
-              >
-                Client Login
-              </Link>
-            </div>
-            <p className="mt-4 text-gray-500 text-sm">This is a public preview only. All data shown here is sample data and not real client performance.</p>
-          </motion.div>
-
-          <div className="mb-12">
+      <PageShell>
+        <PageHero
+          title={<>One clear view of every call and <AccentText>next action.</AccentText></>}
+          description="Preview how AssistantAI can organise calls, enquiries, bookings, follow-up, setup progress and support for an Australian service business."
+          primaryTo="/GetStartedNow"
+          primaryLabel="Get Started"
+          secondaryTo="/ClientLogin"
+          secondaryLabel="Client Login"
+          footnote="Public preview using sample data only"
+          visual="platform"
+        />
+        <Section id="page-content" className="bg-[#040b14]">
+          <div className="mb-10">
             <Card className="bg-[#12121a] border-white/5">
               <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
@@ -79,27 +58,14 @@ export default function Platform() {
             <SupportSection />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16 text-center p-10 rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent"
-          >
-            <h3 className="text-2xl font-bold text-white mb-3">Want This Experience for Your Business?</h3>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Choose a plan or talk to the AI receptionist to see how AssistantAI can help your business answer more calls, capture more enquiries, and reduce admin.
-            </p>
-            <Link
-              to="/GetStartedNow"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-full hover:shadow-lg hover:shadow-cyan-500/25 transition-all text-sm"
-            >
-              Get Started Now
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-    </div>
+        </Section>
+        <ConversionCTA
+          title="Want this connected experience for your business?"
+          description="See how your calls, bookings and follow-up can move through one clearer workflow."
+          primaryTo="/BookStrategyCall"
+          primaryLabel="Book a Strategy Call"
+        />
+      </PageShell>
     </>
   );
 }

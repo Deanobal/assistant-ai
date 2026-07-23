@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { CheckCircle2, ArrowRight, Clock3, BriefcaseBusiness } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock3 } from 'lucide-react';
 import SEO from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { STRATEGY_CALL_BOOKING_MODE, STRATEGY_CALL_BOOKING_URL } from '@/lib/booking';
+import {
+  PageShell,
+  Section,
+  premiumButton,
+  premiumButtonSecondary,
+} from '@/components/marketing/PremiumMarketing';
 
 function getQueryValue(key) {
   const params = new URLSearchParams(window.location.search);
@@ -40,7 +43,7 @@ export default function ThankYou() {
   useEffect(() => {
     if (!isPaymentSuccess || !sessionId) {
       setCheckingOnboarding(false);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -65,151 +68,74 @@ export default function ThankYou() {
     };
   }, [isPaymentSuccess, sessionId]);
 
+  const statusLabel = isPaymentSuccess ? (onboardingReady ? 'Payment confirmed' : 'Payment received') : 'Request received';
+  const title = isPaymentSuccess
+    ? (onboardingReady ? 'Your AssistantAI onboarding has started.' : 'We’re preparing your onboarding now.')
+    : 'Thanks — we’ve received your request.';
+  const description = isPaymentSuccess
+    ? (onboardingReady ? 'Your onboarding workspace is ready and the next steps are waiting for you.' : 'Stripe has confirmed payment. We’re waiting for the onboarding record to finish creating.')
+    : 'We’ll review your details and contact you with the clearest next step.';
+
   return (
     <>
       <SEO
         title="Thank You | AssistantAI"
-        description="Thanks — we’ve received your request. AssistantAI will review your details and contact you shortly with the right next step."
+        description="Thanks — we’ve received your request and will contact you with the right next step."
         canonicalPath="/thank-you"
+        noIndex
       />
-      <section className="relative py-24 md:py-28 bg-grid min-h-[calc(100vh-120px)]">
-        <div className="bg-radial-glow absolute inset-0" />
-        <div className="relative max-w-4xl mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-cyan-500/20 bg-cyan-500/10">
-              <CheckCircle2 className="h-10 w-10 text-cyan-300" />
+      <PageShell>
+        <Section className="relative min-h-[760px] overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(31,111,255,0.14),transparent_34%)]" />
+          <div className="relative mx-auto max-w-4xl text-center">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#2d5fae] bg-[#10284c]">
+              <CheckCircle2 className="h-8 w-8 text-[#77a9ff]" aria-hidden="true" />
+            </span>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-[#76a7ff]">{statusLabel}</p>
+            <h1 className="mx-auto mt-4 max-w-3xl text-balance text-4xl font-[720] tracking-[-0.045em] text-white sm:text-5xl">{title}</h1>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#aab4c3]">{description}</p>
+
+            <div className="mt-10 rounded-[16px] border border-[#2a394f] bg-[#07121f] p-6 text-left sm:p-8">
+              <div className="flex items-center gap-3">
+                <Clock3 className="h-5 w-5 text-[#4b8cff]" aria-hidden="true" />
+                <h2 className="text-xl font-semibold text-white">What happens next</h2>
+              </div>
+              <div className="mt-6 grid gap-px overflow-hidden rounded-[12px] border border-[#26364d] bg-[#26364d] md:grid-cols-3">
+                {[
+                  isPaymentSuccess ? 'Payment status is confirmed.' : 'We review the details you submitted.',
+                  isPaymentSuccess ? 'Your onboarding record is prepared.' : 'We map the most useful workflow and next step.',
+                  isPaymentSuccess ? 'You continue into setup and system connection.' : 'Our team contacts you to continue the conversation.',
+                ].map((step, index) => (
+                  <div key={step} className="bg-[#081522] p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#76a7ff]">Step {index + 1}</p>
+                    <p className="mt-3 text-sm leading-7 text-[#c2cbd6]">{step}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-cyan-400 mb-3 text-base font-medium">{isPaymentSuccess ? (onboardingReady ? 'PAYMENT CONFIRMED' : 'PAYMENT RECEIVED') : 'REQUEST RECEIVED'}</p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance text-white">
-              {isPaymentSuccess ? (onboardingReady ? 'Payment confirmed — your AssistantAI onboarding has started.' : 'Payment received — setting up your onboarding now...') : 'Thanks — we’ve received your request'}
-            </h1>
-            {isPaymentSuccess ? (
-              <p className="mt-4 text-cyan-100 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">{onboardingReady ? 'Your onboarding workspace is ready and we’ll guide you through the next steps.' : 'Stripe has confirmed your payment. We’re waiting for the onboarding records to finish creating.'}</p>
-            ) : (
-              <>
-                <p className="mt-4 text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">You’ve taken the first step to fixing missed calls and lost leads.</p>
-                <p className="mt-4 text-cyan-100 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">Most businesses we speak to are losing leads right now — let’s fix that fast.</p>
-                <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">We’ll reach out shortly — or you can lock in a time now.</p>
-              </>
-            )}
-          </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mt-10 grid gap-6">
-            <Card className="bg-[#12121a] border-white/5 overflow-hidden">
-              <CardContent className="p-8 md:p-10 text-center space-y-6">
-                <div className="space-y-3">
-                  <p className="text-cyan-300 text-sm font-medium uppercase tracking-[0.2em]">{isPaymentSuccess ? (onboardingReady ? 'Onboarding Started' : 'Setting Up') : 'Next Best Step'}</p>
-                  <h2 className="text-2xl md:text-3xl font-semibold text-white">{isPaymentSuccess ? (onboardingReady ? 'Your setup is underway' : 'Creating your onboarding records') : 'Want to get started faster?'}</h2>
-                  <p className="text-gray-300 max-w-2xl mx-auto">{isPaymentSuccess ? (onboardingReady ? 'Head to onboarding or try the live AI receptionist while we prepare your account.' : 'This usually completes shortly after Stripe sends the webhook.') : 'We can review your setup and map your AI system today.'}</p>
-                </div>
-
-                <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                  {isPaymentSuccess ? (
-                    <Link to="/Onboarding" className="w-full sm:w-auto">
-                      <Button disabled={!onboardingReady && checkingOnboarding} className="w-full min-h-14 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 text-base shadow-lg shadow-cyan-500/20 disabled:opacity-60">
-                        {onboardingReady ? 'Go to Onboarding' : 'Setting Up Onboarding'}
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  ) : hasBookingLink ? (
-                    <a href={STRATEGY_CALL_BOOKING_URL} target="_blank" rel="noreferrer" className="w-full sm:w-auto">
-                      <Button className="w-full min-h-14 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 text-base shadow-lg shadow-cyan-500/20">
-                        Book Your Strategy Call Now
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </a>
-                  ) : (
-                    <Link to="/Contact" className="w-full sm:w-auto">
-                      <Button className="w-full min-h-14 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full px-8 text-base shadow-lg shadow-cyan-500/20">
-                        Request Immediate Call
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                  <a href="/#live-demo" className="w-full sm:w-auto">
-                    <Button variant="outline" className="w-full min-h-14 rounded-full border-white/10 bg-white/[0.03] px-8 text-white hover:bg-white/[0.06]">
-                      Try Live AI Receptionist
-                    </Button>
-                  </a>
-                </div>
-
-                {!isPaymentSuccess && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-cyan-100/90">If you're ready, we can map this out with you today.</p>
-                    <p className="text-sm text-cyan-100/80">Most strategy calls are booked within hours of enquiry.</p>
-                  </div>
-                )}
-
-                <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-6 text-left max-w-3xl mx-auto">
-                  <p className="text-white font-medium mb-4">Used by Australian service businesses to:</p>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/6 bg-black/10 p-4">
-                      <CheckCircle2 className="h-5 w-5 text-cyan-300 mt-0.5 shrink-0" />
-                      <p className="text-sm text-gray-200">Capture more leads</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/6 bg-black/10 p-4">
-                      <CheckCircle2 className="h-5 w-5 text-cyan-300 mt-0.5 shrink-0" />
-                      <p className="text-sm text-gray-200">Respond instantly</p>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/6 bg-black/10 p-4">
-                      <CheckCircle2 className="h-5 w-5 text-cyan-300 mt-0.5 shrink-0" />
-                      <p className="text-sm text-gray-200">Reduce admin workload</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#12121a] border-white/5">
-              <CardContent className="p-8 md:p-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <Clock3 className="h-5 w-5 text-cyan-300" />
-                  <h2 className="text-xl font-semibold text-white">What Happens Next</h2>
-                </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                    <p className="text-sm text-gray-400 mb-2">Step 1</p>
-                    <p className="text-white font-medium">{isPaymentSuccess ? 'Your payment has been received' : 'We review your enquiry'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                    <p className="text-sm text-gray-400 mb-2">Step 2</p>
-                    <p className="text-white font-medium">{isPaymentSuccess ? (onboardingReady ? 'Your onboarding record has been created' : 'We’re creating your onboarding record') : 'We map your AI workflow'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                    <p className="text-sm text-gray-400 mb-2">Step 3</p>
-                    <p className="text-white font-medium">{isPaymentSuccess ? 'We’ll collect your business details and connect your systems' : 'We contact you within 1–24 hours'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#12121a] border-white/5">
-              <CardContent className="p-8 md:p-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <BriefcaseBusiness className="h-5 w-5 text-cyan-300" />
-                  <h2 className="text-xl font-semibold text-white">What this fixes in your business</h2>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-gray-200">Missed calls after hours</div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-gray-200">Slow response times</div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-gray-200">Lost leads</div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-gray-200">Manual follow-up</div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-gray-200">Admin overload</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 pt-2">
-              <Link to={isPaymentSuccess ? '/Onboarding' : '/'} className="w-full sm:w-auto">
-                <Button disabled={isPaymentSuccess && !onboardingReady && checkingOnboarding} className="w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 text-white disabled:opacity-60">{isPaymentSuccess ? (onboardingReady ? 'Go to Onboarding' : 'Setting Up Onboarding') : 'Back to Home'}</Button>
-              </Link>
-              <a href="/#live-demo" className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full rounded-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]">Try Live AI Receptionist</Button>
-              </a>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              {isPaymentSuccess ? (
+                <Link to="/Onboarding" className={premiumButton} aria-disabled={!onboardingReady && checkingOnboarding}>
+                  {onboardingReady ? 'Go to Onboarding' : 'Preparing Onboarding'}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : hasBookingLink ? (
+                <a href={STRATEGY_CALL_BOOKING_URL} target="_blank" rel="noreferrer" className={premiumButton}>
+                  Book Your Strategy Call
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              ) : (
+                <Link to="/Contact" className={premiumButton}>
+                  Continue the Conversation
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
+              <Link to="/AIDemo" className={premiumButtonSecondary}>Try the Live Demo</Link>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </div>
+        </Section>
+      </PageShell>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import LeadStats from '@/components/admin/leads/LeadStats';
 import LeadSourceSummary from '@/components/admin/leads/LeadSourceSummary';
@@ -16,18 +16,18 @@ export default function LeadDashboard() {
 
   const { data: leads = [] } = useQuery({
     queryKey: ['admin-leads'],
-    queryFn: () => base44.entities.Lead.list('-updated_date', 200),
+    queryFn: () => assistantApi.entities.Lead.list('-updated_date', 200),
     initialData: [],
   });
 
   const { data: clients = [] } = useQuery({
     queryKey: ['pipeline-clients'],
-    queryFn: () => base44.entities.Client.list('-updated_date', 100),
+    queryFn: () => assistantApi.entities.Client.list('-updated_date', 100),
     initialData: [],
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    mutationFn: ({ id, data }) => assistantApi.entities.Lead.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
     },
@@ -35,8 +35,8 @@ export default function LeadDashboard() {
 
   const markWonMutation = useMutation({
     mutationFn: async (lead) => {
-      const updatedLead = await base44.entities.Lead.update(lead.id, { ...lead, status: 'Won' });
-      await base44.functions.invoke('convertWonLeadToOnboarding', {
+      const updatedLead = await assistantApi.entities.Lead.update(lead.id, { ...lead, status: 'Won' });
+      await assistantApi.functions.invoke('convertWonLeadToOnboarding', {
         event: { entity_name: 'Lead', type: 'update' },
         data: updatedLead,
         old_data: lead,

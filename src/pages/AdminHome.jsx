@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Activity, AlertTriangle, ArrowUpRight, BarChart3, BookOpen, BriefcaseBusiness, CheckCircle2, ClipboardList, DollarSign, FileText, HelpCircle, Image, Inbox, Layers, LifeBuoy, Link2, MessageSquareQuote, Navigation, PlugZap, Radio, Rocket, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -203,11 +203,11 @@ function LiveRunsTable({ rows }) {
 }
 
 export default function AdminHome() {
-  const { data: leads = [], isFetching: leadsFetching } = useQuery({ queryKey: ['admin-home-leads'], queryFn: () => base44.entities.Lead.list('-updated_date', 200), initialData: [] });
-  const { data: clients = [], isFetching: clientsFetching } = useQuery({ queryKey: ['admin-home-clients'], queryFn: () => base44.entities.Client.list('-updated_date', 200), initialData: [] });
-  const { data: conversations = [], isFetching: conversationsFetching } = useQuery({ queryKey: ['admin-home-conversations'], queryFn: () => base44.entities.SupportConversation.list('-updated_at', 200), initialData: [] });
-  const { data: tasks = [], isFetching: tasksFetching } = useQuery({ queryKey: ['admin-home-tasks'], queryFn: () => base44.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
-  const { data: billingRecords = [], isFetching: billingFetching } = useQuery({ queryKey: ['admin-home-billing'], queryFn: () => base44.entities.BillingStatus.list('-updated_date', 300), initialData: [] });
+  const { data: leads = [], isFetching: leadsFetching } = useQuery({ queryKey: ['admin-home-leads'], queryFn: () => assistantApi.entities.Lead.list('-updated_date', 200), initialData: [] });
+  const { data: clients = [], isFetching: clientsFetching } = useQuery({ queryKey: ['admin-home-clients'], queryFn: () => assistantApi.entities.Client.list('-updated_date', 200), initialData: [] });
+  const { data: conversations = [], isFetching: conversationsFetching } = useQuery({ queryKey: ['admin-home-conversations'], queryFn: () => assistantApi.entities.SupportConversation.list('-updated_at', 200), initialData: [] });
+  const { data: tasks = [], isFetching: tasksFetching } = useQuery({ queryKey: ['admin-home-tasks'], queryFn: () => assistantApi.entities.OnboardingTask.list('-updated_date', 500), initialData: [] });
+  const { data: billingRecords = [], isFetching: billingFetching } = useQuery({ queryKey: ['admin-home-billing'], queryFn: () => assistantApi.entities.BillingStatus.list('-updated_date', 300), initialData: [] });
   const { data: configStatus = null, isFetching: configFetching } = useQuery({ queryKey: ['admin-home-config-status'], queryFn: () => fetch('/api/config-status').then((response) => response.json()), initialData: null });
   const { data: adminAiMetrics = null, isFetching: adminAiFetching } = useQuery({
     queryKey: ['admin-ai-metrics'],
@@ -296,7 +296,7 @@ export default function AdminHome() {
                 <Badge className={`rounded-full border-0 px-4 py-2 shadow-sm ${isRefreshing ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>{isRefreshing ? 'Refreshing live data' : 'Live data loaded'}</Badge>
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">AssistantAI admin console</h1>
-              <p className="mt-2 text-sm text-slate-600">Live Base44 records, first-party analytics and configuration status. AI cost and latency widgets now check live call_records and only show values when real source fields exist.</p>
+              <p className="mt-2 text-sm text-slate-600">Live Supabase records, first-party analytics and configuration status. AI cost and latency widgets check live call records and only show values when real source fields exist.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/Onboarding" className="rounded-full border border-white/70 bg-white/50 px-5 py-3 text-sm font-bold text-slate-800 shadow-sm backdrop-blur-xl">New client</Link>

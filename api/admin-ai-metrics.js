@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function startOfWindow(hours, endDate = new Date()) {
   return new Date(endDate.getTime() - hours * 60 * 60 * 1000).toISOString();
 }
@@ -82,7 +84,7 @@ function sourceStatus({ calls, cost, latency, duration }) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  if (!requireAdmin(req, res)) return;
 
   try {
     const url = process.env.VITE_SUPABASE_URL;

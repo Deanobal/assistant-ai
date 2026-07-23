@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, MicOff, Phone, PhoneOff, ShieldCheck } from 'lucide-react';
+import { Mic, Phone, PhoneOff, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function VapiReceptionistDemo() {
