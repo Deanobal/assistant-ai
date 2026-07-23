@@ -97,6 +97,20 @@ const routes = {
     h1: 'AI Receptionist Buyer Resources',
     intro: 'Clear, practical resources for choosing and implementing an AI voice agent for business.',
   },
+  '/ClientLogin': {
+    title: 'Client Login | AssistantAI',
+    description: 'Securely access your AssistantAI client portal.',
+    h1: 'Client Login',
+    intro: 'Access your AssistantAI portal to review call activity, billing, setup progress and support.',
+    robots: 'noindex, nofollow',
+  },
+  '/thank-you': {
+    title: 'Thank You | AssistantAI',
+    description: 'Thanks — we have received your request and will contact you with the right next step.',
+    h1: 'Thanks — we have received your request.',
+    intro: 'We will review your details and contact you with the clearest next step.',
+    robots: 'noindex, nofollow',
+  },
 };
 
 function decodeSourceString(value = '') {
@@ -144,7 +158,7 @@ function renderRoute(template, routePath, page) {
 
   let html = template.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(page.title)}</title>`);
   html = replaceMeta(html, 'name', 'description', page.description);
-  html = replaceMeta(html, 'name', 'robots', 'index, follow');
+  html = replaceMeta(html, 'name', 'robots', page.robots || 'index, follow');
   html = replaceMeta(html, 'property', 'og:title', page.title);
   html = replaceMeta(html, 'property', 'og:description', page.description);
   html = replaceMeta(html, 'property', 'og:url', canonical);
