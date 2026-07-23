@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import KpiCards from './analytics/KpiCards';
@@ -17,8 +17,8 @@ export default function AnalyticsSection({ mode = 'live', clientAccountId = null
   const { data: leads = [], isLoading: isLoadingLeads } = useQuery({
     queryKey: ['analytics-leads', clientAccountId || 'all'],
     queryFn: () => clientAccountId
-      ? base44.entities.Lead.filter({ client_account_id: clientAccountId }, '-updated_date', 500)
-      : base44.entities.Lead.list('-updated_date', 500),
+      ? assistantApi.entities.Lead.filter({ client_account_id: clientAccountId }, '-updated_date', 500)
+      : assistantApi.entities.Lead.list('-updated_date', 500),
     initialData: [],
     enabled: !isSample,
   });
@@ -26,8 +26,8 @@ export default function AnalyticsSection({ mode = 'live', clientAccountId = null
   const { data: callRecords = [], isLoading: isLoadingCalls } = useQuery({
     queryKey: ['analytics-call-records', clientAccountId || 'all'],
     queryFn: () => clientAccountId
-      ? base44.entities.CallRecord.filter({ client_account_id: clientAccountId }, '-timestamp', 500)
-      : base44.entities.CallRecord.list('-timestamp', 500),
+      ? assistantApi.entities.CallRecord.filter({ client_account_id: clientAccountId }, '-timestamp', 500)
+      : assistantApi.entities.CallRecord.list('-timestamp', 500),
     initialData: [],
     enabled: !isSample,
   });

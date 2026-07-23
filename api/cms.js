@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { requireAdmin } from './_native-auth.js';
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -34,63 +34,6 @@ const resources = {
   'navigation-items': { table: 'navigation_items', list: 'items', single: 'item', defaultStatus: 'draft', publicStatus: 'active' },
   'lead-forms': { table: 'lead_forms', list: 'forms', single: 'form', defaultStatus: 'draft', publicStatus: 'active' },
 };
-
-function getSecret() {
-  return process.env.ADMIN_ACCESS_CODE || process.env.SUPABASE_SERVICE_ROLE_KEY || 'assistantai-admin-dev';
-}
-
-function signSession(ts) {
-  return crypto.createHmac('sha256', getSecret()).update(String(ts)).digest('hex');
-}
-
-function readCookie(req, name) {
-  const cookie = req.headers.cookie || '';
-  const found = cookie.split(';').map((item) => item.trim()).find((item) => item.startsWith(`${name}=`));
-  return found ? decodeURIComponent(found.slice(name.length + 1)) : '';
-}
-
-function isAdminSession(req) {
-  const value = readCookie(req, 'aai_admin');
-  const [ts, sig] = value.split('.');
-  if (!ts || !sig) return false;
-  const ageMs = Date.now() - Number(ts);
-  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > 1000 * 60 * 60 * 12) return false;
-  try {
-    const expected = Buffer.from(signSession(ts));
-    const actual = Buffer.from(sig);
-    return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
-  } catch (_error) {
-    return false;
-  }
-}
-
-function setAdminCookie(res) {
-  const ts = Date.now();
-  const token = `${ts}.${signSession(ts)}`;
-  res.setHeader('Set-Cookie', `aai_admin=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=43200`);
-}
-
-function clearAdminCookie(res) {
-  res.setHeader('Set-Cookie', 'aai_admin=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0');
-}
-
-async function handleAdminAuth(req, res, resource) {
-  if (resource === 'admin-session') return res.status(200).json({ authenticated: isAdminSession(req) });
-  if (resource === 'admin-logout') {
-    clearAdminCookie(res);
-    return res.status(200).json({ success: true });
-  }
-  if (resource === 'admin-login') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const body = parseBody(req);
-    const code = String(body.code || '');
-    if (!process.env.ADMIN_ACCESS_CODE) return res.status(500).json({ error: 'ADMIN_ACCESS_CODE is not configured in Vercel' });
-    if (code !== process.env.ADMIN_ACCESS_CODE) return res.status(401).json({ error: 'Invalid admin code' });
-    setAdminCookie(res);
-    return res.status(200).json({ success: true });
-  }
-  return null;
-}
 
 function requiresAdmin(req, resource) {
   if (resource === 'media-upload') return true;
@@ -238,15 +181,13 @@ async function handleUpload(req, res) {
 export default async function handler(req, res) {
   try {
     const resource = String(req.query?.resource || '').trim();
-    const authResponse = await handleAdminAuth(req, res, resource);
-    if (authResponse) return authResponse;
     if (resource === 'media-upload') {
-      if (!isAdminSession(req)) return res.status(401).json({ error: 'Admin login required' });
+      if (!requireAdmin(req, res)) return;
       return handleUpload(req, res);
     }
     const config = resources[resource];
     if (!config) return res.status(404).json({ error: 'Unknown CMS resource' });
-    if (requiresAdmin(req, resource) && !isAdminSession(req)) return res.status(401).json({ error: 'Admin login required' });
+    if (requiresAdmin(req, resource) && !requireAdmin(req, res)) return;
 
     if (req.method === 'GET') {
       try {

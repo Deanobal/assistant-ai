@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Lock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,10 @@ export default function OnboardingIntake() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      const authenticated = await base44.auth.isAuthenticated();
+      const authenticated = await assistantApi.auth.isAuthenticated();
       setIsAuthenticated(authenticated);
       if (authenticated) {
-        const user = await base44.auth.me();
+        const user = await assistantApi.auth.me();
         setCurrentUser(user);
       }
       setIsLoadingAccess(false);
@@ -35,41 +35,41 @@ export default function OnboardingIntake() {
   }, []);
 
   const handleReturnHome = async () => {
-    await base44.auth.logout();
+    await assistantApi.auth.logout();
     navigate('/', { replace: true });
   };
 
   const { data: clients = [] } = useQuery({
     queryKey: ['onboarding-intake-client', clientId],
-    queryFn: () => base44.entities.Client.filter({ id: clientId }, '-updated_date', 1),
+    queryFn: () => assistantApi.entities.Client.filter({ id: clientId }, '-updated_date', 1),
     initialData: [],
     enabled: !!clientId && isAuthenticated,
   });
 
   const { data: intakeForms = [] } = useQuery({
     queryKey: ['onboarding-intake-form', clientId],
-    queryFn: () => base44.entities.IntakeForm.filter({ client_id: clientId }, '-updated_date', 1),
+    queryFn: () => assistantApi.entities.IntakeForm.filter({ client_id: clientId }, '-updated_date', 1),
     initialData: [],
     enabled: !!clientId && isAuthenticated,
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['onboarding-intake-tasks', clientId],
-    queryFn: () => base44.entities.OnboardingTask.filter({ client_id: clientId }, '-updated_date', 300),
+    queryFn: () => assistantApi.entities.OnboardingTask.filter({ client_id: clientId }, '-updated_date', 300),
     initialData: [],
     enabled: !!clientId && isAuthenticated,
   });
 
   const { data: integrations = [] } = useQuery({
     queryKey: ['onboarding-intake-integrations', clientId],
-    queryFn: () => base44.entities.IntegrationStatus.filter({ client_id: clientId }, '-updated_date', 100),
+    queryFn: () => assistantApi.entities.IntegrationStatus.filter({ client_id: clientId }, '-updated_date', 100),
     initialData: [],
     enabled: !!clientId && isAuthenticated,
   });
 
   const { data: billingRecords = [] } = useQuery({
     queryKey: ['onboarding-intake-billing', clientId],
-    queryFn: () => base44.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 10),
+    queryFn: () => assistantApi.entities.BillingStatus.filter({ client_id: clientId }, '-updated_date', 10),
     initialData: [],
     enabled: !!clientId && isAuthenticated,
   });
@@ -85,7 +85,7 @@ export default function OnboardingIntake() {
 
   const insightsMutation = useMutation({
     mutationFn: async () => {
-      const response = await base44.functions.invoke('generateOnboardingInsights', { clientId });
+      const response = await assistantApi.functions.invoke('generateOnboardingInsights', { clientId });
       return response.data.insights;
     },
     onSuccess: (data) => setAiInsights(data),
@@ -107,9 +107,9 @@ export default function OnboardingIntake() {
         go_live_ready: isGoLiveReady(activeTasks),
       };
 
-      await base44.entities.IntakeForm.update(intakeDraft.id, nextIntake);
-      await base44.entities.Client.update(clientId, nextClient);
-      await base44.entities.ClientNote.create({
+      await assistantApi.entities.IntakeForm.update(intakeDraft.id, nextIntake);
+      await assistantApi.entities.Client.update(clientId, nextClient);
+      await assistantApi.entities.ClientNote.create({
         client_id: clientId,
         note_type: 'onboarding_note',
         content: 'Structured intake form updated.',

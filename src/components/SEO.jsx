@@ -25,7 +25,7 @@ function upsertLink(selector, attributes) {
   });
 }
 
-export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image, imageAlt }) {
+export default function SEO({ title, description, canonicalPath = '/', structuredData = [], image = '', imageAlt = '' }) {
   React.useEffect(() => {
     const origin = window.location.hostname === 'localhost' ? DEFAULT_ORIGIN : window.location.origin || DEFAULT_ORIGIN;
     const canonicalUrl = new URL(canonicalPath, origin).toString();

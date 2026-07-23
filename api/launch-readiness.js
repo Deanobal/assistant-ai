@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 const REQUIRED_FOR_PAYMENT_CUTOVER = [
   'VITE_SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
@@ -34,6 +36,7 @@ export default function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  if (!requireAdmin(req, res)) return;
 
   const critical = checkGroup(REQUIRED_FOR_PAYMENT_CUTOVER);
   const recommended = checkGroup(RECOMMENDED_FOR_LAUNCH);

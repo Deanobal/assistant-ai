@@ -1,75 +1,28 @@
-# AssistantAI backend route plan
+# AssistantAI backend routes
 
-These routes replace Base44 progressively. Do not remove Base44 fallback until every route is tested in production.
+The production backend is implemented as Vercel Functions backed by Supabase.
 
-## Implemented
+## Public routes
 
-- GET /api/health
-- POST /api/contact-submit
+- Lead, contact and strategy-call submission routes validate public input and perform narrowly scoped server-side writes.
+- `POST /api/stripe-checkout` accepts only Starter or Growth and maps those names to server-owned Stripe Price IDs.
+- `POST /api/stripe-webhook` verifies Stripe's raw-body signature before processing a payment event.
+- Vapi webhook/tool routes must verify their configured secret before mutating data.
 
-## Next routes
+## Admin routes
 
-### POST /api/checkout-create
-Creates Stripe Checkout for Starter or Growth.
+- `/api/native-*`, `/api/admin-ai-*`, `/api/config-status` and client workspace administration require the signed admin session cookie.
+- Admin session signing uses `ADMIN_SESSION_SECRET`; the password is never stored in browser storage.
 
-Inputs:
-- lead_id
-- selected_plan: starter or growth
-- full_name
-- email
+## Client portal
 
-Behaviour:
-- validate Starter/Growth only
-- use Stripe secret key from Vercel server env
-- use configured price IDs
-- create subscription checkout session with setup fee and recurring price
-- update Supabase lead with checkout URL and pending payment status
-
-### POST /api/stripe-webhook
-Processes Stripe checkout completion.
-
-Behaviour:
-- verify webhook signature
-- dedupe using stripe_event_logs
-- find lead by metadata.lead_id
-- mark lead Won
-- create or update client
-- create billing_status
-- create intake_forms
-- create integration_status rows
-- create onboarding_tasks from selected plan
-- create client_note
-- log notification
-
-### POST /api/vapi-tool-call
-Handles Vapi tool calls.
-
-Required response shape:
-{
-  "results": [
-    {
-      "toolCallId": "call_xxx",
-      "result": { "success": true }
-    }
-  ]
-}
-
-Supported tools:
-- create_ai_qualified_lead
-- create_checkout_for_qualified_lead
-
-### POST /api/onboarding-start
-Manual onboarding start shortcut.
-
-Behaviour:
-- create Lead as Won
-- create Client
-- create supporting canonical records
-- redirect frontend to client workspace
+- Supabase Auth identifies the client.
+- Row-level security binds the authenticated user to one `clients.auth_user_id` record.
+- Portal access is read-only and limited to rows owned by that client.
 
 ## Security rules
 
-- Never expose server keys through VITE variables
-- Public browser values only use VITE prefix
-- Stripe, Supabase service role, GHL, Twilio and Resend keys stay server-only
-- Webhooks must verify signatures/secrets before mutating data
+- Never expose server keys through `VITE_` variables.
+- Stripe, Supabase service role, Vapi, GoHighLevel, Twilio and Resend keys remain server-only.
+- Webhooks verify signatures or shared secrets before mutations.
+- Direct leaf-route requests must enforce the same authentication as aggregator routes.

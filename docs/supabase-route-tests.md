@@ -116,4 +116,4 @@ Then check Supabase tables:
 
 ## Current safety rule
 
-Do not disable Base44 until all new Supabase routes pass production tests and Stripe webhook migration is complete.
+Keep paid acquisition paused until all Supabase routes pass production tests and Stripe webhook processing is confirmed.

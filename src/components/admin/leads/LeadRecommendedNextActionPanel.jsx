@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Bell, Clock, Sparkles } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -35,8 +35,8 @@ export default function LeadRecommendedNextActionPanel({ leadId, lead, nextActio
     queryKey: ['lead-booking-nudge', leadId],
     queryFn: async () => {
       const [smsLogs, alertLogs] = await Promise.all([
-        base44.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 20),
-        base44.entities.NotificationLog.filter({ entity_id: leadId }, '-created_date', 40),
+        assistantApi.entities.NotificationLog.filter({ entity_id: leadId, channel: 'sms' }, '-created_date', 20),
+        assistantApi.entities.NotificationLog.filter({ entity_id: leadId }, '-created_date', 40),
       ]);
 
       return { smsLogs, alertLogs };

@@ -1,5 +1,4 @@
-import { Mail, Phone, Clock3, CalendarDays, ArrowUpRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Mail, Phone, Clock3, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function BookingSupportPanel({ bookingUrl, bookingMode = 'request', bookingProvider = 'Live Calendar', heading = 'What Happens Next?', intro, responseText, adminWarning }) {

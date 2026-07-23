@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarClock, CheckCircle2, ClipboardList } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,13 +59,13 @@ export default function ClientLeadsSection({ clientAccountId }) {
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['client-portal-leads', clientAccountId],
-    queryFn: () => base44.entities.Lead.filter({ client_account_id: clientAccountId }, '-created_date', 100),
+    queryFn: () => assistantApi.entities.Lead.filter({ client_account_id: clientAccountId }, '-created_date', 100),
     initialData: [],
     enabled: !!clientAccountId,
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ leadId, status }) => base44.functions.invoke('updateClientPortalLeadStatus', { leadId, status }),
+    mutationFn: ({ leadId, status }) => assistantApi.functions.invoke('updateClientPortalLeadStatus', { leadId, status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-portal-leads', clientAccountId] }),
   });
 

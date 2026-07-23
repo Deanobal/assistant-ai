@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Card, CardContent } from '@/components/ui/card';
 import UnmatchedSmsCard from '@/components/admin/sms/UnmatchedSmsCard';
 import { getResolutionState } from '@/lib/smsMatching';
@@ -8,19 +8,19 @@ import { getResolutionState } from '@/lib/smsMatching';
 export default function UnmatchedSmsInbox() {
   const { data: logs = [] } = useQuery({
     queryKey: ['unmatched-sms-inbox'],
-    queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
+    queryFn: () => assistantApi.entities.NotificationLog.filter({ channel: 'sms', event_type: 'customer_sms_reply_unmatched' }, '-created_date', 200),
     initialData: [],
   });
 
   const { data: leads = [] } = useQuery({
     queryKey: ['manual-match-leads'],
-    queryFn: () => base44.entities.Lead.list('-updated_date', 200),
+    queryFn: () => assistantApi.entities.Lead.list('-updated_date', 200),
     initialData: [],
   });
 
   const { data: outboundLogs = [] } = useQuery({
     queryKey: ['manual-match-outbound-sms'],
-    queryFn: () => base44.entities.NotificationLog.filter({ channel: 'sms', recipient_role: 'client' }, '-created_date', 300),
+    queryFn: () => assistantApi.entities.NotificationLog.filter({ channel: 'sms', recipient_role: 'client' }, '-created_date', 300),
     initialData: [],
   });
 

@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') return JSON.parse(req.body || '{}');
@@ -13,18 +15,6 @@ function getConfig() {
 
 function clean(record) {
   return Object.fromEntries(Object.entries(record || {}).filter(([, value]) => value !== undefined && value !== null && value !== ''));
-}
-
-function getHeader(req, name) {
-  const lower = name.toLowerCase();
-  return String(req.headers?.[lower] || req.headers?.[name] || '').trim();
-}
-
-function isAuthorisedAdminAction(req) {
-  const expected = String(process.env.ADMIN_ACTION_SECRET || process.env.ADMIN_ACCESS_PASSWORD || '').trim();
-  if (!expected) return false;
-  const received = getHeader(req, 'x-admin-action-secret');
-  return received && received === expected;
 }
 
 function containsHostileValue(value) {
@@ -75,12 +65,9 @@ function safePatch(input = {}) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
-    if (!isAuthorisedAdminAction(req)) {
-      return res.status(401).json({ error: 'Unauthorised admin action' });
-    }
-
     const body = parseBody(req);
     const clientId = String(body.client_id || '').trim();
     if (!clientId) return res.status(400).json({ error: 'client_id is required' });

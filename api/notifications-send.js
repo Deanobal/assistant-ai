@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 async function logNotification({ url, key, payload }) {
   const response = await fetch(`${url}/rest/v1/notification_logs`, {
     method: 'POST',
@@ -119,6 +121,7 @@ function deriveDeliveryStatus({ emailResult, smsResult, emailRequested, smsReque
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
     const url = process.env.VITE_SUPABASE_URL;

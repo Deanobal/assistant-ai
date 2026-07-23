@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, CheckCircle, ArrowRight, Download, ShieldCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,8 +50,8 @@ export default function BillingSection({ mode = 'live', clientId = null }) {
   const { data: billingRecords = [], isLoading } = useQuery({
     queryKey: ['billing-records', clientId || 'all', mode],
     queryFn: () => clientId
-      ? base44.entities.BillingRecord.filter({ client_id: clientId }, '-updated_date', 100)
-      : base44.entities.BillingRecord.list('-updated_date', 100),
+      ? assistantApi.entities.BillingRecord.filter({ client_id: clientId }, '-updated_date', 100)
+      : assistantApi.entities.BillingRecord.list('-updated_date', 100),
     initialData: [],
     enabled: !isSample,
   });

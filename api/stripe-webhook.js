@@ -1,4 +1,21 @@
-import crypto from 'crypto';
+import Stripe from 'stripe';
+
+let stripeVerifier;
+
+function getStripeVerifier() {
+  if (!stripeVerifier) {
+    stripeVerifier = new Stripe(
+      process.env.STRIPE_SECRET_KEY || 'webhook-signature-verification-only',
+      { apiVersion: '2026-06-24.dahlia' },
+    );
+  }
+
+  return stripeVerifier;
+}
+
+export function constructStripeWebhookEvent(rawBody, signature, webhookSecret) {
+  return getStripeVerifier().webhooks.constructEvent(rawBody, signature, webhookSecret);
+}
 
 export const config = {
   api: {
@@ -13,24 +30,6 @@ function buffer(req) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
-}
-
-function verifyStripeSignature(rawBody, signatureHeader, secret) {
-  if (!signatureHeader || !secret) return false;
-  const parts = Object.fromEntries(signatureHeader.split(',').map((part) => {
-    const [key, value] = part.split('=');
-    return [key, value];
-  }));
-  const timestamp = parts.t;
-  const expected = parts.v1;
-  if (!timestamp || !expected) return false;
-
-  const signedPayload = `${timestamp}.${rawBody.toString('utf8')}`;
-  const digest = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-
-  const a = Buffer.from(digest, 'hex');
-  const b = Buffer.from(expected, 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 async function supabaseRequest(path, options = {}) {
@@ -231,14 +230,26 @@ async function createClientStackFromSession(session) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const rawBody = await buffer(req);
-  const signature = req.headers['stripe-signature'];
+  const webhookSecret = String(process.env.STRIPE_WEBHOOK_SECRET || '').trim();
+  if (!webhookSecret) return res.status(503).json({ error: 'Stripe webhook is not configured' });
 
-  if (!verifyStripeSignature(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET)) {
-    return res.status(400).json({ error: 'Invalid Stripe signature' });
+  let rawBody;
+  try {
+    rawBody = await buffer(req);
+  } catch (error) {
+    console.error('Stripe webhook body read failed:', error.message);
+    return res.status(400).json({ error: 'Unable to read webhook body' });
   }
 
-  const event = JSON.parse(rawBody.toString('utf8'));
+  const signature = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = constructStripeWebhookEvent(rawBody, signature, webhookSecret);
+  } catch (error) {
+    console.warn('Stripe webhook signature rejected:', error.message);
+    return res.status(400).json({ error: 'Invalid Stripe signature' });
+  }
 
   try {
     const existing = await selectFirst('stripe_event_logs', `stripe_event_id=eq.${encodeURIComponent(event.id)}`);
@@ -287,6 +298,7 @@ export default async function handler(req, res) {
       });
     } catch (_notificationError) {}
 
-    return res.status(500).json({ error: 'Stripe webhook processing failed', details: error.message });
+    console.error('Stripe webhook processing failed:', error.message);
+    return res.status(500).json({ error: 'Stripe webhook processing failed' });
   }
 }

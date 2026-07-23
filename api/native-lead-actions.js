@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 const PLAN_PRICING = {
   Starter: { setup_fee: 1500, monthly_fee: 497 },
   Growth: { setup_fee: 3000, monthly_fee: 1500 },
@@ -164,6 +166,7 @@ async function manualMatchUnmatchedSms(payload) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};

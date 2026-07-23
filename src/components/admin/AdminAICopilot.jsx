@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bot, Loader2, Maximize2, MessageSquare, Minimize2, Send, ShieldCheck, X } from 'lucide-react';
+import { Bot, Loader2, Maximize2, Minimize2, Send, ShieldCheck, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -113,14 +113,14 @@ export default function AdminAICopilot() {
     const response = await fetch('/api/admin-client-safe-update', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-action-secret': localStorage.getItem('assistantai_admin_action_secret') || localStorage.getItem('assistantai_admin_password') || ''
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ client_id: clientId, patch: parsed.patch })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
-      if (response.status === 401) throw new Error('Admin action blocked. Re-enter the admin action secret before allowing AI edits.');
+      if (response.status === 401) throw new Error('Admin session expired. Sign in again before allowing AI edits.');
       throw new Error(data.details || data.error || 'Safe client update failed.');
     }
 

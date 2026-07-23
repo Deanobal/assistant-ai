@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, BriefcaseBusiness } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { assistantApi } from '@/api/nativeClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminEmptyState } from '@/components/admin/AdminState';
@@ -80,7 +80,7 @@ export default function ClientWorkspace() {
   }, [client, intake, clientId]);
 
   const updateClientMutation = useMutation({
-    mutationFn: (data) => base44.entities.Client.update(clientId, { ...data, updated_at: new Date().toISOString() }),
+    mutationFn: (data) => assistantApi.entities.Client.update(clientId, { ...data, updated_at: new Date().toISOString() }),
     onSuccess: () => {
       ['client-workspace-direct', 'onboarding-clients', 'client-manager-clients'].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
     },
@@ -88,30 +88,30 @@ export default function ClientWorkspace() {
 
   const updateIntakeMutation = useMutation({
     mutationFn: (data) => data.id
-      ? base44.entities.IntakeForm.update(data.id, { ...data, last_updated: new Date().toISOString() })
-      : base44.entities.IntakeForm.create({ ...data, client_id: clientId, last_updated: new Date().toISOString() }),
+      ? assistantApi.entities.IntakeForm.update(data.id, { ...data, last_updated: new Date().toISOString() })
+      : assistantApi.entities.IntakeForm.create({ ...data, client_id: clientId, last_updated: new Date().toISOString() }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const updateTaskMutation = useMutation({ mutationFn: (task) => base44.entities.OnboardingTask.update(task.id, { ...task, updated_at: new Date().toISOString() }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
+  const updateTaskMutation = useMutation({ mutationFn: (task) => assistantApi.entities.OnboardingTask.update(task.id, { ...task, updated_at: new Date().toISOString() }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const updateIntegrationMutation = useMutation({
     mutationFn: async ({ record, status }) => {
-      if (record.id) return base44.entities.IntegrationStatus.update(record.id, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : record.last_sync });
-      return base44.entities.IntegrationStatus.create({ ...record, client_id: clientId, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null, notes: record.notes || '' });
+      if (record.id) return assistantApi.entities.IntegrationStatus.update(record.id, { ...record, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : record.last_sync });
+      return assistantApi.entities.IntegrationStatus.create({ ...record, client_id: clientId, connection_status: status, last_sync: status === 'connected' ? new Date().toISOString() : null, notes: record.notes || '' });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const createNoteMutation = useMutation({ mutationFn: (note) => base44.entities.ClientNote.create({ client_id: clientId, note_type: note.note_type, content: note.content, created_by: 'admin', created_at: new Date().toISOString(), is_archived: false }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
+  const createNoteMutation = useMutation({ mutationFn: (note) => assistantApi.entities.ClientNote.create({ client_id: clientId, note_type: note.note_type, content: note.content, created_by: 'admin', created_at: new Date().toISOString(), is_archived: false }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const updateBillingMutation = useMutation({
-    mutationFn: (patch) => billing?.id ? base44.entities.BillingStatus.update(billing.id, { ...billing, ...patch }) : base44.entities.BillingStatus.create({ client_id: clientId, plan: clientDraft.plan, setup_fee: PLAN_PRICING[clientDraft.plan].setup_fee, monthly_fee: PLAN_PRICING[clientDraft.plan].monthly_fee, billing_status: 'draft', payment_method: '', invoice_reference: '', renewal_date: null, stripe_customer_id: null, stripe_subscription_id: null, stripe_checkout_session_id: null, admin_override: false, notes: '', ...patch }),
+    mutationFn: (patch) => billing?.id ? assistantApi.entities.BillingStatus.update(billing.id, { ...billing, ...patch }) : assistantApi.entities.BillingStatus.create({ client_id: clientId, plan: clientDraft.plan, setup_fee: PLAN_PRICING[clientDraft.plan].setup_fee, monthly_fee: PLAN_PRICING[clientDraft.plan].monthly_fee, billing_status: 'draft', payment_method: '', invoice_reference: '', renewal_date: null, stripe_customer_id: null, stripe_subscription_id: null, stripe_checkout_session_id: null, admin_override: false, notes: '', ...patch }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }),
   });
 
-  const sendCheckoutMutation = useMutation({ mutationFn: () => base44.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }), onSuccess: (response) => { queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }); if (response?.data?.checkout_url) window.open(response.data.checkout_url, '_blank'); } });
-  const overrideBillingMutation = useMutation({ mutationFn: () => base44.functions.invoke('adminOverrideBillingStatus', { clientId, billingStatus: 'active' }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
+  const sendCheckoutMutation = useMutation({ mutationFn: () => assistantApi.functions.invoke('adminCreateStripeCheckout', { clientId, origin: window.location.origin }), onSuccess: (response) => { queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }); if (response?.data?.checkout_url) window.open(response.data.checkout_url, '_blank'); } });
+  const overrideBillingMutation = useMutation({ mutationFn: () => assistantApi.functions.invoke('adminOverrideBillingStatus', { clientId, billingStatus: 'active' }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] }) });
 
   const taskSummary = useMemo(() => ({ total: tasks.length, completed: tasks.filter((task) => task.completed).length }), [tasks]);
   const activeTasks = tasks.filter((task) => !task.is_archived);
@@ -162,7 +162,7 @@ export default function ClientWorkspace() {
     await updateClientMutation.mutateAsync({ ...getOperationalClientState(clientDraft), status: 'Live', lifecycle_state: 'live', onboarding_archived: true, go_live_ready: true, go_live_date: new Date().toISOString().slice(0, 10), workflow_phase: 'Go Live', last_activity: 'Client marked live and transitioned into Client Manager', progress_percentage: 100, updated_at: new Date().toISOString() });
     if (intakeDraft?.id) await updateIntakeMutation.mutateAsync({ ...intakeDraft, is_archived: true, approval_status: 'approved', last_updated: new Date().toISOString() });
     await Promise.all(tasks.map((task) => updateTaskMutation.mutateAsync({ ...task, is_archived: true })));
-    await Promise.all(notes.filter((note) => !note.is_archived).map((note) => base44.entities.ClientNote.update(note.id, { ...note, is_archived: true })));
+    await Promise.all(notes.filter((note) => !note.is_archived).map((note) => assistantApi.entities.ClientNote.update(note.id, { ...note, is_archived: true })));
     queryClient.invalidateQueries({ queryKey: ['client-workspace-direct', clientId] });
     queryClient.invalidateQueries({ queryKey: ['onboarding-clients'] });
     queryClient.invalidateQueries({ queryKey: ['client-manager-clients'] });

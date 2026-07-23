@@ -43,7 +43,7 @@ function buildReadinessItems(configStatus) {
         'Public forms, demo flows, and CRM handoff records',
       ],
       notes: supabaseReady
-        ? 'Lead capture is connected to Supabase through native Vercel API routes. Public enquiry, demo, contact, and signup flows should no longer depend on Base44 for lead storage.'
+        ? 'Lead capture is connected to Supabase through native Vercel API routes. Public enquiry, demo, contact, and signup flows use Supabase for lead storage.'
         : `Lead capture requires the Supabase environment to be valid. Open items: ${missingList(status.supabase)}.`,
       nextAction: supabaseReady
         ? 'Monitor new submissions and confirm source_page values are being captured cleanly in Supabase.'
@@ -60,7 +60,7 @@ function buildReadinessItems(configStatus) {
         `Google Calendar target: ${SALES_CALENDAR_ID}`,
       ],
       notes: bookingReady
-        ? `The strategy-call path is native Vercel + Supabase + Google Calendar. It targets ${SALES_CALENDAR_ID} without Base44.`
+        ? `The strategy-call path uses Vercel, Supabase and Google Calendar. It targets ${SALES_CALENDAR_ID}.`
         : `Booking is not fully live until Supabase and Google Calendar OAuth are configured. Calendar issues: ${missingList(status.google_calendar)}. Supabase issues: ${missingList(status.supabase)}.`,
       nextAction: bookingReady
         ? 'Run one live /BookStrategyCall form test and confirm the created event appears on sales@assistantai.com.au.'
@@ -74,7 +74,7 @@ function buildReadinessItems(configStatus) {
         `Calendar ID: ${SALES_CALENDAR_ID}`,
         `Google OAuth credentials: ${providerState(status.google_calendar)}`,
         'Native Google Calendar helper',
-        'No Base44 connector dependency',
+        'Native Vercel API routes',
       ],
       notes: googleCalendarReady
         ? `The AssistantAI booking code can authenticate directly with Google Calendar and create confirmed events on ${SALES_CALENDAR_ID}.`
@@ -89,15 +89,15 @@ function buildReadinessItems(configStatus) {
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['Admin login gate', 'client portal shell', 'protected admin routes'],
       notes: 'Admin and client areas are separated from the public marketing site. Public visitors should not be able to trigger admin-only actions.',
-      nextAction: 'Replace any remaining Base44 auth shims with native session/auth endpoints.',
+      nextAction: 'Verify native admin sessions and Supabase Auth in production.',
     },
     {
       title: 'Client Portal Protection',
       status: 'ready',
       lastUpdated: READINESS_LAST_UPDATED,
       dependencies: ['ClientPortal route', 'ClientLogin route', 'client record linking fallback'],
-      notes: 'The portal opens cleanly without dead-ending users. Remaining Base44 portal reads should be replaced with Supabase-backed routes before client launch.',
-      nextAction: 'Migrate client portal data reads, file uploads, support messages, and access resolution away from Base44.',
+      notes: 'The portal uses Supabase Auth and row-level policies so clients can read only their own workspace data.',
+      nextAction: 'Verify portal access with a confirmed client account before launch.',
     },
     {
       title: 'Onboarding Workflow',

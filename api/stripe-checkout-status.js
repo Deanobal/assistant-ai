@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) throw new Error('Stripe server configuration missing');
 
-    const stripe = new Stripe(stripeKey);
+    const stripe = new Stripe(stripeKey, { apiVersion: '2026-06-24.dahlia' });
     const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['customer', 'subscription'] });
 
     const leadId = session.metadata?.lead_id || session.metadata?.leadId || '';

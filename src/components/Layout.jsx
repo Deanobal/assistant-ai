@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { ArrowUpRight, AudioLines, Menu, X } from 'lucide-react';
 import CrispChat from './chat/CrispChat';
 import SiteAnalyticsTracker from './analytics/SiteAnalyticsTracker';
 
@@ -10,199 +10,174 @@ const navLinks = [
   { label: 'Integrations', path: '/Integrations' },
   { label: 'Pricing', path: '/Pricing' },
   { label: 'Case Studies', path: '/CaseStudies' },
-  { label: 'Contact', path: '/Contact' },
 ];
 
-const footerCompanyLinks = [
-  { label: 'Home', path: '/' },
-  ...navLinks,
-  { label: 'Resources', path: '/Resources' },
-  { label: 'Blog', path: '/Blog' },
-  { label: 'About', path: '/About' },
+const footerColumns = [
+  {
+    heading: 'Company',
+    links: [
+      { label: 'About', path: '/About' },
+      { label: 'Case Studies', path: '/CaseStudies' },
+      { label: 'Contact', path: '/Contact' },
+      { label: 'Client Login', path: '/ClientLogin' },
+    ],
+  },
+  {
+    heading: 'Solutions',
+    links: [
+      { label: 'AI Receptionist Australia', path: '/ai-receptionist-australia' },
+      { label: 'Missed Call Automation', path: '/missed-call-automation-australia' },
+      { label: 'Appointment Booking AI', path: '/ai-appointment-booking-assistant' },
+      { label: 'AI Receptionist for Trades', path: '/ai-receptionist-for-trades' },
+    ],
+  },
+  {
+    heading: 'Resources',
+    links: [
+      { label: 'Services', path: '/Services' },
+      { label: 'Industries', path: '/Industries' },
+      { label: 'Integrations', path: '/Integrations' },
+      { label: 'Blog', path: '/Blog' },
+    ],
+  },
 ];
 
-const footerSolutionLinks = [
-  { label: 'AI Receptionist Australia', path: '/ai-receptionist-australia' },
-  { label: 'AI Phone Assistant', path: '/ai-phone-assistant-small-business' },
-  { label: 'Missed Call Automation', path: '/missed-call-automation-australia' },
-  { label: 'Lead Follow-Up Automation', path: '/ai-lead-follow-up-automation' },
-  { label: 'Appointment Booking AI', path: '/ai-appointment-booking-assistant' },
-  { label: 'AI Receptionist for Trades', path: '/ai-receptionist-for-trades' },
-];
-
-const mobileNavLinks = [
-  ...navLinks,
-  { label: 'Client Login', path: '/ClientLogin' }
-];
+function Brand({ compact = false }) {
+  return (
+    <Link to="/" className="group inline-flex items-center gap-2.5" aria-label="AssistantAI home">
+      <span className={`flex shrink-0 items-center justify-center rounded-full bg-[#1f6fff] text-white shadow-[0_0_24px_rgba(31,111,255,0.28)] ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}>
+        <AudioLines className={compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} strokeWidth={2.3} aria-hidden="true" />
+      </span>
+      <span className={`${compact ? 'text-lg' : 'text-xl'} font-[680] tracking-[-0.035em] text-white`}>
+        Assistant<span className="text-[#4b8cff]">AI</span>
+      </span>
+    </Link>
+  );
+}
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 xl:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <img
-            src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
-            alt="AssistantAI Logo"
-            className="w-9 h-9" />
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-[#172235] bg-[#030812]/86 backdrop-blur-xl">
+      <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12 xl:px-16" aria-label="Primary navigation">
+        <Brand />
 
-          <span className="text-white text-xl font-semibold tracking-tight">AssistantAI</span>
-        </Link>
+        <div className="hidden items-center gap-7 lg:flex xl:gap-9">
+          {navLinks.map((link) => {
+            const active = location.pathname === link.path;
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`text-sm font-semibold transition ${active ? 'text-white' : 'text-[#aab4c3] hover:text-white'}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
 
-        <div className="hidden min-[1101px]:flex items-center justify-end gap-3 xl:gap-4 flex-1 min-w-0">
-          <div className="flex items-center gap-3 xl:gap-4 min-w-0">
-            {navLinks.map((link) =>
-              link.path.includes('#') ? (
-                <a
-                  key={link.path}
-                  href={link.path}
-                  className="text-sm font-medium whitespace-nowrap text-gray-400 transition-colors hover:text-cyan-400"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`text-sm font-medium whitespace-nowrap transition-colors ${
-                    location.pathname === link.path ?
-                    'text-cyan-400' :
-                    'text-gray-400 hover:text-cyan-400'}`
-                  }>
-                  {link.label}
-                </Link>
-              )
-            )}
-          </div>
-
+        <div className="hidden items-center gap-3 lg:flex">
           <Link
             to="/ClientLogin"
-            className="shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20 hover:text-white">
-
+            className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[#465267] bg-[#07101b] px-5 text-sm font-semibold text-white transition hover:border-[#6a778a] hover:bg-[#0c1724] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4b8cff]"
+          >
             Client Login
+          </Link>
+          <Link
+            to="/GetStartedNow"
+            className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(31,111,255,0.25)] transition hover:bg-[#0a45aa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7faaff]"
+          >
+            Get Started
           </Link>
         </div>
 
         <button
-          className="min-[1101px]:hidden text-white"
-          onClick={() => setMobileOpen(!mobileOpen)}>
-
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-[#354258] text-white transition hover:bg-[#0b1725] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4b8cff] lg:hidden"
+          onClick={() => setMobileOpen((open) => !open)}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        >
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-      </div>
+      </nav>
 
-      {mobileOpen &&
-        <div className="min-[1101px]:hidden bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5">
-
-            <div className="px-6 py-4 space-y-3">
-              {mobileNavLinks.map((link) =>
-                link.path.includes('#') ? (
-                  <a
-                    key={link.path}
-                    href={link.path}
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-sm font-medium text-gray-400"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={`block py-2 text-sm font-medium ${
-                    location.pathname === link.path ? 'text-cyan-400' : 'text-gray-400'}`
-                    }>
-                    {link.label}
-                  </Link>
-                )
-            )}
-            </div>
+      {mobileOpen ? (
+        <div id="mobile-navigation" className="border-t border-[#172235] bg-[#030812]/98 px-5 py-5 shadow-2xl lg:hidden">
+          <div className="mx-auto max-w-lg space-y-1">
+            {[...navLinks, { label: 'Contact', path: '/Contact' }, { label: 'Client Login', path: '/ClientLogin' }].map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`flex min-h-12 items-center justify-between rounded-[10px] px-4 text-sm font-semibold transition ${location.pathname === link.path ? 'bg-[#0b1e38] text-[#76a7ff]' : 'text-[#c1cad5] hover:bg-[#091522] hover:text-white'}`}
+              >
+                {link.label}
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            ))}
+            <Link to="/GetStartedNow" className="mt-3 flex min-h-12 items-center justify-center rounded-[10px] border border-[#347cff] bg-[#0b4dbb] px-5 text-sm font-semibold text-white">Get Started</Link>
           </div>
-        }
-    </nav>);
-
+        </div>
+      ) : null}
+    </header>
+  );
 }
 
 function Footer() {
   return (
-    <footer className="bg-[#070710] border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12 lg:grid-cols-5">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2.5 mb-4">
-              <img
-                src="https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/logoai.png"
-                alt="AssistantAI Logo"
-                className="w-9 h-9" />
-
-              <span className="text-white font-semibold text-lg">AssistantAI</span>
-            </div>
-            <p className="max-w-sm text-base leading-7 text-gray-500">Premium AI reception and follow-up for Australian service businesses, designed to answer calls, capture enquiries, reduce admin, and help more leads become paying clients.
-
-            </p>
-            <p className="mt-4 text-base leading-7 text-gray-600">Built for trades, clinics, real estate, law firms, and service businesses across Australia.</p>
+    <footer className="border-t border-[#1c2939] bg-[#020711]">
+      <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12 xl:px-16">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.35fr_0.75fr_0.95fr_0.75fr_1fr]">
+          <div>
+            <Brand compact />
+            <p className="mt-5 max-w-xs text-sm leading-7 text-[#9ea9b7]">AI reception and follow-up for Australian service businesses.</p>
           </div>
 
-          <div>
-            <h4 className="text-white font-medium text-sm mb-4">Company</h4>
-            <div className="space-y-2.5">
-              {footerCompanyLinks.map((link) =>
-                link.path.includes('#') ? (
-                  <a key={link.path} href={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
-                    {link.label}
-                  </Link>
-                )
-              )}
+          {footerColumns.map((column) => (
+            <div key={column.heading}>
+              <h2 className="text-sm font-semibold text-white">{column.heading}</h2>
+              <ul className="mt-5 space-y-3.5">
+                {column.links.map((link) => (
+                  <li key={link.path}>
+                    <Link to={link.path} className="text-sm text-[#9ea9b7] transition hover:text-white">{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
 
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Solutions</h4>
-            <div className="space-y-2.5">
-              {footerSolutionLinks.map((link) => (
-                <Link key={link.path} to={link.path} className="block text-gray-500 text-sm hover:text-cyan-400 transition-colors">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-white font-medium text-sm mb-4">Contact</h4>
-            <div className="space-y-2.5 text-gray-500 text-sm">
-              <p className="text-base">sales@assistantai.com.au</p>
-              <Link to="/Platform" className="text-base block hover:text-cyan-400 transition-colors">Platform Preview</Link>
-              <Link to="/Resources" className="text-base block hover:text-cyan-400 transition-colors">AI Receptionist Resources</Link>
-              <Link to="/ClientLogin" className="block hover:text-cyan-400 transition-colors">Client Login</Link>
-            </div>
+            <h2 className="text-sm font-semibold text-white">Contact</h2>
+            <a href="mailto:sales@assistantai.com.au" className="mt-5 block break-all text-sm text-[#9ea9b7] transition hover:text-white">sales@assistantai.com.au</a>
+            <p className="mt-4 text-sm leading-6 text-[#9ea9b7]">Australia-wide implementation and support.</p>
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-12 pt-8 text-center">
-          <p className="text-gray-600 text-sm">© 2026 AssistantAI. All rights reserved.</p>
-        </div>
+        <div className="mt-12 border-t border-[#1c2939] pt-7 text-sm text-[#94a1b1]">© 2026 AssistantAI. All rights reserved.</div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 }
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="public-site min-h-screen bg-[#030812] text-white">
       <SiteAnalyticsTracker />
       <Navbar />
-      <main className="pt-16">
+      <main className="pt-[72px]">
         <Outlet />
       </main>
       <Footer />
       <CrispChat />
-    </div>);
-
+    </div>
+  );
 }

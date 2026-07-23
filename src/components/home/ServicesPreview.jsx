@@ -1,10 +1,10 @@
 import { Phone, UserCheck, CalendarCheck, Database, MessageSquareText, PhoneForwarded } from 'lucide-react';
 
 const cards = [
-  { icon: Phone, title: 'AI Receptionist', desc: 'Answers calls and captures enquiries 24/7 so ready buyers do not get left waiting.' },
+  { icon: Phone, title: 'AI Receptionist', desc: 'An automated phone answering service that captures enquiries 24/7 so ready buyers do not get left waiting.' },
   { icon: UserCheck, title: 'Enquiry Qualification', desc: 'Asks the right questions and helps work out whether Starter, Growth, or Enterprise is the right fit.' },
   { icon: CalendarCheck, title: 'Booking Support', desc: 'Helps turn inbound demand into booked jobs, appointments, and scheduled next steps faster.' },
-  { icon: Database, title: 'Organised Customer Details', desc: 'Keeps contact details, notes, and follow-up needs clear for your team.' },
+  { icon: Database, title: 'Virtual AI Assistant', desc: 'Keeps customer details, notes, and follow-up needs organised and clear for your team.' },
   { icon: MessageSquareText, title: 'Secure Signup', desc: 'Guides ready Starter and Growth buyers toward secure checkout after they confirm.' },
   { icon: PhoneForwarded, title: 'Setup Underway', desc: 'Once payment is complete, your setup details are prepared so we can begin.' },
 ];

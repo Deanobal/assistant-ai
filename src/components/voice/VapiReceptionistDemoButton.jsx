@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, Phone, PhoneOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const FALLBACK_MESSAGE = 'Our live voice demo is being connected. You can still get started or leave your details and we’ll send access.';
 const CALL_START_TIMEOUT_MS = 12000;
@@ -61,7 +60,7 @@ function getButtonLabel(status) {
   if (status === 'connecting') return 'Connecting...';
   if (status === 'ending') return 'Ending Call...';
   if (status === 'listening') return 'End Call';
-  return 'Talk to Our AI Receptionist';
+  return 'Talk to our AI Receptionist';
 }
 
 export default function VapiReceptionistDemoButton({ className = '', variant = 'primary', showFallbackText = false }) {
@@ -173,20 +172,20 @@ export default function VapiReceptionistDemoButton({ className = '', variant = '
   };
 
   const baseClass = variant === 'secondary'
-    ? 'border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]'
-    : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25';
+    ? 'border border-[#465267] bg-[#07101b] text-white hover:border-[#6a778a] hover:bg-[#0c1724]'
+    : 'border border-[#347cff] bg-[#0b4dbb] text-white shadow-[0_10px_35px_rgba(31,111,255,0.28)] hover:bg-[#0a45aa] hover:shadow-[0_14px_42px_rgba(31,111,255,0.36)]';
 
   return (
     <div className={className} data-build={PRODUCTION_REBUILD_MARK}>
-      <Button
+      <button
         type="button"
         onClick={handleClick}
         disabled={status === 'ending'}
-        className={`inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold transition-all sm:w-auto ${baseClass}`}
+        className={`inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-[12px] px-6 py-4 text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-[#7faaff] sm:w-auto ${baseClass}`}
       >
         {status === 'listening' ? <PhoneOff className="h-4 w-4" /> : status === 'connecting' ? <Phone className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         {getButtonLabel(status)}
-      </Button>
+      </button>
 
       {status === 'connecting' && (
         <p className="mt-3 max-w-sm text-sm leading-6 text-cyan-300">Requesting microphone access and starting the live demo...</p>

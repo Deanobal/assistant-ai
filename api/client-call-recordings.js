@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 async function supabaseRequest(url, key, table, query, options = {}) {
   const response = await fetch(`${url}/rest/v1/${table}${query ? `?${query}` : ''}`, {
     method: options.method || 'GET',
@@ -70,16 +72,15 @@ function normaliseCall(record) {
 }
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
+
   if (req.method === 'GET') {
     return res.status(200).json({
       success: true,
       service: 'assistantai-client-call-recordings',
       description: 'POST email/client_id to list portal-safe call recordings for the linked client.'
     });
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {

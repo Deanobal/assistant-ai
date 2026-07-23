@@ -1,21 +1,5 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
-import HeroSection from '../components/home/HeroSection';
-import TrustStrip from '../components/home/TrustStrip';
-import ProblemSection from '../components/home/ProblemSection';
-import HowItWorksSection from '../components/home/HowItWorksSection';
-import CredibilitySection from '../components/home/CredibilitySection';
-import ServicesPreview from '../components/home/ServicesPreview';
-import AdvancedAIFeatures from '../components/home/AdvancedAIFeatures';
-import EverythingWorksTogether from '../components/home/EverythingWorksTogether';
-import UseCasesPreview from '../components/home/UseCasesPreview';
-import PlatformPreviewSection from '../components/home/PlatformPreviewSection';
-import PricingPreview from '../components/home/PricingPreview';
-import CTASection from '../components/home/CTASection';
-import ROICalculator from '../components/home/ROICalculator';
-import RevenueSystemSection from '../components/home/RevenueSystemSection';
-import HighIntentLinks from '../components/seo/HighIntentLinks';
+import PremiumHomeExperience from '../components/home/PremiumHomeExperience';
 
 const SITE_URL = 'https://www.assistantai.com.au';
 const HERO_IMAGE = 'https://rygyswsngskbdpgeqloy.supabase.co/storage/v1/object/public/site-assets/Hero.png';
@@ -96,23 +80,31 @@ const structuredData = [
         name: 'What does AssistantAI do for service businesses?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'AssistantAI provides an AI assistant and AI receptionist that answers calls, captures enquiries, supports bookings, and helps Australian service businesses follow up faster.',
+          text: 'AssistantAI provides an AI receptionist that answers calls, captures enquiries, supports bookings and helps Australian service businesses follow up faster.',
         },
       },
       {
         '@type': 'Question',
-        name: 'Who is AssistantAI built for?',
+        name: 'Can it handle calls outside business hours?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'AssistantAI is built for Australian service-based businesses including cleaning, trades, clinics, property, real estate, legal, and other service providers that want faster response times and less admin.',
+          text: 'Yes. It can provide consistent first-response coverage after hours, capture the caller’s details and prepare the right next action for your team.',
         },
       },
       {
         '@type': 'Question',
-        name: 'Can AssistantAI help recover missed calls?',
+        name: 'Does it replace our team?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes. AssistantAI can answer enquiries, capture caller details, identify urgency, and support follow-up workflows so fewer high-intent leads are lost.',
+          text: 'No. AssistantAI handles repetitive first response and structured capture. Urgent, sensitive or complex enquiries can be escalated to a person.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can it connect to our existing systems?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'AssistantAI can be configured around calendars, CRM workflows, payments, SMS and email tools depending on your plan and implementation requirements.',
         },
       },
     ],
@@ -123,39 +115,14 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="AI Assistant & AI Receptionist for Australian Businesses | AssistantAI"
-        description="AssistantAI gives Australian service businesses an AI assistant that answers calls, captures leads, supports bookings, follows up faster, and turns more enquiries into paying clients."
+        title="AI Receptionist Australia for Service Businesses | AssistantAI"
+        description="AssistantAI is an AI receptionist for Australian service businesses, answering calls 24/7, qualifying enquiries, supporting bookings and automating follow-up."
         canonicalPath="/"
         structuredData={structuredData}
         image={HERO_IMAGE}
         imageAlt={HERO_IMAGE_ALT}
       />
-      <div className="pb-24 md:pb-0">
-        <HeroSection />
-        <TrustStrip />
-        <ProblemSection />
-        <ROICalculator />
-        <RevenueSystemSection />
-        <HighIntentLinks compact />
-        <HowItWorksSection />
-        <CredibilitySection />
-        <ServicesPreview />
-        <AdvancedAIFeatures />
-        <EverythingWorksTogether />
-        <UseCasesPreview />
-        <PlatformPreviewSection />
-        <PricingPreview />
-        <CTASection />
-      </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0a0a0f]/92 px-4 py-3 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden">
-        <Link
-          to="/GetStartedNow"
-          className="mx-auto flex min-h-[3.25rem] max-w-md items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/20"
-        >
-          Sign Up Now
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
+      <PremiumHomeExperience />
     </>
   );
 }

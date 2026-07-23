@@ -1,4 +1,7 @@
-const PLAN_CONFIG = {
+import { randomInt } from 'node:crypto';
+import Stripe from 'stripe';
+
+export const PLAN_CONFIG = {
   starter: {
     selected_plan: 'Starter',
     setup_price_env: 'STRIPE_STARTER_SETUP_PRICE_ID',
@@ -28,9 +31,15 @@ function siteBaseUrl(req) {
   if (configured) {
     return configured.startsWith('http') ? configured : `https://${configured}`;
   }
-  const host = req.headers['x-forwarded-host'] || req.headers.host || 'www.assistantai.com.au';
+  if (process.env.NODE_ENV === 'production') return 'https://www.assistantai.com.au';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:5173';
   const proto = req.headers['x-forwarded-proto'] || 'https';
   return `${proto}://${host}`;
+}
+
+export function integrationIdentifier() {
+  const suffix = Array.from({ length: 8 }, () => String.fromCharCode(97 + randomInt(0, 26))).join('');
+  return `assistantai_${suffix}`;
 }
 
 async function updateLeadPaymentPending({ leadId, selectedPlan, checkoutUrl, sessionId }) {
@@ -102,34 +111,29 @@ export default async function handler(req, res) {
     const email = String(body.email || '').trim();
     const baseUrl = siteBaseUrl(req);
 
-    const params = new URLSearchParams();
-    params.append('mode', 'subscription');
-    params.append('success_url', `${baseUrl}/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}`);
-    params.append('cancel_url', `${baseUrl}/GetStartedNow?plan=${encodeURIComponent(config.selected_plan.toLowerCase())}&checkout=cancelled`);
-    params.append('line_items[0][price]', setupPriceId);
-    params.append('line_items[0][quantity]', '1');
-    params.append('line_items[1][price]', monthlyPriceId);
-    params.append('line_items[1][quantity]', '1');
-    params.append('metadata[selected_plan]', config.selected_plan);
-    if (leadId) params.append('metadata[lead_id]', leadId);
-    if (fullName) params.append('metadata[name]', fullName);
-    if (businessName) params.append('metadata[business_name]', businessName);
-    if (email) params.append('customer_email', email);
-    if (email) params.append('metadata[email]', email);
-
-    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${stripeKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params.toString()
+    const identifier = integrationIdentifier();
+    const metadata = {
+      selected_plan: config.selected_plan,
+      integration_identifier: identifier,
+      ...(leadId ? { lead_id: leadId } : {}),
+      ...(fullName ? { name: fullName } : {}),
+      ...(businessName ? { business_name: businessName } : {}),
+      ...(email ? { email } : {}),
+    };
+    const stripe = new Stripe(stripeKey, { apiVersion: '2026-06-24.dahlia' });
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      success_url: `${baseUrl}/thank-you?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/GetStartedNow?plan=${encodeURIComponent(config.selected_plan.toLowerCase())}&checkout=cancelled`,
+      line_items: [
+        { price: setupPriceId, quantity: 1 },
+        { price: monthlyPriceId, quantity: 1 },
+      ],
+      metadata,
+      subscription_data: { metadata },
+      ...(leadId ? { client_reference_id: leadId } : {}),
+      ...(email ? { customer_email: email } : {}),
     });
-
-    const session = await stripeResponse.json();
-    if (!stripeResponse.ok) {
-      return res.status(500).json({ error: 'Stripe checkout creation failed', details: session?.error?.message || session });
-    }
 
     const updatedLead = await updateLeadPaymentPending({
       leadId,
@@ -146,6 +150,7 @@ export default async function handler(req, res) {
       lead: updatedLead
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Stripe checkout route failed', details: error.message });
+    console.error('Stripe checkout route failed:', error.message);
+    return res.status(500).json({ error: 'Stripe checkout route failed' });
   }
 }

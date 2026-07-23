@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { requireAdmin } from './_native-auth.js';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GA_SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
@@ -200,7 +201,7 @@ async function runSearchConsole({ accessToken, siteUrl, range }) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  if (!requireAdmin(req, res)) return;
 
   const range = normaliseRange(req.query?.range || '30d');
   const config = getRequiredConfig();

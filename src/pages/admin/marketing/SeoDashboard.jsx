@@ -230,7 +230,7 @@ export default function SeoDashboard() {
             <div>
               <h3 className="font-bold">Google SEO sources are not connected yet</h3>
               <p className="mt-1 text-sm leading-relaxed text-amber-100/80">
-                Add Google OAuth, GA4 and Search Console environment variables. The dashboard now reads from /api/google-acquisition-summary instead of the old missing Base44 functions.
+                Add Google OAuth, GA4 and Search Console environment variables. The dashboard reads from the native /api/google-acquisition-summary route.
               </p>
             </div>
           </div>

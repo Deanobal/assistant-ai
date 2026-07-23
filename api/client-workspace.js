@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 function getConfig() {
   const url = String(process.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
   const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -113,6 +115,7 @@ function fallbackBilling(client) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (!requireAdmin(req, res)) return;
 
   try {
     const id = String(req.query.id || '').trim();

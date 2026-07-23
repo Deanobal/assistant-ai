@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Wrench, HeartPulse, Building2, Briefcase, ArrowRight } from 'lucide-react';
+import { Wrench, HeartPulse, Building2, Briefcase } from 'lucide-react';
 
 const industries = [
 { icon: Wrench, title: 'Trades', desc: 'Capture urgent jobs, quote requests, and after-hours enquiries faster.' },

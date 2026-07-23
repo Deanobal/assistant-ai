@@ -1,3 +1,5 @@
+import { requireAdmin } from './_native-auth.js';
+
 const GROUPS = {
   supabase: ['VITE_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'],
   stripe: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_STARTER_SETUP_PRICE_ID', 'STRIPE_STARTER_PRICE_ID', 'STRIPE_GROWTH_SETUP_PRICE_ID', 'STRIPE_GROWTH_PRICE_ID'],
@@ -92,6 +94,7 @@ export default function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  if (!requireAdmin(req, res)) return;
 
   const status = Object.fromEntries(Object.entries(GROUPS).map(([group, names]) => [group, groupStatus(names)]));
 

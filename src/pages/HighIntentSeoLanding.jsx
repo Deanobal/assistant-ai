@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowRight, Bot, CalendarCheck, CheckCircle2, Clock3, MessageSquareText, PhoneCall, ShieldCheck, Sparkles, Target, Zap } from 'lucide-react';
 import SEO from '../components/SEO';
 import VapiReceptionistDemoButton from '@/components/voice/VapiReceptionistDemoButton';
+import PremiumHomeExperience from '@/components/home/PremiumHomeExperience';
 
 const landingPages = {
   'ai-receptionist-australia': {
@@ -218,6 +219,7 @@ const landingPages = {
 
 function LandingSection({ page }) {
   const Icon = page.icon || Sparkles;
+  const isFlagshipReceptionistPage = page.canonicalPath === '/ai-receptionist-australia';
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -228,7 +230,7 @@ function LandingSection({ page }) {
       serviceType: page.primaryKeyword,
       description: page.description,
     },
-    {
+    ...(!isFlagshipReceptionistPage ? [{
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
       mainEntity: page.faq.map(([question, answer]) => ({
@@ -236,8 +238,17 @@ function LandingSection({ page }) {
         name: question,
         acceptedAnswer: { '@type': 'Answer', text: answer },
       })),
-    }
+    }] : [])
   ];
+
+  if (isFlagshipReceptionistPage) {
+    return (
+      <>
+        <SEO title={page.title} description={page.description} canonicalPath={page.canonicalPath} structuredData={structuredData} />
+        <PremiumHomeExperience />
+      </>
+    );
+  }
 
   return (
     <>
@@ -262,11 +273,11 @@ function LandingSection({ page }) {
               </div>
             </div>
             <div className="rounded-3xl border border-white/10 bg-[#11111a]/90 p-6 shadow-2xl shadow-cyan-950/20 md:p-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Search intent target</p>
-              <h2 className="mt-3 text-2xl font-bold text-white">{page.primaryKeyword}</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Built around your workflow</p>
+              <h2 className="mt-3 text-2xl font-bold text-white">What AssistantAI handles</h2>
               <p className="mt-4 text-gray-400 leading-7">{page.pain}</p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {page.secondary.map((keyword) => <span key={keyword} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">{keyword}</span>)}
+                {page.outcomes.slice(0, 3).map((outcome) => <span key={outcome} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">{outcome}</span>)}
               </div>
             </div>
           </div>
@@ -283,12 +294,12 @@ function LandingSection({ page }) {
           <div className="mt-16 grid gap-8 lg:grid-cols-2">
             <div className="rounded-3xl border border-white/5 bg-[#12121a] p-8">
               <Target className="h-8 w-8 text-cyan-400" />
-              <h2 className="mt-4 text-3xl font-bold text-white">Built for buying intent, not vanity traffic</h2>
-              <p className="mt-4 text-gray-400 leading-8">These pages are written for prospects already looking for a practical AI reception, missed-call, booking, or follow-up system. The goal is to capture commercial search demand and move visitors toward a demo or setup conversation.</p>
+              <h2 className="mt-4 text-3xl font-bold text-white">Designed around real enquiry flow</h2>
+              <p className="mt-4 text-gray-400 leading-8">AssistantAI connects the first response with structured capture, clear routing and practical follow-up, so your team can act with better context.</p>
             </div>
             <div className="rounded-3xl border border-white/5 bg-[#12121a] p-8">
               <Zap className="h-8 w-8 text-cyan-400" />
-              <h2 className="mt-4 text-3xl font-bold text-white">Best-fit use cases</h2>
+              <h2 className="mt-4 text-3xl font-bold text-white">Best-fit service workflows</h2>
               <ul className="mt-5 space-y-4">
                 {page.useCases.map((item) => <li key={item} className="flex items-start gap-3 text-gray-300 leading-7"><span className="mt-2 h-2 w-2 rounded-full bg-cyan-400" />{item}</li>)}
               </ul>
